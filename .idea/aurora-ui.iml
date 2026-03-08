@@ -17,6 +17,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/aurora_text/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/aurora_theme/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/aurora_widgets/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/minimal/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
