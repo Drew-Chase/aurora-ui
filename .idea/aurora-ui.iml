@@ -10,6 +10,13 @@
       <sourceFolder url="file://$MODULE_DIR$/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_a11y/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_animate/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_layout/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_render/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_text/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_theme/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_widgets/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

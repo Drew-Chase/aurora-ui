@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["aurora","crates/aurora_core", "crates/aurora_gpu", "crates/aurora_platform"]
+members = ["aurora", "crates/aurora_a11y", "crates/aurora_animate","crates/aurora_core", "crates/aurora_gpu", "crates/aurora_layout", "crates/aurora_platform", "crates/aurora_render", "crates/aurora_text", "crates/aurora_theme", "crates/aurora_widgets"]
 
 # ---------- SHARED PROFILES ----------
 # These apply to ALL workspace members automatically.
