@@ -1,0 +1,7 @@
+[package]
+name = "aurora_core"
+version = "0.1.0"
+edition = "2024"
+description = "Types, math, color, rects, and other core utilities for Aurora."
+
+[dependencies]

@@ -1,0 +1,34 @@
+[workspace]
+resolver = "3"
+members = ["aurora","crates/aurora_core", "crates/aurora_gpu", "crates/aurora_platform"]
+
+# ---------- SHARED PROFILES ----------
+# These apply to ALL workspace members automatically.
+
+[profile.dev]
+opt-level = 1              # faster dev builds than 0, much faster iteration
+incremental = true
+debug = "line-tables-only" # smaller debug info, still get backtraces
+
+[profile.dev.package."*"]  # optimize dependencies even in dev
+opt-level = 2              # deps don't change often, optimize them fully
+
+[profile.release]
+opt-level = "z"            # optimize for size over speed
+lto = "fat"                # full link-time optimization — slow build, small binary
+codegen-units = 1          # max optimization (single codegen unit)
+panic = "abort"            # removes unwinding tables (~100-200 KB savings)
+strip = "symbols"          # strip debug symbols from binary
+
+[profile.release-fast]     # alternative: optimize for speed when profiling
+inherits = "release"
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+
+# Specific overrides — optimize critical hot-path crates even in dev
+[profile.dev.package.aurora_render]
+opt-level = 2
+
+[profile.dev.package.aurora_gpu]
+opt-level = 2

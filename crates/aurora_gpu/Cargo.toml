@@ -1,0 +1,7 @@
+[package]
+name = "aurora_gpu"
+version = "0.1.0"
+edition = "2024"
+description = "GPU abstraction — thin wrapper"
+
+[dependencies]

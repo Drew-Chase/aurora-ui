@@ -1,0 +1,8 @@
+[package]
+name = "aurora"
+version = "0.1.0"
+edition = "2024"
+description = "A GPU-accelerated, feature-gated UI framework for building fast, lightweight desktop applications in Rust. Custom Win11/macOS titlebars. ~1.2 MB minimal binary. Sub-100ms startup."
+authors = ["Drew Chase"]
+
+[dependencies]
