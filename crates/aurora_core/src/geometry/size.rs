@@ -1,3 +1,5 @@
+#![doc = include_str!("../../../../.wiki/Size.md")]
+
 /// A 2D size with `width` and `height` dimensions.
 ///
 /// Represents the dimensions of a rectangular area. Commonly used alongside

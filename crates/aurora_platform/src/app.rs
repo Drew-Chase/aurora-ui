@@ -1,6 +1,7 @@
+#![doc = include_str!("../../../.wiki/App.md")]
+
 use crate::errors::app::AppError;
 use aurora_core::geometry::size::Size;
-use std::process::ExitCode;
 use std::sync::Arc;
 use winit::application::ApplicationHandler;
 use winit::dpi;

@@ -1,3 +1,5 @@
+#![doc = include_str!("../../../../.wiki/Corners.md")]
+
 /// Corner radii for a rounded rectangle.
 ///
 /// Stores independent radii for each corner in CSS order: top-left, top-right,

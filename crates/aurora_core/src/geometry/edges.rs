@@ -1,3 +1,5 @@
+#![doc = include_str!("../../../../.wiki/Edges.md")]
+
 use crate::geometry::size::Size;
 
 /// Edge insets (top, right, bottom, left) describing spacing around a rectangle.

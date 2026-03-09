@@ -1,3 +1,5 @@
+#![doc = include_str!("../../../../.wiki/Rect.md")]
+
 use crate::geometry::edges::Edges;
 use crate::geometry::point::Point;
 use crate::geometry::size::Size;

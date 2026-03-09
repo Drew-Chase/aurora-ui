@@ -1,3 +1,5 @@
+#![doc = include_str!("../../../../.wiki/Point.md")]
+
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 /// A 2D point with `x` and `y` coordinates.
