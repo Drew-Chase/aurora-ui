@@ -1,6 +1,9 @@
+/// Errors that can occur when creating or running an application window.
 #[derive(Debug)]
 pub enum AppError {
+    /// The OS refused to create the window (invalid config, resource limits, etc.).
     WindowCreationFailed(String),
+    /// The event loop encountered a fatal error.
     EventLoopFailed(String),
 }
 

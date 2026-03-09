@@ -5,7 +5,7 @@ fn main() {
         .title("Hello, Aurora")
         .size((800, 600))
         .run(|_app, frame_info| {
-            println!("App started with frame info: {:?}", frame_info);
+            println!("App re-rendered with frame info: {:?}", frame_info);
         })
         .expect("Failed to start application");
 }
