@@ -151,10 +151,10 @@ impl Color {
     }
 }
 
-/// Formats the color as a CSS-style `#rrggbb` hex string (alpha is not included).
+/// Formats the color as a CSS-style `#rrggbbaa` hex string
 impl Display for Color {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "#{:02x}{:02x}{:02x}", self.red, self.green, self.blue)
+        write!(f, "#{:02x}{:02x}{:02x}{:02x}", self.red, self.green, self.blue, self.alpha)
     }
 }
 
@@ -321,10 +321,10 @@ mod test {
     #[test]
     fn test_display() {
         let color = Color::from_hex(0xff00ff);
-        assert_eq!(format!("{}", color), "#ff00ff");
+        assert_eq!(format!("{}", color), "#ff00ffff");
 
         let color = Color::from_hex(0x000000);
-        assert_eq!(format!("{}", color), "#000000");
+        assert_eq!(format!("{}", color), "#000000ff");
     }
 
     #[test]
