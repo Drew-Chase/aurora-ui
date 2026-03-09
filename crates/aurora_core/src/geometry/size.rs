@@ -64,3 +64,11 @@ impl From<(f32, f32)> for Size {
         Self { width, height }
     }
 }
+impl From<(i32, i32)> for Size {
+    fn from((width, height): (i32, i32)) -> Self {
+        Self {
+            width: width as f32,
+            height: height as f32,
+        }
+    }
+}
