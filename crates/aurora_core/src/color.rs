@@ -1,20 +1,22 @@
+#![doc = include_str!("../../../.wiki/Color.md")]
+
 use std::fmt::Display;
 
 /// A trait for converting string representations of hex colors into [`Color`] values.
 ///
 /// Implementors parse a hex string (without a leading `#`) and return the corresponding color.
-pub trait StringColor {
+pub trait IntoColor {
     /// Parses `self` as a hex color string and returns the corresponding [`Color`].
     ///
     /// Returns black (`#000000`) if the string is not a valid hex number.
-    fn color(&self) -> Color;
+    fn color(&self, has_alpha: bool) -> Color;
 }
 
 /// An RGBA color with 8-bit channels.
 ///
 /// Colors can be constructed from hex values, RGB/RGBA components, or HSL/HSLA values.
 /// The [`Display`] implementation formats the color as a CSS-style `#rrggbb` hex string.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Color {
     /// Red channel (0–255).
     pub red: u8,
@@ -114,8 +116,7 @@ impl Color {
     /// Creates a color from a hex integer in either RGB (`0xRRGGBB`) or RGBA (`0xRRGGBBAA`) format.
     ///
     /// Values greater than `0xFFFFFF` are interpreted as RGBA; otherwise as RGB with alpha set to 255.
-    pub fn from_hex(hex: u64) -> Self {
-        let has_alpha = hex > 0xffffff;
+    pub fn from_hex(hex: u64, has_alpha: bool) -> Self {
         if has_alpha {
             let red = ((hex >> 24) & 0xff) as u8;
             let green = ((hex >> 16) & 0xff) as u8;
@@ -149,26 +150,96 @@ impl Color {
         let alpha = self.alpha as u64;
         (red << 24) | (green << 16) | (blue << 8) | alpha
     }
+
+    /// Packs this color into a `u32` in `0x00RRGGBB` format.
+    ///
+    /// Alpha is discarded. This is the format expected by softbuffer.
+    pub fn to_rgb_u32(&self) -> u32 {
+        (self.red as u32) << 16 | (self.green as u32) << 8 | self.blue as u32
+    }
+
+    /// Packs this color into a `u32` in `0xAARRGGBB` format.
+    ///
+    /// Common in Direct2D, GDI+, and Windows-native APIs.
+    pub fn to_argb_u32(&self) -> u32 {
+        (self.alpha as u32) << 24 | (self.red as u32) << 16 | (self.green as u32) << 8 | self.blue as u32
+    }
+
+    /// Packs this color into a `u32` in `0xAABBGGRR` format.
+    ///
+    /// Common in OpenGL, Vulkan, and other GPU APIs that expect little-endian RGBA byte order.
+    pub fn to_abgr_u32(&self) -> u32 {
+        (self.alpha as u32) << 24 | (self.blue as u32) << 16 | (self.green as u32) << 8 | self.red as u32
+    }
+
+    /// Converts this color to an array of f32 values in RGBA format (`[r, g, b, a]`).
+    pub fn to_array(&self) -> [f32; 4] {
+        [
+            self.red as f32 / 255.0,
+            self.green as f32 / 255.0,
+            self.blue as f32 / 255.0,
+            self.alpha as f32 / 255.0,
+        ]
+    }
+
+    /// Linearly interpolates between `self` and `other` by `time`.
+    ///
+    /// - `time` = 0.0 returns `self`.
+    /// - `time` = 1.0 returns `other`.
+    /// - Values outside 0.0–1.0 are clamped.
+    pub fn lerp(&self, other: &Self, time: f32) -> Self {
+        let t = time.clamp(0.0, 1.0);
+        Self {
+            red: (self.red as f32 + (other.red as f32 - self.red as f32) * t).round() as u8,
+            green: (self.green as f32 + (other.green as f32 - self.green as f32) * t).round() as u8,
+            blue: (self.blue as f32 + (other.blue as f32 - self.blue as f32) * t).round() as u8,
+            alpha: (self.alpha as f32 + (other.alpha as f32 - self.alpha as f32) * t).round() as u8,
+        }
+    }
+
+    /// Linearly interpolates across a sequence of colors by `time`.
+    ///
+    /// `time` is clamped to 0.0–1.0 and mapped evenly across the color stops.
+    /// For example, with 4 colors, `time` 0.0–0.33 blends between the first and second,
+    /// 0.33–0.66 between the second and third, and 0.66–1.0 between the third and fourth.
+    ///
+    /// Panics if `colors` is empty.
+    pub fn lerp_many(colors: &[Color], time: f32) -> Self {
+        assert!(!colors.is_empty(), "lerp_many requires at least one color");
+        if colors.len() == 1 {
+            return colors[0];
+        }
+        let t = time.clamp(0.0, 1.0);
+        let segments = (colors.len() - 1) as f32;
+        let scaled = t * segments;
+        let index = (scaled as usize).min(colors.len() - 2);
+        let local_t = scaled - index as f32;
+        colors[index].lerp(&colors[index + 1], local_t)
+    }
 }
 
 /// Formats the color as a CSS-style `#rrggbbaa` hex string
 impl Display for Color {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "#{:02x}{:02x}{:02x}{:02x}", self.red, self.green, self.blue, self.alpha)
+        write!(
+            f,
+            "#{:02x}{:02x}{:02x}{:02x}",
+            self.red, self.green, self.blue, self.alpha
+        )
     }
 }
 
-impl StringColor for String {
-    fn color(&self) -> Color {
+impl IntoColor for String {
+    fn color(&self, has_alpha: bool) -> Color {
         let hex = u64::from_str_radix(self, 16).unwrap_or(0);
-        Color::from_hex(hex)
+        Color::from_hex(hex, has_alpha)
     }
 }
 
-impl StringColor for &str {
-    fn color(&self) -> Color {
+impl IntoColor for &str {
+    fn color(&self, has_alpha: bool) -> Color {
         let hex = u64::from_str_radix(self, 16).unwrap_or(0);
-        Color::from_hex(hex)
+        Color::from_hex(hex, has_alpha)
     }
 }
 
@@ -212,28 +283,47 @@ macro_rules! hsl {
     };
 }
 
+/// Interpolates across multiple colors by a `time` value (0.0–1.0).
+///
+/// The time is distributed evenly across adjacent color pairs.
+///
+/// Shorthand for [`Color::lerp_many`].
+#[macro_export]
+macro_rules! lerp {
+    ($time:expr, $($color:expr),+ $(,)?) => {
+        Color::lerp_many(&[$($color),+], $time)
+    };
+}
+
 #[cfg(test)]
 mod test {
-    use crate::color::{Color, StringColor};
+    use crate::color::{Color, IntoColor};
 
     #[test]
     fn test_from_hex() {
         let hex_color = 0xff00ff;
-        let color = Color::from_hex(hex_color);
+        let color = Color::from_hex(hex_color, false);
         assert_eq!(color.red, 255);
         assert_eq!(color.green, 0);
         assert_eq!(color.blue, 255);
         assert_eq!(color.alpha, 255);
 
+        let hex_color = 0x00000080;
+        let color = Color::from_hex(hex_color, true);
+        assert_eq!(color.red, 0);
+        assert_eq!(color.green, 0);
+        assert_eq!(color.blue, 0);
+        assert_eq!(color.alpha, 128);
+
         let hex_color = 0x00ff00;
-        let color = Color::from_hex(hex_color);
+        let color = Color::from_hex(hex_color, false);
         assert_eq!(color.red, 0);
         assert_eq!(color.green, 255);
         assert_eq!(color.blue, 0);
         assert_eq!(color.alpha, 255);
 
         let hex_color = 0xffff0080;
-        let color = Color::from_hex(hex_color);
+        let color = Color::from_hex(hex_color, true);
 
         assert_eq!(color.red, 255);
         assert_eq!(color.green, 255);
@@ -241,7 +331,7 @@ mod test {
         assert_eq!(color.alpha, 128); // 80 = 8 × 16 + 0 = 128
 
         let hex_color = 0x72203a;
-        let color = Color::from_hex(hex_color);
+        let color = Color::from_hex(hex_color, false);
 
         assert_eq!(color.red, 114);
         assert_eq!(color.green, 32);
@@ -249,7 +339,7 @@ mod test {
         assert_eq!(color.alpha, 255);
 
         let hex_color = 0x1ce783;
-        let color = Color::from_hex(hex_color);
+        let color = Color::from_hex(hex_color, false);
 
         assert_eq!(color.red, 28);
         assert_eq!(color.green, 231);
@@ -259,11 +349,11 @@ mod test {
 
     #[test]
     fn test_to_hex() {
-        let color = Color::from_hex(0xff00ffff);
+        let color = Color::from_hex(0xff00ffff, true);
         let hex_color = color.to_hex();
         assert_eq!(hex_color, 0xff00ffff);
 
-        let color = Color::from_hex(0xff00ff);
+        let color = Color::from_hex(0xff00ff, false);
         let hex_color = color.to_hex();
         assert_eq!(hex_color, 0xff00ffff);
     }
@@ -320,22 +410,22 @@ mod test {
 
     #[test]
     fn test_display() {
-        let color = Color::from_hex(0xff00ff);
+        let color = Color::from_hex(0xff00ff, false);
         assert_eq!(format!("{}", color), "#ff00ffff");
 
-        let color = Color::from_hex(0x000000);
+        let color = Color::from_hex(0x000000, false);
         assert_eq!(format!("{}", color), "#000000ff");
     }
 
     #[test]
     fn test_string_color_trait() {
-        let color = "ff00ff".to_string().color();
+        let color = "ff00ff".to_string().color(false);
         assert_eq!(color.red, 255);
         assert_eq!(color.green, 0);
         assert_eq!(color.blue, 255);
         assert_eq!(color.alpha, 255);
 
-        let color = "00ff00".color();
+        let color = "00ff00".color(false);
         assert_eq!(color.red, 0);
         assert_eq!(color.green, 255);
         assert_eq!(color.blue, 0);
@@ -376,5 +466,176 @@ mod test {
         assert_eq!(color.green, 255);
         assert_eq!(color.blue, 0);
         assert_eq!(color.alpha, 127);
+    }
+
+    #[test]
+    fn test_to_rgb_u32() {
+        let color = Color::from_rgba(255, 128, 0, 200);
+        assert_eq!(color.to_rgb_u32(), 0x00FF8000);
+
+        let color = Color::from_rgb(0, 0, 0);
+        assert_eq!(color.to_rgb_u32(), 0x00000000);
+
+        let color = Color::from_rgb(255, 255, 255);
+        assert_eq!(color.to_rgb_u32(), 0x00FFFFFF);
+    }
+
+    #[test]
+    fn test_to_argb_u32() {
+        let color = Color::from_rgba(255, 128, 0, 200);
+        assert_eq!(color.to_argb_u32(), 0xC8FF8000);
+
+        let color = Color::from_rgb(255, 0, 255);
+        assert_eq!(color.to_argb_u32(), 0xFFFF00FF);
+    }
+
+    #[test]
+    fn test_to_abgr_u32() {
+        let color = Color::from_rgba(255, 128, 0, 200);
+        assert_eq!(color.to_abgr_u32(), 0xC80080FF);
+
+        let color = Color::from_rgb(255, 0, 255);
+        assert_eq!(color.to_abgr_u32(), 0xFFFF00FF);
+
+        // Verify channel order: R and B are swapped compared to ARGB
+        let color = Color::from_rgb(255, 0, 0); // pure red
+        assert_eq!(color.to_argb_u32(), 0xFFFF0000);
+        assert_eq!(color.to_abgr_u32(), 0xFF0000FF);
+    }
+
+    #[test]
+    fn test_lerp_endpoints() {
+        let black = Color::from_rgb(0, 0, 0);
+        let white = Color::from_rgb(255, 255, 255);
+
+        // t=0.0 returns self
+        assert_eq!(black.lerp(&white, 0.0), black);
+        // t=1.0 returns other
+        assert_eq!(black.lerp(&white, 1.0), white);
+    }
+
+    #[test]
+    fn test_lerp_midpoint() {
+        let black = Color::from_rgb(0, 0, 0);
+        let white = Color::from_rgb(255, 255, 255);
+
+        let mid = black.lerp(&white, 0.5);
+        assert_eq!(mid.red, 128);
+        assert_eq!(mid.green, 128);
+        assert_eq!(mid.blue, 128);
+        assert_eq!(mid.alpha, 255);
+    }
+
+    #[test]
+    fn test_lerp_quarter() {
+        let red = Color::from_rgba(255, 0, 0, 255);
+        let blue = Color::from_rgba(0, 0, 255, 255);
+
+        let quarter = red.lerp(&blue, 0.25);
+        assert_eq!(quarter.red, 191);
+        assert_eq!(quarter.green, 0);
+        assert_eq!(quarter.blue, 64);
+    }
+
+    #[test]
+    fn test_lerp_alpha() {
+        let opaque = Color::from_rgba(255, 0, 0, 255);
+        let transparent = Color::from_rgba(255, 0, 0, 0);
+
+        let half = opaque.lerp(&transparent, 0.5);
+        assert_eq!(half.red, 255);
+        assert_eq!(half.alpha, 128);
+    }
+
+    #[test]
+    fn test_lerp_clamps() {
+        let a = Color::from_rgb(100, 100, 100);
+        let b = Color::from_rgb(200, 200, 200);
+
+        // Values outside 0.0–1.0 are clamped
+        assert_eq!(a.lerp(&b, -1.0), a);
+        assert_eq!(a.lerp(&b, 2.0), b);
+    }
+
+    #[test]
+    fn test_to_array() {
+        let color = Color::from_rgba(255, 128, 0, 255);
+        let arr = color.to_array();
+        assert!((arr[0] - 1.0).abs() < f32::EPSILON);
+        assert!((arr[1] - 128.0 / 255.0).abs() < f32::EPSILON);
+        assert!(arr[2].abs() < f32::EPSILON);
+        assert!((arr[3] - 1.0).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn test_lerp_many_endpoints() {
+        let red = Color::from_rgb(255, 0, 0);
+        let green = Color::from_rgb(0, 255, 0);
+        let blue = Color::from_rgb(0, 0, 255);
+
+        assert_eq!(Color::lerp_many(&[red, green, blue], 0.0), red);
+        assert_eq!(Color::lerp_many(&[red, green, blue], 1.0), blue);
+    }
+
+    #[test]
+    fn test_lerp_many_midpoints() {
+        let red = Color::from_rgb(255, 0, 0);
+        let green = Color::from_rgb(0, 255, 0);
+        let blue = Color::from_rgb(0, 0, 255);
+
+        // t=0.5 is exactly at the second color
+        assert_eq!(Color::lerp_many(&[red, green, blue], 0.5), green);
+
+        // t=0.25 is midpoint between red and green
+        let mid = Color::lerp_many(&[red, green, blue], 0.25);
+        assert_eq!(mid.red, 128);
+        assert_eq!(mid.green, 128);
+        assert_eq!(mid.blue, 0);
+
+        // t=0.75 is midpoint between green and blue
+        let mid = Color::lerp_many(&[red, green, blue], 0.75);
+        assert_eq!(mid.red, 0);
+        assert_eq!(mid.green, 128);
+        assert_eq!(mid.blue, 128);
+    }
+
+    #[test]
+    fn test_lerp_many_single_color() {
+        let red = Color::from_rgb(255, 0, 0);
+        assert_eq!(Color::lerp_many(&[red], 0.5), red);
+    }
+
+    #[test]
+    fn test_lerp_macro() {
+        let red = Color::from_rgb(255, 0, 0);
+        let green = Color::from_rgb(0, 255, 0);
+        let blue = Color::from_rgb(0, 0, 255);
+
+        assert_eq!(lerp!(0.0, red, green, blue), red);
+        assert_eq!(lerp!(0.5, red, green, blue), green);
+        assert_eq!(lerp!(1.0, red, green, blue), blue);
+    }
+
+    #[test]
+    fn test_lerp_macro_four_colors() {
+        let c1 = Color::from_rgb(255, 0, 0);
+        let c2 = Color::from_rgb(0, 255, 0);
+        let c3 = Color::from_rgb(0, 0, 255);
+        let c4 = Color::from_rgb(255, 255, 255);
+
+        assert_eq!(lerp!(0.0, c1, c2, c3, c4), c1);
+        assert_eq!(lerp!(1.0, c1, c2, c3, c4), c4);
+
+        // t=1/3 lands exactly on c2
+        let at_c2 = lerp!(1.0 / 3.0, c1, c2, c3, c4);
+        assert_eq!(at_c2.red, 0);
+        assert_eq!(at_c2.green, 255);
+        assert_eq!(at_c2.blue, 0);
+
+        // t=2/3 lands exactly on c3
+        let at_c3 = lerp!(2.0 / 3.0, c1, c2, c3, c4);
+        assert_eq!(at_c3.red, 0);
+        assert_eq!(at_c3.green, 0);
+        assert_eq!(at_c3.blue, 255);
     }
 }
