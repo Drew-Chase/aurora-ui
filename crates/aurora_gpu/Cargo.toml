@@ -5,3 +5,11 @@ edition = "2024"
 description = "GPU abstraction — thin wrapper"
 
 [dependencies]
+aurora_core = { path = "../aurora_core" }
+log = "0.4"
+
+softbuffer = { version = "0.4", optional = true }
+
+[features]
+default = ["software"]
+software = ["dep:softbuffer"]
