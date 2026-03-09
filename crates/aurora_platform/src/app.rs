@@ -74,7 +74,7 @@ pub struct FrameInfo {
     /// Drawable height in physical pixels.
     pub height: u32,
     /// Display scale factor (e.g. `2.0` on Retina/HiDPI displays).
-    pub scale_factor: f32,
+    pub scale_factor: f64,
 }
 
 impl App {
@@ -187,15 +187,15 @@ impl AppWindow {
         Size::new(inner_size.width as f32, inner_size.height as f32)
     }
 
-    /// Returns the outer (including decorations) size in logical pixels.
-    pub fn physical_size(&self) -> Size {
+    /// Returns the outer (including decorations) size in physical pixels.
+    pub fn outer_size(&self) -> Size {
         let inner_size = self.window_handle.outer_size();
         Size::new(inner_size.width as f32, inner_size.height as f32)
     }
 
     /// Returns the display scale factor (e.g. `2.0` on Retina/HiDPI).
-    pub fn scale_factor(&self) -> f32 {
-        self.window_handle.scale_factor() as f32
+    pub fn scale_factor(&self) -> f64 {
+        self.window_handle.scale_factor()
     }
 
     /// Requests a redraw for the next frame.
@@ -267,7 +267,7 @@ where
                 let frame_info = FrameInfo {
                     width: physical.width,
                     height: physical.height,
-                    scale_factor: window.window_handle.scale_factor() as f32,
+                    scale_factor: window.window_handle.scale_factor(),
                 };
 
                 (self.on_render)(window, frame_info);
@@ -276,7 +276,7 @@ where
                 let frame_info = FrameInfo {
                     width: physical_size.width,
                     height: physical_size.height,
-                    scale_factor: window.window_handle.scale_factor() as f32,
+                    scale_factor: window.window_handle.scale_factor(),
                 };
                 (self.on_render)(window, frame_info);
             }
