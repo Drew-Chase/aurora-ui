@@ -5,3 +5,15 @@ edition = "2024"
 description = "Windowing + native handle + event loop"
 
 [dependencies]
+aurora_core = { path = "../aurora_core" }
+winit = "0.30"
+raw-window-handle = "0.6"
+log = "0.4"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_Graphics_Dwm", ] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6.4"
+objc2-app-kit = { version = "0.3.2", features = ["NSWindow", "NSView"] }
+objc2-foundation = { version = "0.3.2", features = ["NSObject"] }
