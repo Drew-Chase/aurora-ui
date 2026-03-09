@@ -1,18 +1,33 @@
 use std::fmt::Display;
 
-pub trait StringColor{
-    fn color(&self)->Color;
+/// A trait for converting string representations of hex colors into [`Color`] values.
+///
+/// Implementors parse a hex string (without a leading `#`) and return the corresponding color.
+pub trait StringColor {
+    /// Parses `self` as a hex color string and returns the corresponding [`Color`].
+    ///
+    /// Returns black (`#000000`) if the string is not a valid hex number.
+    fn color(&self) -> Color;
 }
 
+/// An RGBA color with 8-bit channels.
+///
+/// Colors can be constructed from hex values, RGB/RGBA components, or HSL/HSLA values.
+/// The [`Display`] implementation formats the color as a CSS-style `#rrggbb` hex string.
 #[derive(Debug, Clone)]
 pub struct Color {
+    /// Red channel (0–255).
     pub red: u8,
+    /// Green channel (0–255).
     pub green: u8,
+    /// Blue channel (0–255).
     pub blue: u8,
+    /// Alpha channel (0–255), where 255 is fully opaque.
     pub alpha: u8,
 }
 
 impl Color {
+    /// Creates a new color from individual RGBA channel values.
     pub fn new(red: u8, green: u8, blue: u8, alpha: u8) -> Self {
         Color {
             red,
@@ -21,6 +36,10 @@ impl Color {
             alpha,
         }
     }
+
+    /// Creates a fully opaque color from RGB channel values.
+    ///
+    /// Alpha is set to 255.
     pub fn from_rgb(red: u8, green: u8, blue: u8) -> Self {
         Color {
             red,
@@ -29,6 +48,8 @@ impl Color {
             alpha: 255,
         }
     }
+
+    /// Creates a color from RGBA channel values.
     pub fn from_rgba(red: u8, green: u8, blue: u8, alpha: u8) -> Self {
         Color {
             red,
@@ -37,6 +58,14 @@ impl Color {
             alpha,
         }
     }
+
+    /// Creates a fully opaque color from HSL (hue, saturation, lightness) values.
+    ///
+    /// This is a convenience wrapper around [`from_hsla`](Self::from_hsla) with alpha set to 1.0.
+    ///
+    /// - `hue` — degrees on the color wheel (0–360, wraps via modulo).
+    /// - `saturation` — 0.0 (grey) to 1.0 (full color), clamped.
+    /// - `lightness` — 0.0 (black) to 1.0 (white), clamped.
     pub fn from_hsl<T, F>(hue: T, saturation: F, lightness: F) -> Self
     where
         T: Into<i32>,
@@ -45,6 +74,12 @@ impl Color {
         Self::from_hsla(hue, saturation.into(), lightness.into(), 1f32)
     }
 
+    /// Creates a color from HSLA (hue, saturation, lightness, alpha) values.
+    ///
+    /// - `hue` — degrees on the color wheel (0–360, wraps via modulo).
+    /// - `saturation` — 0.0 (grey) to 1.0 (full color), clamped.
+    /// - `lightness` — 0.0 (black) to 1.0 (white), clamped.
+    /// - `alpha` — 0.0 (fully transparent) to 1.0 (fully opaque), clamped.
     pub fn from_hsla<T, F>(hue: T, saturation: F, lightness: F, alpha: F) -> Self
     where
         T: Into<i32>,
@@ -76,6 +111,9 @@ impl Color {
         }
     }
 
+    /// Creates a color from a hex integer in either RGB (`0xRRGGBB`) or RGBA (`0xRRGGBBAA`) format.
+    ///
+    /// Values greater than `0xFFFFFF` are interpreted as RGBA; otherwise as RGB with alpha set to 255.
     pub fn from_hex(hex: u64) -> Self {
         let has_alpha = hex > 0xffffff;
         if has_alpha {
@@ -103,6 +141,7 @@ impl Color {
         }
     }
 
+    /// Converts this color to a hex integer in RGBA format (`0xRRGGBBAA`).
     pub fn to_hex(&self) -> u64 {
         let red = self.red as u64;
         let green = self.green as u64;
@@ -112,28 +151,30 @@ impl Color {
     }
 }
 
+/// Formats the color as a CSS-style `#rrggbb` hex string (alpha is not included).
 impl Display for Color {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "#{:02x}{:02x}{:02x}", self.red, self.green, self.blue)
     }
 }
 
-impl StringColor for String{
-
-    fn color(&self)->Color{
+impl StringColor for String {
+    fn color(&self) -> Color {
         let hex = u64::from_str_radix(self, 16).unwrap_or(0);
         Color::from_hex(hex)
     }
 }
 
-impl StringColor for &str{
-    fn color(&self)->Color{
+impl StringColor for &str {
+    fn color(&self) -> Color {
         let hex = u64::from_str_radix(self, 16).unwrap_or(0);
         Color::from_hex(hex)
     }
 }
 
-
+/// Creates a [`Color`] from RGBA channel values.
+///
+/// Shorthand for [`Color::from_rgba`].
 #[macro_export]
 macro_rules! rgba {
     ($r:expr,$g:expr,$b:expr,$a:expr) => {
@@ -141,6 +182,9 @@ macro_rules! rgba {
     };
 }
 
+/// Creates a fully opaque [`Color`] from RGB channel values.
+///
+/// Shorthand for [`Color::from_rgb`].
 #[macro_export]
 macro_rules! rgb {
     ($r:expr,$g:expr,$b:expr) => {
@@ -148,12 +192,19 @@ macro_rules! rgb {
     };
 }
 
+/// Creates a [`Color`] from HSLA values.
+///
+/// Shorthand for [`Color::from_hsla`].
 #[macro_export]
 macro_rules! hsla {
     ($h:expr,$s:expr,$l:expr,$a:expr) => {
         Color::from_hsla($h, $s, $l, $a)
     };
 }
+
+/// Creates a fully opaque [`Color`] from HSL values.
+///
+/// Shorthand for [`Color::from_hsl`].
 #[macro_export]
 macro_rules! hsl {
     ($h:expr,$s:expr,$l:expr) => {
