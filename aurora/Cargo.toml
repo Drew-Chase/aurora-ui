@@ -6,3 +6,4 @@ description = "A GPU-accelerated, feature-gated UI framework for building fast, 
 authors = ["Drew Chase"]
 
 [dependencies]
+aurora_core = { path = "../crates/aurora_core" }
