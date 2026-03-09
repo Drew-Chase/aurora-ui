@@ -14,6 +14,7 @@
 </p>
 
 ---
+> [!WARN] This framework is still in development and is not ready for production use. Use at your own risk.
 
 AuroraUI is a cross-platform desktop UI framework that treats performance as a
 first-class constraint — not an afterthought. Every subsystem (text rendering,
