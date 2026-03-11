@@ -5,6 +5,7 @@ pub enum AppError {
     WindowCreationFailed(String),
     /// The event loop encountered a fatal error.
     EventLoopFailed(String),
+    GpuInitializationError(String),
 }
 
 impl std::fmt::Display for AppError {
@@ -12,6 +13,9 @@ impl std::fmt::Display for AppError {
         match self {
             AppError::WindowCreationFailed(msg) => write!(f, "Window creation failed: {}", msg),
             AppError::EventLoopFailed(msg) => write!(f, "Event loop failed: {}", msg),
+            AppError::GpuInitializationError(msg) => {
+                write!(f, "GPU initialization failed: {}", msg)
+            }
         }
     }
 }

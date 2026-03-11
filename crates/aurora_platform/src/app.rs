@@ -1,7 +1,9 @@
 #![doc = include_str!("../../../.wiki/App.md")]
 
 use crate::errors::app::AppError;
+use aurora_core::color::Color;
 use aurora_core::geometry::size::Size;
+use aurora_gpu::gpu_context::GpuContext;
 use std::sync::Arc;
 use winit::application::ApplicationHandler;
 use winit::dpi;
@@ -41,7 +43,7 @@ use winit::window::{WindowAttributes, WindowId};
 ///     })
 ///     .expect("Failed to run app");
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct App {
     pub title: String,
     pub size: Size,
@@ -49,6 +51,7 @@ pub struct App {
     pub resizable: bool,
     pub decorations: bool,
     pub custom_titlebar: bool,
+    pub background_color: Color,
 }
 
 /// Handle to the underlying OS window.
@@ -57,6 +60,7 @@ pub struct App {
 /// properties or request redraws.
 pub struct AppWindow {
     window_handle: Arc<winit::window::Window>,
+    gpu: Box<dyn GpuContext>,
 }
 
 struct AppHandler<F> {
@@ -141,6 +145,11 @@ impl App {
         self
     }
 
+    pub fn background_color(mut self, background_color: impl Into<Color>) -> Self {
+        self.background_color = background_color.into();
+        self
+    }
+
     /// Opens the window and enters the event loop.
     ///
     /// The `on_render` callback is invoked on every [`RedrawRequested`](WindowEvent::RedrawRequested)
@@ -149,7 +158,7 @@ impl App {
     /// Returns an [`AppError`] if the window or event loop could not be created.
     pub fn run<F>(self, on_render: F) -> Result<(), AppError>
     where
-        F: FnMut(&AppWindow, FrameInfo) + 'static,
+        F: FnMut(&mut AppWindow, FrameInfo) + 'static,
     {
         let mut app_handler = AppHandler {
             config: self,
@@ -173,13 +182,23 @@ impl Default for App {
             resizable: true,
             decorations: true,
             custom_titlebar: false,
+            background_color: Color::WHITE,
         }
     }
 }
 
 impl AppWindow {
-    pub(crate) fn new(window_handle: Arc<winit::window::Window>) -> Self {
-        Self { window_handle }
+    pub(crate) fn new(window_handle: Arc<winit::window::Window>) -> Result<Self, AppError> {
+        let gpu: Box<dyn GpuContext> = {
+            #[cfg(feature = "software")]
+            {
+                let backend =
+                    aurora_gpu::backend::softbuffer::SoftbufferBackend::new(window_handle.clone())
+                        .map_err(|err| AppError::GpuInitializationError(err.to_string()))?;
+                Box::new(backend)
+            }
+        };
+        Ok(Self { window_handle, gpu })
     }
 
     /// Returns the inner (client-area) size in logical pixels.
@@ -208,11 +227,20 @@ impl AppWindow {
     pub fn window_handle(&self) -> Arc<winit::window::Window> {
         self.window_handle.clone()
     }
+    pub fn clear(&mut self, color: Color) {
+        self.gpu.clear(color);
+    }
+    pub fn buffer_mut(&mut self) -> &mut [u32] {
+        self.gpu.buffer_mut()
+    }
+    pub fn present(&mut self) {
+        self.gpu.present();
+    }
 }
 
 impl<F> ApplicationHandler for AppHandler<F>
 where
-    F: FnMut(&AppWindow, FrameInfo) + 'static,
+    F: FnMut(&mut AppWindow, FrameInfo) + 'static,
 {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if let Some(window) = &self.window {
@@ -236,7 +264,17 @@ where
                 .with_min_inner_size(dpi::LogicalSize::new(min_size.width, min_size.height));
         }
         self.window = match event_loop.create_window(attributes) {
-            Ok(window) => Some(AppWindow::new(Arc::new(window))),
+            Ok(window) => {
+                let handle = Arc::new(window);
+                match AppWindow::new(handle) {
+                    Ok(app_window) => Some(app_window),
+                    Err(err) => {
+                        log::error!("Failed to create window: {}", err);
+                        event_loop.exit();
+                        return;
+                    }
+                }
+            }
             Err(err) => {
                 log::error!("Failed to create window: {}", err);
                 event_loop.exit();
@@ -253,8 +291,9 @@ where
     ) {
         let window = self
             .window
-            .as_ref()
+            .as_mut()
             .expect("Window redraw request without a valid window");
+        let background_color = self.config.background_color;
         match event {
             WindowEvent::CloseRequested => {
                 log::trace!("Window close requested");
@@ -270,8 +309,10 @@ where
                     height: physical.height,
                     scale_factor: window.window_handle.scale_factor(),
                 };
-
+                window.gpu.resize(frame_info.width, frame_info.height);
+                window.clear(background_color);
                 (self.on_render)(window, frame_info);
+                window.present();
             }
             WindowEvent::Resized(physical_size) => {
                 let frame_info = FrameInfo {
@@ -279,7 +320,10 @@ where
                     height: physical_size.height,
                     scale_factor: window.window_handle.scale_factor(),
                 };
+                window.gpu.resize(frame_info.width, frame_info.height);
+                window.clear(background_color);
                 (self.on_render)(window, frame_info);
+                window.present();
             }
             WindowEvent::ScaleFactorChanged { .. } => {
                 window.request_redraw();
