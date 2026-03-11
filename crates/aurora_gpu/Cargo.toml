@@ -8,6 +8,7 @@ description = "GPU abstraction — thin wrapper"
 aurora_core = { path = "../aurora_core" }
 log = "0.4"
 
+winit = "0.30"
 softbuffer = { version = "0.4", optional = true }
 
 [features]
