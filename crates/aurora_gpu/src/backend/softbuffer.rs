@@ -2,6 +2,11 @@ use crate::gpu_context::GpuContext;
 use aurora_core::color::Color;
 use std::sync::Arc;
 
+/// CPU software rendering backend using the `softbuffer` crate.
+///
+/// Uses a `Vec<u32>` as a retained pixel buffer. On [`present`](GpuContext::present),
+/// the buffer is copied to the OS surface in a single memcpy. Smallest binary size
+/// of all backends — no GPU driver dependency.
 pub struct SoftbufferBackend {
     context: softbuffer::Context<Arc<winit::window::Window>>,
     surface: softbuffer::Surface<Arc<winit::window::Window>, Arc<winit::window::Window>>,
@@ -11,6 +16,9 @@ pub struct SoftbufferBackend {
 }
 
 impl SoftbufferBackend {
+    /// Creates a new softbuffer backend for the given window.
+    ///
+    /// The buffer starts empty — call [`resize`](GpuContext::resize) before drawing.
     pub fn new(window: Arc<winit::window::Window>) -> Result<Self, softbuffer::SoftBufferError> {
         let context = softbuffer::Context::new(window.clone())?;
         let surface = softbuffer::Surface::new(&context, window.clone())?;

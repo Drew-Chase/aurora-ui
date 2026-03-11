@@ -6,6 +6,11 @@ use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 
+/// A 2D drawing surface backed by a raw pixel buffer.
+///
+/// Borrows a `&mut [u32]` buffer (typically from a [`GpuContext`](aurora_gpu::gpu_context::GpuContext))
+/// and provides shape-drawing methods. All coordinates are in physical pixels.
+/// The buffer is row-major with pixels in `0x00RRGGBB` format.
 pub struct Canvas<'a> {
     pub(crate) width: u32,
     pub(crate) height: u32,
@@ -13,6 +18,9 @@ pub struct Canvas<'a> {
 }
 
 impl<'a> Canvas<'a> {
+    /// Creates a canvas from a pixel buffer and its dimensions.
+    ///
+    /// The buffer is expected to be row-major with `width * height` entries.
     pub fn new(width: u32, height: u32, buffer: &'a mut [u32]) -> Self {
         Canvas {
             width,
@@ -21,6 +29,9 @@ impl<'a> Canvas<'a> {
         }
     }
 
+    /// Fills an axis-aligned rectangle with a solid color.
+    ///
+    /// Coordinates are clamped to the canvas bounds.
     pub fn fill_rect(&mut self, rect: impl Into<Rect>, color: impl Into<Color>) {
         let rect = rect.into();
         let pixel = color.into().to_rgb_u32();
@@ -39,6 +50,11 @@ impl<'a> Canvas<'a> {
         }
     }
 
+    /// Draws a filled circle.
+    ///
+    /// Convenience wrapper around [`fill_rounded_rect`](Self::fill_rounded_rect) that
+    /// creates a square rect from `position` and `size`, then rounds all corners
+    /// with `radius`.
     pub fn circle(
         &mut self,
         position: impl Into<Point>,
@@ -54,6 +70,11 @@ impl<'a> Canvas<'a> {
         self.fill_rounded_rect(rect, corner, color)
     }
 
+    /// Fills a rounded rectangle with per-corner radii.
+    ///
+    /// Uses CSS-style radius clamping — if adjacent corner radii exceed the
+    /// available edge length, all radii are scaled proportionally.
+    /// Falls back to [`fill_rect`](Self::fill_rect) when all radii are zero.
     pub fn fill_rounded_rect(
         &mut self,
         rect: impl Into<Rect>,
@@ -183,6 +204,9 @@ impl<'a> Canvas<'a> {
         }
     }
 
+    /// Draws a rectangular outline with the given pixel thickness.
+    ///
+    /// Only the border pixels are filled — the interior is untouched.
     pub fn stroke_rect(&mut self, bounds: impl Into<Rect>, thickness: impl Into<u32>, color: impl Into<Color>) {
         let rect = bounds.into();
         let thickness = thickness.into();
@@ -225,6 +249,11 @@ impl<'a> Canvas<'a> {
             }
         }
     }
+    /// Draws a rounded rectangular outline with per-corner radii.
+    ///
+    /// The inner edge uses radii shrunk by the stroke thickness. Uses CSS-style
+    /// radius clamping. Falls back to [`stroke_rect`](Self::stroke_rect) when
+    /// all radii are zero.
     pub fn stroke_rounded_rect(
         &mut self,
         bounds: impl Into<Rect>,
