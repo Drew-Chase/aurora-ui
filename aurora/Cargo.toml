@@ -8,3 +8,9 @@ authors = ["Drew Chase"]
 [dependencies]
 aurora_core = { path = "../crates/aurora_core" }
 aurora_platform = { path = "../crates/aurora_platform" }
+aurora_gpu = { path = "../crates/aurora_gpu" }
+
+
+[features]
+default = ["software"]
+software = ["aurora_gpu/software"]
