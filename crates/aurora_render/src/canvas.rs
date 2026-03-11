@@ -1,3 +1,5 @@
+#![doc = include_str!("../../../.wiki/Canvas.md")]
+
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::point::Point;

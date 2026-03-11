@@ -1,3 +1,5 @@
+#![doc = include_str!("../../../.wiki/GpuContext.md")]
+
 use aurora_core::color::Color;
 
 pub trait GpuContext {
