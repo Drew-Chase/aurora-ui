@@ -4,3 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+aurora_core = { path = "../aurora_core" }
+aurora_render = { path = "../aurora_render" }
