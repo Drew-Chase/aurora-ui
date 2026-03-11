@@ -29,8 +29,15 @@ pub struct Color {
 }
 
 impl Color {
+    pub const BLACK: Color = Color::new(0, 0, 0, 255);
+    pub const WHITE: Color = Color::new(255, 255, 255, 255);
+    pub const RED: Color = Color::new(255, 0, 0, 255);
+    pub const GREEN: Color = Color::new(0, 255, 0, 255);
+    pub const BLUE: Color = Color::new(0, 0, 255, 255);
+    pub const TRANSPARENT: Color = Color::new(0, 0, 0, 0);
+    
     /// Creates a new color from individual RGBA channel values.
-    pub fn new(red: u8, green: u8, blue: u8, alpha: u8) -> Self {
+    pub const fn new(red: u8, green: u8, blue: u8, alpha: u8) -> Self {
         Color {
             red,
             green,
@@ -162,14 +169,20 @@ impl Color {
     ///
     /// Common in Direct2D, GDI+, and Windows-native APIs.
     pub fn to_argb_u32(&self) -> u32 {
-        (self.alpha as u32) << 24 | (self.red as u32) << 16 | (self.green as u32) << 8 | self.blue as u32
+        (self.alpha as u32) << 24
+            | (self.red as u32) << 16
+            | (self.green as u32) << 8
+            | self.blue as u32
     }
 
     /// Packs this color into a `u32` in `0xAABBGGRR` format.
     ///
     /// Common in OpenGL, Vulkan, and other GPU APIs that expect little-endian RGBA byte order.
     pub fn to_abgr_u32(&self) -> u32 {
-        (self.alpha as u32) << 24 | (self.blue as u32) << 16 | (self.green as u32) << 8 | self.red as u32
+        (self.alpha as u32) << 24
+            | (self.blue as u32) << 16
+            | (self.green as u32) << 8
+            | self.red as u32
     }
 
     /// Converts this color to an array of f32 values in RGBA format (`[r, g, b, a]`).
