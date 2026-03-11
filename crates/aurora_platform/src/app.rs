@@ -4,6 +4,7 @@ use crate::errors::app::AppError;
 use aurora_core::color::Color;
 use aurora_core::geometry::size::Size;
 use aurora_gpu::gpu_context::GpuContext;
+use aurora_render::canvas::Canvas;
 use std::sync::Arc;
 use winit::application::ApplicationHandler;
 use winit::dpi;
@@ -235,6 +236,16 @@ impl AppWindow {
     }
     pub fn present(&mut self) {
         self.gpu.present();
+    }
+
+    pub fn draw<F>(&mut self, f: F)
+                   where
+                       F: FnOnce(&mut Canvas),
+    {
+        let (width, height) = self.gpu.size();
+        let buffer = self.gpu.buffer_mut();
+        let mut canvas = Canvas::new(width, height, buffer);
+        f(&mut canvas);
     }
 }
 
