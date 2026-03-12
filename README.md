@@ -85,10 +85,10 @@ choose what to pay for.
 
 | Preset    | Includes                       | Binary Size | Startup |
 |-----------|--------------------------------|-------------|---------|
-| `minimal` | Window + OpenGL + flex layout  | ~1.2 MB     | ~30ms   |
-| `lean`    | + text + basic widgets + theme | ~3.0 MB     | ~60ms   |
-| `default` | Same as `lean`                 | ~3.0 MB     | ~60ms   |
-| `full`    | Everything                     | ~7-8 MB     | ~120ms  |
+| `minimal` | Window + OpenGL + flex layout  | ~300 KB     | ~30ms   |
+| `lean`    | + text + basic widgets + theme | ~1.5 MB     | ~60ms   |
+| `default` | Same as `lean`                 | ~1.5 MB     | ~60ms   |
+| `full`    | Everything                     | ~3.0 MB     | ~120ms  |
 
 ### Individual Features
 
