@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use std::io;
 
+#[derive(Debug)]
 /// Errors that can occur when loading a font.
 pub enum FontError {
 	/// The font file could not be read from disk.
