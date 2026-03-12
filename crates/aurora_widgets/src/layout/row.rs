@@ -193,3 +193,10 @@ impl Widget for Row {
         &self.children
     }
 }
+#[macro_export]
+macro_rules! row {
+    () => {{
+        use aurora_ui::layout::row::Row;
+        Row::new()
+    }};
+}

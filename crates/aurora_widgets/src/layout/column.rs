@@ -72,11 +72,11 @@ impl Default for Column {
 
 impl Widget for Column {
     fn layout(&mut self, available: Size) -> Size {
-        let total_width = match self.width{
+        let total_width = match self.width {
             Some(w) => w as f32,
             None => available.width,
         };
-        let total_height = match self.height{
+        let total_height = match self.height {
             Some(h) => h as f32,
             None => available.height,
         };
@@ -171,11 +171,11 @@ impl Widget for Column {
         }
 
         // Return the column's total size
-        let final_width = match self.width{
+        let final_width = match self.width {
             Some(w) => w as f32,
             None => available.width,
         };
-        let final_height = match self.height{
+        let final_height = match self.height {
             Some(h) => h as f32,
             None => available.height,
         };
@@ -192,4 +192,12 @@ impl Widget for Column {
     fn children(&self) -> &[Box<dyn Widget>] {
         &self.children
     }
+}
+
+#[macro_export]
+macro_rules! column {
+    () => {{
+        use aurora_ui::layout::column::Column;
+        Column::new()
+    }};
 }

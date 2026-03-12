@@ -20,6 +20,7 @@
       <sourceFolder url="file://$MODULE_DIR$/examples/minimal/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/aurora_core/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/aurora_platform/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/layout_example/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

@@ -1,33 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use aurora_ui::app::App;
-use aurora_ui::box_widget::BoxWidget;
-use aurora_ui::color::Color;
-use aurora_ui::layout::column::Column;
-use aurora_ui::layout::row::Row;
 
 fn main() {
     App::new()
         .title("Minimal Example")
         .min_size((310, 440))
-        .run(|window, _frame_info| {
-            window.root(
-                Column::new()
-                    .spacing(10.0)
-                    .padding(aurora_ui::geometry::edges::Edges::all(10.0))
-                    .justify(aurora_ui::layout::Justify::Center)
-                    .align(aurora_ui::layout::Align::Center)
-                    .child(
-                        Row::new()
-                            .spacing(10.0)
-                            .height(100)
-                            .child(BoxWidget::new().background_color(Color::BLUE))
-                            .child(BoxWidget::new().background_color(Color::RED))
-                            .child(BoxWidget::new().background_color(Color::GREEN)),
-                    )
-                    .child(BoxWidget::new().height(100).background_color(Color::BLUE))
-                    .child(BoxWidget::new().background_color(Color::RED))
-                    .child(BoxWidget::new().height(100).background_color(Color::GREEN)),
-            )
-        })
+        .run(|_window, _frame_info| {})
         .expect("Failed to run app");
 }
