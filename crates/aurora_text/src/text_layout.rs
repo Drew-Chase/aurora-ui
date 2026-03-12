@@ -2,6 +2,10 @@ use crate::font_manager::FontManager;
 use aurora_core::color::Color;
 use aurora_core::geometry::size::Size;
 
+/// A shaped and measured text block ready for rendering.
+///
+/// Wraps a `cosmic_text::Buffer` to perform font shaping and layout, then
+/// provides a software rasteriser that alpha-blends glyphs into a raw pixel buffer.
 #[derive(Clone)]
 pub struct TextLayout {
     buffer: cosmic_text::Buffer,
@@ -9,6 +13,10 @@ pub struct TextLayout {
 }
 
 impl TextLayout {
+    /// Creates a new text layout, shaping the given text immediately.
+    ///
+    /// Line height is set to `font_size * 1.2`. Pass an `align` value to
+    /// control horizontal alignment (`Left`, `Center`, `Right`, etc.).
     pub fn new(
         font_manager: &mut FontManager,
         text: &str,
@@ -31,6 +39,7 @@ impl TextLayout {
 
         Self { buffer, color }
     }
+    /// Sets the maximum width for line wrapping and re-shapes the buffer.
     pub fn set_max_width(&mut self, font_manager: &mut FontManager, width: f32) {
         self.buffer
             .set_size(font_manager.font_system_mut(), Some(width), None);
@@ -38,6 +47,7 @@ impl TextLayout {
             .shape_until_scroll(font_manager.font_system_mut(), false);
     }
 
+    /// Returns the bounding size of the laid-out text.
     pub fn size(&self) -> Size {
         let mut width: f32 = 0.0;
         let mut height: f32 = 0.0;
@@ -50,6 +60,10 @@ impl TextLayout {
         Size::new(width, height)
     }
 
+    /// Rasterises every glyph into a raw `0x00RRGGBB` pixel buffer.
+    ///
+    /// Sub-pixel coverage is alpha-blended against the existing buffer contents.
+    /// Out-of-bounds glyphs are clipped.
     pub fn render(
         &self,
         cache: &mut cosmic_text::SwashCache,

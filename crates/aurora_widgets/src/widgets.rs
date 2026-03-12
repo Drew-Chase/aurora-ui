@@ -2,16 +2,32 @@ use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_render::canvas::Canvas;
 
+/// A UI element that can be laid out and painted.
+///
+/// Implement this trait to create custom widgets. The framework calls
+/// [`layout`](Widget::layout) first to determine sizes, then [`paint`](Widget::paint)
+/// to draw the widget into a [`Canvas`].
 pub trait Widget {
+    /// Computes the widget's size given the available space and a layout context.
     fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size;
+    /// Draws the widget into the canvas at the given rectangle.
     fn paint(&self, canvas: &mut Canvas, rect: Rect);
+    /// Returns the widget's child widgets.
     fn children(&self) -> &[Box<dyn Widget>];
 }
 
+/// Context passed to [`Widget::layout`] during the layout phase.
+///
+/// When the `text` feature is enabled, this carries a mutable reference to
+/// the [`FontManager`](aurora_text::font_manager::FontManager) so widgets can
+/// shape text.
 #[cfg(feature = "text")]
 pub struct LayoutCtx<'a> {
     pub font_manager: &'a mut aurora_text::font_manager::FontManager,
 }
 
+/// Context passed to [`Widget::layout`] during the layout phase.
+///
+/// This is the text-free variant; no font manager is available.
 #[cfg(not(feature = "text"))]
 pub struct LayoutCtx;

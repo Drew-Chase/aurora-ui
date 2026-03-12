@@ -156,11 +156,16 @@ impl App {
         self
     }
 
+    /// Sets the background color used to clear the window before each frame.
     pub fn background_color(mut self, background_color: impl Into<Color>) -> Self {
         self.background_color = background_color.into();
         self
     }
 
+    /// Registers a font from a static byte slice (e.g. `include_bytes!`).
+    ///
+    /// The font is loaded into the [`FontManager`](aurora_text::font_manager::FontManager)
+    /// when the window is created.
     #[cfg(feature = "text")]
     pub fn font(mut self, bytes: &'static [u8]) -> Self {
         self.fonts.push(bytes);
@@ -240,6 +245,10 @@ impl AppWindow {
         #[cfg(not(feature = "text"))]
         Ok(Self { window_handle, gpu })
     }
+    /// Lays out and paints a root widget tree into the window.
+    ///
+    /// Runs the layout phase (computing sizes) then the paint phase (drawing
+    /// into the canvas) for the given widget and all its children.
     pub fn root(&mut self, mut widget: impl Widget + 'static) {
         let (width, height) = self.gpu.size();
         let available = Size::new(width as f32, height as f32);
@@ -273,11 +282,16 @@ impl AppWindow {
         widget.paint(&mut canvas, rect);
     }
 
+    /// Returns a mutable reference to the window's [`FontManager`](aurora_text::font_manager::FontManager).
     #[cfg(feature = "text")]
     pub fn font_manager(&mut self) -> &mut aurora_text::font_manager::FontManager {
         &mut self.font_manager
     }
 
+    /// Renders a [`TextLayout`] directly into the GPU buffer at the given pixel offset.
+    ///
+    /// For most use cases, prefer [`draw`](Self::draw) with [`Canvas::draw_text`](aurora_render::canvas::Canvas)
+    /// or the [`Text`](aurora_widgets::text_widget::Text) widget instead.
     #[cfg(feature = "text")]
     pub fn render_text(&mut self, layout: &TextLayout, x: i32, y: i32) {
         let (width, _) = self.gpu.size();
@@ -318,16 +332,22 @@ impl AppWindow {
     pub fn window_handle(&self) -> Arc<winit::window::Window> {
         self.window_handle.clone()
     }
+    /// Clears the GPU buffer to the given color.
     pub fn clear(&mut self, color: Color) {
         self.gpu.clear(color);
     }
+    /// Returns a mutable reference to the raw pixel buffer.
     pub fn buffer_mut(&mut self) -> &mut [u32] {
         self.gpu.buffer_mut()
     }
+    /// Copies the buffer to the display surface.
     pub fn present(&mut self) {
         self.gpu.present();
     }
 
+    /// Creates a [`Canvas`] from the GPU buffer and passes it to the closure.
+    ///
+    /// This is the primary way to draw content onto the window.
     pub fn draw<F>(&mut self, f: F)
     where
         F: FnOnce(&mut Canvas),

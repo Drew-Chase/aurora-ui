@@ -54,6 +54,10 @@ impl<'a> Canvas<'a> {
         }
     }
 
+    /// Draws a [`TextLayout`] at the given pixel offset.
+    ///
+    /// Delegates to [`TextLayout::render`], passing the canvas buffer,
+    /// font manager, and glyph cache.
     #[cfg(feature = "text")]
     pub fn draw_text(&mut self, layout: &TextLayout, x: i32, y: i32) {
         layout.render(

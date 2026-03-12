@@ -6,6 +6,10 @@ use aurora_render::canvas::Canvas;
 use aurora_text::cosmic_text::Align;
 use aurora_text::text_layout::TextLayout;
 
+/// A widget that displays styled text.
+///
+/// Uses the builder pattern for configuration. Implements [`Widget`] so it can
+/// be composed with layout containers like `column!` and `row!`.
 #[derive(Clone)]
 pub struct Text {
     pub text: String,
@@ -17,24 +21,29 @@ pub struct Text {
 }
 
 impl Text {
+    /// Creates a new text widget with default styling.
     pub fn new(text: impl Into<String>) -> Self {
         Self {
             text: text.into(),
             ..Self::default()
         }
     }
+    /// Sets the font size in pixels. Defaults to `16.0`.
     pub fn font_size(mut self, font_size: f32) -> Self {
         self.font_size = font_size;
         self
     }
+    /// Sets the text color. Defaults to [`Color::BLACK`](aurora_core::color::Color::BLACK).
     pub fn color(mut self, color: aurora_core::color::Color) -> Self {
         self.color = color;
         self
     }
+    /// Sets padding around the text.
     pub fn padding(mut self, padding: Edges) -> Self {
         self.padding = padding;
         self
     }
+    /// Sets horizontal text alignment. Defaults to [`Align::Left`].
     pub fn align(mut self, align: Align) -> Self {
         self.align = align;
         self
