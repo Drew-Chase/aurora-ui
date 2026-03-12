@@ -1,5 +1,5 @@
 use crate::layout::{Align, Justify};
-use crate::widgets::Widget;
+use crate::widgets::{LayoutCtx, Widget};
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
@@ -71,7 +71,7 @@ impl Default for Column {
 }
 
 impl Widget for Column {
-    fn layout(&mut self, available: Size) -> Size {
+    fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
         let total_width = match self.width {
             Some(w) => w as f32,
             None => available.width,
@@ -90,7 +90,7 @@ impl Widget for Column {
         let mut child_sizes: Vec<Option<Size>> = Vec::with_capacity(self.children.len());
 
         for child in &mut self.children {
-            let size = child.layout(content_area);
+            let size = child.layout(content_area, ctx);
             // If the child used the full available height, it's flexible
             if size.height >= content_area.height {
                 child_sizes.push(None);
@@ -121,7 +121,7 @@ impl Widget for Column {
                 Some(size) => final_sizes.push(size),
                 None => {
                     let flex_available = Size::new(content_area.width, flex_height);
-                    let size = child.layout(flex_available);
+                    let size = child.layout(flex_available, ctx);
                     final_sizes.push(size);
                 }
             }

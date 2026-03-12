@@ -17,4 +17,4 @@ aurora_text = { path = "../crates/aurora_text", optional = true }
 [features]
 default = ["software"]
 software = ["aurora_gpu/software"]
-text = ["dep:aurora_text", "aurora_platform/text"]
+text = ["dep:aurora_text", "aurora_platform/text", "aurora_render/text", "aurora_widgets/text"]

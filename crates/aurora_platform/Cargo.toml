@@ -27,4 +27,4 @@ objc2-foundation = { version = "0.3.2", features = ["NSObject"] }
 [features]
 default = ["software"]
 software = ["aurora_gpu/software"]
-text = ["dep:aurora_text"]
+text = ["dep:aurora_text", "aurora_render/text", "aurora_widgets/text"]

@@ -6,14 +6,15 @@ use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_gpu::gpu_context::GpuContext;
 use aurora_render::canvas::Canvas;
-use aurora_widgets::widgets::Widget;
+#[cfg(feature = "text")]
+use aurora_text::text_layout::TextLayout;
+use aurora_widgets::widgets::{LayoutCtx, Widget};
 use std::sync::Arc;
 use winit::application::ApplicationHandler;
 use winit::dpi;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::{WindowAttributes, WindowId};
-use aurora_text::text_layout::TextLayout;
 
 /// Builder for configuring and launching an application window.
 ///
@@ -243,10 +244,38 @@ impl AppWindow {
         let (width, height) = self.gpu.size();
         let available = Size::new(width as f32, height as f32);
 
-        widget.layout(available);
+	    let mut layout_context = {
+		    #[cfg(feature = "text")]
+		    {
+			    LayoutCtx {
+				    font_manager: &mut self.font_manager,
+			    }
+		    }
+		    #[cfg(not(feature = "text"))]
+		    {
+			    LayoutCtx{}
+		    }
+	    };
+
+        widget.layout(available, &mut layout_context);
 
         let buffer = self.gpu.buffer_mut();
-        let mut canvas = Canvas::new(width, height, buffer);
+        let mut canvas = {
+            #[cfg(not(feature = "text"))]
+            {
+                Canvas::new(width, height, buffer)
+            }
+            #[cfg(feature = "text")]
+            {
+                Canvas::new(
+                    width,
+                    height,
+                    buffer,
+                    &mut self.font_manager,
+                    &mut self.swash_cache,
+                )
+            }
+        };
         let rect = Rect::from_size(available);
         widget.paint(&mut canvas, rect);
     }
@@ -260,7 +289,14 @@ impl AppWindow {
     pub fn render_text(&mut self, layout: &TextLayout, x: i32, y: i32) {
         let (width, _) = self.gpu.size();
         let buffer = self.gpu.buffer_mut();
-        layout.render(&mut self.swash_cache, &mut self.font_manager, buffer, width, x, y);
+        layout.render(
+            &mut self.swash_cache,
+            &mut self.font_manager,
+            buffer,
+            width,
+            x,
+            y,
+        );
     }
 
     /// Returns the inner (client-area) size in logical pixels.
@@ -305,7 +341,22 @@ impl AppWindow {
     {
         let (width, height) = self.gpu.size();
         let buffer = self.gpu.buffer_mut();
-        let mut canvas = Canvas::new(width, height, buffer);
+        let mut canvas = {
+            #[cfg(not(feature = "text"))]
+            {
+                Canvas::new(width, height, buffer)
+            }
+            #[cfg(feature = "text")]
+            {
+                Canvas::new(
+                    width,
+                    height,
+                    buffer,
+                    &mut self.font_manager,
+                    &mut self.swash_cache,
+                )
+            }
+        };
         f(&mut canvas);
     }
 }

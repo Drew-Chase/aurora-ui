@@ -1,4 +1,4 @@
-use crate::widgets::Widget;
+use crate::widgets::{LayoutCtx, Widget};
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
@@ -52,7 +52,7 @@ impl Default for BoxWidget {
 }
 
 impl Widget for BoxWidget {
-    fn layout(&mut self, available: Size) -> Size {
+    fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
         let width = match self.width {
             Some(w) => w as f32,
             None => available.width,

@@ -5,6 +5,12 @@ use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+#[cfg(feature = "text")]
+use aurora_text::cosmic_text::SwashCache;
+#[cfg(feature = "text")]
+use aurora_text::font_manager::FontManager;
+#[cfg(feature = "text")]
+use aurora_text::text_layout::TextLayout;
 
 /// A 2D drawing surface backed by a raw pixel buffer.
 ///
@@ -15,9 +21,15 @@ pub struct Canvas<'a> {
     pub(crate) width: u32,
     pub(crate) height: u32,
     pub(crate) buffer: &'a mut [u32],
+    #[cfg(feature = "text")]
+    pub(crate) font_manager: &'a mut FontManager,
+    #[cfg(feature = "text")]
+    pub(crate) swash_cache: &'a mut SwashCache,
 }
 
 impl<'a> Canvas<'a> {
+
+    #[cfg(not(feature = "text"))]
     /// Creates a canvas from a pixel buffer and its dimensions.
     ///
     /// The buffer is expected to be row-major with `width * height` entries.
@@ -27,6 +39,31 @@ impl<'a> Canvas<'a> {
             height,
             buffer,
         }
+    }
+    #[cfg(feature = "text")]
+    /// Creates a canvas from a pixel buffer and its dimensions.
+    ///
+    /// The buffer is expected to be row-major with `width * height` entries.
+    pub fn new(width: u32, height: u32, buffer: &'a mut [u32], font_manager: &'a mut FontManager, swash_cache: &'a mut SwashCache) -> Self {
+        Canvas {
+            width,
+            height,
+            buffer,
+            font_manager,
+            swash_cache,
+        }
+    }
+
+    #[cfg(feature = "text")]
+    pub fn draw_text(&mut self, layout: &TextLayout, x: i32, y: i32) {
+        layout.render(
+            self.swash_cache,
+            self.font_manager,
+            self.buffer,
+            self.width,
+            x,
+            y,
+        );
     }
 
     /// Fills an axis-aligned rectangle with a solid color.

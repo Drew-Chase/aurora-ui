@@ -5,3 +5,8 @@ edition = "2024"
 
 [dependencies]
 aurora_core = { path = "../aurora_core" }
+aurora_text = { path = "../aurora_text" , optional = true}
+
+
+[features]
+text = ["dep:aurora_text"]
