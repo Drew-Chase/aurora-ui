@@ -13,6 +13,7 @@ use winit::dpi;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::{WindowAttributes, WindowId};
+use aurora_text::text_layout::TextLayout;
 
 /// Builder for configuring and launching an application window.
 ///
@@ -57,8 +58,6 @@ pub struct App {
     pub background_color: Color,
     #[cfg(feature = "text")]
     pub fonts: Vec<&'static [u8]>,
-    #[cfg(feature = "text")]
-    pub font_data: Vec<&'static [u8]>,
 }
 
 /// Handle to the underlying OS window.
@@ -70,6 +69,8 @@ pub struct AppWindow {
     gpu: Box<dyn GpuContext>,
     #[cfg(feature = "text")]
     font_manager: aurora_text::font_manager::FontManager,
+    #[cfg(feature = "text")]
+    pub swash_cache: aurora_text::cosmic_text::SwashCache,
 }
 
 struct AppHandler<F> {
@@ -200,8 +201,6 @@ impl Default for App {
             background_color: Color::WHITE,
             #[cfg(feature = "text")]
             fonts: vec![],
-            #[cfg(feature = "text")]
-            font_data: vec![],
         }
     }
 }
@@ -227,15 +226,14 @@ impl AppWindow {
                 for bytes in &config.fonts {
                     fm.load_from_bytes(bytes);
                 }
-                for bytes in &config.font_data {
-                    fm.load_from_bytes(bytes);
-                }
                 fm
             };
+            let swash_cache = aurora_text::cosmic_text::SwashCache::new();
             Ok(Self {
                 window_handle,
                 gpu,
                 font_manager,
+                swash_cache,
             })
         }
         #[cfg(not(feature = "text"))]
@@ -256,6 +254,13 @@ impl AppWindow {
     #[cfg(feature = "text")]
     pub fn font_manager(&mut self) -> &mut aurora_text::font_manager::FontManager {
         &mut self.font_manager
+    }
+
+    #[cfg(feature = "text")]
+    pub fn render_text(&mut self, layout: &TextLayout, x: i32, y: i32) {
+        let (width, _) = self.gpu.size();
+        let buffer = self.gpu.buffer_mut();
+        layout.render(&mut self.swash_cache, &mut self.font_manager, buffer, width, x, y);
     }
 
     /// Returns the inner (client-area) size in logical pixels.
