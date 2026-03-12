@@ -52,7 +52,7 @@ impl Default for BoxWidget {
 }
 
 impl Widget for BoxWidget {
-    fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
+    fn layout(&mut self, available: Size, _ctx: &mut LayoutCtx) -> Size {
         let width = match self.width {
             Some(w) => w as f32,
             None => available.width,
