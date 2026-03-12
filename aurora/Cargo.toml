@@ -10,9 +10,11 @@ aurora_core = { path = "../crates/aurora_core" }
 aurora_platform = { path = "../crates/aurora_platform" }
 aurora_gpu = { path = "../crates/aurora_gpu" }
 aurora_render = { path = "../crates/aurora_render" }
-aurora_widgets = {path = "../crates/aurora_widgets"}
+aurora_widgets = { path = "../crates/aurora_widgets" }
+aurora_text = { path = "../crates/aurora_text", optional = true }
 
 
 [features]
 default = ["software"]
 software = ["aurora_gpu/software"]
+text = ["dep:aurora_text"]

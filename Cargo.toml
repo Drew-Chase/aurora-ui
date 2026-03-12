@@ -13,7 +13,8 @@ members = [
     "crates/aurora_theme",
     "crates/aurora_widgets",
     "examples/layout_example",
-    "examples/minimal"
+    "examples/minimal",
+    "examples/text_example"
 ]
 default-members = [
     "aurora",

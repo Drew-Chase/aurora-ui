@@ -6,3 +6,5 @@ pub use aurora_gpu::*;
 pub use aurora_platform::*;
 pub use aurora_render::*;
 pub use aurora_widgets::*;
+#[cfg(feature = "text")]
+pub use aurora_text::*;
