@@ -196,7 +196,7 @@ impl Widget for Row {
 #[macro_export]
 macro_rules! row {
     () => {{
-        use aurora_ui::layout::row::Row;
+        use aurora_ui::aurora_widgets::layout::row::Row;
         Row::new()
     }};
 }

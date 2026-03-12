@@ -197,7 +197,7 @@ impl Widget for Column {
 #[macro_export]
 macro_rules! column {
     () => {{
-        use aurora_ui::layout::column::Column;
+        use aurora_ui::aurora_widgets::layout::column::Column;
         Column::new()
     }};
 }
