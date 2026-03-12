@@ -1,5 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use aurora_ui::app::App;
+use aurora_ui::App;
 
 fn main() {
     App::new()

@@ -1,7 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use aurora_ui::app::App;
 use aurora_ui::box_widget::BoxWidget;
-use aurora_ui::{column, row};
+use aurora_ui::{column, row, App};
 use aurora_ui::color::Color;
 
 fn main() {

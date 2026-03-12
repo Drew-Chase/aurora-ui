@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use aurora_ui::app::App;
+
+use aurora_ui::App;
+use aurora_ui::font_manager::FontManager;
 
 fn main() {
     App::new()
