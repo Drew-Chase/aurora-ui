@@ -5,18 +5,18 @@ use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_render::canvas::Canvas;
 
-pub struct Column {
+pub struct Row {
     justify: Justify,
     align: Align,
     spacing: f32,
     padding: Edges,
     children: Vec<Box<dyn Widget>>,
     child_rects: Vec<Rect>,
-    pub width: Option<u32>,
-    pub height: Option<u32>,
+    width: Option<u32>,
+    height: Option<u32>,
 }
 
-impl Column {
+impl Row {
     pub fn new() -> Self {
         Self::default()
     }
@@ -55,7 +55,7 @@ impl Column {
     }
 }
 
-impl Default for Column {
+impl Default for Row {
     fn default() -> Self {
         Self {
             justify: Justify::Start,
@@ -70,13 +70,13 @@ impl Default for Column {
     }
 }
 
-impl Widget for Column {
+impl Widget for Row {
     fn layout(&mut self, available: Size) -> Size {
-        let total_width = match self.width{
+        let total_width = match self.width {
             Some(w) => w as f32,
             None => available.width,
         };
-        let total_height = match self.height{
+        let total_height = match self.height {
             Some(h) => h as f32,
             None => available.height,
         };
@@ -91,12 +91,12 @@ impl Widget for Column {
 
         for child in &mut self.children {
             let size = child.layout(content_area);
-            // If the child used the full available height, it's flexible
-            if size.height >= content_area.height {
+            // If the child used the full available width, it's flexible
+            if size.width >= content_area.width {
                 child_sizes.push(None);
                 flex_count += 1;
             } else {
-                fixed_total += size.height;
+                fixed_total += size.width;
                 child_sizes.push(Some(size));
             }
         }
@@ -107,8 +107,8 @@ impl Widget for Column {
         } else {
             0.0
         };
-        let remaining = (content_height - fixed_total - total_spacing).max(0.0);
-        let flex_height = if flex_count > 0 {
+        let remaining = (content_width - fixed_total - total_spacing).max(0.0);
+        let flex_width = if flex_count > 0 {
             remaining / flex_count as f32
         } else {
             0.0
@@ -120,20 +120,20 @@ impl Widget for Column {
             match child_sizes[i] {
                 Some(size) => final_sizes.push(size),
                 None => {
-                    let flex_available = Size::new(content_area.width, flex_height);
+                    let flex_available = Size::new(flex_width, content_area.height);
                     let size = child.layout(flex_available);
                     final_sizes.push(size);
                 }
             }
         }
 
-        // Total height of all children + spacing
-        let total_child_height: f32 = final_sizes.iter().map(|s| s.height).sum();
-        let total_height = total_child_height + total_spacing;
-        let leftover = (content_height - total_height).max(0.0);
+        // Total width of all children + spacing
+        let total_child_width: f32 = final_sizes.iter().map(|s| s.width).sum();
+        let total_width = total_child_width + total_spacing;
+        let leftover = (content_width - total_width).max(0.0);
 
-        // Starting y offset based on justify
-        let mut y = self.padding.top
+        // Starting x offset based on justify
+        let mut x = self.padding.left
             + match self.justify {
                 Justify::Start => 0.0,
                 Justify::Center => leftover / 2.0,
@@ -151,31 +151,31 @@ impl Widget for Column {
         // Position each child
         self.child_rects.clear();
         for child_size in final_sizes.iter() {
-            let x = self.padding.left
+            let y = self.padding.top
                 + match self.align {
                     Align::Start => 0.0,
-                    Align::Center => (content_width - child_size.width) / 2.0,
-                    Align::End => content_width - child_size.width,
+                    Align::Center => (content_height - child_size.height) / 2.0,
+                    Align::End => content_height - child_size.height,
                     Align::Stretch => 0.0,
                 };
 
-            let w = if self.align == Align::Stretch {
-                content_width
+            let h = if self.align == Align::Stretch {
+                content_height
             } else {
-                child_size.width
+                child_size.height
             };
 
             self.child_rects
-                .push(Rect::new(x, y, x + w, y + child_size.height));
-            y += child_size.height + actual_spacing;
+                .push(Rect::new(x, y, x + child_size.width, y + h));
+            x += child_size.width + actual_spacing;
         }
 
-        // Return the column's total size
-        let final_width = match self.width{
+        // Return the row's total size
+        let final_width = match self.width {
             Some(w) => w as f32,
             None => available.width,
         };
-        let final_height = match self.height{
+        let final_height = match self.height {
             Some(h) => h as f32,
             None => available.height,
         };
