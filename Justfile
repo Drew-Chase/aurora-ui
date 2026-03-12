@@ -7,4 +7,4 @@ doc open="false":
 
 # Runs the minimal example project in release mode
 run-example-minimal:
-    cargo run --package aurora_minimal_example --profile release
+    cargo run --package minimal_example --profile release
