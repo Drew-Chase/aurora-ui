@@ -11,6 +11,8 @@ log = "0.4"
 aurora_gpu = { path = "../aurora_gpu", default-features = false }
 aurora_render = { path = "../aurora_render" }
 aurora_widgets = {path = "../aurora_widgets"}
+aurora_text = {path = "../aurora_text", optional = true}
+
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_Graphics_Dwm", ] }
@@ -25,3 +27,4 @@ objc2-foundation = { version = "0.3.2", features = ["NSObject"] }
 [features]
 default = ["software"]
 software = ["aurora_gpu/software"]
+text = ["dep:aurora_text"]

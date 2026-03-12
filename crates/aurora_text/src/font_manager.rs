@@ -1,6 +1,7 @@
 use crate::errors::fonts::FontError;
-use cosmic_text::fontdb::Database;
+use cosmic_text::fontdb::{Database, Source};
 use std::path::Path;
+use std::sync::Arc;
 
 pub struct FontManager {
     font_system: cosmic_text::FontSystem,
@@ -17,9 +18,17 @@ impl FontManager {
 
         Ok(())
     }
-    pub fn load_from_bytes(&mut self, bytes: &[u8]) {
+    pub fn load_from_bytes(&mut self, bytes: &[u8]) -> Option<String> {
         let db = self.font_system.db_mut();
-        db.load_font_data(bytes.to_vec());
+        let bytes = Arc::new(bytes.to_vec());
+        let font_source = Source::Binary(bytes);
+        let id = db.load_font_source(font_source);
+        id.first()
+            .and_then(|face_id| db.face(*face_id).map(|face| face.families[0].0.clone()))
+    }
+
+    pub fn font_system_mut(&mut self) -> &mut cosmic_text::FontSystem {
+        &mut self.font_system
     }
 }
 

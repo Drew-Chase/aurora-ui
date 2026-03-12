@@ -2,17 +2,17 @@
 
 use crate::errors::app::AppError;
 use aurora_core::color::Color;
+use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_gpu::gpu_context::GpuContext;
 use aurora_render::canvas::Canvas;
+use aurora_widgets::widgets::Widget;
 use std::sync::Arc;
 use winit::application::ApplicationHandler;
 use winit::dpi;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::{WindowAttributes, WindowId};
-use aurora_core::geometry::rect::Rect;
-use aurora_widgets::widgets::Widget;
 
 /// Builder for configuring and launching an application window.
 ///
@@ -55,6 +55,10 @@ pub struct App {
     pub decorations: bool,
     pub custom_titlebar: bool,
     pub background_color: Color,
+    #[cfg(feature = "text")]
+    pub fonts: Vec<&'static [u8]>,
+    #[cfg(feature = "text")]
+    pub font_data: Vec<&'static [u8]>,
 }
 
 /// Handle to the underlying OS window.
@@ -64,6 +68,8 @@ pub struct App {
 pub struct AppWindow {
     window_handle: Arc<winit::window::Window>,
     gpu: Box<dyn GpuContext>,
+    #[cfg(feature = "text")]
+    font_manager: aurora_text::font_manager::FontManager,
 }
 
 struct AppHandler<F> {
@@ -153,6 +159,12 @@ impl App {
         self
     }
 
+    #[cfg(feature = "text")]
+    pub fn font(mut self, bytes: &'static [u8]) -> Self {
+        self.fonts.push(bytes);
+        self
+    }
+
     /// Opens the window and enters the event loop.
     ///
     /// The `on_render` callback is invoked on every [`RedrawRequested`](WindowEvent::RedrawRequested)
@@ -186,12 +198,49 @@ impl Default for App {
             decorations: true,
             custom_titlebar: false,
             background_color: Color::WHITE,
+            #[cfg(feature = "text")]
+            fonts: vec![],
+            #[cfg(feature = "text")]
+            font_data: vec![],
         }
     }
 }
 
 impl AppWindow {
-
+    pub(crate) fn new(
+        window_handle: Arc<winit::window::Window>,
+        config: &App,
+    ) -> Result<Self, AppError> {
+        let gpu: Box<dyn GpuContext> = {
+            #[cfg(feature = "software")]
+            {
+                let backend =
+                    aurora_gpu::backend::softbuffer::SoftbufferBackend::new(window_handle.clone())
+                        .map_err(|err| AppError::GpuInitializationError(err.to_string()))?;
+                Box::new(backend)
+            }
+        };
+        #[cfg(feature = "text")]
+        {
+            let font_manager = {
+                let mut fm = aurora_text::font_manager::FontManager::new();
+                for bytes in &config.fonts {
+                    fm.load_from_bytes(bytes);
+                }
+                for bytes in &config.font_data {
+                    fm.load_from_bytes(bytes);
+                }
+                fm
+            };
+            Ok(Self {
+                window_handle,
+                gpu,
+                font_manager,
+            })
+        }
+        #[cfg(not(feature = "text"))]
+        Ok(Self { window_handle, gpu })
+    }
     pub fn root(&mut self, mut widget: impl Widget + 'static) {
         let (width, height) = self.gpu.size();
         let available = Size::new(width as f32, height as f32);
@@ -204,18 +253,9 @@ impl AppWindow {
         widget.paint(&mut canvas, rect);
     }
 
-    
-    pub(crate) fn new(window_handle: Arc<winit::window::Window>) -> Result<Self, AppError> {
-        let gpu: Box<dyn GpuContext> = {
-            #[cfg(feature = "software")]
-            {
-                let backend =
-                    aurora_gpu::backend::softbuffer::SoftbufferBackend::new(window_handle.clone())
-                        .map_err(|err| AppError::GpuInitializationError(err.to_string()))?;
-                Box::new(backend)
-            }
-        };
-        Ok(Self { window_handle, gpu })
+    #[cfg(feature = "text")]
+    pub fn font_manager(&mut self) -> &mut aurora_text::font_manager::FontManager {
+        &mut self.font_manager
     }
 
     /// Returns the inner (client-area) size in logical pixels.
@@ -255,8 +295,8 @@ impl AppWindow {
     }
 
     pub fn draw<F>(&mut self, f: F)
-                   where
-                       F: FnOnce(&mut Canvas),
+    where
+        F: FnOnce(&mut Canvas),
     {
         let (width, height) = self.gpu.size();
         let buffer = self.gpu.buffer_mut();
@@ -293,7 +333,7 @@ where
         self.window = match event_loop.create_window(attributes) {
             Ok(window) => {
                 let handle = Arc::new(window);
-                match AppWindow::new(handle) {
+                match AppWindow::new(handle, config) {
                     Ok(app_window) => Some(app_window),
                     Err(err) => {
                         log::error!("Failed to create window: {}", err);
