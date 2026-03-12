@@ -11,6 +11,8 @@ use winit::dpi;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::{WindowAttributes, WindowId};
+use aurora_core::geometry::rect::Rect;
+use aurora_widgets::widgets::Widget;
 
 /// Builder for configuring and launching an application window.
 ///
@@ -189,6 +191,20 @@ impl Default for App {
 }
 
 impl AppWindow {
+
+    pub fn root(&mut self, mut widget: impl Widget + 'static) {
+        let (width, height) = self.gpu.size();
+        let available = Size::new(width as f32, height as f32);
+
+        widget.layout(available);
+
+        let buffer = self.gpu.buffer_mut();
+        let mut canvas = Canvas::new(width, height, buffer);
+        let rect = Rect::from_size(available);
+        widget.paint(&mut canvas, rect);
+    }
+
+    
     pub(crate) fn new(window_handle: Arc<winit::window::Window>) -> Result<Self, AppError> {
         let gpu: Box<dyn GpuContext> = {
             #[cfg(feature = "software")]

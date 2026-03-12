@@ -10,6 +10,7 @@ winit = "0.30"
 log = "0.4"
 aurora_gpu = { path = "../aurora_gpu", default-features = false }
 aurora_render = { path = "../aurora_render" }
+aurora_widgets = {path = "../aurora_widgets"}
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_Graphics_Dwm", ] }

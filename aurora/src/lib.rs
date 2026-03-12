@@ -5,3 +5,4 @@ pub use aurora_core::*;
 pub use aurora_gpu::*;
 pub use aurora_platform::*;
 pub use aurora_render::*;
+pub use aurora_widgets::*;
