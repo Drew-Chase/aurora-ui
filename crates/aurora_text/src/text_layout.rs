@@ -1,6 +1,8 @@
 use crate::font_manager::FontManager;
 use aurora_core::color::Color;
+use aurora_core::geometry::size::Size;
 
+#[derive(Clone)]
 pub struct TextLayout {
     buffer: cosmic_text::Buffer,
     color: Color,
@@ -35,6 +37,19 @@ impl TextLayout {
         self.buffer
             .shape_until_scroll(font_manager.font_system_mut(), false);
     }
+
+    pub fn size(&self) -> Size {
+        let mut width: f32 = 0.0;
+        let mut height: f32 = 0.0;
+
+        for run in self.buffer.layout_runs() {
+            width = width.max(run.line_w);
+            height = height.max(run.line_top + run.line_height);
+        }
+
+        Size::new(width, height)
+    }
+
     pub fn render(
         &self,
         cache: &mut cosmic_text::SwashCache,

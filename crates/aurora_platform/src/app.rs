@@ -244,38 +244,31 @@ impl AppWindow {
         let (width, height) = self.gpu.size();
         let available = Size::new(width as f32, height as f32);
 
-	    let mut layout_context = {
-		    #[cfg(feature = "text")]
-		    {
-			    LayoutCtx {
-				    font_manager: &mut self.font_manager,
-			    }
-		    }
-		    #[cfg(not(feature = "text"))]
-		    {
-			    LayoutCtx{}
-		    }
-	    };
-
-        widget.layout(available, &mut layout_context);
-
-        let buffer = self.gpu.buffer_mut();
-        let mut canvas = {
-            #[cfg(not(feature = "text"))]
-            {
-                Canvas::new(width, height, buffer)
-            }
+        // Layout phase — font_manager borrow ends when this block closes
+        {
             #[cfg(feature = "text")]
-            {
-                Canvas::new(
-                    width,
-                    height,
-                    buffer,
-                    &mut self.font_manager,
-                    &mut self.swash_cache,
-                )
-            }
-        };
+            let mut ctx = LayoutCtx {
+                font_manager: &mut self.font_manager,
+            };
+            #[cfg(not(feature = "text"))]
+            let mut ctx = LayoutCtx;
+
+            widget.layout(available, &mut ctx);
+        }
+
+        // Paint phase — safe to borrow font_manager again
+        let buffer = self.gpu.buffer_mut();
+        #[cfg(feature = "text")]
+        let mut canvas = Canvas::new(
+            width,
+            height,
+            buffer,
+            &mut self.font_manager,
+            &mut self.swash_cache,
+        );
+        #[cfg(not(feature = "text"))]
+        let mut canvas = Canvas::new(width, height, buffer);
+
         let rect = Rect::from_size(available);
         widget.paint(&mut canvas, rect);
     }
