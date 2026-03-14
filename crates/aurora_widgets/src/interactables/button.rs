@@ -72,7 +72,7 @@ pub fn button(options: ButtonOptions) -> impl Widget {
                         .width(width)
                         .height(height)
                         .child(
-                            Column::new().child(text_options.color(if state.is_hovering {
+                            Column::new().child(text_options.width(width as f32).height(height as f32).color(if state.is_hovering {
                                 text_hover_color
                             } else {
                                 text_color
