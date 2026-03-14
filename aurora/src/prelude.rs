@@ -23,7 +23,7 @@ pub use aurora_widgets::layout::column::Column;
 pub use aurora_widgets::layout::row::Row;
 pub use aurora_widgets::layout::{Align, Justify};
 pub use aurora_widgets::widgets::{EventResponse, LayoutCtx, Widget};
-pub use aurora_widgets::{column, row};
+pub use aurora_widgets::{col, row};
 
 // Text (feature-gated)
 #[cfg(feature = "text")]

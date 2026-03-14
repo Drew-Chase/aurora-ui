@@ -1,6 +1,5 @@
 use aurora_ui::prelude::*;
 
-
 fn main() {
     App::new()
         .title("Button Example")
@@ -9,7 +8,7 @@ fn main() {
         .font(include_bytes!("../../Roboto-Regular.ttf"))
         .run(|window, _frame_info| {
             window.root(
-                column!()
+                col!()
                     .spacing(10.0)
                     .align(Align::Center)
                     .justify(Justify::Center)

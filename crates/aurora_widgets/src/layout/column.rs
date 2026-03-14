@@ -233,7 +233,7 @@ impl Widget for Column {
 }
 
 #[macro_export]
-macro_rules! column {
+macro_rules! col {
     () => {{
         use aurora_ui::aurora_widgets::layout::column::Column;
         Column::new()

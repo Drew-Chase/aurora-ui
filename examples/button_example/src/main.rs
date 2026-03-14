@@ -1,6 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use aurora_ui::prelude::*;
-use aurora_ui::prelude::column;
 
 fn main() {
     App::new()
@@ -9,7 +8,7 @@ fn main() {
         .font(include_bytes!("../../Roboto-Regular.ttf"))
         .run(|window, _frame_info| {
             window.root(
-                column!()
+                col!()
                     .spacing(10.0)
                     .align(Align::Center)
                     .justify(Justify::Center)

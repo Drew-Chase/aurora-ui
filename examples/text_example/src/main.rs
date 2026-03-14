@@ -8,7 +8,7 @@ fn main() {
         .font(include_bytes!("../../Roboto-Regular.ttf"))
         .run(|window, _frame_info| {
             window.root(
-                column!()
+                col!()
                     .spacing(10.0)
                     .child(Text::new("Item 1").padding(Edges::symmetric(20.0, 20.0)))
                     .child(Text::new("Item 2").padding(Edges::symmetric(20.0, 0.0)))

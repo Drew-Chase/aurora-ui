@@ -7,7 +7,7 @@ fn main() {
         .min_size((310, 440))
         .run(|window, _frame_info| {
             window.root(
-                column!()
+                col!()
                     .spacing(10.0)
                     .padding(Edges::all(10.0))
                     .justify(Justify::Center)
