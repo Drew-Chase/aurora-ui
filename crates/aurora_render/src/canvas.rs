@@ -63,10 +63,10 @@ impl<'a> Canvas<'a> {
             buffer,
         }
     }
-    #[cfg(feature = "text")]
     /// Creates a canvas from a pixel buffer and its dimensions.
     ///
     /// The buffer is expected to be row-major with `width * height` entries.
+    #[cfg(feature = "text")]
     pub fn new(width: u32, height: u32, buffer: &'a mut [u32], font_manager: &'a mut FontManager, swash_cache: &'a mut SwashCache) -> Self {
         Canvas {
             width,

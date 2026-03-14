@@ -1,3 +1,5 @@
+pub mod prelude;
+
 #[cfg(not(any(feature = "software")))]
 compile_error!("At least one GPU backend feature must be enabled (e.g. 'software')");
 

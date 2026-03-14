@@ -299,6 +299,20 @@ macro_rules! rgb {
     };
 }
 
+#[macro_export]
+macro_rules! hex {
+    ($hex:expr) => {
+        Color::from_hex($hex, false)
+    };
+}
+#[macro_export]
+macro_rules! hexa {
+    ($hex:expr) => {
+        Color::from_hex($hex, true)
+    };
+}
+
+
 /// Creates a [`Color`] from HSLA values.
 ///
 /// Shorthand for [`Color::from_hsla`].

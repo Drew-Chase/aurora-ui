@@ -23,6 +23,7 @@
       <sourceFolder url="file://$MODULE_DIR$/examples/layout_example/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/text_example/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/button_example/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/counter_example/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

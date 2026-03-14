@@ -252,7 +252,12 @@ impl AppWindow {
             })
         }
         #[cfg(not(feature = "text"))]
-        Ok(Self { window_handle, gpu })
+        Ok(Self {
+            window_handle,
+            gpu,
+            root_widget: None,
+            cursor: winit::window::CursorIcon::Default,
+        })
     }
     /// Lays out and paints a root widget tree into the window.
     ///

@@ -1,13 +1,11 @@
 use crate::box_widget::BoxWidget;
 use crate::composite::Composite;
 use crate::interactables::touch_area::{OnClickCallback, TouchArea};
-use crate::layout::Align;
 use crate::layout::column::Column;
 use crate::text_widget::Text;
 use crate::widgets::Widget;
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
-use aurora_core::geometry::edges::Edges;
 use std::cell::RefCell;
 use std::rc::Rc;
 
