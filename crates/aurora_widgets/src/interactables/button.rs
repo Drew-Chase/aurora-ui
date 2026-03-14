@@ -1,7 +1,7 @@
 use crate::box_widget::BoxWidget;
 use crate::composite::Composite;
 use crate::interactables::touch_area::{OnClickCallback, TouchArea};
-use crate::layout::{column::Column, Align, Justify};
+use crate::layout::{Align, Justify};
 use crate::text_widget::Text;
 use crate::widgets::Widget;
 use aurora_core::color::Color;
@@ -24,7 +24,9 @@ pub struct ButtonOptions {
 impl Default for ButtonOptions {
     fn default() -> ButtonOptions {
         ButtonOptions {
-            text_options: Text::default().align(Align::Center).justify(Justify::Center),
+            text_options: Text::default()
+                .align(Align::Center)
+                .justify(Justify::Center),
             on_click: Box::new(|_| {}),
             width: 100,
             height: 50,
@@ -71,16 +73,14 @@ pub fn button(options: ButtonOptions) -> impl Widget {
                         .width(width)
                         .height(height)
                         .child(
-                            Column::new().child(
-                                text_options
-                                    .width(width as f32)
-                                    .height(height as f32)
-                                    .color(if state.is_hovering {
-                                        text_hover_color
-                                    } else {
-                                        text_color
-                                    }),
-                            ),
+                            text_options
+                                .width(width as f32)
+                                .height(height as f32)
+                                .color(if state.is_hovering {
+                                    text_hover_color
+                                } else {
+                                    text_color
+                                }),
                         ),
                 )
                 .on_hover(move |_position, hovering| {
