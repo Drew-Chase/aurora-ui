@@ -13,14 +13,14 @@ fn main() {
         .run(|window, _frame_info| {
             window.root(
                 col!()
-                    .spacing(0.0)
+                    .spacing(10.0)
                     .align(Align::Center)
                     .justify(Justify::Center)
                     .child(
                         Text::new("Counter: ")
                             .font_weight(FontWeight::Black)
-                            .font_size(24.0)
                             .height(24.0)
+                            .font_size(24.0)
                             .align(Align::Center),
                     )
                     .child(counter()),
@@ -47,7 +47,10 @@ pub fn counter() -> impl Widget {
                 .justify(Justify::Center)
                 .align(Align::Center)
                 .child(button(ButtonOptions {
-                    text_options: Text::new("-").font_size(20.0).align(Align::Center).justify(Justify::Center),
+                    text_options: Text::new("-")
+                        .font_size(20.0)
+                        .align(Align::Center)
+                        .justify(Justify::Center),
                     width: 40,
                     height: 40,
                     on_click: Box::new(move |_| decrement_setter.set(|prev| prev.value -= 1)),
@@ -56,11 +59,13 @@ pub fn counter() -> impl Widget {
                 .child(
                     Text::new(state.value.to_string())
                         .font_size(20.0)
-                        .align(Align::Center)
-                        .padding(Edges::new(20.0, 0.0, 0.0, 0.0)),
+                        .align(Align::Center),
                 )
                 .child(button(ButtonOptions {
-                    text_options: Text::new("+").font_size(20.0).height(40.0).width(40.0).align(Align::Center).justify(Justify::Center),
+                    text_options: Text::new("+")
+                        .font_size(20.0)
+                        .align(Align::Center)
+                        .justify(Justify::Center),
                     width: 40,
                     height: 40,
                     on_click: Box::new(move |_| increment_setter.set(|prev| prev.value += 1)),
