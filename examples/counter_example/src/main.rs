@@ -1,10 +1,12 @@
+use aurora_ui::aurora_platform::app::WindowPosition;
 use aurora_ui::prelude::*;
 
 fn main() {
     App::new()
-        .title("Button Example")
+        .title("Counter Example")
         .size((300, 300))
         .resizable(false)
+        .position(WindowPosition::Center)
         .font(include_bytes!("../../Roboto-Regular.ttf"))
         .run(|window, _frame_info| {
             window.root(

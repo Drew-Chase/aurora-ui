@@ -19,6 +19,39 @@ use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::{WindowAttributes, WindowButtons, WindowId};
 
+/// Which monitor to target for window placement.
+///
+/// Used with [`WindowPosition`] to control where a window spawns.
+#[derive(Debug, Clone, Copy, Default)]
+pub enum WindowMonitor {
+    /// The primary display.
+    ///
+    /// Falls back to the first available monitor if no primary is reported.
+    #[default]
+    Primary,
+    /// The monitor where the cursor is currently located.
+    ///
+    /// On platforms that do not support pre-window cursor queries this
+    /// falls back to [`Primary`](Self::Primary).
+    Active,
+    /// A specific monitor by its zero-based index.
+    ///
+    /// Falls back to [`Primary`](Self::Primary) if the index is out of range.
+    Index(usize),
+}
+
+/// Initial window placement on the target monitor.
+///
+/// Used with the [`App::position`] builder method.
+#[derive(Debug, Clone, Copy)]
+pub enum WindowPosition {
+    /// Center the window on the target monitor.
+    Center,
+    /// Place the window at logical coordinates relative to the target
+    /// monitor's top-left corner.
+    At(Point),
+}
+
 /// Builder for configuring and launching an application window.
 ///
 /// Uses the builder pattern — each setter consumes and returns `self` so calls
@@ -59,6 +92,8 @@ pub struct App {
     pub resizable: bool,
     pub decorations: bool,
     pub custom_titlebar: bool,
+    pub position: Option<WindowPosition>,
+    pub monitor: WindowMonitor,
     pub background_color: Color,
     #[cfg(feature = "text")]
     pub fonts: Vec<&'static [u8]>,
@@ -162,6 +197,23 @@ impl App {
         self
     }
 
+    /// Sets the initial window position on the target monitor.
+    ///
+    /// When not set, the OS chooses the position.
+    pub fn position(mut self, position: WindowPosition) -> Self {
+        self.position = Some(position);
+        self
+    }
+
+    /// Selects which monitor the window spawns on.
+    ///
+    /// Defaults to [`WindowMonitor::Primary`]. Only takes effect when
+    /// [`position`](Self::position) is also set.
+    pub fn monitor(mut self, monitor: WindowMonitor) -> Self {
+        self.monitor = monitor;
+        self
+    }
+
     /// Sets the background color used to clear the window before each frame.
     pub fn background_color(mut self, background_color: impl Into<Color>) -> Self {
         self.background_color = background_color.into();
@@ -211,6 +263,8 @@ impl Default for App {
             resizable: true,
             decorations: true,
             custom_titlebar: false,
+            position: None,
+            monitor: WindowMonitor::Primary,
             background_color: Color::WHITE,
             #[cfg(feature = "text")]
             fonts: vec![],
@@ -441,6 +495,29 @@ where
                 WindowButtons::CLOSE | WindowButtons::MINIMIZE,
             );
         }
+        if let Some(position) = config.position {
+            if let Some(monitor) = resolve_monitor(event_loop, config.monitor) {
+                let monitor_pos = monitor.position();
+                let monitor_size = monitor.size();
+                let scale = monitor.scale_factor();
+
+                let pos = match position {
+                    WindowPosition::Center => {
+                        let win_w = (size.width as f64 * scale) as i32;
+                        let win_h = (size.height as f64 * scale) as i32;
+                        dpi::PhysicalPosition::new(
+                            monitor_pos.x + (monitor_size.width as i32 - win_w) / 2,
+                            monitor_pos.y + (monitor_size.height as i32 - win_h) / 2,
+                        )
+                    }
+                    WindowPosition::At(point) => dpi::PhysicalPosition::new(
+                        monitor_pos.x + (point.x as f64 * scale) as i32,
+                        monitor_pos.y + (point.y as f64 * scale) as i32,
+                    ),
+                };
+                attributes = attributes.with_position(pos);
+            }
+        }
         if let Some(min_size) = min_size {
             attributes = attributes
                 .with_min_inner_size(dpi::LogicalSize::new(min_size.width, min_size.height));
@@ -551,4 +628,54 @@ fn translate_mouse_state(state: winit::event::ElementState) -> MouseState {
         winit::event::ElementState::Pressed => MouseState::Pressed,
         winit::event::ElementState::Released => MouseState::Released,
     }
+}
+
+fn resolve_monitor(
+    event_loop: &ActiveEventLoop,
+    monitor: WindowMonitor,
+) -> Option<winit::monitor::MonitorHandle> {
+    let primary = || {
+        event_loop
+            .primary_monitor()
+            .or_else(|| event_loop.available_monitors().next())
+    };
+
+    match monitor {
+        WindowMonitor::Primary => primary(),
+        WindowMonitor::Active => {
+            #[cfg(target_os = "windows")]
+            if let Some(m) = cursor_monitor(event_loop) {
+                return Some(m);
+            }
+            primary()
+        }
+        WindowMonitor::Index(index) => {
+            event_loop.available_monitors().nth(index).or_else(primary)
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn cursor_monitor(event_loop: &ActiveEventLoop) -> Option<winit::monitor::MonitorHandle> {
+    use windows::Win32::Foundation::POINT;
+    use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
+
+    let mut point = POINT::default();
+    unsafe { GetCursorPos(&mut point) }.ok()?;
+
+    let cx = point.x;
+    let cy = point.y;
+
+    for monitor in event_loop.available_monitors() {
+        let pos = monitor.position();
+        let size = monitor.size();
+        if cx >= pos.x
+            && cx < pos.x + size.width as i32
+            && cy >= pos.y
+            && cy < pos.y + size.height as i32
+        {
+            return Some(monitor);
+        }
+    }
+    None
 }

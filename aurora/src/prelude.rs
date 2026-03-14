@@ -10,7 +10,7 @@ pub use aurora_core::kmi::mouse::{MouseButton, MouseClickEvent, MouseEvent, Mous
 pub use crate::aurora_core::{hex, hexa, rgb, rgba, hsl, hsla};
 
 // Platform
-pub use aurora_platform::app::{App, AppWindow, FrameInfo};
+pub use aurora_platform::app::{App, AppWindow, FrameInfo, WindowMonitor, WindowPosition};
 
 // Rendering
 pub use aurora_render::canvas::Canvas;
