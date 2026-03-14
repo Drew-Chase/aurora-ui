@@ -4,6 +4,7 @@ use aurora_ui::aurora_platform::app::App;
 use aurora_ui::aurora_widgets::column;
 use aurora_ui::aurora_widgets::interactables::button::{button, ButtonOptions};
 use aurora_ui::aurora_widgets::layout::{Align, Justify};
+use aurora_ui::aurora_widgets::text_widget::Text;
 
 fn main() {
     App::new()
@@ -18,8 +19,12 @@ fn main() {
                     .justify(Justify::Center)
                     .child(button(
                         ButtonOptions{
-                            text: "Click Me!".into(),
-                            text_alignment: Align::Center,
+                            text_options: Text{
+                                text: "Test".to_string(),
+                                align: Align::Center,
+                                font_size: 24.0,
+                              ..Text::default()
+                            },
                             on_click: Box::new(|event| {
                                 println!("Button clicked at position: {:?}", event.position);
                             }),

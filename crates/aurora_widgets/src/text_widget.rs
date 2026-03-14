@@ -20,7 +20,7 @@ pub struct Text {
     pub align: Align,
     pub width: Option<f32>,
     pub height: Option<f32>,
-    pub(crate) text_layout: Option<TextLayout>,
+    pub text_layout: Option<TextLayout>,
 }
 
 impl Text {
@@ -69,11 +69,11 @@ impl Default for Text {
             text: String::new(),
             font_size: 16.0,
             color: aurora_core::color::Color::BLACK,
-            text_layout: None,
             padding: Edges::zero(),
             align: Align::Start,
             width: None,
             height: None,
+            text_layout: None,
         }
     }
 }
