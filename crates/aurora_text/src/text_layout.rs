@@ -82,7 +82,8 @@ impl TextLayout {
 
         for run in self.buffer.layout_runs() {
             for glyph in run.glyphs.iter() {
-                let physical_glyph = glyph.physical((x_offset as f32, y_offset as f32), 1.0);
+                let physical_glyph =
+                    glyph.physical((x_offset as f32, y_offset as f32 + run.line_y), 1.0);
 
                 if let Some(image) =
                     cache.get_image(font_manager.font_system_mut(), physical_glyph.cache_key)
