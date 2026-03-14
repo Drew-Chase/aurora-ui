@@ -17,7 +17,7 @@ use winit::application::ApplicationHandler;
 use winit::dpi;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
-use winit::window::{WindowAttributes, WindowId};
+use winit::window::{WindowAttributes, WindowButtons, WindowId};
 
 /// Builder for configuring and launching an application window.
 ///
@@ -436,6 +436,11 @@ where
             .with_decorations(decorations)
             .with_resizable(resizable)
             .with_inner_size(dpi::LogicalSize::new(size.width, size.height));
+        if !resizable {
+            attributes = attributes.with_enabled_buttons(
+                WindowButtons::CLOSE | WindowButtons::MINIMIZE,
+            );
+        }
         if let Some(min_size) = min_size {
             attributes = attributes
                 .with_min_inner_size(dpi::LogicalSize::new(min_size.width, min_size.height));
