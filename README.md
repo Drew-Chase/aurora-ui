@@ -9,8 +9,7 @@
   <a href="#features"><strong>Features</strong></a> ·
   <a href="#quick-start"><strong>Quick Start</strong></a> ·
   <a href="#feature-flags"><strong>Feature Flags</strong></a> ·
-  <a href="#architecture"><strong>Architecture</strong></a> ·
-  <a href="#benchmarks"><strong>Benchmarks</strong></a>
+  <a href="#architecture"><strong>Architecture</strong></a>
 </p>
 
 ---
@@ -23,18 +22,30 @@ widgets, animation, accessibility) is behind a feature gate. You pay only for
 what you use, in both binary size and startup time.
 
 ```rust
-use aurora::prelude::*;
+use aurora_ui::prelude::*;
 
 fn main() {
-	App::new()
-		.title("Hello, Aurora")
-		.titlebar(Titlebar::Custom) // native Win11 rounded corners + macOS traffic lights
-		.run(|ctx| {
-			Column::new()
-				.child(Label::new("Hello, world!"))
-				.child(Button::new("Click me").on_click(|_| println!("clicked")))
-				.build(ctx);
-		});
+    App::new()
+        .title("Hello, Aurora")
+        .size((400, 300))
+        .font(include_bytes!("Roboto-Regular.ttf"))
+        .run(|window, _frame| {
+            window.root(
+                col!()
+                    .spacing(10.0)
+                    .align(Align::Center)
+                    .justify(Justify::Center)
+                    .child(Text::new("Hello, world!").font_size(24.0))
+                    .child(button(ButtonOptions {
+                        text_options: Text::new("Click me")
+                            .align(Align::Center)
+                            .justify(Justify::Center),
+                        on_click: Box::new(|_| println!("clicked")),
+                        ..Default::default()
+                    })),
+            );
+        })
+        .expect("Failed to run app");
 }
 ```
 
@@ -42,74 +53,46 @@ fn main() {
 
 | Problem                                   | Aurora's Answer                                                                                                               |
 |-------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| Electron/Tauri apps take 5-10s to start   | **< 100ms** startup (minimal), **< 300ms** (with text)                                                                        |
-| Qt/GTK bundles are 50-200 MB              | **~1.2 MB** minimal, **~3 MB** with text + widgets                                                                            |
+| Electron/Tauri apps are slow to start     | Feature-gated architecture keeps startup fast — load only what you need                                                       |
+| Qt/GTK bundles are large                  | Minimal binary with aggressive feature gating — don't need text? Don't ship a font shaper                                    |
 | No framework does custom titlebars right  | **Native Win11 rounded corners, drop shadows, and snap layouts.** macOS traffic lights with `fullSizeContentView`. Linux CSD. |
-| Frameworks force you to bundle everything | **Feature-gated architecture.** Don't need text? Don't ship a font shaper.                                                    |
+| Frameworks force you to bundle everything | **Feature-gated architecture.** Every subsystem is opt-in.                                                                    |
 
 ## Features
 
-- **GPU-accelerated rendering** — OpenGL (default, smallest), wgpu (Vulkan/Metal/DX12), or CPU software fallback
-- **Custom window titlebars** — Windows 11 DWM integration with rounded corners and snap layouts, macOS transparent titlebar, Linux CSD
-- **Feature-gated everything** — text, widgets, animation, accessibility, image decoding are all opt-in
-- **Statically linked binaries** — single executable, no runtime dependencies
-- **Sub-second startup** — measured and benchmarked, not just promised
-- **Flex and grid layout** — built-in flex with optional CSS Grid via Taffy
-- **Theming** — dark/light themes with OS preference detection
-- **Incremental rendering** — dirty-flag system skips unchanged subtrees
+- **Software rendering** — CPU rendering via softbuffer (only backend currently implemented; GPU backends planned)
+- **Custom window titlebars** — Windows 11 DWM integration and macOS transparent titlebar (planned/in-progress)
+- **Feature-gated text rendering** — Font loading, shaping, and text widgets behind `text` feature flag
+- **Layout system** — `col!` and `row!` macros with flex alignment, spacing, and justification
+- **Composite stateful widgets** — `Composite<S>` for widgets that rebuild on state change
+- **Incremental rendering** — Dirty-flag system skips unchanged subtrees
+- **Statically linked binaries** — Single executable, no runtime dependencies
 
 ## Quick Start
+
+AuroraUI is not yet published to crates.io. To use it, clone the repository and
+reference it as a path dependency:
 
 ```toml
 # Cargo.toml
 [dependencies]
-aurora = "0.1"
+aurora_ui = { path = "path/to/aurora-ui/aurora" }
 ```
 
-The `default` feature set includes the OpenGL backend, flex layout, basic
-widgets, text rendering, and theming — roughly **~3 MB** stripped.
-
-For a minimal window with no text or widgets:
+The `default` feature set includes the software rendering backend. To also
+enable text rendering and widgets that depend on it:
 
 ```toml
 [dependencies]
-aurora = { version = "0.1", default-features = false, features = ["minimal"] }
+aurora_ui = { path = "path/to/aurora-ui/aurora", features = ["software", "text"] }
 ```
 
 ## Feature Flags
 
-Aurora uses aggressive feature gating. Every dependency has a cost, and you
-choose what to pay for.
-
-### Presets
-
-| Preset    | Includes                       | Binary Size | Startup |
-|-----------|--------------------------------|-------------|---------|
-| `minimal` | Window + OpenGL + flex layout  | ~300 KB     | ~30ms   |
-| `lean`    | + text + basic widgets + theme | ~1.5 MB     | ~60ms   |
-| `default` | Same as `lean`                 | ~1.5 MB     | ~60ms   |
-| `full`    | Everything                     | ~3.0 MB     | ~120ms  |
-
-### Individual Features
-
-| Feature            | What it adds                                  | Cost    |
-|--------------------|-----------------------------------------------|---------|
-| `glow`             | OpenGL backend (default)                      | +400 KB |
-| `wgpu`             | Vulkan/Metal/DX12 backend                     | +2.0 MB |
-| `software`         | CPU-only rendering                            | +50 KB  |
-| `text`             | Font discovery, shaping, layout               | +1.5 MB |
-| `text-edit`        | Editable text fields                          | +100 KB |
-| `ime`              | Input method (CJK) support                    | +50 KB  |
-| `widgets-basic`    | Label, Button, Container, Spacer, Image       | +100 KB |
-| `widgets-input`    | TextInput, Slider, Checkbox, Toggle, Dropdown | +150 KB |
-| `widgets-layout`   | ScrollView, SplitPane, Tabs, VirtualList      | +200 KB |
-| `widgets-advanced` | TreeView, Table, Menu, Modal, Tooltip         | +300 KB |
-| `animation`        | Spring and easing-based animations            | +80 KB  |
-| `accessibility`    | AccessKit screen reader support               | +500 KB |
-| `image`            | PNG/JPEG decoding                             | +800 KB |
-| `grid-layout`      | CSS Grid-like layout (Taffy)                  | +200 KB |
-| `system-theme`     | OS dark/light mode detection                  | +30 KB  |
-| `clipboard`        | System clipboard access                       | +100 KB |
+| Feature    | What it adds                                            | Default |
+|------------|---------------------------------------------------------|---------|
+| `software` | CPU software rendering via softbuffer                   | Yes     |
+| `text`     | Font loading, shaping, text widgets, buttons            | No      |
 
 ## Architecture
 
@@ -122,19 +105,22 @@ aurora/
 ├── aurora_core       # Zero-dep types: color, geometry, events, IDs
 ├── aurora_platform   # Windowing, event loop, native handles, custom titlebar
 ├── aurora_gpu        # GPU abstraction with pluggable backends
-├── aurora_render     # 2D drawing: rounded rects, paths, images, batching
-├── aurora_text       # Text shaping, layout, editing, IME (optional)
-├── aurora_layout     # Flex + grid layout engine with caching
-├── aurora_widgets    # Widget library, grouped by feature flag
-├── aurora_theme      # Theming tokens and built-in themes
-├── aurora_animate    # Spring/tween animation system (optional)
-├── aurora_a11y       # AccessKit integration (optional)
+├── aurora_render     # 2D drawing: rounded rects, paths, images
+├── aurora_text       # Text shaping, layout, font management (optional)
+├── aurora_layout     # Layout engine (planned)
+├── aurora_widgets    # Widget library: layout, composites, interactables
+├── aurora_theme      # Theming system (planned)
+├── aurora_animate    # Animation system (planned)
+├── aurora_a11y       # Accessibility via AccessKit (planned)
 └── aurora (facade)   # Public API — re-exports everything
 ```
 
 ## Custom Titlebar
 
-Aurora provides first-class support for custom window chrome that respects
+> [!NOTE]
+> Custom titlebar support is planned/in-progress and not yet fully implemented.
+
+Aurora aims to provide first-class support for custom window chrome that respects
 platform conventions:
 
 **Windows 11** — DWM frame extension with `DWMWA_WINDOW_CORNER_PREFERENCE` for
@@ -145,47 +131,33 @@ button, and automatic drop shadow via `DwmExtendFrameIntoClientArea`.
 Traffic light buttons are automatically positioned within your custom titlebar
 content.
 
-**Linux** — Client-side decorations on Wayland, configurable for X11 compositors.
+**Linux** — Client-side decorations on Wayland (deferred).
 
 ## Platform Support
 
-| Platform        | Backend                     | Status    |
-|-----------------|-----------------------------|-----------|
-| Windows 10/11   | OpenGL 3.3+ / DX12 / Vulkan | Primary   |
-| macOS 11+       | OpenGL 4.1 / Metal          | Primary   |
-| Linux (X11)     | OpenGL 3.3+ / Vulkan        | Supported |
-| Linux (Wayland) | OpenGL 3.3+ / Vulkan        | Supported |
+| Platform        | Backend             | Status    |
+|-----------------|---------------------|-----------|
+| Windows 10/11   | Software (softbuffer) | Primary   |
+| macOS 11+       | Software (softbuffer) | Primary   |
+| Linux (X11)     | Software (softbuffer) | Supported |
+| Linux (Wayland) | Software (softbuffer) | Supported |
 
-## Benchmarks
-
-Measured on a stock development machine. Run `cargo bench` to reproduce.
-
-```
-                        Aurora (minimal)    Aurora (lean)    Tauri    Electron
-Startup to first frame  28ms               62ms             4800ms   6200ms
-Binary size (stripped)  1.2 MB             3.0 MB           8.4 MB   180 MB
-Idle memory             12 MB              18 MB            85 MB    140 MB
-Resize framerate        60 fps             60 fps           12 fps   8 fps
-```
-
-*Benchmarks are from development builds and will be updated as the framework
-matures.*
+GPU backends (OpenGL via glow, Vulkan/Metal/DX12 via wgpu) are planned but not yet implemented.
 
 ## Building from Source
 
 ```bash
-git clone https://github.com/yourusername/auroraui.git
-cd auroraui
+git clone https://github.com/yourusername/aurora-ui.git
+cd aurora-ui
 
-# Run the minimal example (blank window with custom titlebar)
-cargo run --example minimal
+# Run the minimal example (blank window)
+cargo run -p minimal
 
-# Run with all features
-cargo run --example dashboard --features full
+# Run the counter example (requires text feature)
+cargo run -p counter_example --features text
 
 # Build a release binary and check size
-cargo build --release --example minimal --features minimal
-ls -lh target/release/examples/minimal
+cargo build --release -p minimal
 ```
 
 ### Development Setup
@@ -213,4 +185,3 @@ impactful areas are:
 - **Platform testing** — especially Linux compositors, multi-monitor HiDPI setups, and Windows accessibility
 - **Widget implementations** — new widgets following the existing patterns
 - **Examples and documentation** — real-world usage examples
-
