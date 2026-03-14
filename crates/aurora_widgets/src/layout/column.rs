@@ -213,9 +213,12 @@ impl Widget for Column {
             let translated = child_rect.translate(&rect.origin());
             if is_move {
                 // Forward move to all children so they can update hover state
-                let response =child.event(event, translated);
-                if response.handled{
+                let response = child.event(event, translated);
+                if response.handled {
                     handled = true;
+                }
+                // Only take cursor from the child under the mouse
+                if translated.contains(&pos) {
                     cursor = response.cursor;
                 }
             } else if translated.contains(&pos) && child.event(event, translated).handled {

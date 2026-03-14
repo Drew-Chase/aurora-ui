@@ -3,6 +3,7 @@ use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::MouseEvent;
 use aurora_render::canvas::Canvas;
 
@@ -207,13 +208,19 @@ impl Widget for Row {
 
         let is_move = matches!(event, MouseEvent::MouseMoveEvent(_));
         let mut handled = false;
+        let mut cursor: Option<CursorIcon> = None;
 
         for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
             let translated = child_rect.translate(&rect.origin());
             if is_move {
                 // Forward move to all children so they can update hover state
-                if child.event(event, translated).handled {
+                let response = child.event(event, translated);
+                if response.handled {
                     handled = true;
+                }
+                // Only take cursor from the child under the mouse
+                if translated.contains(&pos) {
+                    cursor = response.cursor;
                 }
             } else if translated.contains(&pos) && child.event(event, translated).handled {
                 return EventResponse {
@@ -224,7 +231,7 @@ impl Widget for Row {
         }
         EventResponse {
             handled,
-            ..EventResponse::default()
+            cursor,
         }
     }
 }

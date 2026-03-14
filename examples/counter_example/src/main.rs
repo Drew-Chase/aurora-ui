@@ -58,7 +58,8 @@ pub fn counter() -> impl Widget {
                 }))
                 .child(
                     Text::new(state.value.to_string())
-                        .font_size(20.0)
+                        .font_size(24.0)
+                        .font_weight(FontWeight::Medium)
                         .align(Align::Center),
                 )
                 .child(button(ButtonOptions {
