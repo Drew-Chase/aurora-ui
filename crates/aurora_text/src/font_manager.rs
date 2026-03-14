@@ -16,6 +16,11 @@ impl FontManager {
     pub fn new() -> Self {
         Self::default()
     }
+    pub fn new_with_system_db() -> Self {
+        let mut manager = Self::new();
+        manager.font_system.db_mut().load_system_fonts();
+        manager
+    }
 
     /// Loads a font from a file path on disk.
     pub fn load(&mut self, path: impl AsRef<Path>) -> Result<(), FontError> {
@@ -40,6 +45,7 @@ impl FontManager {
     pub fn font_system_mut(&mut self) -> &mut cosmic_text::FontSystem {
         &mut self.font_system
     }
+
 }
 
 impl Default for FontManager {

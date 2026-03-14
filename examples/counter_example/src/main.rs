@@ -1,3 +1,4 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use aurora_ui::aurora_platform::app::WindowPosition;
 use aurora_ui::prelude::*;
 
@@ -7,7 +8,7 @@ fn main() {
         .size((300, 300))
         .resizable(false)
         .position(WindowPosition::Center)
-        .font(include_bytes!("../../Roboto-Regular.ttf"))
+        .use_system_fonts()
         .run(|window, _frame_info| {
             window.root(
                 col!()

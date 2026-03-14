@@ -95,6 +95,7 @@ pub struct App {
     pub position: Option<WindowPosition>,
     pub monitor: WindowMonitor,
     pub background_color: Color,
+    pub use_system_font: bool,
     #[cfg(feature = "text")]
     pub fonts: Vec<&'static [u8]>,
 }
@@ -205,6 +206,22 @@ impl App {
         self
     }
 
+    /// Enables the use of system font discovery.
+    ///
+    /// This can cause a ~200ms delay on startup but allows for more font options.
+    pub fn use_system_fonts(mut self)->Self{
+        self.use_system_font = true;
+        self
+    }
+
+    /// Enables or disables system font discovery.
+    ///
+    /// Enabling system font discovery can cause a ~200ms delay on startup but allows for more font options.
+    pub fn set_use_system_font(mut self, use_system_font: bool)->Self{
+        self.use_system_font = use_system_font;
+        self
+    }
+
     /// Selects which monitor the window spawns on.
     ///
     /// Defaults to [`WindowMonitor::Primary`]. Only takes effect when
@@ -266,6 +283,7 @@ impl Default for App {
             position: None,
             monitor: WindowMonitor::Primary,
             background_color: Color::WHITE,
+            use_system_font: false,
             #[cfg(feature = "text")]
             fonts: vec![],
         }
@@ -289,7 +307,11 @@ impl AppWindow {
         #[cfg(feature = "text")]
         {
             let font_manager = {
-                let mut fm = aurora_text::font_manager::FontManager::new();
+                let mut fm = if config.use_system_font {
+                    aurora_text::font_manager::FontManager::new_with_system_db()
+                } else {
+                    aurora_text::font_manager::FontManager::new()
+                };
                 for bytes in &config.fonts {
                     fm.load_from_bytes(bytes);
                 }
