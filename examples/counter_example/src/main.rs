@@ -5,7 +5,7 @@ use aurora_ui::prelude::*;
 fn main() {
     App::new()
         .title("Counter Example")
-        .size((300, 300))
+        .size((300, 150))
         .resizable(false)
         .position(WindowPosition::Center)
         .use_system_fonts()
@@ -47,7 +47,7 @@ pub fn counter() -> impl Widget {
                 .justify(Justify::Center)
                 .align(Align::Center)
                 .child(button(ButtonOptions {
-                    text_options: Text::new("-").font_size(20.0).align(Align::Center),
+                    text_options: Text::new("-").font_size(20.0).align(Align::Center).justify(Justify::Center),
                     width: 40,
                     height: 40,
                     on_click: Box::new(move |_| decrement_setter.set(|prev| prev.value -= 1)),
@@ -60,7 +60,7 @@ pub fn counter() -> impl Widget {
                         .padding(Edges::new(20.0, 0.0, 0.0, 0.0)),
                 )
                 .child(button(ButtonOptions {
-                    text_options: Text::new("+").font_size(20.0).align(Align::Center),
+                    text_options: Text::new("+").font_size(20.0).height(40.0).width(40.0).align(Align::Center).justify(Justify::Center),
                     width: 40,
                     height: 40,
                     on_click: Box::new(move |_| increment_setter.set(|prev| prev.value += 1)),
