@@ -38,10 +38,10 @@ pub fn counter() -> impl Widget {
                 .child(button(ButtonOptions {
                     text_options: Text {
                         text: "-".into(),
+                        font_size: 20.0,
                         align: Align::Center,
                         ..Text::default()
                     },
-                    background_color: hex!(0xff0000),
                     width: 40,
                     height: 40,
                     on_click: Box::new(move |_| decrement_setter.set(|prev| prev.value -= 1)),
