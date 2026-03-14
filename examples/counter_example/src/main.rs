@@ -60,6 +60,7 @@ pub fn counter() -> impl Widget {
                     Text::new(state.value.to_string())
                         .font_size(24.0)
                         .font_weight(FontWeight::Medium)
+                        .justify(Justify::Center)
                         .align(Align::Center),
                 )
                 .child(button(ButtonOptions {
