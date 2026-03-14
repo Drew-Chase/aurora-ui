@@ -1,8 +1,10 @@
 use crate::layout::{Align, Justify};
-use crate::widgets::{LayoutCtx, Widget};
+use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::cursor_icon::CursorIcon;
+use aurora_core::kmi::mouse::MouseEvent;
 use aurora_render::canvas::Canvas;
 
 pub struct Column {
@@ -191,6 +193,42 @@ impl Widget for Column {
 
     fn children(&self) -> &[Box<dyn Widget>] {
         &self.children
+    }
+
+    fn event(&mut self, event: &MouseEvent, rect: Rect) -> EventResponse     {
+        let pos = match event {
+            MouseEvent::MouseMoveEvent(p) => *p,
+            MouseEvent::MouseClickEvent(c) => c.position,
+            MouseEvent::MouseScrollEvent(_) => return EventResponse{
+                handled: false,
+                ..EventResponse::default()
+            },
+        };
+
+        let is_move = matches!(event, MouseEvent::MouseMoveEvent(_));
+        let mut handled = false;
+        let mut cursor: Option<CursorIcon> = None;
+
+        for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
+            let translated = child_rect.translate(&rect.origin());
+            if is_move {
+                // Forward move to all children so they can update hover state
+                let response =child.event(event, translated);
+                if response.handled{
+                    handled = true;
+                    cursor = response.cursor;
+                }
+            } else if translated.contains(&pos) && child.event(event, translated).handled {
+                return EventResponse{
+                    handled: false,
+                    ..EventResponse::default()
+                };
+            }
+        }
+        EventResponse{
+            handled,
+            cursor
+        }
     }
 }
 

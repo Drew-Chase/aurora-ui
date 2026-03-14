@@ -96,3 +96,15 @@ impl Widget for Text {
         &[]
     }
 }
+
+impl From<String> for Text {
+    fn from(text: String) -> Self {
+        Self::new(text)
+    }
+}
+
+impl From<&str> for Text {
+    fn from(text: &str) -> Self {
+        Self::new(text)
+    }
+}

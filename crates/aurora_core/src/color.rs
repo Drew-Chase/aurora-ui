@@ -229,6 +229,29 @@ impl Color {
         let local_t = scaled - index as f32;
         colors[index].lerp(&colors[index + 1], local_t)
     }
+
+    pub fn opacity(mut self, opacity: f32) -> Self {
+        let opacity = opacity.clamp(0.0, 1.0);
+        self.alpha = (255f32 * opacity) as u8;
+        self
+    }
+
+    pub fn alpha(mut self, alpha: u8) -> Self {
+        self.alpha = alpha;
+        self
+    }
+    pub fn red(mut self, red: u8) -> Self {
+        self.red = red;
+        self
+    }
+    pub fn green(mut self, green: u8) -> Self {
+        self.green = green;
+        self
+    }
+    pub fn blue(mut self, blue: u8) -> Self {
+        self.blue = blue;
+        self
+    }
 }
 
 /// Formats the color as a CSS-style `#rrggbbaa` hex string

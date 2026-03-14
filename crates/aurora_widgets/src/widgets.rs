@@ -1,7 +1,13 @@
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::cursor_icon::CursorIcon;
+use aurora_core::kmi::mouse::MouseEvent;
 use aurora_render::canvas::Canvas;
-
+#[derive(Default)]
+pub struct EventResponse {
+    pub handled: bool,
+    pub cursor: Option<CursorIcon>,
+}
 /// A UI element that can be laid out and painted.
 ///
 /// Implement this trait to create custom widgets. The framework calls
@@ -14,6 +20,9 @@ pub trait Widget {
     fn paint(&self, canvas: &mut Canvas, rect: Rect);
     /// Returns the widget's child widgets.
     fn children(&self) -> &[Box<dyn Widget>];
+    fn event(&mut self, _event: &MouseEvent, _rect: Rect)->EventResponse{
+        EventResponse::default()
+    }
 }
 
 /// Context passed to [`Widget::layout`] during the layout phase.

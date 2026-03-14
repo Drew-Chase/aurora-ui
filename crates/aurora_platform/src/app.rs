@@ -2,8 +2,11 @@
 
 use crate::errors::app::AppError;
 use aurora_core::color::Color;
+use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::cursor_icon::CursorIcon;
+use aurora_core::kmi::mouse::{MouseButton, MouseClickEvent, MouseEvent, MouseState};
 use aurora_gpu::gpu_context::GpuContext;
 use aurora_render::canvas::Canvas;
 #[cfg(feature = "text")]
@@ -68,16 +71,19 @@ pub struct App {
 pub struct AppWindow {
     window_handle: Arc<winit::window::Window>,
     gpu: Box<dyn GpuContext>,
+    root_widget: Option<Box<dyn Widget>>,
     #[cfg(feature = "text")]
     font_manager: aurora_text::font_manager::FontManager,
     #[cfg(feature = "text")]
     pub swash_cache: aurora_text::cosmic_text::SwashCache,
+    pub(crate) cursor: winit::window::CursorIcon,
 }
 
 struct AppHandler<F> {
     config: App,
     on_render: F,
     window: Option<AppWindow>,
+    pub(crate) current_cursor_position: Option<Point>,
 }
 
 /// Per-frame information passed to the render callback.
@@ -186,6 +192,7 @@ impl App {
             config: self,
             on_render,
             window: None,
+            current_cursor_position: None,
         };
         let event_loop = winit::event_loop::EventLoop::new().map_err(AppError::from)?;
         event_loop
@@ -240,6 +247,8 @@ impl AppWindow {
                 gpu,
                 font_manager,
                 swash_cache,
+                root_widget: None,
+                cursor: winit::window::CursorIcon::Default,
             })
         }
         #[cfg(not(feature = "text"))]
@@ -249,37 +258,64 @@ impl AppWindow {
     ///
     /// Runs the layout phase (computing sizes) then the paint phase (drawing
     /// into the canvas) for the given widget and all its children.
-    pub fn root(&mut self, mut widget: impl Widget + 'static) {
+    pub fn root(&mut self, widget: impl Widget + 'static) {
+        if self.root_widget.is_none() {
+            self.root_widget = Some(Box::new(widget));
+        }
+    }
+
+    pub(crate) fn layout_and_paint(&mut self) {
         let (width, height) = self.gpu.size();
         let available = Size::new(width as f32, height as f32);
 
-        // Layout phase — font_manager borrow ends when this block closes
-        {
+        if let Some(ref mut widget) = self.root_widget {
+            // Layout phase — font_manager borrow ends when this block closes
+            {
+                #[cfg(feature = "text")]
+                let mut ctx = LayoutCtx {
+                    font_manager: &mut self.font_manager,
+                };
+                #[cfg(not(feature = "text"))]
+                let mut ctx = LayoutCtx;
+
+                widget.layout(available, &mut ctx);
+            }
+
+            // Paint phase — safe to borrow font_manager again
+            let buffer = self.gpu.buffer_mut();
             #[cfg(feature = "text")]
-            let mut ctx = LayoutCtx {
-                font_manager: &mut self.font_manager,
-            };
+            let mut canvas = Canvas::new(
+                width,
+                height,
+                buffer,
+                &mut self.font_manager,
+                &mut self.swash_cache,
+            );
             #[cfg(not(feature = "text"))]
-            let mut ctx = LayoutCtx;
+            let mut canvas = Canvas::new(width, height, buffer);
 
-            widget.layout(available, &mut ctx);
+            let rect = Rect::from_size(available);
+            widget.paint(&mut canvas, rect);
         }
+    }
 
-        // Paint phase — safe to borrow font_manager again
-        let buffer = self.gpu.buffer_mut();
-        #[cfg(feature = "text")]
-        let mut canvas = Canvas::new(
-            width,
-            height,
-            buffer,
-            &mut self.font_manager,
-            &mut self.swash_cache,
-        );
-        #[cfg(not(feature = "text"))]
-        let mut canvas = Canvas::new(width, height, buffer);
-
-        let rect = Rect::from_size(available);
-        widget.paint(&mut canvas, rect);
+    pub(crate) fn dispatch_event(&mut self, event: &MouseEvent) {
+        let (width, height) = self.gpu.size();
+        let rect = Rect::from_size((width as f32, height as f32).into());
+        if let Some(ref mut widget) = self.root_widget {
+            let response = widget.event(event, rect);
+            if let Some(cursor) = response.cursor {
+                let winit_cursor = match cursor {
+                    CursorIcon::Default => winit::window::CursorIcon::Default,
+                    CursorIcon::Pointer => winit::window::CursorIcon::Pointer,
+                    CursorIcon::Text => winit::window::CursorIcon::Text,
+                    CursorIcon::Grab => winit::window::CursorIcon::Grab,
+                    CursorIcon::Grabbing => winit::window::CursorIcon::Grabbing,
+                    CursorIcon::NotAllowed => winit::window::CursorIcon::NotAllowed,
+                };
+                self.window_handle.set_cursor(winit_cursor);
+            }
+        }
     }
 
     /// Returns a mutable reference to the window's [`FontManager`](aurora_text::font_manager::FontManager).
@@ -438,7 +474,6 @@ where
             WindowEvent::RedrawRequested => {
                 log::trace!("Window redraw requested");
                 window.window_handle.pre_present_notify();
-
                 let physical = window.window_handle.inner_size();
                 let frame_info = FrameInfo {
                     width: physical.width,
@@ -448,6 +483,7 @@ where
                 window.gpu.resize(frame_info.width, frame_info.height);
                 window.clear(background_color);
                 (self.on_render)(window, frame_info);
+                window.layout_and_paint();
                 window.present();
             }
             WindowEvent::Resized(physical_size) => {
@@ -460,11 +496,48 @@ where
                 window.clear(background_color);
                 (self.on_render)(window, frame_info);
                 window.present();
+                window.request_redraw();
             }
             WindowEvent::ScaleFactorChanged { .. } => {
                 window.request_redraw();
             }
+            WindowEvent::CursorMoved { position, .. } => {
+                let pos = Point::new(position.x as f32, position.y as f32);
+                self.current_cursor_position = Some(pos);
+                let event = MouseEvent::MouseMoveEvent(pos);
+                window.dispatch_event(&event);
+                window.request_redraw();
+            }
+            WindowEvent::MouseInput { state, button, .. } => {
+                if let Some(current_cursor_position) = self.current_cursor_position {
+                    let event = MouseEvent::MouseClickEvent(MouseClickEvent {
+                        button: translate_mouse_button(button),
+                        state: translate_mouse_state(state),
+                        position: current_cursor_position,
+                    });
+                    window.dispatch_event(&event);
+                    window.request_redraw();
+                }
+            }
             _ => {}
         }
+    }
+}
+
+fn translate_mouse_button(button: winit::event::MouseButton) -> MouseButton {
+    match button {
+        winit::event::MouseButton::Left => MouseButton::Left,
+        winit::event::MouseButton::Right => MouseButton::Right,
+        winit::event::MouseButton::Middle => MouseButton::Middle,
+        winit::event::MouseButton::Back => MouseButton::Back,
+        winit::event::MouseButton::Forward => MouseButton::Forward,
+        winit::event::MouseButton::Other(_) => MouseButton::Left,
+    }
+}
+
+fn translate_mouse_state(state: winit::event::ElementState) -> MouseState {
+    match state {
+        winit::event::ElementState::Pressed => MouseState::Pressed,
+        winit::event::ElementState::Released => MouseState::Released,
     }
 }

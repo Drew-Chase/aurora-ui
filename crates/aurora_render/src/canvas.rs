@@ -29,6 +29,29 @@ pub struct Canvas<'a> {
 
 impl<'a> Canvas<'a> {
 
+    /// Blends a foreground color into a buffer span, handling both opaque and transparent cases.
+    fn blend_span(buffer: &mut [u32], pixel: u32, alpha: u8) {
+        if alpha == 255 {
+            buffer.fill(pixel);
+        } else {
+            let a = alpha as u32;
+            let inv_a = 255 - a;
+            let fg_r = (pixel >> 16) & 0xFF;
+            let fg_g = (pixel >> 8) & 0xFF;
+            let fg_b = pixel & 0xFF;
+            for px in buffer.iter_mut() {
+                let bg = *px;
+                let bg_r = (bg >> 16) & 0xFF;
+                let bg_g = (bg >> 8) & 0xFF;
+                let bg_b = bg & 0xFF;
+                let r = (fg_r * a + bg_r * inv_a) / 255;
+                let g = (fg_g * a + bg_g * inv_a) / 255;
+                let b = (fg_b * a + bg_b * inv_a) / 255;
+                *px = (r << 16) | (g << 8) | b;
+            }
+        }
+    }
+
     #[cfg(not(feature = "text"))]
     /// Creates a canvas from a pixel buffer and its dimensions.
     ///
@@ -74,8 +97,15 @@ impl<'a> Canvas<'a> {
     ///
     /// Coordinates are clamped to the canvas bounds.
     pub fn fill_rect(&mut self, rect: impl Into<Rect>, color: impl Into<Color>) {
+        let color = color.into();
+        if color.alpha == 0 {
+            return;
+        }
+
         let rect = rect.into();
-        let pixel = color.into().to_rgb_u32();
+        let pixel = color.to_rgb_u32();
+
+
 
         let x0 = (rect.x1.max(0.0) as u32).min(self.width);
         let y0 = (rect.y1.max(0.0) as u32).min(self.height);
@@ -85,9 +115,7 @@ impl<'a> Canvas<'a> {
         for y in y0..y1 {
             let row_start = (y * self.width + x0) as usize;
             let row_end = (y * self.width + x1) as usize;
-            if row_end <= self.buffer.len() {
-                self.buffer[row_start..row_end].fill(pixel);
-            }
+            Self::blend_span(&mut self.buffer[row_start..row_end], pixel, color.alpha);
         }
     }
 
@@ -127,7 +155,12 @@ impl<'a> Canvas<'a> {
             return self.fill_rect(rect, color);
         }
         let rect = rect.into();
-        let pixel = color.into().to_rgb_u32();
+        let color = color.into();
+        if color.alpha == 0 {
+            return;
+        }
+        let pixel = color.to_rgb_u32();
+        let alpha = color.alpha;
 
         let w = rect.x2 - rect.x1;
         let h = rect.y2 - rect.y1;
@@ -239,7 +272,7 @@ impl<'a> Canvas<'a> {
                 let row_start = (y * self.width + row_x0) as usize;
                 let row_end = (y * self.width + row_x1) as usize;
                 if row_end <= self.buffer.len() {
-                    self.buffer[row_start..row_end].fill(pixel);
+                    Self::blend_span(&mut self.buffer[row_start..row_end], pixel, alpha);
                 }
             }
         }
@@ -251,7 +284,12 @@ impl<'a> Canvas<'a> {
     pub fn stroke_rect(&mut self, bounds: impl Into<Rect>, thickness: impl Into<u32>, color: impl Into<Color>) {
         let rect = bounds.into();
         let thickness = thickness.into();
-        let pixel = color.into().to_rgb_u32();
+        let color = color.into();
+        if color.alpha == 0 {
+            return;
+        }
+        let pixel = color.to_rgb_u32();
+        let alpha = color.alpha;
 
         let x0 = (rect.x1.max(0.0) as u32).min(self.width);
         let y0 = (rect.y1.max(0.0) as u32).min(self.height);
@@ -269,7 +307,7 @@ impl<'a> Canvas<'a> {
                 let row_start = (y * self.width + x0) as usize;
                 let row_end = (y * self.width + x1) as usize;
                 if row_end <= self.buffer.len() {
-                    self.buffer[row_start..row_end].fill(pixel);
+                    Self::blend_span(&mut self.buffer[row_start..row_end], pixel, alpha);
                 }
             } else {
                 // Middle rows — fill only the left and right edges
@@ -277,14 +315,14 @@ impl<'a> Canvas<'a> {
                     let start = (y * self.width + x0) as usize;
                     let end = (y * self.width + inner_x0) as usize;
                     if end <= self.buffer.len() {
-                        self.buffer[start..end].fill(pixel);
+                        Self::blend_span(&mut self.buffer[start..end], pixel, alpha);
                     }
                 }
                 if inner_x1 < x1 {
                     let start = (y * self.width + inner_x1) as usize;
                     let end = (y * self.width + x1) as usize;
                     if end <= self.buffer.len() {
-                        self.buffer[start..end].fill(pixel);
+                        Self::blend_span(&mut self.buffer[start..end], pixel, alpha);
                     }
                 }
             }
@@ -308,7 +346,12 @@ impl<'a> Canvas<'a> {
         }
         let rect = bounds.into();
         let t = thickness as f32;
-        let pixel = color.into().to_rgb_u32();
+        let color = color.into();
+        if color.alpha == 0 {
+            return;
+        }
+        let pixel = color.to_rgb_u32();
+        let alpha = color.alpha;
 
         let w = rect.x2 - rect.x1;
         let h = rect.y2 - rect.y1;
@@ -415,7 +458,7 @@ impl<'a> Canvas<'a> {
                 let start = (y * self.width + out_left) as usize;
                 let end = (y * self.width + out_right) as usize;
                 if end <= self.buffer.len() {
-                    self.buffer[start..end].fill(pixel);
+                    Self::blend_span(&mut self.buffer[start..end], pixel, alpha);
                 }
                 continue;
             }
@@ -471,7 +514,7 @@ impl<'a> Canvas<'a> {
                 let start = (y * self.width + out_left) as usize;
                 let end = (y * self.width + inn_left.min(out_right)) as usize;
                 if end <= self.buffer.len() {
-                    self.buffer[start..end].fill(pixel);
+                    Self::blend_span(&mut self.buffer[start..end], pixel, alpha);
                 }
             }
             // Right border strip
@@ -479,7 +522,7 @@ impl<'a> Canvas<'a> {
                 let start = (y * self.width + inn_right.max(out_left)) as usize;
                 let end = (y * self.width + out_right) as usize;
                 if end <= self.buffer.len() {
-                    self.buffer[start..end].fill(pixel);
+                    Self::blend_span(&mut self.buffer[start..end], pixel, alpha);
                 }
             }
         }

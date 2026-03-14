@@ -11,6 +11,8 @@ pub struct BoxWidget {
     pub background_color: aurora_core::color::Color,
     pub corners: Corners,
     pub padding: Edges,
+    pub child: Option<Box<dyn Widget>>,
+    child_rect: Rect,
 }
 
 impl BoxWidget {
@@ -37,6 +39,10 @@ impl BoxWidget {
         self.padding = padding;
         self
     }
+    pub fn child(mut self, child: impl Widget + 'static) -> Self {
+        self.child = Some(Box::new(child));
+        self
+    }
 }
 
 impl Default for BoxWidget {
@@ -47,12 +53,14 @@ impl Default for BoxWidget {
             background_color: aurora_core::color::Color::TRANSPARENT,
             corners: Corners::zero(),
             padding: Edges::zero(),
+            child: None,
+            child_rect: Rect::zero(),
         }
     }
 }
 
 impl Widget for BoxWidget {
-    fn layout(&mut self, available: Size, _ctx: &mut LayoutCtx) -> Size {
+    fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
         let width = match self.width {
             Some(w) => w as f32,
             None => available.width,
@@ -61,14 +69,36 @@ impl Widget for BoxWidget {
             Some(h) => h as f32,
             None => available.height,
         };
+
+        let content_size = Size::new(
+            (width - self.padding.horizontal()).max(0.0),
+            (height - self.padding.vertical()).max(0.0),
+        );
+        if let Some(child) = &mut self.child {
+            let child_size = child.layout(content_size, ctx);
+            self.child_rect = Rect::new(
+                self.padding.left,
+                self.padding.top,
+                self.padding.left + child_size.width,
+                self.padding.top + child_size.height,
+            );
+        }
+
         Size::new(width, height)
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
-        canvas.fill_rounded_rect(rect, self.corners, self.background_color)
+        canvas.fill_rounded_rect(rect, self.corners, self.background_color);
+        if let Some(child) = &self.child {
+            let translated = self.child_rect.translate(&rect.origin());
+            child.paint(canvas, translated);
+        }
     }
 
     fn children(&self) -> &[Box<dyn Widget>] {
-        &[]
+        match &self.child {
+            Some(child) => std::slice::from_ref(child),
+            None => &[]
+        }
     }
 }
