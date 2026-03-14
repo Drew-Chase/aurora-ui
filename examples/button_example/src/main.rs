@@ -19,6 +19,7 @@ fn main() {
                     .child(button(
                         ButtonOptions{
                             text: "Click Me!".into(),
+                            text_alignment: Align::Center,
                             on_click: Box::new(|event| {
                                 println!("Button clicked at position: {:?}", event.position);
                             }),
