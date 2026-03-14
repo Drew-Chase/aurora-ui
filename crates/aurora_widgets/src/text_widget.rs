@@ -1,4 +1,4 @@
-use crate::layout::Align;
+use crate::layout::{Align, Justify};
 use crate::widgets::{LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::edges::Edges;
@@ -24,6 +24,7 @@ pub struct Text {
     pub color: Color,
     pub padding: Edges,
     pub align: Align,
+    pub justify: Justify,
     pub width: Option<f32>,
     pub height: Option<f32>,
     pub text_layout: Option<TextLayout>,
@@ -105,6 +106,12 @@ impl Text {
         self
     }
 
+    /// Sets vertical text justification.
+    pub fn justify(mut self, justify: Justify) -> Self {
+        self.justify = justify;
+        self
+    }
+
     /// Sets an explicit width in pixels. When `None`, fills the available width.
     pub fn width(mut self, width: f32) -> Self {
         self.width = Some(width);
@@ -126,6 +133,7 @@ impl Default for Text {
             color: Color::BLACK,
             padding: Edges::zero(),
             align: Align::Start,
+            justify: Justify::Start,
             width: None,
             height: None,
             text_layout: None,
@@ -163,9 +171,13 @@ impl Widget for Text {
             .unwrap_or(available.height)
             .min(available.height);
 
-        // Center text vertically
         let available_height = height - self.padding.top - self.padding.bottom;
-        self.vertical_offset = ((available_height - text_size.height) / 2.0).max(0.0);
+        let leftover = (available_height - text_size.height).max(0.0);
+        self.vertical_offset = match self.justify {
+            Justify::Start | Justify::SpaceBetween => 0.0,
+            Justify::Center => leftover / 2.0,
+            Justify::End => leftover,
+        };
 
         self.text_layout = Some(text_layout);
 

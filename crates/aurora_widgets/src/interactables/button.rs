@@ -1,7 +1,7 @@
 use crate::box_widget::BoxWidget;
 use crate::composite::Composite;
 use crate::interactables::touch_area::{OnClickCallback, TouchArea};
-use crate::layout::column::Column;
+use crate::layout::{column::Column, Align, Justify};
 use crate::text_widget::Text;
 use crate::widgets::Widget;
 use aurora_core::color::Color;
@@ -24,7 +24,7 @@ pub struct ButtonOptions {
 impl Default for ButtonOptions {
     fn default() -> ButtonOptions {
         ButtonOptions {
-            text_options: Text::default(),
+            text_options: Text::default().align(Align::Center).justify(Justify::Center),
             on_click: Box::new(|_| {}),
             width: 100,
             height: 50,
