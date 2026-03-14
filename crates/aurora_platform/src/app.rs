@@ -495,6 +495,7 @@ where
                 window.gpu.resize(frame_info.width, frame_info.height);
                 window.clear(background_color);
                 (self.on_render)(window, frame_info);
+                window.layout_and_paint();
                 window.present();
                 window.request_redraw();
             }

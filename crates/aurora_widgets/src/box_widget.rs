@@ -79,12 +79,12 @@ impl Widget for BoxWidget {
             self.child_rect = Rect::new(
                 self.padding.left,
                 self.padding.top,
-                self.padding.left + child_size.width,
-                self.padding.top + child_size.height,
+                self.padding.left + child_size.width.min(content_size.width),
+                self.padding.top + child_size.height.min(content_size.height),
             );
         }
 
-        Size::new(width, height)
+        Size::new(width.min(available.width), height.min(available.height))
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {

@@ -3,8 +3,9 @@ use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_render::canvas::Canvas;
-use aurora_text::cosmic_text::Align;
+use aurora_text::cosmic_text;
 use aurora_text::text_layout::TextLayout;
+use crate::layout::Align;
 
 /// A widget that displays styled text.
 ///
@@ -17,6 +18,8 @@ pub struct Text {
     pub color: aurora_core::color::Color,
     pub padding: Edges,
     pub align: Align,
+    pub width: Option<f32>,
+    pub height: Option<f32>,
     pub(crate) text_layout: Option<TextLayout>,
 }
 
@@ -48,6 +51,16 @@ impl Text {
         self.align = align;
         self
     }
+    /// Sets an explicit width in pixels. When `None`, fills the available width.
+    pub fn width(mut self, width: f32) -> Self {
+        self.width = Some(width);
+        self
+    }
+    /// Sets an explicit height in pixels. When `None`, fills the available height.
+    pub fn height(mut self, height: f32) -> Self {
+        self.height = Some(height);
+        self
+    }
 }
 
 impl Default for Text {
@@ -58,28 +71,48 @@ impl Default for Text {
             color: aurora_core::color::Color::BLACK,
             text_layout: None,
             padding: Edges::zero(),
-            align: Align::Left,
+            align: Align::Start,
+            width: None,
+            height: None,
         }
     }
 }
 
 impl Widget for Text {
-    fn layout(&mut self, _available: Size, ctx: &mut LayoutCtx) -> Size {
+    fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
         let font_manager = &mut ctx.font_manager;
-        let text_layout = TextLayout::new(
+        let max_width = (available.width - self.padding.horizontal()).max(0.0);
+        let align: cosmic_text::Align = match self.align{
+            Align::Start => cosmic_text::Align::Left,
+            Align::Center => cosmic_text::Align::Center,
+            Align::End => cosmic_text::Align::Right,
+            Align::Stretch => {
+                cosmic_text::Align::Left
+            }
+        };
+
+        let mut text_layout = TextLayout::new(
             font_manager,
             &self.text,
             self.font_size,
             self.color,
-            Some(self.align),
+            Some(align),
         );
-        let size = text_layout.size();
+        text_layout.set_max_width(font_manager, max_width);
+
+        let text_size = text_layout.size();
         self.text_layout = Some(text_layout);
 
-        Size::new(
-            size.width + self.padding.horizontal(),
-            size.height + self.padding.vertical(),
-        )
+        let width = self
+            .width
+            .unwrap_or(available.width)
+            .min(available.width);
+        let height = self
+            .height
+            .unwrap_or(available.height)
+            .min(available.height);
+
+        Size::new(width, height)
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
@@ -87,7 +120,7 @@ impl Widget for Text {
             canvas.draw_text(
                 text_layout,
                 (rect.x1 + self.padding.left) as i32,
-                (rect.y1 + self.padding.top) as i32,
+                (rect.y1 + self.padding.top + self.font_size) as i32,
             );
         }
     }

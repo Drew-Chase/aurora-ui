@@ -51,10 +51,14 @@ impl Widget for TouchArea {
             .child
             .as_mut()
             .map(|child| child.layout(available, ctx));
-        let width = self.width.unwrap_or(child_size.unwrap_or(available).width);
+        let width = self
+            .width
+            .unwrap_or(child_size.unwrap_or(available).width)
+            .min(available.width);
         let height = self
             .height
-            .unwrap_or(child_size.unwrap_or(available).height);
+            .unwrap_or(child_size.unwrap_or(available).height)
+            .min(available.height);
 
         self.child_rect = Rect::new(0f32, 0f32, width, height);
 
