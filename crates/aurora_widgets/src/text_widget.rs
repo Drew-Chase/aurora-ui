@@ -124,7 +124,7 @@ impl Widget for Text {
             canvas.draw_text(
                 text_layout,
                 (rect.x1 + self.padding.left) as i32,
-                (rect.y1 + self.padding.top + self.vertical_offset + self.font_size) as i32,
+                (rect.y1 + self.padding.top + self.vertical_offset) as i32,
             );
         }
     }

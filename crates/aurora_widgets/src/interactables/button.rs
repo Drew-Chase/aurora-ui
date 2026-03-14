@@ -7,6 +7,7 @@ use crate::text_widget::Text;
 use crate::widgets::Widget;
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
+use aurora_core::geometry::edges::Edges;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -72,11 +73,16 @@ pub fn button(options: ButtonOptions) -> impl Widget {
                         .width(width)
                         .height(height)
                         .child(
-                            Column::new().child(text_options.width(width as f32).height(height as f32).color(if state.is_hovering {
-                                text_hover_color
-                            } else {
-                                text_color
-                            })),
+                            Column::new().child(
+                                text_options
+                                    .width(width as f32)
+                                    .height(height as f32)
+                                    .color(if state.is_hovering {
+                                        text_hover_color
+                                    } else {
+                                        text_color
+                                    }),
+                            ),
                         ),
                 )
                 .on_hover(move |_position, hovering| {
