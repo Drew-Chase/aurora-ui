@@ -17,7 +17,8 @@ fn main() {
                             text_options: Text{
                                 text: "Test".to_string(),
                                 align: Align::Center,
-                                font_size: 24.0,
+                                justify: Justify::Center,
+                                font: FontOptions::new().size(14.0),
                               ..Text::default()
                             },
                             on_click: Box::new(|event| {
