@@ -97,6 +97,8 @@ pub struct App {
     pub background_color: Color,
     pub use_system_font: bool,
     #[cfg(feature = "text")]
+    pub font_options: aurora_text::font_options::FontOptions,
+    #[cfg(feature = "text")]
     pub fonts: Vec<&'static [u8]>,
 }
 
@@ -110,6 +112,8 @@ pub struct AppWindow {
     root_widget: Option<Box<dyn Widget>>,
     #[cfg(feature = "text")]
     font_manager: aurora_text::font_manager::FontManager,
+    #[cfg(feature = "text")]
+    font_options: aurora_text::font_options::FontOptions,
     #[cfg(feature = "text")]
     pub swash_cache: aurora_text::cosmic_text::SwashCache,
     pub(crate) cursor: winit::window::CursorIcon,
@@ -237,6 +241,15 @@ impl App {
         self
     }
 
+    /// Sets the global font options applied to all text widgets by default.
+    ///
+    /// Individual widgets can override any field via their own builder methods.
+    #[cfg(feature = "text")]
+    pub fn font_options(mut self, font_options: aurora_text::font_options::FontOptions) -> Self {
+        self.font_options = font_options;
+        self
+    }
+
     /// Registers a font from a static byte slice (e.g. `include_bytes!`).
     ///
     /// The font is loaded into the [`FontManager`](aurora_text::font_manager::FontManager)
@@ -285,6 +298,8 @@ impl Default for App {
             background_color: Color::WHITE,
             use_system_font: false,
             #[cfg(feature = "text")]
+            font_options: aurora_text::font_options::FontOptions::default(),
+            #[cfg(feature = "text")]
             fonts: vec![],
         }
     }
@@ -322,6 +337,7 @@ impl AppWindow {
                 window_handle,
                 gpu,
                 font_manager,
+                font_options: config.font_options.clone(),
                 swash_cache,
                 root_widget: None,
                 cursor: winit::window::CursorIcon::Default,
@@ -355,6 +371,7 @@ impl AppWindow {
                 #[cfg(feature = "text")]
                 let mut ctx = LayoutCtx {
                     font_manager: &mut self.font_manager,
+                    font_options: &self.font_options,
                 };
                 #[cfg(not(feature = "text"))]
                 let mut ctx = LayoutCtx;

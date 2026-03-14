@@ -9,12 +9,20 @@ fn main() {
         .resizable(false)
         .position(WindowPosition::Center)
         .use_system_fonts()
+        .font_options(FontOptions::new().family("Roboto"))
         .run(|window, _frame_info| {
             window.root(
                 col!()
-                    .spacing(10.0)
+                    .spacing(0.0)
                     .align(Align::Center)
                     .justify(Justify::Center)
+                    .child(
+                        Text::new("Counter: ")
+                            .font_weight(FontWeight::Black)
+                            .font_size(24.0)
+                            .height(24.0)
+                            .align(Align::Center),
+                    )
                     .child(counter()),
             );
         })
@@ -33,18 +41,13 @@ pub fn counter() -> impl Widget {
 
         Box::new(
             row!()
-                .height(80)
+                .height(40)
                 .width(150)
                 .spacing(10.0)
                 .justify(Justify::Center)
                 .align(Align::Center)
                 .child(button(ButtonOptions {
-                    text_options: Text {
-                        text: "-".into(),
-                        font_size: 20.0,
-                        align: Align::Center,
-                        ..Text::default()
-                    },
+                    text_options: Text::new("-").font_size(20.0).align(Align::Center),
                     width: 40,
                     height: 40,
                     on_click: Box::new(move |_| decrement_setter.set(|prev| prev.value -= 1)),
@@ -54,15 +57,10 @@ pub fn counter() -> impl Widget {
                     Text::new(state.value.to_string())
                         .font_size(20.0)
                         .align(Align::Center)
-                        .padding(Edges::new(30.0, 0.0, 0.0, 0.0)),
+                        .padding(Edges::new(20.0, 0.0, 0.0, 0.0)),
                 )
                 .child(button(ButtonOptions {
-                    text_options: Text {
-                        text: "+".into(),
-                        align: Align::Center,
-                        font_size: 20.0,
-                        ..Text::default()
-                    },
+                    text_options: Text::new("+").font_size(20.0).align(Align::Center),
                     width: 40,
                     height: 40,
                     on_click: Box::new(move |_| increment_setter.set(|prev| prev.value += 1)),

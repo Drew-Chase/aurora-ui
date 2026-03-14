@@ -27,6 +27,8 @@ pub use aurora_widgets::{col, row};
 
 // Text (feature-gated)
 #[cfg(feature = "text")]
+pub use aurora_text::font_options::{FontOptions, FontStyle, FontStretch, FontWeight};
+#[cfg(feature = "text")]
 pub use aurora_text::{font_manager::FontManager, text_layout::TextLayout};
 #[cfg(feature = "text")]
 pub use aurora_widgets::interactables::button::{button, ButtonOptions};

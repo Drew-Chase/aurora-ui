@@ -1,4 +1,5 @@
 use crate::font_manager::FontManager;
+use crate::font_options::FontOptions;
 use aurora_core::color::Color;
 use aurora_core::geometry::size::Size;
 
@@ -15,22 +16,26 @@ pub struct TextLayout {
 impl TextLayout {
     /// Creates a new text layout, shaping the given text immediately.
     ///
-    /// Line height is set to `font_size * 1.2`. Pass an `align` value to
-    /// control horizontal alignment (`Left`, `Center`, `Right`, etc.).
+    /// Font size, line height, family, weight, style, and stretch are read
+    /// from `font_options`. Pass an `align` value to control horizontal
+    /// alignment (`Left`, `Center`, `Right`, etc.).
     pub fn new(
         font_manager: &mut FontManager,
         text: &str,
-        font_size: f32,
+        font_options: &FontOptions,
         color: Color,
         align: Option<cosmic_text::Align>,
     ) -> Self {
-        let metrics = cosmic_text::Metrics::new(font_size, font_size * 1.2);
+        let size = font_options.effective_size();
+        let line_height = font_options.effective_line_height();
+        let metrics = cosmic_text::Metrics::new(size, line_height);
         let mut buffer = cosmic_text::Buffer::new(font_manager.font_system_mut(), metrics);
+        let attrs = font_options.to_cosmic_attrs();
 
         buffer.set_text(
             font_manager.font_system_mut(),
             text,
-            &cosmic_text::Attrs::new(),
+            &attrs,
             cosmic_text::Shaping::Advanced,
             align,
         );

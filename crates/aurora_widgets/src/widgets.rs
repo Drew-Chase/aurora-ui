@@ -28,11 +28,13 @@ pub trait Widget {
 /// Context passed to [`Widget::layout`] during the layout phase.
 ///
 /// When the `text` feature is enabled, this carries a mutable reference to
-/// the [`FontManager`](aurora_text::font_manager::FontManager) so widgets can
-/// shape text.
+/// the [`FontManager`](aurora_text::font_manager::FontManager) and the global
+/// [`FontOptions`](aurora_text::font_options::FontOptions) so widgets can shape
+/// text with the application's default font settings.
 #[cfg(feature = "text")]
 pub struct LayoutCtx<'a> {
     pub font_manager: &'a mut aurora_text::font_manager::FontManager,
+    pub font_options: &'a aurora_text::font_options::FontOptions,
 }
 
 /// Context passed to [`Widget::layout`] during the layout phase.
