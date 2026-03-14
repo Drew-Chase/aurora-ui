@@ -117,6 +117,7 @@ pub struct AppWindow {
     #[cfg(feature = "text")]
     pub swash_cache: aurora_text::cosmic_text::SwashCache,
     pub(crate) cursor: winit::window::CursorIcon,
+    pub(crate) last_mouse_position: Option<Point>,
 }
 
 struct AppHandler<F> {
@@ -341,6 +342,7 @@ impl AppWindow {
                 swash_cache,
                 root_widget: None,
                 cursor: winit::window::CursorIcon::Default,
+                last_mouse_position: None,
             })
         }
         #[cfg(not(feature = "text"))]
@@ -349,6 +351,7 @@ impl AppWindow {
             gpu,
             root_widget: None,
             cursor: winit::window::CursorIcon::Default,
+            last_mouse_position: None,
         })
     }
     /// Lays out and paints a root widget tree into the window.
@@ -366,7 +369,7 @@ impl AppWindow {
         let available = Size::new(width as f32, height as f32);
 
         if let Some(ref mut widget) = self.root_widget {
-            // Layout phase — font_manager borrow ends when this block closes
+            // Layout phase — may rebuild dirty composites
             {
                 #[cfg(feature = "text")]
                 let mut ctx = LayoutCtx {
@@ -377,6 +380,36 @@ impl AppWindow {
                 let mut ctx = LayoutCtx;
 
                 widget.layout(available, &mut ctx);
+            }
+
+            // Restore hover state on rebuilt widgets so visual hover and cursor
+            // survive composite rebuilds triggered by clicks or state changes.
+            if let Some(pos) = self.last_mouse_position {
+                let rect = Rect::from_size(available);
+                let response = widget.event(&MouseEvent::MouseMoveEvent(pos), rect);
+                let cursor = response.cursor.unwrap_or(CursorIcon::Default);
+                let winit_cursor = match cursor {
+                    CursorIcon::Default => winit::window::CursorIcon::Default,
+                    CursorIcon::Pointer => winit::window::CursorIcon::Pointer,
+                    CursorIcon::Text => winit::window::CursorIcon::Text,
+                    CursorIcon::Grab => winit::window::CursorIcon::Grab,
+                    CursorIcon::Grabbing => winit::window::CursorIcon::Grabbing,
+                    CursorIcon::NotAllowed => winit::window::CursorIcon::NotAllowed,
+                };
+                self.window_handle.set_cursor(winit_cursor);
+
+                // Re-layout if hover dirtied any composites
+                {
+                    #[cfg(feature = "text")]
+                    let mut ctx = LayoutCtx {
+                        font_manager: &mut self.font_manager,
+                        font_options: &self.font_options,
+                    };
+                    #[cfg(not(feature = "text"))]
+                    let mut ctx = LayoutCtx;
+
+                    widget.layout(available, &mut ctx);
+                }
             }
 
             // Paint phase — safe to borrow font_manager again
@@ -398,6 +431,9 @@ impl AppWindow {
     }
 
     pub(crate) fn dispatch_event(&mut self, event: &MouseEvent) {
+        if let MouseEvent::MouseMoveEvent(pos) = event {
+            self.last_mouse_position = Some(*pos);
+        }
         let (width, height) = self.gpu.size();
         let rect = Rect::from_size((width as f32, height as f32).into());
         if let Some(ref mut widget) = self.root_widget {
