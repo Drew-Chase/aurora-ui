@@ -24,3 +24,5 @@
 /// - [`errors`] — Error types for window creation and event loop failures.
 pub mod app;
 pub mod errors;
+
+pub use winit;
