@@ -214,7 +214,7 @@ impl App {
     /// Enables the use of system font discovery.
     ///
     /// This can cause a ~200ms delay on startup but allows for more font options.
-    pub fn use_system_fonts(mut self)->Self{
+    pub fn use_system_fonts(mut self) -> Self {
         self.use_system_font = true;
         self
     }
@@ -222,7 +222,7 @@ impl App {
     /// Enables or disables system font discovery.
     ///
     /// Enabling system font discovery can cause a ~200ms delay on startup but allows for more font options.
-    pub fn set_use_system_font(mut self, use_system_font: bool)->Self{
+    pub fn set_use_system_font(mut self, use_system_font: bool) -> Self {
         self.use_system_font = use_system_font;
         self
     }
@@ -565,32 +565,31 @@ where
             .with_resizable(resizable)
             .with_inner_size(dpi::LogicalSize::new(size.width, size.height));
         if !resizable {
-            attributes = attributes.with_enabled_buttons(
-                WindowButtons::CLOSE | WindowButtons::MINIMIZE,
-            );
+            attributes =
+                attributes.with_enabled_buttons(WindowButtons::CLOSE | WindowButtons::MINIMIZE);
         }
-        if let Some(position) = config.position {
-            if let Some(monitor) = resolve_monitor(event_loop, config.monitor) {
-                let monitor_pos = monitor.position();
-                let monitor_size = monitor.size();
-                let scale = monitor.scale_factor();
+        if let Some(position) = config.position
+            && let Some(monitor) = resolve_monitor(event_loop, config.monitor)
+        {
+            let monitor_pos = monitor.position();
+            let monitor_size = monitor.size();
+            let scale = monitor.scale_factor();
 
-                let pos = match position {
-                    WindowPosition::Center => {
-                        let win_w = (size.width as f64 * scale) as i32;
-                        let win_h = (size.height as f64 * scale) as i32;
-                        dpi::PhysicalPosition::new(
-                            monitor_pos.x + (monitor_size.width as i32 - win_w) / 2,
-                            monitor_pos.y + (monitor_size.height as i32 - win_h) / 2,
-                        )
-                    }
-                    WindowPosition::At(point) => dpi::PhysicalPosition::new(
-                        monitor_pos.x + (point.x as f64 * scale) as i32,
-                        monitor_pos.y + (point.y as f64 * scale) as i32,
-                    ),
-                };
-                attributes = attributes.with_position(pos);
-            }
+            let pos = match position {
+                WindowPosition::Center => {
+                    let win_w = (size.width as f64 * scale) as i32;
+                    let win_h = (size.height as f64 * scale) as i32;
+                    dpi::PhysicalPosition::new(
+                        monitor_pos.x + (monitor_size.width as i32 - win_w) / 2,
+                        monitor_pos.y + (monitor_size.height as i32 - win_h) / 2,
+                    )
+                }
+                WindowPosition::At(point) => dpi::PhysicalPosition::new(
+                    monitor_pos.x + (point.x as f64 * scale) as i32,
+                    monitor_pos.y + (point.y as f64 * scale) as i32,
+                ),
+            };
+            attributes = attributes.with_position(pos);
         }
         if let Some(min_size) = min_size {
             attributes = attributes
@@ -723,9 +722,7 @@ fn resolve_monitor(
             }
             primary()
         }
-        WindowMonitor::Index(index) => {
-            event_loop.available_monitors().nth(index).or_else(primary)
-        }
+        WindowMonitor::Index(index) => event_loop.available_monitors().nth(index).or_else(primary),
     }
 }
 
