@@ -598,6 +598,10 @@ where
         self.window = match event_loop.create_window(attributes) {
             Ok(window) => {
                 let handle = Arc::new(window);
+                #[cfg(target_os = "windows")]
+                if config.custom_titlebar {
+                    crate::windows_titlebar::apply(&handle);
+                }
                 match AppWindow::new(handle, config) {
                     Ok(app_window) => Some(app_window),
                     Err(err) => {
