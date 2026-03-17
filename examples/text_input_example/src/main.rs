@@ -10,19 +10,34 @@ fn main() {
     let email = Rc::new(RefCell::new(String::new()));
     let password = Rc::new(RefCell::new(String::new()));
 
-    // Clones for on_change closures
     let username_w = username.clone();
     let email_w = email.clone();
     let password_w = password.clone();
 
-    // Clones for submit button
     let username_r = username.clone();
     let email_r = email.clone();
     let password_r = password.clone();
 
+    let submit = {
+        let username = username_r.clone();
+        let email = email_r.clone();
+        let password = password_r.clone();
+        move || {
+            println!(
+                "Logging in with Username: {}, Email: {}, Password: {}",
+                username.borrow(),
+                email.borrow(),
+                password.borrow(),
+            );
+        }
+    };
+
+    let submit_btn = Rc::new(RefCell::new(submit.clone()));
+    let submit_enter = submit_btn.clone();
+
     App::new()
         .title("Text Input Example")
-        .size((400, 300))
+        .size((400, 320))
         .position(WindowPosition::Center)
         .background_color(hsl!(0, 0.0, 0.9))
         .resizable(false)
@@ -43,6 +58,7 @@ fn main() {
                     .child(
                         TextInput::new()
                             .placeholder("Username")
+                            .tab_index(1)
                             .height(34.0)
                             .corners(Corners::all(6.0))
                             .padding(Edges::symmetric(8.0, 10.0))
@@ -54,6 +70,7 @@ fn main() {
                     .child(
                         TextInput::new()
                             .placeholder("Email address")
+                            .tab_index(2)
                             .height(34.0)
                             .corners(Corners::all(6.0))
                             .padding(Edges::symmetric(8.0, 10.0))
@@ -65,12 +82,18 @@ fn main() {
                     .child(
                         TextInput::new()
                             .placeholder("Password")
+                            .password(true)
+                            .tab_index(3)
                             .height(34.0)
                             .corners(Corners::all(6.0))
                             .padding(Edges::symmetric(8.0, 10.0))
                             .on_change({
                                 let password = password_w.clone();
                                 move |value| *password.borrow_mut() = value.to_string()
+                            })
+                            .on_submit({
+                                let submit = submit_enter.clone();
+                                move || submit.borrow_mut()()
                             }),
                     )
                     .child(button(ButtonOptions {
@@ -86,17 +109,8 @@ fn main() {
                         text_color: Color::WHITE,
                         text_hover_color: Color::WHITE,
                         on_click: {
-                            let username = username_r.clone();
-                            let email = email_r.clone();
-                            let password = password_r.clone();
-                            Box::new(move |_| {
-                                println!(
-                                    "Logging in with Username: {}, Email: {}, Password: {}",
-                                    username.borrow(),
-                                    email.borrow(),
-                                    password.borrow(),
-                                );
-                            })
+                            let submit = submit_btn.clone();
+                            Box::new(move |_| submit.borrow_mut()())
                         },
                         ..Default::default()
                     })),

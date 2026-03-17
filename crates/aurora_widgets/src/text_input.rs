@@ -5,7 +5,7 @@ use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::cursor_icon::CursorIcon;
-use aurora_core::kmi::keyboard::{Key, KeyboardEvent};
+use aurora_core::kmi::keyboard::{Key, KeyboardEvent, Modifiers};
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
@@ -16,11 +16,21 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 
+/// Callback for key events. Receives the key and modifiers.
+pub type OnKeyCallback = Box<dyn FnMut(&Key, &Modifiers)>;
+
 /// A single-line text input field.
 ///
 /// Supports keyboard input, cursor navigation, text selection (Shift+arrows,
-/// Shift+click, Ctrl+A), click-to-focus, and click-to-position-cursor.
-/// Clicking outside the input unfocuses it.
+/// Shift+click, Ctrl+A), click-to-focus, click-to-position-cursor, password
+/// masking, Tab navigation, and Enter to submit.
+///
+/// # Tab Navigation
+///
+/// Set a `tab_index` on each focusable widget. When the user presses Tab,
+/// focus moves to the next widget by tab index. Shift+Tab moves backward.
+/// Tab indices are global — the framework collects them from all widgets
+/// in the tree and cycles through them in order.
 ///
 /// # Example
 ///
@@ -28,18 +38,15 @@ static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 /// use aurora_ui::prelude::*;
 ///
 /// TextInput::new()
-///     .placeholder("Enter your name")
-///     .font_size(16.0)
-///     .padding(Edges::symmetric(8.0, 12.0))
-///     .selection_color(Color::from_rgb(51, 120, 210))
+///     .placeholder("Username")
+///     .tab_index(1)
+///     .on_submit(|| println!("submitted!"))
 ///     .on_change(|text| println!("Input: {text}"))
 /// ```
 pub struct TextInput {
     id: u64,
     text: String,
     cursor_pos: usize,
-    /// Byte index of the selection anchor, if a selection is active.
-    /// The selected range is `min(anchor, cursor_pos)..max(anchor, cursor_pos)`.
     selection_anchor: Option<usize>,
     font: FontOptions,
     color: Color,
@@ -52,14 +59,18 @@ pub struct TextInput {
     padding: Edges,
     placeholder: String,
     focused: bool,
+    password: bool,
+    tab_index: Option<u32>,
     width: Option<f32>,
     height: Option<f32>,
     text_layout: Option<TextLayout>,
     placeholder_layout: Option<TextLayout>,
     cursor_pixel_x: f32,
-    /// Pixel x positions for each char boundary, used for click positioning and selection rendering.
     char_x_positions: Vec<f32>,
     on_change: Option<Box<dyn FnMut(&str)>>,
+    on_submit: Option<Box<dyn FnMut()>>,
+    on_key_down: Option<OnKeyCallback>,
+    on_key_up: Option<OnKeyCallback>,
 }
 
 impl Default for TextInput {
@@ -80,6 +91,8 @@ impl Default for TextInput {
             padding: Edges::symmetric(6.0, 10.0),
             placeholder: String::new(),
             focused: false,
+            password: false,
+            tab_index: None,
             width: None,
             height: None,
             text_layout: None,
@@ -87,6 +100,9 @@ impl Default for TextInput {
             cursor_pixel_x: 0.0,
             char_x_positions: Vec::new(),
             on_change: None,
+            on_submit: None,
+            on_key_down: None,
+            on_key_up: None,
         }
     }
 }
@@ -107,6 +123,21 @@ impl TextInput {
     /// Sets the placeholder text shown when the input is empty.
     pub fn placeholder(mut self, placeholder: impl Into<String>) -> Self {
         self.placeholder = placeholder.into();
+        self
+    }
+
+    /// Enables password mode — text is displayed as dots.
+    pub fn password(mut self, password: bool) -> Self {
+        self.password = password;
+        self
+    }
+
+    /// Sets the tab index for keyboard navigation.
+    ///
+    /// When Tab is pressed, focus moves to the widget with the next higher
+    /// tab index. Shift+Tab moves to the previous.
+    pub fn tab_index(mut self, index: u32) -> Self {
+        self.tab_index = Some(index);
         self
     }
 
@@ -188,7 +219,33 @@ impl TextInput {
         self
     }
 
-    /// Returns the selected byte range `(start, end)`, or `None` if no selection.
+    /// Registers a callback invoked when Enter is pressed while focused.
+    pub fn on_submit(mut self, f: impl FnMut() + 'static) -> Self {
+        self.on_submit = Some(Box::new(f));
+        self
+    }
+
+    /// Registers a callback invoked on key press while focused.
+    pub fn on_key_down(mut self, f: impl FnMut(&Key, &Modifiers) + 'static) -> Self {
+        self.on_key_down = Some(Box::new(f));
+        self
+    }
+
+    /// Registers a callback invoked on key release while focused.
+    pub fn on_key_up(mut self, f: impl FnMut(&Key, &Modifiers) + 'static) -> Self {
+        self.on_key_up = Some(Box::new(f));
+        self
+    }
+
+    /// Returns the display text — masked with dots if in password mode.
+    fn display_text(&self) -> String {
+        if self.password {
+            "\u{2022}".repeat(self.text.chars().count())
+        } else {
+            self.text.clone()
+        }
+    }
+
     fn selection_range(&self) -> Option<(usize, usize)> {
         self.selection_anchor.map(|anchor| {
             let lo = anchor.min(self.cursor_pos);
@@ -197,13 +254,11 @@ impl TextInput {
         })
     }
 
-    /// Returns true if there is a non-empty selection.
     fn has_selection(&self) -> bool {
         self.selection_range()
             .is_some_and(|(lo, hi)| lo != hi)
     }
 
-    /// Deletes the selected text and positions cursor at the start.
     fn delete_selection(&mut self) {
         if let Some((lo, hi)) = self.selection_range() {
             if lo != hi {
@@ -214,12 +269,10 @@ impl TextInput {
         }
     }
 
-    /// Clears any selection.
     fn clear_selection(&mut self) {
         self.selection_anchor = None;
     }
 
-    /// Starts or extends a selection from the current anchor.
     fn extend_selection(&mut self) {
         if self.selection_anchor.is_none() {
             self.selection_anchor = Some(self.cursor_pos);
@@ -232,17 +285,25 @@ impl TextInput {
         }
     }
 
-    /// Returns the pixel x for a given byte position using the cached positions.
+    /// Maps a byte position in the real text to a byte position in the display text.
+    fn display_byte_pos(&self, byte_pos: usize) -> usize {
+        if !self.password {
+            return byte_pos;
+        }
+        // In password mode, each char becomes a bullet (3 bytes in UTF-8).
+        let char_count = self.text[..byte_pos].chars().count();
+        char_count * "\u{2022}".len()
+    }
+
     fn pixel_x_for(&self, byte_pos: usize) -> f32 {
-        // char_x_positions[i] = pixel x after the i-th char boundary
-        // Index 0 = x after first char, etc.
-        // We need to find the char index for this byte_pos.
-        if byte_pos == 0 || self.char_x_positions.is_empty() {
+        let display_pos = self.display_byte_pos(byte_pos);
+        if display_pos == 0 || self.char_x_positions.is_empty() {
             return 0.0;
         }
+        let display_text = self.display_text();
         let mut char_idx = 0;
-        for (i, _) in self.text.char_indices() {
-            if i >= byte_pos {
+        for (i, _) in display_text.char_indices() {
+            if i >= display_pos {
                 break;
             }
             char_idx += 1;
@@ -256,26 +317,54 @@ impl TextInput {
         }
     }
 
-    /// Finds the byte position closest to a pixel x offset from the text start.
     fn byte_pos_for_x(&self, x: f32) -> usize {
         if self.char_x_positions.is_empty() || x <= 0.0 {
             return 0;
         }
-        let mut best_pos = 0;
+        let display_text = self.display_text();
+        let mut byte_indices: Vec<usize> = display_text.char_indices().map(|(i, _)| i).collect();
+        byte_indices.push(display_text.len());
+
+        // Find closest char boundary in display text
+        let mut best_display_pos = 0;
         let mut best_dist = x.abs();
-        let mut byte_idx_iter: Vec<usize> = self.text.char_indices().map(|(i, _)| i).collect();
-        byte_idx_iter.push(self.text.len());
-        // byte_idx_iter: [0, char1_start, char2_start, ..., text.len()]
-        // char_x_positions: [x_after_char0, x_after_char1, ...]
         for (ci, &px) in self.char_x_positions.iter().enumerate() {
-            let byte_pos = byte_idx_iter.get(ci + 1).copied().unwrap_or(self.text.len());
             let dist = (x - px).abs();
             if dist < best_dist {
                 best_dist = dist;
-                best_pos = byte_pos;
+                best_display_pos = byte_indices.get(ci + 1).copied().unwrap_or(display_text.len());
             }
         }
-        best_pos
+
+        // Map display byte pos back to real byte pos
+        if !self.password {
+            return best_display_pos;
+        }
+        // In password mode, each display char = 1 real char
+        let display_char_count = display_text[..best_display_pos].chars().count();
+        self.text
+            .char_indices()
+            .nth(display_char_count)
+            .map(|(i, _)| i)
+            .unwrap_or(self.text.len())
+    }
+
+    /// Sets focus state and returns whether focus changed.
+    pub fn set_focused(&mut self, focused: bool) {
+        if !focused {
+            self.clear_selection();
+        }
+        self.focused = focused;
+    }
+
+    /// Returns this widget's tab index, if set.
+    pub fn get_tab_index(&self) -> Option<u32> {
+        self.tab_index
+    }
+
+    /// Returns this widget's unique ID.
+    pub fn get_id(&self) -> u64 {
+        self.id
     }
 }
 
@@ -291,10 +380,12 @@ impl Widget for TextInput {
             .min(available.height);
         let max_width = (w - self.padding.horizontal()).max(0.0);
 
-        // Build text layout
-        if !self.text.is_empty() {
+        let display = self.display_text();
+
+        // Build text layout from display text (masked or real)
+        if !display.is_empty() {
             let mut tl =
-                TextLayout::new(ctx.font_manager, &self.text, &resolved, self.color, None);
+                TextLayout::new(ctx.font_manager, &display, &resolved, self.color, None);
             tl.set_max_width(ctx.font_manager, max_width);
             self.text_layout = Some(tl);
         } else {
@@ -316,16 +407,15 @@ impl Widget for TextInput {
             self.placeholder_layout = None;
         }
 
-        // Build character x positions for cursor/selection positioning
+        // Build character x positions from display text
         self.char_x_positions.clear();
         let mut running = String::new();
-        for ch in self.text.chars() {
+        for ch in display.chars() {
             running.push(ch);
             let cl = TextLayout::new(ctx.font_manager, &running, &resolved, self.color, None);
             self.char_x_positions.push(cl.size().width);
         }
 
-        // Set cursor pixel x
         self.cursor_pixel_x = self.pixel_x_for(self.cursor_pos);
 
         Size::new(w, h)
@@ -364,7 +454,7 @@ impl Widget for TextInput {
             canvas.draw_text(pl, text_x as i32, text_y as i32);
         }
 
-        // Draw cursor (only when focused and no selection, or at cursor end)
+        // Draw cursor
         if self.focused {
             let cursor_x = text_x + self.cursor_pixel_x;
             canvas.fill_rect(
@@ -378,24 +468,36 @@ impl Widget for TextInput {
         &[]
     }
 
+    fn tab_index(&self) -> Option<u32> {
+        self.tab_index
+    }
+
+    fn widget_id(&self) -> Option<u64> {
+        Some(self.id)
+    }
+
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         match event {
+            WidgetEvent::Focus(target_id) => {
+                if *target_id == self.id {
+                    self.focused = true;
+                    self.cursor_pos = self.text.len();
+                    self.selection_anchor = Some(0);
+                    return EventResponse {
+                        handled: true,
+                        ..Default::default()
+                    };
+                }
+                EventResponse::default()
+            }
             WidgetEvent::Mouse(MouseEvent::MouseClickEvent(click)) => {
                 if click.state == MouseState::Pressed && rect.contains(&click.position) {
                     self.focused = true;
 
                     let click_x = click.position.x - rect.x1 - self.padding.left;
                     let new_pos = self.byte_pos_for_x(click_x);
-
-                    // Shift+click extends selection
-                    if click.state == MouseState::Pressed {
-                        if self.selection_anchor.is_none() {
-                            // No existing selection and no shift — just position
-                            self.selection_anchor = None;
-                        }
-                    }
-
                     self.cursor_pos = new_pos;
+                    self.clear_selection();
                     self.cursor_pixel_x = self.pixel_x_for(new_pos);
 
                     return EventResponse {
@@ -405,7 +507,6 @@ impl Widget for TextInput {
                         ..Default::default()
                     };
                 }
-                // Click outside — unfocus
                 if click.state == MouseState::Pressed && !rect.contains(&click.position) {
                     self.focused = false;
                     self.clear_selection();
@@ -426,7 +527,6 @@ impl Widget for TextInput {
                 if !self.focused || ch.is_control() {
                     return EventResponse::default();
                 }
-                // Replace selection if any
                 if self.has_selection() {
                     self.delete_selection();
                 }
@@ -442,6 +542,35 @@ impl Widget for TextInput {
             WidgetEvent::Keyboard(KeyboardEvent::KeyPressed { key, modifiers }) => {
                 if !self.focused {
                     return EventResponse::default();
+                }
+
+                // Fire on_key_down callback
+                if let Some(ref mut cb) = self.on_key_down {
+                    cb(key, modifiers);
+                }
+
+                // Tab navigation
+                if *key == Key::Tab {
+                    self.focused = false;
+                    self.clear_selection();
+                    return EventResponse {
+                        handled: true,
+                        request_focus: Some(self.id),
+                        focus_next: !modifiers.shift,
+                        focus_prev: modifiers.shift,
+                        ..Default::default()
+                    };
+                }
+
+                // Enter submits
+                if *key == Key::Enter {
+                    if let Some(ref mut on_submit) = self.on_submit {
+                        on_submit();
+                    }
+                    return EventResponse {
+                        handled: true,
+                        ..Default::default()
+                    };
                 }
 
                 // Ctrl+A selects all
@@ -498,7 +627,6 @@ impl Widget for TextInput {
                         } else {
                             self.clear_selection();
                         }
-                        let old = self.cursor_pos;
                         if modifiers.ctrl {
                             self.cursor_pos = prev_word_boundary(&self.text, self.cursor_pos);
                         } else if self.cursor_pos > 0 {
@@ -508,7 +636,7 @@ impl Widget for TextInput {
                                 .map(|(i, _)| i)
                                 .unwrap_or(0);
                         }
-                        if !modifiers.shift && old != self.cursor_pos {
+                        if !modifiers.shift {
                             self.clear_selection();
                         }
                     }
@@ -526,7 +654,6 @@ impl Widget for TextInput {
                         } else {
                             self.clear_selection();
                         }
-                        let old = self.cursor_pos;
                         if modifiers.ctrl {
                             self.cursor_pos = next_word_boundary(&self.text, self.cursor_pos);
                         } else if self.cursor_pos < self.text.len() {
@@ -536,7 +663,7 @@ impl Widget for TextInput {
                                 .map(|(i, _)| self.cursor_pos + i)
                                 .unwrap_or(self.text.len());
                         }
-                        if !modifiers.shift && old != self.cursor_pos {
+                        if !modifiers.shift {
                             self.clear_selection();
                         }
                     }
@@ -563,12 +690,20 @@ impl Widget for TextInput {
                     ..Default::default()
                 }
             }
+            WidgetEvent::Keyboard(KeyboardEvent::KeyReleased { key, modifiers }) => {
+                if !self.focused {
+                    return EventResponse::default();
+                }
+                if let Some(ref mut cb) = self.on_key_up {
+                    cb(key, modifiers);
+                }
+                EventResponse::default()
+            }
             _ => EventResponse::default(),
         }
     }
 }
 
-/// Finds the byte index of the previous word boundary.
 fn prev_word_boundary(text: &str, pos: usize) -> usize {
     let before = &text[..pos];
     let trimmed = before.trim_end();
@@ -581,7 +716,6 @@ fn prev_word_boundary(text: &str, pos: usize) -> usize {
         .unwrap_or(0)
 }
 
-/// Finds the byte index of the next word boundary.
 fn next_word_boundary(text: &str, pos: usize) -> usize {
     let after = &text[pos..];
     let skip_word = after

@@ -459,6 +459,34 @@ impl AppWindow {
                 };
                 self.window_handle.set_cursor(winit_cursor);
             }
+            // Handle tab focus cycling
+            if response.focus_next || response.focus_prev {
+                let mut tab_widgets: Vec<(u32, u64)> = Vec::new();
+                collect_tab_widgets(widget.as_ref(), &mut tab_widgets);
+                tab_widgets.sort_by_key(|(idx, _)| *idx);
+
+                if !tab_widgets.is_empty() {
+                    // Find which widget just unfocused (the one that sent focus_next)
+                    let current_idx = response
+                        .request_focus
+                        .and_then(|id| tab_widgets.iter().position(|(_, wid)| *wid == id));
+
+                    let next = if response.focus_next {
+                        match current_idx {
+                            Some(i) => (i + 1) % tab_widgets.len(),
+                            None => 0,
+                        }
+                    } else {
+                        match current_idx {
+                            Some(i) if i > 0 => i - 1,
+                            _ => tab_widgets.len() - 1,
+                        }
+                    };
+
+                    let (_, target_id) = tab_widgets[next];
+                    widget.event(&WidgetEvent::Focus(target_id), rect);
+                }
+            }
         }
     }
 
@@ -775,6 +803,16 @@ fn translate_mouse_state(state: winit::event::ElementState) -> MouseState {
     match state {
         winit::event::ElementState::Pressed => MouseState::Pressed,
         winit::event::ElementState::Released => MouseState::Released,
+    }
+}
+
+/// Recursively collects `(tab_index, widget_id)` pairs from the widget tree.
+fn collect_tab_widgets(widget: &dyn aurora_widgets::widgets::Widget, out: &mut Vec<(u32, u64)>) {
+    if let (Some(tab), Some(id)) = (widget.tab_index(), widget.widget_id()) {
+        out.push((tab, id));
+    }
+    for child in widget.children() {
+        collect_tab_widgets(child.as_ref(), out);
     }
 }
 

@@ -229,12 +229,25 @@ impl Widget for Column {
         let mouse = match event {
             WidgetEvent::Mouse(e) => e,
             _ => {
-                // Forward non-mouse events to all children
+                // Forward non-mouse events to all children, propagate focus responses
+                let mut result = EventResponse::default();
                 for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
                     let translated = child_rect.translate(&rect.origin());
-                    child.event(event, translated);
+                    let response = child.event(event, translated);
+                    if response.handled {
+                        result.handled = true;
+                    }
+                    if response.focus_next {
+                        result.focus_next = true;
+                    }
+                    if response.focus_prev {
+                        result.focus_prev = true;
+                    }
+                    if response.request_focus.is_some() {
+                        result.request_focus = response.request_focus;
+                    }
                 }
-                return EventResponse::default();
+                return result;
             }
         };
         let pos = match mouse {

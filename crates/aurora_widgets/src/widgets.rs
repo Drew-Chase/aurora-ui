@@ -13,6 +13,10 @@ pub struct EventResponse {
     pub cursor: Option<CursorIcon>,
     /// Request focus for the widget with this ID, if any.
     pub request_focus: Option<u64>,
+    /// Request that focus move to the next focusable widget (Tab navigation).
+    pub focus_next: bool,
+    /// Request that focus move to the previous focusable widget (Shift+Tab).
+    pub focus_prev: bool,
 }
 
 /// A UI element that can be laid out and painted.
@@ -32,6 +36,14 @@ pub trait Widget {
     /// The default implementation ignores the event.
     fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
         EventResponse::default()
+    }
+    /// Returns this widget's tab index for keyboard navigation, if focusable.
+    fn tab_index(&self) -> Option<u32> {
+        None
+    }
+    /// Returns this widget's unique ID, if it has one.
+    fn widget_id(&self) -> Option<u64> {
+        None
     }
 }
 

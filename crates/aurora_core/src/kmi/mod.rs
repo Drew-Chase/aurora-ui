@@ -15,4 +15,6 @@ pub enum WidgetEvent {
     Mouse(MouseEvent),
     /// A keyboard input event.
     Keyboard(KeyboardEvent),
+    /// Request that the widget with this ID takes focus.
+    Focus(u64),
 }
