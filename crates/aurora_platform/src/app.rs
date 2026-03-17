@@ -603,7 +603,8 @@ where
             .with_title(title)
             .with_decorations(decorations)
             .with_resizable(resizable)
-            .with_inner_size(dpi::LogicalSize::new(size.width, size.height));
+            .with_inner_size(dpi::LogicalSize::new(size.width, size.height))
+            .with_visible(false);
         if !resizable {
             attributes =
                 attributes.with_enabled_buttons(WindowButtons::CLOSE | WindowButtons::MINIMIZE);
@@ -657,6 +658,10 @@ where
                 return;
             }
         };
+        if let Some(win) = self.window.as_ref() {
+            win.window_handle.set_visible(true);
+        }
+
     }
 
     fn window_event(
