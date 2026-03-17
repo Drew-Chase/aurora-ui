@@ -21,7 +21,7 @@ pub struct Canvas<'a> {
     pub(crate) width: u32,
     pub(crate) height: u32,
     pub(crate) buffer: &'a mut [u32],
-    pub(crate) clip: Option<Rect>,
+    pub(crate) clip_stack: Vec<Rect>,
     #[cfg(feature = "text")]
     pub(crate) font_manager: &'a mut FontManager,
     #[cfg(feature = "text")]
@@ -61,7 +61,7 @@ impl<'a> Canvas<'a> {
             width,
             height,
             buffer,
-            clip: None,
+            clip_stack: Vec::new(),
         }
     }
     /// Creates a canvas from a pixel buffer and its dimensions.
@@ -79,7 +79,7 @@ impl<'a> Canvas<'a> {
             width,
             height,
             buffer,
-            clip: None,
+            clip_stack: Vec::new(),
             font_manager,
             swash_cache,
         }
@@ -87,21 +87,27 @@ impl<'a> Canvas<'a> {
 
     /// Pushes a clipping rectangle onto the clip stack.
     ///
-    /// If a clip region already exists, the new clip is the intersection of the existing
-    /// clip and the provided rectangle.
+    /// The effective clip is the intersection of the new rect with the
+    /// current top of the stack, so nested clips always tighten the region.
+    /// Call [`pop_clip`](Self::pop_clip) to restore the previous clip.
     pub fn push_clip(&mut self, rect: Rect) {
-        self.clip = match self.clip {
-            Some(existing) => existing.intersection(&rect),
-            None => Some(rect),
+        let clipped = match self.clip_stack.last() {
+            Some(existing) => existing.intersection(&rect).unwrap_or(rect),
+            None => rect,
         };
+        self.clip_stack.push(clipped);
     }
 
-    /// Removes the current clipping rectangle.
+    /// Pops the most recent clipping rectangle, restoring the previous one.
     ///
-    /// Note: This implementation only supports a single clip level. Calling `pop_clip`
-    /// will remove any active clip region entirely.
+    /// Every `push_clip` should be paired with a `pop_clip`.
     pub fn pop_clip(&mut self) {
-        self.clip = None;
+        self.clip_stack.pop();
+    }
+
+    /// Returns the current effective clip rect, if any.
+    pub fn current_clip(&self) -> Option<&Rect> {
+        self.clip_stack.last()
     }
 
     /// Draws a [`TextLayout`] at the given pixel offset.
@@ -110,6 +116,7 @@ impl<'a> Canvas<'a> {
     /// font manager, glyph cache, and the active clip rect.
     #[cfg(feature = "text")]
     pub fn draw_text(&mut self, layout: &TextLayout, x: i32, y: i32) {
+        let clip = self.clip_stack.last().copied();
         layout.render(
             self.swash_cache,
             self.font_manager,
@@ -117,7 +124,7 @@ impl<'a> Canvas<'a> {
             self.width,
             x,
             y,
-            self.clip.as_ref(),
+            clip.as_ref(),
         );
     }
 
@@ -137,7 +144,7 @@ impl<'a> Canvas<'a> {
         let mut x1 = (rect.x2.max(0.0) as u32).min(self.width);
         let mut y1 = (rect.y2.max(0.0) as u32).min(self.height);
 
-        if let Some(clip) = &self.clip {
+        if let Some(clip) = self.current_clip() {
             x0 = x0.max(clip.x1.max(0.0) as u32);
             y0 = y0.max(clip.y1.max(0.0) as u32);
             x1 = x1.min(clip.x2.max(0.0) as u32);
@@ -227,7 +234,7 @@ impl<'a> Canvas<'a> {
         let mut x1 = (rect.x2.max(0.0) as u32).min(self.width);
         let mut y1 = (rect.y2.max(0.0) as u32).min(self.height);
 
-        if let Some(clip) = &self.clip {
+        if let Some(clip) = self.current_clip() {
             x0 = x0.max(clip.x1.max(0.0) as u32);
             y0 = y0.max(clip.y1.max(0.0) as u32);
             x1 = x1.min(clip.x2.max(0.0) as u32);
@@ -340,7 +347,7 @@ impl<'a> Canvas<'a> {
         let mut x1 = (rect.x2.max(0.0) as u32).min(self.width);
         let mut y1 = (rect.y2.max(0.0) as u32).min(self.height);
 
-        if let Some(clip) = &self.clip {
+        if let Some(clip) = self.current_clip() {
             x0 = x0.max(clip.x1.max(0.0) as u32);
             y0 = y0.max(clip.y1.max(0.0) as u32);
             x1 = x1.min(clip.x2.max(0.0) as u32);
@@ -441,7 +448,7 @@ impl<'a> Canvas<'a> {
         let mut x1 = (rect.x2.max(0.0) as u32).min(self.width);
         let mut y1 = (rect.y2.max(0.0) as u32).min(self.height);
 
-        if let Some(clip) = &self.clip {
+        if let Some(clip) = self.current_clip() {
             x0 = x0.max(clip.x1.max(0.0) as u32);
             y0 = y0.max(clip.y1.max(0.0) as u32);
             x1 = x1.min(clip.x2.max(0.0) as u32);
