@@ -4,6 +4,7 @@ use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseButton, MouseClickEvent, MouseEvent, MouseState};
+use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 /// Callback invoked on mouse click (press then release).
@@ -123,7 +124,11 @@ impl Widget for TouchArea {
         }
     }
 
-    fn event(&mut self, event: &MouseEvent, rect: Rect) -> EventResponse {
+    fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        let event = match event {
+            WidgetEvent::Mouse(e) => e,
+            _ => return EventResponse::default(),
+        };
         match event {
             MouseEvent::MouseMoveEvent(pos) => {
                 self.hovered = rect.contains(pos);
@@ -141,11 +146,13 @@ impl Widget for TouchArea {
                     EventResponse {
                         handled: true,
                         cursor: self.hover_cursor,
+                        ..Default::default()
                     }
                 } else {
                     EventResponse {
                         handled: true,
                         cursor: Some(CursorIcon::Default),
+                        ..Default::default()
                     }
                 }
             }

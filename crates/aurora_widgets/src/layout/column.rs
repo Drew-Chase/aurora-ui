@@ -5,6 +5,7 @@ use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::MouseEvent;
+use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 /// A vertical layout container that arranges children top-to-bottom.
@@ -224,8 +225,19 @@ impl Widget for Column {
         &self.children
     }
 
-    fn event(&mut self, event: &MouseEvent, rect: Rect) -> EventResponse     {
-        let pos = match event {
+    fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        let mouse = match event {
+            WidgetEvent::Mouse(e) => e,
+            _ => {
+                // Forward non-mouse events to all children
+                for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
+                    let translated = child_rect.translate(&rect.origin());
+                    child.event(event, translated);
+                }
+                return EventResponse::default();
+            }
+        };
+        let pos = match mouse {
             MouseEvent::MouseMoveEvent(p) => *p,
             MouseEvent::MouseClickEvent(c) => c.position,
             MouseEvent::MouseScrollEvent(_) => return EventResponse{
@@ -234,7 +246,7 @@ impl Widget for Column {
             },
         };
 
-        let is_move = matches!(event, MouseEvent::MouseMoveEvent(_));
+        let is_move = matches!(mouse, MouseEvent::MouseMoveEvent(_));
         let mut handled = false;
         let mut cursor: Option<CursorIcon> = None;
 
@@ -257,9 +269,10 @@ impl Widget for Column {
                 };
             }
         }
-        EventResponse{
+        EventResponse {
             handled,
-            cursor
+            cursor,
+            ..Default::default()
         }
     }
 }

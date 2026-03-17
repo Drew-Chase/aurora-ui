@@ -5,6 +5,7 @@ use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
+use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use crate::widgets::{EventResponse, LayoutCtx, Widget};
@@ -300,7 +301,22 @@ impl Widget for ScrollView {
         }
     }
 
-    fn event(&mut self, event: &MouseEvent, rect: Rect) -> EventResponse {
+    fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        let mouse = match event {
+            WidgetEvent::Mouse(e) => e,
+            _ => {
+                if let Some(child) = &mut self.child {
+                    let scrolled_rect = Rect::new(
+                        rect.x1 + self.padding.left,
+                        rect.y1 + self.padding.top - self.scroll_offset,
+                        rect.x1 + self.padding.left + self.child_size.width,
+                        rect.y1 + self.padding.top - self.scroll_offset + self.child_size.height,
+                    );
+                    return child.event(event, scrolled_rect);
+                }
+                return EventResponse::default();
+            }
+        };
         let viewport = Rect::new(
             rect.x1 + self.padding.left,
             rect.y1 + self.padding.top,
@@ -309,7 +325,7 @@ impl Widget for ScrollView {
             rect.y1 + self.padding.top + self.viewport_height,
         );
 
-        match event {
+        match mouse {
             MouseEvent::MouseMoveEvent(pos) => {
                 self.last_mouse_pos = *pos;
 
@@ -338,7 +354,7 @@ impl Widget for ScrollView {
                         rect.x1 + self.padding.left + self.child_size.width,
                         rect.y1 + self.padding.top - self.scroll_offset + self.child_size.height,
                     );
-                    return child.event(event, scrolled_rect);
+                    return child.event(&WidgetEvent::Mouse(mouse.clone()), scrolled_rect);
                 }
                 EventResponse::default()
             }
@@ -389,7 +405,7 @@ impl Widget for ScrollView {
                         rect.x1 + self.padding.left + self.child_size.width,
                         rect.y1 + self.padding.top - self.scroll_offset + self.child_size.height,
                     );
-                    return child.event(event, scrolled_rect);
+                    return child.event(&WidgetEvent::Mouse(mouse.clone()), scrolled_rect);
                 }
                 EventResponse::default()
             }

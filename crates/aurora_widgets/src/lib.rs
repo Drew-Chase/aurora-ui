@@ -8,6 +8,9 @@ pub mod layout;
 /// Text display widget (requires the `text` feature).
 #[cfg(feature = "text")]
 pub mod text_widget;
+/// Single-line text input widget (requires the `text` feature).
+#[cfg(feature = "text")]
+pub mod text_input;
 /// Interactive widgets: TouchArea, Button.
 pub mod interactables;
 /// Stateful composite widget with rebuild-on-change semantics.

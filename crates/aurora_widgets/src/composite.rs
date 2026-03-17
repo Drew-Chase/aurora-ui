@@ -1,7 +1,7 @@
 use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
-use aurora_core::kmi::mouse::MouseEvent;
+use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use std::rc::Rc;
@@ -96,7 +96,7 @@ impl<S: 'static> Widget for Composite<S> {
 		}
 	}
 
-	fn event(&mut self, event: &MouseEvent, rect: Rect) -> EventResponse {
+	fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
 		match &mut self.inner {
 			Some(inner) => inner.event(event, rect),
 			None => EventResponse::default(),

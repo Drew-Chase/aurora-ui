@@ -4,3 +4,15 @@ pub mod keyboard;
 pub mod mouse;
 /// Mouse cursor icon variants.
 pub mod cursor_icon;
+
+use keyboard::KeyboardEvent;
+use mouse::MouseEvent;
+
+/// A unified input event dispatched to widgets.
+#[derive(Debug, Clone)]
+pub enum WidgetEvent {
+    /// A mouse input event.
+    Mouse(MouseEvent),
+    /// A keyboard input event.
+    Keyboard(KeyboardEvent),
+}

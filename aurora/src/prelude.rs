@@ -6,7 +6,9 @@ pub use aurora_core::geometry::point::Point;
 pub use aurora_core::geometry::rect::Rect;
 pub use aurora_core::geometry::size::Size;
 pub use aurora_core::kmi::cursor_icon::CursorIcon;
+pub use aurora_core::kmi::keyboard::{Key, KeyboardEvent, Modifiers};
 pub use aurora_core::kmi::mouse::{MouseButton, MouseClickEvent, MouseEvent, MouseState};
+pub use aurora_core::kmi::WidgetEvent;
 pub use crate::aurora_core::{hex, hexa, rgb, rgba, hsl, hsla};
 
 // Platform
@@ -37,6 +39,8 @@ pub use aurora_text::{font_manager::FontManager, text_layout::TextLayout};
 pub use aurora_widgets::interactables::button::{button, ButtonOptions};
 #[cfg(feature = "text")]
 pub use aurora_widgets::text_widget::Text;
+#[cfg(feature = "text")]
+pub use aurora_widgets::text_input::TextInput;
 
 // Image (feature-gated)
 #[cfg(feature = "image")]

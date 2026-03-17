@@ -1,8 +1,9 @@
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::cursor_icon::CursorIcon;
-use aurora_core::kmi::mouse::MouseEvent;
+use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
+
 /// The result of dispatching an event to a widget.
 #[derive(Default)]
 pub struct EventResponse {
@@ -10,7 +11,10 @@ pub struct EventResponse {
     pub handled: bool,
     /// Cursor icon to show while hovering this widget, if any.
     pub cursor: Option<CursorIcon>,
+    /// Request focus for the widget with this ID, if any.
+    pub request_focus: Option<u64>,
 }
+
 /// A UI element that can be laid out and painted.
 ///
 /// Implement this trait to create custom widgets. The framework calls
@@ -23,10 +27,10 @@ pub trait Widget {
     fn paint(&self, canvas: &mut Canvas, rect: Rect);
     /// Returns the widget's child widgets.
     fn children(&self) -> &[Box<dyn Widget>];
-    /// Handles a mouse event within the given bounds. Returns an [`EventResponse`].
+    /// Handles a widget event within the given bounds. Returns an [`EventResponse`].
     ///
     /// The default implementation ignores the event.
-    fn event(&mut self, _event: &MouseEvent, _rect: Rect) -> EventResponse {
+    fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
         EventResponse::default()
     }
 }

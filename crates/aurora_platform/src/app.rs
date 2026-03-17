@@ -6,7 +6,9 @@ use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::cursor_icon::CursorIcon;
+use aurora_core::kmi::keyboard::{Key, KeyboardEvent, Modifiers};
 use aurora_core::kmi::mouse::{MouseButton, MouseClickEvent, MouseEvent, MouseState};
+use aurora_core::kmi::WidgetEvent;
 use aurora_gpu::gpu_context::GpuContext;
 use aurora_render::canvas::Canvas;
 #[cfg(feature = "text")]
@@ -125,6 +127,7 @@ struct AppHandler<F> {
     on_render: F,
     window: Option<AppWindow>,
     pub(crate) current_cursor_position: Option<Point>,
+    current_modifiers: winit::keyboard::ModifiersState,
     benchmark: bool,
     start_time: std::time::Instant,
 }
@@ -280,6 +283,7 @@ impl App {
             on_render,
             window: None,
             current_cursor_position: None,
+            current_modifiers: winit::keyboard::ModifiersState::default(),
             benchmark,
             start_time,
         };
@@ -392,7 +396,7 @@ impl AppWindow {
             // survive composite rebuilds triggered by clicks or state changes.
             if let Some(pos) = self.last_mouse_position {
                 let rect = Rect::from_size(available);
-                let response = widget.event(&MouseEvent::MouseMoveEvent(pos), rect);
+                let response = widget.event(&WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)), rect);
                 let cursor = response.cursor.unwrap_or(CursorIcon::Default);
                 let winit_cursor = match cursor {
                     CursorIcon::Default => winit::window::CursorIcon::Default,
@@ -436,24 +440,25 @@ impl AppWindow {
         }
     }
 
-    pub(crate) fn dispatch_event(&mut self, event: &MouseEvent) {
-        if let MouseEvent::MouseMoveEvent(pos) = event {
+    pub(crate) fn dispatch_event(&mut self, event: &WidgetEvent) {
+        if let WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) = event {
             self.last_mouse_position = Some(*pos);
         }
         let (width, height) = self.gpu.size();
         let rect = Rect::from_size((width as f32, height as f32).into());
         if let Some(ref mut widget) = self.root_widget {
             let response = widget.event(event, rect);
-            let cursor = response.cursor.unwrap_or(CursorIcon::Default);
-            let winit_cursor = match cursor {
-                CursorIcon::Default => winit::window::CursorIcon::Default,
-                CursorIcon::Pointer => winit::window::CursorIcon::Pointer,
-                CursorIcon::Text => winit::window::CursorIcon::Text,
-                CursorIcon::Grab => winit::window::CursorIcon::Grab,
-                CursorIcon::Grabbing => winit::window::CursorIcon::Grabbing,
-                CursorIcon::NotAllowed => winit::window::CursorIcon::NotAllowed,
-            };
-            self.window_handle.set_cursor(winit_cursor);
+            if let Some(cursor) = response.cursor {
+                let winit_cursor = match cursor {
+                    CursorIcon::Default => winit::window::CursorIcon::Default,
+                    CursorIcon::Pointer => winit::window::CursorIcon::Pointer,
+                    CursorIcon::Text => winit::window::CursorIcon::Text,
+                    CursorIcon::Grab => winit::window::CursorIcon::Grab,
+                    CursorIcon::Grabbing => winit::window::CursorIcon::Grabbing,
+                    CursorIcon::NotAllowed => winit::window::CursorIcon::NotAllowed,
+                };
+                self.window_handle.set_cursor(winit_cursor);
+            }
         }
     }
 
@@ -683,18 +688,18 @@ where
             WindowEvent::CursorMoved { position, .. } => {
                 let pos = Point::new(position.x as f32, position.y as f32);
                 self.current_cursor_position = Some(pos);
-                let event = MouseEvent::MouseMoveEvent(pos);
-                window.dispatch_event(&event);
+                window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)));
                 window.request_redraw();
             }
             WindowEvent::MouseInput { state, button, .. } => {
                 if let Some(current_cursor_position) = self.current_cursor_position {
-                    let event = MouseEvent::MouseClickEvent(MouseClickEvent {
-                        button: translate_mouse_button(button),
-                        state: translate_mouse_state(state),
-                        position: current_cursor_position,
-                    });
-                    window.dispatch_event(&event);
+                    window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseClickEvent(
+                        MouseClickEvent {
+                            button: translate_mouse_button(button),
+                            state: translate_mouse_state(state),
+                            position: current_cursor_position,
+                        },
+                    )));
                     window.request_redraw();
                 }
             }
@@ -703,9 +708,52 @@ where
                     winit::event::MouseScrollDelta::LineDelta(_, y) => y,
                     winit::event::MouseScrollDelta::PixelDelta(pos) => pos.y as f32 / 40.0,
                 };
-                let event = MouseEvent::MouseScrollEvent(scroll_delta);
-                window.dispatch_event(&event);
+                window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseScrollEvent(
+                    scroll_delta,
+                )));
                 window.request_redraw();
+            }
+            WindowEvent::KeyboardInput { event, .. } => {
+                let modifiers = Modifiers {
+                    shift: self.current_modifiers.shift_key(),
+                    ctrl: self.current_modifiers.control_key(),
+                    alt: self.current_modifiers.alt_key(),
+                };
+
+                let key = translate_key(&event.logical_key);
+
+                match event.state {
+                    winit::event::ElementState::Pressed => {
+                        window.dispatch_event(&WidgetEvent::Keyboard(
+                            KeyboardEvent::KeyPressed {
+                                key,
+                                modifiers,
+                            },
+                        ));
+
+                        if let winit::keyboard::Key::Character(c) = &event.logical_key {
+                            if !modifiers.ctrl && !modifiers.alt {
+                                for ch in c.chars() {
+                                    window.dispatch_event(&WidgetEvent::Keyboard(
+                                        KeyboardEvent::CharTyped(ch),
+                                    ));
+                                }
+                            }
+                        }
+                    }
+                    winit::event::ElementState::Released => {
+                        window.dispatch_event(&WidgetEvent::Keyboard(
+                            KeyboardEvent::KeyReleased {
+                                key,
+                                modifiers,
+                            },
+                        ));
+                    }
+                }
+                window.request_redraw();
+            }
+            WindowEvent::ModifiersChanged(mods) => {
+                self.current_modifiers = mods.state();
             }
             _ => {}
         }
@@ -727,6 +775,33 @@ fn translate_mouse_state(state: winit::event::ElementState) -> MouseState {
     match state {
         winit::event::ElementState::Pressed => MouseState::Pressed,
         winit::event::ElementState::Released => MouseState::Released,
+    }
+}
+
+fn translate_key(key: &winit::keyboard::Key) -> Key {
+    match key {
+        winit::keyboard::Key::Named(named) => match named {
+            winit::keyboard::NamedKey::Backspace => Key::Backspace,
+            winit::keyboard::NamedKey::Delete => Key::Delete,
+            winit::keyboard::NamedKey::ArrowLeft => Key::Left,
+            winit::keyboard::NamedKey::ArrowRight => Key::Right,
+            winit::keyboard::NamedKey::ArrowUp => Key::Up,
+            winit::keyboard::NamedKey::ArrowDown => Key::Down,
+            winit::keyboard::NamedKey::Home => Key::Home,
+            winit::keyboard::NamedKey::End => Key::End,
+            winit::keyboard::NamedKey::Enter => Key::Enter,
+            winit::keyboard::NamedKey::Tab => Key::Tab,
+            winit::keyboard::NamedKey::Escape => Key::Escape,
+            _ => Key::Other,
+        },
+        winit::keyboard::Key::Character(c) => {
+            let mut chars = c.chars();
+            match (chars.next(), chars.next()) {
+                (Some(ch), None) => Key::Character(ch),
+                _ => Key::Other,
+            }
+        }
+        _ => Key::Other,
     }
 }
 
