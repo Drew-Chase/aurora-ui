@@ -1,7 +1,9 @@
 /// A parsed SVG document that can be rasterized at any size.
 ///
-/// Uses `usvg` for SVG parsing and `tiny-skia` for rasterization — no filter
-/// support (avoids the upstream `resvg`/`rgb` crate compatibility issue).
+/// Uses `usvg` for SVG parsing and `tiny-skia` for rasterization.
+/// Supports solid colors, linear gradients, radial gradients, fills, strokes,
+/// transforms, and anti-aliasing. Patterns, embedded images, text nodes,
+/// and SVG filter effects (blur, drop-shadow, etc.) are not supported.
 ///
 /// The SVG is parsed once at construction time. Call [`render`](Self::render)
 /// to rasterize it into RGBA pixels at the desired dimensions.
@@ -140,16 +142,72 @@ fn convert_path(path: &usvg::Path) -> Option<tiny_skia::Path> {
     pb.finish()
 }
 
-/// Converts a usvg paint to a tiny-skia paint (solid colors only).
+/// Converts a usvg paint to a tiny-skia paint.
+///
+/// Supports solid colors, linear gradients, and radial gradients.
+/// Patterns are not yet supported and will be skipped.
 fn convert_paint(paint: &usvg::Paint, opacity: usvg::Opacity) -> Option<tiny_skia::Paint<'static>> {
+    let alpha = (opacity.get() * 255.0) as u8;
     match paint {
         usvg::Paint::Color(color) => {
             let mut p = tiny_skia::Paint::default();
-            p.set_color_rgba8(color.red, color.green, color.blue, (opacity.get() * 255.0) as u8);
+            p.set_color_rgba8(color.red, color.green, color.blue, alpha);
             p.anti_alias = true;
             Some(p)
         }
-        // Gradients and patterns not yet supported
-        _ => None,
+        usvg::Paint::LinearGradient(grad) => {
+            let stops = convert_stops(grad.stops(), alpha);
+            let shader = tiny_skia::LinearGradient::new(
+                tiny_skia::Point::from_xy(grad.x1(), grad.y1()),
+                tiny_skia::Point::from_xy(grad.x2(), grad.y2()),
+                stops,
+                convert_spread(grad.spread_method()),
+                tiny_skia::Transform::identity(),
+            )?;
+            let mut p = tiny_skia::Paint::default();
+            p.shader = shader;
+            p.anti_alias = true;
+            Some(p)
+        }
+        usvg::Paint::RadialGradient(grad) => {
+            let stops = convert_stops(grad.stops(), alpha);
+            let shader = tiny_skia::RadialGradient::new(
+                tiny_skia::Point::from_xy(grad.fx(), grad.fy()),
+                grad.r().get(),
+                tiny_skia::Point::from_xy(grad.cx(), grad.cy()),
+                grad.r().get(),
+                stops,
+                convert_spread(grad.spread_method()),
+                tiny_skia::Transform::identity(),
+            )?;
+            let mut p = tiny_skia::Paint::default();
+            p.shader = shader;
+            p.anti_alias = true;
+            Some(p)
+        }
+        usvg::Paint::Pattern(_) => None,
+    }
+}
+
+/// Converts usvg gradient stops to tiny-skia stops with applied opacity.
+fn convert_stops(stops: &[usvg::Stop], alpha: u8) -> Vec<tiny_skia::GradientStop> {
+    stops
+        .iter()
+        .map(|s| {
+            let a = ((s.opacity().get() * alpha as f32) as u8).max(0);
+            tiny_skia::GradientStop::new(
+                s.offset().get(),
+                tiny_skia::Color::from_rgba8(s.color().red, s.color().green, s.color().blue, a),
+            )
+        })
+        .collect()
+}
+
+/// Converts usvg spread method to tiny-skia.
+fn convert_spread(method: usvg::SpreadMethod) -> tiny_skia::SpreadMode {
+    match method {
+        usvg::SpreadMethod::Pad => tiny_skia::SpreadMode::Pad,
+        usvg::SpreadMethod::Reflect => tiny_skia::SpreadMode::Reflect,
+        usvg::SpreadMethod::Repeat => tiny_skia::SpreadMode::Repeat,
     }
 }

@@ -10,8 +10,8 @@ use std::sync::Arc;
 /// The SVG data is shared via `Arc` so cloning the widget is cheap.
 /// Parse the SVG once with [`SvgData::from_bytes`] and wrap it in an `Arc`.
 ///
-/// The SVG is re-rasterized whenever the layout size changes, producing
-/// crisp output at any resolution.
+/// Rasterization is cached — the SVG is only re-rasterized when the layout
+/// size changes. Repeated paints at the same size reuse the cached pixels.
 ///
 /// # Example
 ///
