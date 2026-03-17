@@ -472,6 +472,7 @@ impl AppWindow {
             width,
             x,
             y,
+            None,
         );
     }
 
@@ -683,6 +684,15 @@ where
                     window.dispatch_event(&event);
                     window.request_redraw();
                 }
+            }
+            WindowEvent::MouseWheel { delta, .. } => {
+                let scroll_delta = match delta {
+                    winit::event::MouseScrollDelta::LineDelta(_, y) => y,
+                    winit::event::MouseScrollDelta::PixelDelta(pos) => pos.y as f32 / 40.0,
+                };
+                let event = MouseEvent::MouseScrollEvent(scroll_delta);
+                window.dispatch_event(&event);
+                window.request_redraw();
             }
             _ => {}
         }

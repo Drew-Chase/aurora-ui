@@ -37,8 +37,8 @@ pub enum MouseEvent {
     MouseClickEvent(MouseClickEvent),
     /// The mouse cursor moved to a new position.
     MouseMoveEvent(Point),
-    /// The scroll wheel was used. `true` = up, `false` = down.
-    MouseScrollEvent(bool),
+    /// The scroll wheel was used. Positive = scroll up, negative = scroll down.
+    MouseScrollEvent(f32),
 }
 
 /// Details of a mouse click (press or release).

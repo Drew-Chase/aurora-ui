@@ -1,6 +1,7 @@
 use crate::font_manager::FontManager;
 use crate::font_options::FontOptions;
 use aurora_core::color::Color;
+use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 
 /// A shaped and measured text block ready for rendering.
@@ -68,7 +69,8 @@ impl TextLayout {
     /// Rasterises every glyph into a raw `0x00RRGGBB` pixel buffer.
     ///
     /// Sub-pixel coverage is alpha-blended against the existing buffer contents.
-    /// Out-of-bounds glyphs are clipped.
+    /// Out-of-bounds glyphs are clipped. An optional `clip` rect restricts
+    /// rendering to a sub-region of the buffer.
     pub fn render(
         &self,
         cache: &mut cosmic_text::SwashCache,
@@ -77,8 +79,20 @@ impl TextLayout {
         width: u32,
         x_offset: i32,
         y_offset: i32,
+        clip: Option<&Rect>,
     ) {
         let pixel = self.color.to_rgb_u32();
+        let height = buffer.len() as i32 / width as i32;
+
+        let (clip_x0, clip_y0, clip_x1, clip_y1) = match clip {
+            Some(c) => (
+                c.x1.max(0.0) as i32,
+                c.y1.max(0.0) as i32,
+                (c.x2 as i32).min(width as i32),
+                (c.y2 as i32).min(height),
+            ),
+            None => (0, 0, width as i32, height),
+        };
 
         for run in self.buffer.layout_runs() {
             for glyph in run.glyphs.iter() {
@@ -95,12 +109,12 @@ impl TextLayout {
 
                     for gy in 0..glyph_h {
                         let py = glyph_top + gy;
-                        if py < 0 || py >= buffer.len() as i32 / width as i32 {
+                        if py < clip_y0 || py >= clip_y1 {
                             continue;
                         }
                         for gx in 0..glyph_w {
                             let px = glyph_left + gx;
-                            if px < 0 || px >= width as i32 {
+                            if px < clip_x0 || px >= clip_x1 {
                                 continue;
                             }
 
@@ -114,7 +128,6 @@ impl TextLayout {
                                 if alpha == 255 {
                                     buffer[idx] = pixel;
                                 } else {
-                                    // Alpha blend with existing pixel
                                     let bg = buffer[idx];
                                     let bg_r = (bg >> 16) & 0xFF;
                                     let bg_g = (bg >> 8) & 0xFF;

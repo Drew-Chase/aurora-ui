@@ -1,11 +1,12 @@
 /// Layout containers for arranging child widgets.
 ///
-/// This module provides four layout primitives:
+/// This module provides five layout primitives:
 ///
 /// - [`Column`](column::Column) — vertical stack (use the [`col!`] macro)
 /// - [`Row`](row::Row) — horizontal stack (use the [`row!`] macro)
 /// - [`Stack`](stack::Stack) — overlapping layers (z-order)
 /// - [`Positioned`](position::Positioned) — absolute/fixed positioning
+/// - [`ScrollView`](scrollview::ScrollView) — scrollable viewport
 ///
 /// Column and Row share [`Justify`] and [`Align`] enums for controlling
 /// distribution along the main and cross axes respectively.
@@ -13,6 +14,8 @@ pub mod column;
 pub mod row;
 pub mod position;
 pub mod stack;
+/// Scrollable viewport container.
+pub mod scrollview;
 
 /// Controls distribution of children along the main axis.
 ///

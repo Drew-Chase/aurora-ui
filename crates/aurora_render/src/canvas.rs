@@ -21,6 +21,7 @@ pub struct Canvas<'a> {
     pub(crate) width: u32,
     pub(crate) height: u32,
     pub(crate) buffer: &'a mut [u32],
+    pub(crate) clip: Option<Rect>,
     #[cfg(feature = "text")]
     pub(crate) font_manager: &'a mut FontManager,
     #[cfg(feature = "text")]
@@ -28,7 +29,6 @@ pub struct Canvas<'a> {
 }
 
 impl<'a> Canvas<'a> {
-
     /// Blends a foreground color into a buffer span, handling both opaque and transparent cases.
     fn blend_span(buffer: &mut [u32], pixel: u32, alpha: u8) {
         if alpha == 255 {
@@ -61,26 +61,53 @@ impl<'a> Canvas<'a> {
             width,
             height,
             buffer,
+            clip: None,
         }
     }
     /// Creates a canvas from a pixel buffer and its dimensions.
     ///
     /// The buffer is expected to be row-major with `width * height` entries.
     #[cfg(feature = "text")]
-    pub fn new(width: u32, height: u32, buffer: &'a mut [u32], font_manager: &'a mut FontManager, swash_cache: &'a mut SwashCache) -> Self {
+    pub fn new(
+        width: u32,
+        height: u32,
+        buffer: &'a mut [u32],
+        font_manager: &'a mut FontManager,
+        swash_cache: &'a mut SwashCache,
+    ) -> Self {
         Canvas {
             width,
             height,
             buffer,
+            clip: None,
             font_manager,
             swash_cache,
         }
     }
 
+    /// Pushes a clipping rectangle onto the clip stack.
+    ///
+    /// If a clip region already exists, the new clip is the intersection of the existing
+    /// clip and the provided rectangle.
+    pub fn push_clip(&mut self, rect: Rect) {
+        self.clip = match self.clip {
+            Some(existing) => existing.intersection(&rect),
+            None => Some(rect),
+        };
+    }
+
+    /// Removes the current clipping rectangle.
+    ///
+    /// Note: This implementation only supports a single clip level. Calling `pop_clip`
+    /// will remove any active clip region entirely.
+    pub fn pop_clip(&mut self) {
+        self.clip = None;
+    }
+
     /// Draws a [`TextLayout`] at the given pixel offset.
     ///
     /// Delegates to [`TextLayout::render`], passing the canvas buffer,
-    /// font manager, and glyph cache.
+    /// font manager, glyph cache, and the active clip rect.
     #[cfg(feature = "text")]
     pub fn draw_text(&mut self, layout: &TextLayout, x: i32, y: i32) {
         layout.render(
@@ -90,27 +117,32 @@ impl<'a> Canvas<'a> {
             self.width,
             x,
             y,
+            self.clip.as_ref(),
         );
     }
 
     /// Fills an axis-aligned rectangle with a solid color.
     ///
-    /// Coordinates are clamped to the canvas bounds.
+    /// Coordinates are clamped to the canvas bounds and the active clip rect.
     pub fn fill_rect(&mut self, rect: impl Into<Rect>, color: impl Into<Color>) {
         let color = color.into();
         if color.alpha == 0 {
             return;
         }
-
         let rect = rect.into();
         let pixel = color.to_rgb_u32();
 
+        let mut x0 = (rect.x1.max(0.0) as u32).min(self.width);
+        let mut y0 = (rect.y1.max(0.0) as u32).min(self.height);
+        let mut x1 = (rect.x2.max(0.0) as u32).min(self.width);
+        let mut y1 = (rect.y2.max(0.0) as u32).min(self.height);
 
-
-        let x0 = (rect.x1.max(0.0) as u32).min(self.width);
-        let y0 = (rect.y1.max(0.0) as u32).min(self.height);
-        let x1 = (rect.x2.max(0.0) as u32).min(self.width);
-        let y1 = (rect.y2.max(0.0) as u32).min(self.height);
+        if let Some(clip) = &self.clip {
+            x0 = x0.max(clip.x1.max(0.0) as u32);
+            y0 = y0.max(clip.y1.max(0.0) as u32);
+            x1 = x1.min(clip.x2.max(0.0) as u32);
+            y1 = y1.min(clip.y2.max(0.0) as u32);
+        }
 
         for y in y0..y1 {
             let row_start = (y * self.width + x0) as usize;
@@ -190,10 +222,17 @@ impl<'a> Canvas<'a> {
         let bl = corners.bottom_left * scale;
         let br = corners.bottom_right * scale;
 
-        let x0 = (rect.x1.max(0.0) as u32).min(self.width);
-        let y0 = (rect.y1.max(0.0) as u32).min(self.height);
-        let x1 = (rect.x2.max(0.0) as u32).min(self.width);
-        let y1 = (rect.y2.max(0.0) as u32).min(self.height);
+        let mut x0 = (rect.x1.max(0.0) as u32).min(self.width);
+        let mut y0 = (rect.y1.max(0.0) as u32).min(self.height);
+        let mut x1 = (rect.x2.max(0.0) as u32).min(self.width);
+        let mut y1 = (rect.y2.max(0.0) as u32).min(self.height);
+
+        if let Some(clip) = &self.clip {
+            x0 = x0.max(clip.x1.max(0.0) as u32);
+            y0 = y0.max(clip.y1.max(0.0) as u32);
+            x1 = x1.min(clip.x2.max(0.0) as u32);
+            y1 = y1.min(clip.y2.max(0.0) as u32);
+        }
 
         // Corner circle centers
         let tl_cx = rect.x1 + tl;
@@ -281,7 +320,12 @@ impl<'a> Canvas<'a> {
     /// Draws a rectangular outline with the given pixel thickness.
     ///
     /// Only the border pixels are filled — the interior is untouched.
-    pub fn stroke_rect(&mut self, bounds: impl Into<Rect>, thickness: impl Into<u32>, color: impl Into<Color>) {
+    pub fn stroke_rect(
+        &mut self,
+        bounds: impl Into<Rect>,
+        thickness: impl Into<u32>,
+        color: impl Into<Color>,
+    ) {
         let rect = bounds.into();
         let thickness = thickness.into();
         let color = color.into();
@@ -291,10 +335,17 @@ impl<'a> Canvas<'a> {
         let pixel = color.to_rgb_u32();
         let alpha = color.alpha;
 
-        let x0 = (rect.x1.max(0.0) as u32).min(self.width);
-        let y0 = (rect.y1.max(0.0) as u32).min(self.height);
-        let x1 = (rect.x2.max(0.0) as u32).min(self.width);
-        let y1 = (rect.y2.max(0.0) as u32).min(self.height);
+        let mut x0 = (rect.x1.max(0.0) as u32).min(self.width);
+        let mut y0 = (rect.y1.max(0.0) as u32).min(self.height);
+        let mut x1 = (rect.x2.max(0.0) as u32).min(self.width);
+        let mut y1 = (rect.y2.max(0.0) as u32).min(self.height);
+
+        if let Some(clip) = &self.clip {
+            x0 = x0.max(clip.x1.max(0.0) as u32);
+            y0 = y0.max(clip.y1.max(0.0) as u32);
+            x1 = x1.min(clip.x2.max(0.0) as u32);
+            y1 = y1.min(clip.y2.max(0.0) as u32);
+        }
 
         let inner_x0 = (x0 + thickness).min(x1);
         let inner_y0 = (y0 + thickness).min(y1);
@@ -337,7 +388,7 @@ impl<'a> Canvas<'a> {
         &mut self,
         bounds: impl Into<Rect>,
         corners: impl Into<Corners>,
-        thickness:u32,
+        thickness: u32,
         color: impl Into<Color>,
     ) {
         let corners = corners.into();
@@ -362,10 +413,18 @@ impl<'a> Canvas<'a> {
         let max_left = corners.top_left + corners.bottom_left;
         let max_right = corners.top_right + corners.bottom_right;
         let mut scale = 1.0_f32;
-        if max_top > 0.0 { scale = scale.min(w / max_top); }
-        if max_bottom > 0.0 { scale = scale.min(w / max_bottom); }
-        if max_left > 0.0 { scale = scale.min(h / max_left); }
-        if max_right > 0.0 { scale = scale.min(h / max_right); }
+        if max_top > 0.0 {
+            scale = scale.min(w / max_top);
+        }
+        if max_bottom > 0.0 {
+            scale = scale.min(w / max_bottom);
+        }
+        if max_left > 0.0 {
+            scale = scale.min(h / max_left);
+        }
+        if max_right > 0.0 {
+            scale = scale.min(h / max_right);
+        }
         let tl = corners.top_left * scale;
         let tr = corners.top_right * scale;
         let bl = corners.bottom_left * scale;
@@ -377,10 +436,17 @@ impl<'a> Canvas<'a> {
         let bl_in = (bl - t).max(0.0);
         let br_in = (br - t).max(0.0);
 
-        let x0 = (rect.x1.max(0.0) as u32).min(self.width);
-        let y0 = (rect.y1.max(0.0) as u32).min(self.height);
-        let x1 = (rect.x2.max(0.0) as u32).min(self.width);
-        let y1 = (rect.y2.max(0.0) as u32).min(self.height);
+        let mut x0 = (rect.x1.max(0.0) as u32).min(self.width);
+        let mut y0 = (rect.y1.max(0.0) as u32).min(self.height);
+        let mut x1 = (rect.x2.max(0.0) as u32).min(self.width);
+        let mut y1 = (rect.y2.max(0.0) as u32).min(self.height);
+
+        if let Some(clip) = &self.clip {
+            x0 = x0.max(clip.x1.max(0.0) as u32);
+            y0 = y0.max(clip.y1.max(0.0) as u32);
+            x1 = x1.min(clip.x2.max(0.0) as u32);
+            y1 = y1.min(clip.y2.max(0.0) as u32);
+        }
 
         // Outer corner circle centers
         let tl_cx = rect.x1 + tl;
