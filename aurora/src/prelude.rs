@@ -20,7 +20,10 @@ pub use aurora_widgets::box_widget::BoxWidget;
 pub use aurora_widgets::composite::{Composite, StateSetter};
 pub use aurora_widgets::interactables::touch_area::TouchArea;
 pub use aurora_widgets::layout::column::Column;
+pub use aurora_widgets::layout::position::{Position, Positioned};
 pub use aurora_widgets::layout::row::Row;
+pub use aurora_widgets::layout::scrollview::ScrollView;
+pub use aurora_widgets::layout::stack::Stack;
 pub use aurora_widgets::layout::{Align, Justify};
 pub use aurora_widgets::widgets::{EventResponse, LayoutCtx, Widget};
 pub use aurora_widgets::{col, row};
@@ -34,3 +37,15 @@ pub use aurora_text::{font_manager::FontManager, text_layout::TextLayout};
 pub use aurora_widgets::interactables::button::{button, ButtonOptions};
 #[cfg(feature = "text")]
 pub use aurora_widgets::text_widget::Text;
+
+// Image (feature-gated)
+#[cfg(feature = "image")]
+pub use aurora_render::image_data::ImageData;
+#[cfg(feature = "image")]
+pub use aurora_widgets::image_widget::{Image, ImageFit};
+
+// SVG (feature-gated)
+#[cfg(feature = "svg")]
+pub use aurora_render::svg_data::SvgData;
+#[cfg(feature = "svg")]
+pub use aurora_widgets::svg_widget::Svg;

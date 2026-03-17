@@ -2,10 +2,6 @@
 
 use std::sync::Arc;
 
-use aurora_ui::aurora_render::image_data::ImageData;
-use aurora_ui::aurora_render::svg_data::SvgData;
-use aurora_ui::aurora_widgets::image_widget::{Image, ImageFit};
-use aurora_ui::aurora_widgets::svg_widget::Svg;
 use aurora_ui::prelude::*;
 
 /// Generates a checkerboard pattern as RGBA pixels.
