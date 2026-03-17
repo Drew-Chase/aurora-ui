@@ -5,6 +5,10 @@ use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_render::canvas::Canvas;
 
+/// A basic rectangular container with background color, corner radii, and optional child.
+///
+/// This is the simplest visual widget — use it for colored rectangles, cards,
+/// or as a styled wrapper around another widget.
 pub struct BoxWidget {
     pub width: Option<u32>,
     pub height: Option<u32>,
@@ -16,29 +20,42 @@ pub struct BoxWidget {
 }
 
 impl BoxWidget {
+    /// Creates a new box with default settings (transparent, no corners, no child).
     pub fn new() -> Self {
         Self::default()
     }
+
+    /// Sets a fixed width in pixels.
     pub fn width(mut self, width: u32) -> Self {
         self.width = Some(width);
         self
     }
+
+    /// Sets a fixed height in pixels.
     pub fn height(mut self, height: u32) -> Self {
         self.height = Some(height);
         self
     }
+
+    /// Sets the background fill color.
     pub fn background_color(mut self, color: aurora_core::color::Color) -> Self {
         self.background_color = color;
         self
     }
+
+    /// Sets the corner radii for rounded corners.
     pub fn corners(mut self, corners: Corners) -> Self {
         self.corners = corners;
         self
     }
+
+    /// Sets the inner padding between the box edge and its child.
     pub fn padding(mut self, padding: Edges) -> Self {
         self.padding = padding;
         self
     }
+
+    /// Sets a child widget to render inside the box.
     pub fn child(mut self, child: impl Widget + 'static) -> Self {
         self.child = Some(Box::new(child));
         self

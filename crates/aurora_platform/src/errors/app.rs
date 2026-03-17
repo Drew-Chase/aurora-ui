@@ -5,6 +5,7 @@ pub enum AppError {
     WindowCreationFailed(String),
     /// The event loop encountered a fatal error.
     EventLoopFailed(String),
+    /// The GPU backend could not be initialized.
     GpuInitializationError(String),
 }
 

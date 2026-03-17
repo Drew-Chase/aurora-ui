@@ -29,11 +29,17 @@ pub struct Color {
 }
 
 impl Color {
+    /// Opaque black (`#000000`).
     pub const BLACK: Color = Color::new(0, 0, 0, 255);
+    /// Opaque white (`#ffffff`).
     pub const WHITE: Color = Color::new(255, 255, 255, 255);
+    /// Opaque red (`#ff0000`).
     pub const RED: Color = Color::new(255, 0, 0, 255);
+    /// Opaque green (`#00ff00`).
     pub const GREEN: Color = Color::new(0, 255, 0, 255);
+    /// Opaque blue (`#0000ff`).
     pub const BLUE: Color = Color::new(0, 0, 255, 255);
+    /// Fully transparent black (`#00000000`).
     pub const TRANSPARENT: Color = Color::new(0, 0, 0, 0);
     
     /// Creates a new color from individual RGBA channel values.
@@ -230,24 +236,32 @@ impl Color {
         colors[index].lerp(&colors[index + 1], local_t)
     }
 
+    /// Returns a copy with alpha set to the given opacity (0.0–1.0, clamped).
     pub fn opacity(mut self, opacity: f32) -> Self {
         let opacity = opacity.clamp(0.0, 1.0);
         self.alpha = (255f32 * opacity) as u8;
         self
     }
 
+    /// Returns a copy with the alpha channel replaced.
     pub fn alpha(mut self, alpha: u8) -> Self {
         self.alpha = alpha;
         self
     }
+
+    /// Returns a copy with the red channel replaced.
     pub fn red(mut self, red: u8) -> Self {
         self.red = red;
         self
     }
+
+    /// Returns a copy with the green channel replaced.
     pub fn green(mut self, green: u8) -> Self {
         self.green = green;
         self
     }
+
+    /// Returns a copy with the blue channel replaced.
     pub fn blue(mut self, blue: u8) -> Self {
         self.blue = blue;
         self
@@ -299,12 +313,19 @@ macro_rules! rgb {
     };
 }
 
+/// Creates a fully opaque [`Color`] from a hex integer (`0xRRGGBB`).
+///
+/// Shorthand for [`Color::from_hex`] without alpha.
 #[macro_export]
 macro_rules! hex {
     ($hex:expr) => {
         Color::from_hex($hex, false)
     };
 }
+
+/// Creates a [`Color`] from a hex integer with alpha (`0xRRGGBBAA`).
+///
+/// Shorthand for [`Color::from_hex`] with alpha.
 #[macro_export]
 macro_rules! hexa {
     ($hex:expr) => {

@@ -166,8 +166,11 @@ impl From<FontWeight> for cosmic_text::Weight {
 /// Font style (posture).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FontStyle {
+    /// Upright glyphs.
     Normal,
+    /// True italic glyphs designed by the type designer.
     Italic,
+    /// Mechanically slanted upright glyphs.
     Oblique,
 }
 
@@ -184,14 +187,23 @@ impl From<FontStyle> for cosmic_text::Style {
 /// Font stretch (width).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FontStretch {
+    /// 50% width.
     UltraCondensed,
+    /// 62.5% width.
     ExtraCondensed,
+    /// 75% width.
     Condensed,
+    /// 87.5% width.
     SemiCondensed,
+    /// 100% width (default).
     Normal,
+    /// 112.5% width.
     SemiExpanded,
+    /// 125% width.
     Expanded,
+    /// 150% width.
     ExtraExpanded,
+    /// 200% width.
     UltraExpanded,
 }
 

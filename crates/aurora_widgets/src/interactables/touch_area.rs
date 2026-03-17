@@ -6,11 +6,19 @@ use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseButton, MouseClickEvent, MouseEvent, MouseState};
 use aurora_render::canvas::Canvas;
 
+/// Callback invoked on mouse click (press then release).
 pub type OnClickCallback = Box<dyn FnMut(&MouseClickEvent)>;
+/// Callback invoked when hover state changes. Receives the widget bounds and whether the cursor is inside.
 pub type OnHoverCallback = Box<dyn FnMut(Rect, bool)>;
+/// Callback invoked while dragging. Receives the current cursor position.
 pub type OnDragCallback = Box<dyn FnMut(Point)>;
+/// Callback invoked on mouse button down. Receives which button was pressed.
 pub type MouseCallback = Box<dyn FnMut(MouseButton)>;
 
+/// An invisible hit-testing region that dispatches mouse events to callbacks.
+///
+/// Wraps an optional child widget and forwards paint/layout to it. Use this
+/// to add click, hover, drag, and mouse-down handling to any widget.
 #[derive(Default)]
 pub struct TouchArea {
     on_mouse_down: Option<MouseCallback>,
@@ -27,38 +35,54 @@ pub struct TouchArea {
 }
 
 impl TouchArea {
+    /// Creates a new touch area with no callbacks and no child.
     pub fn new() -> Self {
         Self::default()
     }
+
+    /// Registers a callback invoked when the area is clicked (released inside bounds).
     pub fn on_click(mut self, f: impl FnMut(&MouseClickEvent) + 'static) -> Self {
         self.on_click = Some(Box::new(f));
         self
     }
+
+    /// Registers a callback invoked when hover state changes.
     pub fn on_hover(mut self, f: impl FnMut(Rect, bool) + 'static) -> Self {
         self.on_hover = Some(Box::new(f));
         self
     }
 
+    /// Registers a callback invoked on mouse button press (before release).
     pub fn on_mouse_down(mut self, f: impl FnMut(MouseButton) + 'static) -> Self {
         self.on_mouse_down = Some(Box::new(f));
         self
     }
+
+    /// Registers a callback invoked while the mouse is dragged after pressing inside bounds.
     pub fn on_drag(mut self, f: impl FnMut(Point) + 'static) -> Self {
         self.on_drag = Some(Box::new(f));
         self
     }
+
+    /// Sets a fixed width for the touch area.
     pub fn width(mut self, width: f32) -> Self {
         self.width = Some(width);
         self
     }
+
+    /// Sets a fixed height for the touch area.
     pub fn height(mut self, height: f32) -> Self {
         self.height = Some(height);
         self
     }
+
+    /// Sets a child widget to render inside the touch area.
     pub fn child(mut self, child: impl Widget + 'static) -> Self {
         self.child = Some(Box::new(child));
         self
     }
+
+    /// Sets the cursor icon shown when hovering over the touch area.
     pub fn hover_cursor(mut self, cursor: CursorIcon) -> Self {
         self.hover_cursor = Some(cursor);
         self

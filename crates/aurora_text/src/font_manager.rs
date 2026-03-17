@@ -16,6 +16,9 @@ impl FontManager {
     pub fn new() -> Self {
         Self::default()
     }
+    /// Creates a new font manager pre-loaded with system fonts.
+    ///
+    /// This can add ~200 ms to startup but enables system font discovery.
     pub fn new_with_system_db() -> Self {
         let mut manager = Self::new();
         manager.font_system.db_mut().load_system_fonts();

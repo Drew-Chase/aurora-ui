@@ -9,15 +9,28 @@ use aurora_core::geometry::corners::Corners;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+/// Configuration for the [`button`] function.
+///
+/// All fields have sensible defaults via [`Default`], so you can override
+/// only what you need with `..ButtonOptions::default()`.
 pub struct ButtonOptions {
+    /// Text widget used as the button label.
     pub text_options: Text,
+    /// Callback invoked on click.
     pub on_click: OnClickCallback,
+    /// Button width in pixels.
     pub width: u32,
+    /// Button height in pixels.
     pub height: u32,
+    /// Background color in the normal state.
     pub background_color: Color,
+    /// Background color when hovered.
     pub hover_background_color: Color,
+    /// Text color in the normal state.
     pub text_color: Color,
+    /// Text color when hovered.
     pub text_hover_color: Color,
+    /// Corner radii for the button rectangle.
     pub border_radius: Corners,
 }
 
@@ -40,10 +53,14 @@ impl Default for ButtonOptions {
 }
 
 #[derive(Default, Copy, Clone)]
-pub struct ButtonState {
+struct ButtonState {
     is_hovering: bool,
 }
 
+/// Creates a styled button widget from the given [`ButtonOptions`].
+///
+/// Internally uses a [`Composite`] to manage hover state and rebuild
+/// the visual tree when the cursor enters or leaves the button.
 pub fn button(options: ButtonOptions) -> impl Widget {
     let on_click = Rc::new(RefCell::new(options.on_click));
     let background = options.background_color;
