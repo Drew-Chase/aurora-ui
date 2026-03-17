@@ -7,6 +7,23 @@ use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::MouseEvent;
 use aurora_render::canvas::Canvas;
 
+/// A horizontal layout container that arranges children left-to-right.
+///
+/// Uses a two-pass flex algorithm: children with a fixed size are measured
+/// first, then remaining space is divided equally among flexible children
+/// (those that consume all available width).
+///
+/// # Example
+///
+/// ```no_run
+/// use aurora_ui::prelude::*;
+///
+/// row!()
+///     .spacing(10.0)
+///     .height(100)
+///     .child(BoxWidget::new().background_color(Color::RED))
+///     .child(BoxWidget::new().width(80).background_color(Color::BLUE))
+/// ```
 pub struct Row {
     justify: Justify,
     align: Align,
@@ -19,38 +36,48 @@ pub struct Row {
 }
 
 impl Row {
+    /// Creates a new row with default settings.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Appends a child widget to the row.
     pub fn child(mut self, widget: impl Widget + 'static) -> Self {
         self.children.push(Box::new(widget));
         self
     }
 
+    /// Sets the gap between children in pixels.
     pub fn spacing(mut self, spacing: f32) -> Self {
         self.spacing = spacing;
         self
     }
 
+    /// Sets the inner padding around the content area.
     pub fn padding(mut self, padding: impl Into<Edges>) -> Self {
         self.padding = padding.into();
         self
     }
 
+    /// Sets how children are distributed along the horizontal (main) axis.
     pub fn justify(mut self, justify: Justify) -> Self {
         self.justify = justify;
         self
     }
 
+    /// Sets how children are aligned along the vertical (cross) axis.
     pub fn align(mut self, align: Align) -> Self {
         self.align = align;
         self
     }
+
+    /// Sets a fixed width for the row, overriding the available width.
     pub fn width(mut self, width: u32) -> Self {
         self.width = Some(width);
         self
     }
+
+    /// Sets a fixed height for the row, overriding the available height.
     pub fn height(mut self, height: u32) -> Self {
         self.height = Some(height);
         self
@@ -235,10 +262,18 @@ impl Widget for Row {
         }
     }
 }
+/// Shorthand for [`Row::new()`].
+///
+/// ```no_run
+/// # use aurora_ui::prelude::*;
+/// row!()
+///     .spacing(10.0)
+///     .height(100)
+///     .child(BoxWidget::new().background_color(Color::RED))
+/// ```
 #[macro_export]
 macro_rules! row {
     () => {{
-        use aurora_ui::aurora_widgets::layout::row::Row;
         Row::new()
     }};
 }

@@ -7,6 +7,25 @@ use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::MouseEvent;
 use aurora_render::canvas::Canvas;
 
+/// A vertical layout container that arranges children top-to-bottom.
+///
+/// Uses a two-pass flex algorithm: children with a fixed size are measured
+/// first, then remaining space is divided equally among flexible children
+/// (those that consume all available height).
+///
+/// # Example
+///
+/// ```no_run
+/// use aurora_ui::prelude::*;
+///
+/// col!()
+///     .spacing(10.0)
+///     .padding(Edges::all(20.0))
+///     .justify(Justify::Center)
+///     .align(Align::Stretch)
+///     .child(BoxWidget::new().height(50).background_color(Color::RED))
+///     .child(BoxWidget::new().background_color(Color::BLUE))
+/// ```
 pub struct Column {
     justify: Justify,
     align: Align,
@@ -19,38 +38,48 @@ pub struct Column {
 }
 
 impl Column {
+    /// Creates a new column with default settings.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Appends a child widget to the column.
     pub fn child(mut self, widget: impl Widget + 'static) -> Self {
         self.children.push(Box::new(widget));
         self
     }
 
+    /// Sets the gap between children in pixels.
     pub fn spacing(mut self, spacing: f32) -> Self {
         self.spacing = spacing;
         self
     }
 
+    /// Sets the inner padding around the content area.
     pub fn padding(mut self, padding: impl Into<Edges>) -> Self {
         self.padding = padding.into();
         self
     }
 
+    /// Sets how children are distributed along the vertical (main) axis.
     pub fn justify(mut self, justify: Justify) -> Self {
         self.justify = justify;
         self
     }
 
+    /// Sets how children are aligned along the horizontal (cross) axis.
     pub fn align(mut self, align: Align) -> Self {
         self.align = align;
         self
     }
+
+    /// Sets a fixed width for the column, overriding the available width.
     pub fn width(mut self, width: u32) -> Self {
         self.width = Some(width);
         self
     }
+
+    /// Sets a fixed height for the column, overriding the available height.
     pub fn height(mut self, height: u32) -> Self {
         self.height = Some(height);
         self
@@ -235,10 +264,17 @@ impl Widget for Column {
     }
 }
 
+/// Shorthand for [`Column::new()`].
+///
+/// ```no_run
+/// # use aurora_ui::prelude::*;
+/// col!()
+///     .spacing(10.0)
+///     .child(BoxWidget::new().height(50).background_color(Color::RED))
+/// ```
 #[macro_export]
 macro_rules! col {
     () => {{
-        use aurora_ui::aurora_widgets::layout::column::Column;
         Column::new()
     }};
 }
