@@ -125,6 +125,8 @@ struct AppHandler<F> {
     on_render: F,
     window: Option<AppWindow>,
     pub(crate) current_cursor_position: Option<Point>,
+    benchmark: bool,
+    start_time: std::time::Instant,
 }
 
 /// Per-frame information passed to the render callback.
@@ -271,11 +273,15 @@ impl App {
     where
         F: FnMut(&mut AppWindow, FrameInfo) + 'static,
     {
+        let benchmark = std::env::var("AURORA_BENCHMARK").is_ok();
+        let start_time = std::time::Instant::now();
         let mut app_handler = AppHandler {
             config: self,
             on_render,
             window: None,
             current_cursor_position: None,
+            benchmark,
+            start_time,
         };
         let event_loop = winit::event_loop::EventLoop::new().map_err(AppError::from)?;
         event_loop
@@ -637,6 +643,13 @@ where
                 event_loop.exit();
             }
             WindowEvent::RedrawRequested => {
+                if self.benchmark {
+                    let elapsed = self.start_time.elapsed();
+                    println!("STARTUP_MS={:.2}", elapsed.as_secs_f64() * 1000.0);
+                    println!("MEMORY_KB={}", current_memory_kb());
+                    event_loop.exit();
+                    return;
+                }
                 log::trace!("Window redraw requested");
                 window.window_handle.pre_present_notify();
                 let physical = window.window_handle.inner_size();
@@ -738,6 +751,43 @@ fn resolve_monitor(
         }
         WindowMonitor::Index(index) => event_loop.available_monitors().nth(index).or_else(primary),
     }
+}
+
+/// Returns the current process working set size in KB.
+#[cfg(target_os = "windows")]
+fn current_memory_kb() -> u64 {
+    use windows::Win32::System::ProcessStatus::{GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS};
+    use windows::Win32::System::Threading::GetCurrentProcess;
+
+    unsafe {
+        let mut pmc = PROCESS_MEMORY_COUNTERS::default();
+        let _ = GetProcessMemoryInfo(
+            GetCurrentProcess(),
+            &mut pmc,
+            std::mem::size_of::<PROCESS_MEMORY_COUNTERS>() as u32,
+        );
+        pmc.WorkingSetSize as u64 / 1024
+    }
+}
+
+/// Returns the current process RSS in KB.
+#[cfg(target_os = "linux")]
+fn current_memory_kb() -> u64 {
+    std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|s| {
+            s.lines()
+                .find(|l| l.starts_with("VmRSS:"))
+                .and_then(|l| l.split_whitespace().nth(1))
+                .and_then(|v| v.parse().ok())
+        })
+        .unwrap_or(0)
+}
+
+/// Returns the current process memory in KB (stub for unsupported platforms).
+#[cfg(not(any(target_os = "windows", target_os = "linux")))]
+fn current_memory_kb() -> u64 {
+    0
 }
 
 #[cfg(target_os = "windows")]

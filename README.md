@@ -61,11 +61,13 @@ fn main() {
 ## Features
 
 - **Software rendering** — CPU rendering via softbuffer (only backend currently implemented; GPU backends planned)
-- **Custom window titlebars** — Windows 11 DWM integration and macOS transparent titlebar (planned/in-progress)
+- **Custom window titlebars** — Windows 11 DWM rounded corners, drop shadow, and edge-resize via `WM_NCHITTEST` subclassing
 - **Feature-gated text rendering** — Font loading, shaping, and text widgets behind `text` feature flag
-- **Layout system** — `col!` and `row!` macros with flex alignment, spacing, and justification
+- **Layout system** — `col!` and `row!` macros with flex alignment, `Stack`, `Positioned`, and `ScrollView`
+- **Image and SVG support** — PNG/JPEG decoding, SVG rasterization with gradient support, feature-gated
 - **Composite stateful widgets** — `Composite<S>` for widgets that rebuild on state change
 - **Incremental rendering** — Dirty-flag system skips unchanged subtrees
+- **Built-in benchmarking** — `just benchmark` reports binary size, startup time, and memory for every example
 - **Statically linked binaries** — Single executable, no runtime dependencies
 
 ## Quick Start
@@ -93,6 +95,27 @@ aurora_ui = { path = "path/to/aurora-ui/aurora", features = ["software", "text"]
 |------------|---------------------------------------------------------|---------|
 | `software` | CPU software rendering via softbuffer                   | Yes     |
 | `text`     | Font loading, shaping, text widgets, buttons            | No      |
+| `image`    | PNG/JPEG decoding and Image widget                      | No      |
+| `svg`      | SVG parsing, rasterization, and Svg widget              | No      |
+
+## Performance
+
+Release-mode benchmarks on Windows 11 (`just benchmark`):
+
+| Example | Binary (KB) | Startup (ms) | Memory (KB) |
+|---|--:|--:|--:|
+| `minimal_example` | 369 | 92.64 | 33,576 |
+| `custom_titlebar_example` | 379 | 98.05 | 34,300 |
+| `layout_example` | 382 | 99.20 | 33,620 |
+| `scrollview_example` | 388 | 105.03 | 33,568 |
+| `image_example` | 1,247 | 112.16 | 35,848 |
+| `counter_example` | 1,622 | 109.24 | 33,456 |
+| `text_example` | 1,764 | 94.48 | 34,644 |
+| `button_example` | 1,774 | 85.01 | 34,672 |
+
+The minimal blank-window binary is **369 KB**. Text rendering (`text` feature) adds ~1.4 MB. Image decoding (`image` feature) adds ~870 KB. All examples start in under 115 ms with ~33 MB working set.
+
+Run `just benchmark` to reproduce these numbers on your machine.
 
 ## Architecture
 
@@ -117,10 +140,7 @@ aurora/
 
 ## Custom Titlebar
 
-> [!NOTE]
-> Custom titlebar support is planned/in-progress and not yet fully implemented.
-
-Aurora aims to provide first-class support for custom window chrome that respects
+Aurora provides first-class support for custom window chrome that respects
 platform conventions:
 
 **Windows 11** — DWM frame extension with `DWMWA_WINDOW_CORNER_PREFERENCE` for
