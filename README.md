@@ -25,27 +25,27 @@ what you use, in both binary size and startup time.
 use aurora_ui::prelude::*;
 
 fn main() {
-    App::new()
-        .title("Hello, Aurora")
-        .size((400, 300))
-        .font(include_bytes!("Roboto-Regular.ttf"))
-        .run(|window, _frame| {
-            window.root(
-                col!()
-                    .spacing(10.0)
-                    .align(Align::Center)
-                    .justify(Justify::Center)
-                    .child(Text::new("Hello, world!").font_size(24.0))
-                    .child(button(ButtonOptions {
-                        text_options: Text::new("Click me")
-                            .align(Align::Center)
-                            .justify(Justify::Center),
-                        on_click: Box::new(|_| println!("clicked")),
-                        ..Default::default()
-                    })),
-            );
-        })
-        .expect("Failed to run app");
+	App::new()
+		.title("Hello, Aurora")
+		.size((400, 300))
+		.font(include_bytes!("Roboto-Regular.ttf"))
+		.run(|window, _frame| {
+			window.root(
+				col!()
+					.spacing(10.0)
+					.align(Align::Center)
+					.justify(Justify::Center)
+					.child(Text::new("Hello, world!").font_size(24.0))
+					.child(button(ButtonOptions {
+						text_options: Text::new("Click me")
+							.align(Align::Center)
+							.justify(Justify::Center),
+						on_click: Box::new(|_| println!("clicked")),
+						..Default::default()
+					})),
+			);
+		})
+		.expect("Failed to run app");
 }
 ```
 
@@ -54,7 +54,7 @@ fn main() {
 | Problem                                   | Aurora's Answer                                                                                                               |
 |-------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
 | Electron/Tauri apps are slow to start     | Feature-gated architecture keeps startup fast — load only what you need                                                       |
-| Qt/GTK bundles are large                  | Minimal binary with aggressive feature gating — don't need text? Don't ship a font shaper                                    |
+| Qt/GTK bundles are large                  | Minimal binary with aggressive feature gating — don't need text? Don't ship a font shaper                                     |
 | No framework does custom titlebars right  | **Native Win11 rounded corners, drop shadows, and snap layouts.** macOS traffic lights with `fullSizeContentView`. Linux CSD. |
 | Frameworks force you to bundle everything | **Feature-gated architecture.** Every subsystem is opt-in.                                                                    |
 
@@ -91,27 +91,28 @@ aurora_ui = { path = "path/to/aurora-ui/aurora", features = ["software", "text"]
 
 ## Feature Flags
 
-| Feature    | What it adds                                            | Default |
-|------------|---------------------------------------------------------|---------|
-| `software` | CPU software rendering via softbuffer                   | Yes     |
-| `text`     | Font loading, shaping, text widgets, buttons            | No      |
-| `image`    | PNG/JPEG decoding and Image widget                      | No      |
-| `svg`      | SVG parsing, rasterization, and Svg widget              | No      |
+| Feature    | What it adds                                 | Default |
+|------------|----------------------------------------------|---------|
+| `software` | CPU software rendering via softbuffer        | Yes     |
+| `text`     | Font loading, shaping, text widgets, buttons | No      |
+| `image`    | PNG/JPEG decoding and Image widget           | No      |
+| `svg`      | SVG parsing, rasterization, and Svg widget   | No      |
 
 ## Performance
 
 Release-mode benchmarks on Windows 11 (`just benchmark`):
 
-| Example | Binary (KB) | Startup (ms) | Memory (KB) |
-|---|--:|--:|--:|
-| `minimal_example` | 369 | 92.64 | 33,576 |
-| `custom_titlebar_example` | 379 | 98.05 | 34,300 |
-| `layout_example` | 382 | 99.20 | 33,620 |
-| `scrollview_example` | 388 | 105.03 | 33,568 |
-| `image_example` | 1,247 | 112.16 | 35,848 |
-| `counter_example` | 1,622 | 109.24 | 33,456 |
-| `text_example` | 1,764 | 94.48 | 34,644 |
-| `button_example` | 1,774 | 85.01 | 34,672 |
+| Example                   | Binary (KB) | Startup (ms) | Memory (KB) |
+|---------------------------|------------:|-------------:|------------:|
+| `button_example`          |       1,780 |        75.86 |      21,312 |
+| `counter_example`         |       1,628 |        99.82 |      18,464 |
+| `custom_titlebar_example` |         385 |        78.46 |      34,260 |
+| `image_example`           |       1,252 |        83.62 |      22,296 |
+| `layout_example`          |         387 |        83.40 |      20,304 |
+| `minimal_example`         |         374 |       128.55 |      20,224 |
+| `scrollview_example`      |         394 |        87.48 |      20,248 |
+| `text_example`            |       1,769 |       107.79 |      21,396 |
+| `text_input_example`      |       1,640 |       100.35 |      19,152 |
 
 The minimal blank-window binary is **369 KB**. Text rendering (`text` feature) adds ~1.4 MB. Image decoding (`image` feature) adds ~870 KB. All examples start in under 115 ms with ~33 MB working set.
 
@@ -155,8 +156,8 @@ content.
 
 ## Platform Support
 
-| Platform        | Backend             | Status    |
-|-----------------|---------------------|-----------|
+| Platform        | Backend               | Status    |
+|-----------------|-----------------------|-----------|
 | Windows 10/11   | Software (softbuffer) | Primary   |
 | macOS 11+       | Software (softbuffer) | Primary   |
 | Linux (X11)     | Software (softbuffer) | Supported |
