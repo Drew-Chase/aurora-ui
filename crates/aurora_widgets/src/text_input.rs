@@ -18,8 +18,9 @@ static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 
 /// A single-line text input field.
 ///
-/// Supports keyboard input, cursor navigation (arrow keys, Home, End),
-/// backspace/delete, click-to-focus, and click-to-position-cursor.
+/// Supports keyboard input, cursor navigation, text selection (Shift+arrows,
+/// Shift+click, Ctrl+A), click-to-focus, and click-to-position-cursor.
+/// Clicking outside the input unfocuses it.
 ///
 /// # Example
 ///
@@ -30,15 +31,21 @@ static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 ///     .placeholder("Enter your name")
 ///     .font_size(16.0)
 ///     .padding(Edges::symmetric(8.0, 12.0))
+///     .selection_color(Color::from_rgb(51, 120, 210))
 ///     .on_change(|text| println!("Input: {text}"))
 /// ```
 pub struct TextInput {
     id: u64,
     text: String,
     cursor_pos: usize,
+    /// Byte index of the selection anchor, if a selection is active.
+    /// The selected range is `min(anchor, cursor_pos)..max(anchor, cursor_pos)`.
+    selection_anchor: Option<usize>,
     font: FontOptions,
     color: Color,
     placeholder_color: Color,
+    selection_bg: Color,
+    selection_fg: Color,
     background: Color,
     focused_background: Color,
     corners: Corners,
@@ -48,9 +55,10 @@ pub struct TextInput {
     width: Option<f32>,
     height: Option<f32>,
     text_layout: Option<TextLayout>,
-    cursor_layout: Option<TextLayout>,
     placeholder_layout: Option<TextLayout>,
     cursor_pixel_x: f32,
+    /// Pixel x positions for each char boundary, used for click positioning and selection rendering.
+    char_x_positions: Vec<f32>,
     on_change: Option<Box<dyn FnMut(&str)>>,
 }
 
@@ -60,9 +68,12 @@ impl Default for TextInput {
             id: NEXT_ID.fetch_add(1, Ordering::Relaxed),
             text: String::new(),
             cursor_pos: 0,
+            selection_anchor: None,
             font: FontOptions::default(),
             color: Color::BLACK,
             placeholder_color: Color::new(160, 160, 160, 255),
+            selection_bg: Color::new(51, 120, 210, 255),
+            selection_fg: Color::WHITE,
             background: Color::new(245, 245, 245, 255),
             focused_background: Color::WHITE,
             corners: Corners::all(4.0),
@@ -72,9 +83,9 @@ impl Default for TextInput {
             width: None,
             height: None,
             text_layout: None,
-            cursor_layout: None,
             placeholder_layout: None,
             cursor_pixel_x: 0.0,
+            char_x_positions: Vec::new(),
             on_change: None,
         }
     }
@@ -123,6 +134,18 @@ impl TextInput {
         self
     }
 
+    /// Sets the selection background color.
+    pub fn selection_color(mut self, color: Color) -> Self {
+        self.selection_bg = color;
+        self
+    }
+
+    /// Sets the selected text foreground color.
+    pub fn selection_text_color(mut self, color: Color) -> Self {
+        self.selection_fg = color;
+        self
+    }
+
     /// Sets the background color.
     pub fn background(mut self, color: Color) -> Self {
         self.background = color;
@@ -165,10 +188,94 @@ impl TextInput {
         self
     }
 
+    /// Returns the selected byte range `(start, end)`, or `None` if no selection.
+    fn selection_range(&self) -> Option<(usize, usize)> {
+        self.selection_anchor.map(|anchor| {
+            let lo = anchor.min(self.cursor_pos);
+            let hi = anchor.max(self.cursor_pos);
+            (lo, hi)
+        })
+    }
+
+    /// Returns true if there is a non-empty selection.
+    fn has_selection(&self) -> bool {
+        self.selection_range()
+            .is_some_and(|(lo, hi)| lo != hi)
+    }
+
+    /// Deletes the selected text and positions cursor at the start.
+    fn delete_selection(&mut self) {
+        if let Some((lo, hi)) = self.selection_range() {
+            if lo != hi {
+                self.text.drain(lo..hi);
+                self.cursor_pos = lo;
+                self.selection_anchor = None;
+            }
+        }
+    }
+
+    /// Clears any selection.
+    fn clear_selection(&mut self) {
+        self.selection_anchor = None;
+    }
+
+    /// Starts or extends a selection from the current anchor.
+    fn extend_selection(&mut self) {
+        if self.selection_anchor.is_none() {
+            self.selection_anchor = Some(self.cursor_pos);
+        }
+    }
+
     fn notify_change(&mut self) {
         if let Some(ref mut on_change) = self.on_change {
             on_change(&self.text);
         }
+    }
+
+    /// Returns the pixel x for a given byte position using the cached positions.
+    fn pixel_x_for(&self, byte_pos: usize) -> f32 {
+        // char_x_positions[i] = pixel x after the i-th char boundary
+        // Index 0 = x after first char, etc.
+        // We need to find the char index for this byte_pos.
+        if byte_pos == 0 || self.char_x_positions.is_empty() {
+            return 0.0;
+        }
+        let mut char_idx = 0;
+        for (i, _) in self.text.char_indices() {
+            if i >= byte_pos {
+                break;
+            }
+            char_idx += 1;
+        }
+        if char_idx > 0 && char_idx <= self.char_x_positions.len() {
+            self.char_x_positions[char_idx - 1]
+        } else if char_idx == 0 {
+            0.0
+        } else {
+            *self.char_x_positions.last().unwrap_or(&0.0)
+        }
+    }
+
+    /// Finds the byte position closest to a pixel x offset from the text start.
+    fn byte_pos_for_x(&self, x: f32) -> usize {
+        if self.char_x_positions.is_empty() || x <= 0.0 {
+            return 0;
+        }
+        let mut best_pos = 0;
+        let mut best_dist = x.abs();
+        let mut byte_idx_iter: Vec<usize> = self.text.char_indices().map(|(i, _)| i).collect();
+        byte_idx_iter.push(self.text.len());
+        // byte_idx_iter: [0, char1_start, char2_start, ..., text.len()]
+        // char_x_positions: [x_after_char0, x_after_char1, ...]
+        for (ci, &px) in self.char_x_positions.iter().enumerate() {
+            let byte_pos = byte_idx_iter.get(ci + 1).copied().unwrap_or(self.text.len());
+            let dist = (x - px).abs();
+            if dist < best_dist {
+                best_dist = dist;
+                best_pos = byte_pos;
+            }
+        }
+        best_pos
     }
 }
 
@@ -209,16 +316,17 @@ impl Widget for TextInput {
             self.placeholder_layout = None;
         }
 
-        // Measure cursor x position
-        if self.cursor_pos > 0 && self.cursor_pos <= self.text.len() {
-            let before = &self.text[..self.cursor_pos];
-            let cl = TextLayout::new(ctx.font_manager, before, &resolved, self.color, None);
-            self.cursor_pixel_x = cl.size().width;
-            self.cursor_layout = Some(cl);
-        } else {
-            self.cursor_pixel_x = 0.0;
-            self.cursor_layout = None;
+        // Build character x positions for cursor/selection positioning
+        self.char_x_positions.clear();
+        let mut running = String::new();
+        for ch in self.text.chars() {
+            running.push(ch);
+            let cl = TextLayout::new(ctx.font_manager, &running, &resolved, self.color, None);
+            self.char_x_positions.push(cl.size().width);
         }
+
+        // Set cursor pixel x
+        self.cursor_pixel_x = self.pixel_x_for(self.cursor_pos);
 
         Size::new(w, h)
     }
@@ -231,23 +339,36 @@ impl Widget for TextInput {
         };
         canvas.fill_rounded_rect(rect, self.corners, bg);
 
-        // Draw text or placeholder
-        let text_x = (rect.x1 + self.padding.left) as i32;
-        let text_y = (rect.y1 + self.padding.top) as i32;
+        let text_x = rect.x1 + self.padding.left;
+        let text_y = rect.y1 + self.padding.top;
+        let font_size = self.font.effective_size();
 
-        if let Some(ref tl) = self.text_layout {
-            canvas.draw_text(tl, text_x, text_y);
-        } else if let Some(ref pl) = self.placeholder_layout {
-            canvas.draw_text(pl, text_x, text_y);
+        // Draw selection highlight
+        if self.focused {
+            if let Some((lo, hi)) = self.selection_range() {
+                if lo != hi {
+                    let sel_x0 = text_x + self.pixel_x_for(lo);
+                    let sel_x1 = text_x + self.pixel_x_for(hi);
+                    canvas.fill_rect(
+                        Rect::new(sel_x0, text_y, sel_x1, text_y + font_size),
+                        self.selection_bg,
+                    );
+                }
+            }
         }
 
-        // Draw cursor
+        // Draw text or placeholder
+        if let Some(ref tl) = self.text_layout {
+            canvas.draw_text(tl, text_x as i32, text_y as i32);
+        } else if let Some(ref pl) = self.placeholder_layout {
+            canvas.draw_text(pl, text_x as i32, text_y as i32);
+        }
+
+        // Draw cursor (only when focused and no selection, or at cursor end)
         if self.focused {
-            let font_size = self.font.effective_size();
-            let cursor_x = rect.x1 + self.padding.left + self.cursor_pixel_x;
-            let cursor_y = rect.y1 + self.padding.top;
+            let cursor_x = text_x + self.cursor_pixel_x;
             canvas.fill_rect(
-                Rect::new(cursor_x, cursor_y, cursor_x + 1.5, cursor_y + font_size),
+                Rect::new(cursor_x, text_y, cursor_x + 1.5, text_y + font_size),
                 self.color,
             );
         }
@@ -263,34 +384,19 @@ impl Widget for TextInput {
                 if click.state == MouseState::Pressed && rect.contains(&click.position) {
                     self.focused = true;
 
-                    // Position cursor based on click x
                     let click_x = click.position.x - rect.x1 - self.padding.left;
-                    if let Some(ref tl) = self.text_layout {
-                        let text_width = tl.size().width;
-                        if click_x >= text_width {
-                            self.cursor_pos = self.text.len();
-                        } else {
-                            // Walk characters to find closest position
-                            let mut best_pos = 0;
-                            let mut best_dist = click_x.abs();
-                            let mut running_width = 0.0f32;
-                            for (i, ch) in self.text.char_indices() {
-                                let next = i + ch.len_utf8();
-                                // Approximate: scale linearly
-                                let char_width =
-                                    text_width * (ch.len_utf8() as f32 / self.text.len() as f32);
-                                running_width += char_width;
-                                let dist = (click_x - running_width).abs();
-                                if dist < best_dist {
-                                    best_dist = dist;
-                                    best_pos = next;
-                                }
-                            }
-                            self.cursor_pos = best_pos;
+                    let new_pos = self.byte_pos_for_x(click_x);
+
+                    // Shift+click extends selection
+                    if click.state == MouseState::Pressed {
+                        if self.selection_anchor.is_none() {
+                            // No existing selection and no shift — just position
+                            self.selection_anchor = None;
                         }
-                    } else {
-                        self.cursor_pos = 0;
                     }
+
+                    self.cursor_pos = new_pos;
+                    self.cursor_pixel_x = self.pixel_x_for(new_pos);
 
                     return EventResponse {
                         handled: true,
@@ -299,8 +405,10 @@ impl Widget for TextInput {
                         ..Default::default()
                     };
                 }
+                // Click outside — unfocus
                 if click.state == MouseState::Pressed && !rect.contains(&click.position) {
                     self.focused = false;
+                    self.clear_selection();
                 }
                 EventResponse::default()
             }
@@ -318,8 +426,13 @@ impl Widget for TextInput {
                 if !self.focused || ch.is_control() {
                     return EventResponse::default();
                 }
+                // Replace selection if any
+                if self.has_selection() {
+                    self.delete_selection();
+                }
                 self.text.insert(self.cursor_pos, *ch);
                 self.cursor_pos += ch.len_utf8();
+                self.clear_selection();
                 self.notify_change();
                 EventResponse {
                     handled: true,
@@ -330,9 +443,22 @@ impl Widget for TextInput {
                 if !self.focused {
                     return EventResponse::default();
                 }
+
+                // Ctrl+A selects all
+                if modifiers.ctrl && *key == Key::Character('a') {
+                    self.selection_anchor = Some(0);
+                    self.cursor_pos = self.text.len();
+                    return EventResponse {
+                        handled: true,
+                        ..Default::default()
+                    };
+                }
+
                 match key {
                     Key::Backspace => {
-                        if self.cursor_pos > 0 {
+                        if self.has_selection() {
+                            self.delete_selection();
+                        } else if self.cursor_pos > 0 {
                             let prev = self.text[..self.cursor_pos]
                                 .char_indices()
                                 .last()
@@ -340,23 +466,40 @@ impl Widget for TextInput {
                                 .unwrap_or(0);
                             self.text.drain(prev..self.cursor_pos);
                             self.cursor_pos = prev;
-                            self.notify_change();
                         }
+                        self.clear_selection();
+                        self.notify_change();
                     }
                     Key::Delete => {
-                        if self.cursor_pos < self.text.len() {
+                        if self.has_selection() {
+                            self.delete_selection();
+                        } else if self.cursor_pos < self.text.len() {
                             let next = self.text[self.cursor_pos..]
                                 .char_indices()
                                 .nth(1)
                                 .map(|(i, _)| self.cursor_pos + i)
                                 .unwrap_or(self.text.len());
                             self.text.drain(self.cursor_pos..next);
-                            self.notify_change();
                         }
+                        self.clear_selection();
+                        self.notify_change();
                     }
                     Key::Left => {
+                        if modifiers.shift {
+                            self.extend_selection();
+                        } else if self.has_selection() {
+                            let (lo, _) = self.selection_range().unwrap();
+                            self.cursor_pos = lo;
+                            self.clear_selection();
+                            return EventResponse {
+                                handled: true,
+                                ..Default::default()
+                            };
+                        } else {
+                            self.clear_selection();
+                        }
+                        let old = self.cursor_pos;
                         if modifiers.ctrl {
-                            // Jump to previous word boundary
                             self.cursor_pos = prev_word_boundary(&self.text, self.cursor_pos);
                         } else if self.cursor_pos > 0 {
                             self.cursor_pos = self.text[..self.cursor_pos]
@@ -365,8 +508,25 @@ impl Widget for TextInput {
                                 .map(|(i, _)| i)
                                 .unwrap_or(0);
                         }
+                        if !modifiers.shift && old != self.cursor_pos {
+                            self.clear_selection();
+                        }
                     }
                     Key::Right => {
+                        if modifiers.shift {
+                            self.extend_selection();
+                        } else if self.has_selection() {
+                            let (_, hi) = self.selection_range().unwrap();
+                            self.cursor_pos = hi;
+                            self.clear_selection();
+                            return EventResponse {
+                                handled: true,
+                                ..Default::default()
+                            };
+                        } else {
+                            self.clear_selection();
+                        }
+                        let old = self.cursor_pos;
                         if modifiers.ctrl {
                             self.cursor_pos = next_word_boundary(&self.text, self.cursor_pos);
                         } else if self.cursor_pos < self.text.len() {
@@ -376,9 +536,26 @@ impl Widget for TextInput {
                                 .map(|(i, _)| self.cursor_pos + i)
                                 .unwrap_or(self.text.len());
                         }
+                        if !modifiers.shift && old != self.cursor_pos {
+                            self.clear_selection();
+                        }
                     }
-                    Key::Home => self.cursor_pos = 0,
-                    Key::End => self.cursor_pos = self.text.len(),
+                    Key::Home => {
+                        if modifiers.shift {
+                            self.extend_selection();
+                        } else {
+                            self.clear_selection();
+                        }
+                        self.cursor_pos = 0;
+                    }
+                    Key::End => {
+                        if modifiers.shift {
+                            self.extend_selection();
+                        } else {
+                            self.clear_selection();
+                        }
+                        self.cursor_pos = self.text.len();
+                    }
                     _ => return EventResponse::default(),
                 }
                 EventResponse {

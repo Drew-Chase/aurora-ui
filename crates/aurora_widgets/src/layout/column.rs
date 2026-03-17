@@ -252,21 +252,16 @@ impl Widget for Column {
 
         for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
             let translated = child_rect.translate(&rect.origin());
+            let response = child.event(event, translated);
             if is_move {
-                // Forward move to all children so they can update hover state
-                let response = child.event(event, translated);
                 if response.handled {
                     handled = true;
                 }
-                // Only take cursor from the child under the mouse
                 if translated.contains(&pos) {
                     cursor = response.cursor;
                 }
-            } else if translated.contains(&pos) && child.event(event, translated).handled {
-                return EventResponse{
-                    handled: false,
-                    ..EventResponse::default()
-                };
+            } else if translated.contains(&pos) && response.handled {
+                handled = true;
             }
         }
         EventResponse {

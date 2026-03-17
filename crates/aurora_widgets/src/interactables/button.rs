@@ -8,6 +8,7 @@ use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use std::cell::RefCell;
 use std::rc::Rc;
+use aurora_core::kmi::cursor_icon::CursorIcon;
 
 /// Configuration for the [`button`] function.
 ///
@@ -32,6 +33,7 @@ pub struct ButtonOptions {
     pub text_hover_color: Color,
     /// Corner radii for the button rectangle.
     pub border_radius: Corners,
+    pub hover_cursor: CursorIcon,
 }
 
 impl Default for ButtonOptions {
@@ -48,6 +50,7 @@ impl Default for ButtonOptions {
             text_color: Color::BLACK,
             text_hover_color: Color::BLACK,
             border_radius: Corners::all(4.0),
+            hover_cursor: CursorIcon::Pointer,
         }
     }
 }
@@ -71,6 +74,7 @@ pub fn button(options: ButtonOptions) -> impl Widget {
     let text_options = options.text_options;
     let width = options.width;
     let height = options.height;
+    let hover_cursor = options.hover_cursor;
 
     Composite::new(ButtonState::default(), move |state, set_state| {
         let setter = set_state.clone();
@@ -79,6 +83,7 @@ pub fn button(options: ButtonOptions) -> impl Widget {
 
         Box::new(
             TouchArea::new()
+                .hover_cursor(hover_cursor)
                 .child(
                     BoxWidget::new()
                         .corners(border_radius)
