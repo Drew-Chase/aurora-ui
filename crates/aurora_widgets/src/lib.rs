@@ -12,3 +12,11 @@ pub mod text_widget;
 pub mod interactables;
 /// Stateful composite widget with rebuild-on-change semantics.
 pub mod composite;
+
+/// Raster image widget (requires the `image` feature).
+#[cfg(feature = "image")]
+pub mod image_widget;
+
+/// SVG image widget (requires the `svg` feature).
+#[cfg(feature = "svg")]
+pub mod svg_widget;

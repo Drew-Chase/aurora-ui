@@ -11,3 +11,5 @@ aurora_text = { path = "../aurora_text", optional = true }
 
 [features]
 text = ["dep:aurora_text", "aurora_render/text"]
+image = ["aurora_render/image"]
+svg = ["aurora_render/svg"]

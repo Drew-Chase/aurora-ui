@@ -600,4 +600,79 @@ impl<'a> Canvas<'a> {
             }
         }
     }
+
+    /// Draws RGBA image data into the canvas at the destination rectangle.
+    ///
+    /// Scales the source image to fit `dest` using nearest-neighbor sampling.
+    /// Supports alpha blending and respects the active clip rect.
+    ///
+    /// `pixels` must be RGBA with 4 bytes per pixel, `img_width * img_height * 4` total.
+    pub fn draw_image(
+        &mut self,
+        pixels: &[u8],
+        img_width: u32,
+        img_height: u32,
+        dest: impl Into<Rect>,
+    ) {
+        let dest = dest.into();
+        let mut dx0 = (dest.x1.max(0.0) as u32).min(self.width);
+        let mut dy0 = (dest.y1.max(0.0) as u32).min(self.height);
+        let mut dx1 = (dest.x2.max(0.0) as u32).min(self.width);
+        let mut dy1 = (dest.y2.max(0.0) as u32).min(self.height);
+
+        if let Some(clip) = self.current_clip() {
+            dx0 = dx0.max(clip.x1.max(0.0) as u32);
+            dy0 = dy0.max(clip.y1.max(0.0) as u32);
+            dx1 = dx1.min(clip.x2.max(0.0) as u32);
+            dy1 = dy1.min(clip.y2.max(0.0) as u32);
+        }
+
+        let dest_w = (dest.x2 - dest.x1).max(1.0);
+        let dest_h = (dest.y2 - dest.y1).max(1.0);
+
+        for y in dy0..dy1 {
+            for x in dx0..dx1 {
+                let sx = ((x as f32 - dest.x1) / dest_w * img_width as f32) as u32;
+                let sy = ((y as f32 - dest.y1) / dest_h * img_height as f32) as u32;
+
+                if sx >= img_width || sy >= img_height {
+                    continue;
+                }
+
+                let src_idx = ((sy * img_width + sx) * 4) as usize;
+                if src_idx + 3 >= pixels.len() {
+                    continue;
+                }
+
+                let r = pixels[src_idx] as u32;
+                let g = pixels[src_idx + 1] as u32;
+                let b = pixels[src_idx + 2] as u32;
+                let a = pixels[src_idx + 3];
+
+                if a == 0 {
+                    continue;
+                }
+
+                let idx = (y * self.width + x) as usize;
+                if idx >= self.buffer.len() {
+                    continue;
+                }
+
+                if a == 255 {
+                    self.buffer[idx] = (r << 16) | (g << 8) | b;
+                } else {
+                    let bg = self.buffer[idx];
+                    let bg_r = (bg >> 16) & 0xFF;
+                    let bg_g = (bg >> 8) & 0xFF;
+                    let bg_b = bg & 0xFF;
+                    let alpha = a as u32;
+                    let inv = 255 - alpha;
+                    let out_r = (r * alpha + bg_r * inv) / 255;
+                    let out_g = (g * alpha + bg_g * inv) / 255;
+                    let out_b = (b * alpha + bg_b * inv) / 255;
+                    self.buffer[idx] = (out_r << 16) | (out_g << 8) | out_b;
+                }
+            }
+        }
+    }
 }

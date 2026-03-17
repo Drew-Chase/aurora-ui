@@ -25,6 +25,7 @@
       <sourceFolder url="file://$MODULE_DIR$/examples/button_example/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/counter_example/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/custom_titlebar_example/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/examples/image_example/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/scrollview_example/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
