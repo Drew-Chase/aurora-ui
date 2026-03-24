@@ -46,13 +46,7 @@ pub fn counter() -> impl Widget {
                 .justify(Justify::Center)
                 .align(Align::Center)
                 .child(
-                    Button::new()
-                        .text_options(
-                            Text::new("-")
-                                .font_size(20.0)
-                                .align(Align::Center)
-                                .justify(Justify::Center),
-                        )
+                    button!("-")
                         .width(40)
                         .height(40)
                         .on_click(move |_| decrement_setter.set(|prev| prev.value -= 1)),
@@ -65,13 +59,7 @@ pub fn counter() -> impl Widget {
                         .align(Align::Center),
                 )
                 .child(
-                    Button::new()
-                        .text_options(
-                            Text::new("+")
-                                .font_size(20.0)
-                                .align(Align::Center)
-                                .justify(Justify::Center),
-                        )
+                    button!("+")
                         .width(40)
                         .height(40)
                         .on_click(move |_| increment_setter.set(|prev| prev.value += 1)),

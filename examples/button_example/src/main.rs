@@ -13,10 +13,12 @@ fn main() {
                     .align(Align::Center)
                     .justify(Justify::Center)
                     .child(
-                        Button::new()
-                            .text("Test")
+                        button!("Test")
                             .on_click(|event| {
                                 println!("Button clicked at position: {:?}", event.position);
+                            })
+                            .on_hover(|hovering| {
+                                println!("Hover: {hovering}");
                             }),
                     ),
             );

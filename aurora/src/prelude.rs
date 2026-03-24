@@ -30,15 +30,14 @@ pub use aurora_widgets::layout::scrollview::ScrollView;
 pub use aurora_widgets::layout::stack::Stack;
 pub use aurora_widgets::layout::{Align, Justify};
 pub use aurora_widgets::widgets::{EventResponse, LayoutCtx, Widget};
-pub use aurora_widgets::{col, row};
+pub use aurora_widgets::interactables::button::Button;
+pub use aurora_widgets::{button, col, row};
 
 // Text (feature-gated)
 #[cfg(feature = "text")]
 pub use aurora_text::font_options::{FontOptions, FontStyle, FontStretch, FontWeight};
 #[cfg(feature = "text")]
 pub use aurora_text::{font_manager::FontManager, text_layout::TextLayout};
-#[cfg(feature = "text")]
-pub use aurora_widgets::interactables::button::Button;
 #[cfg(feature = "text")]
 pub use aurora_widgets::text_widget::Text;
 #[cfg(feature = "text")]

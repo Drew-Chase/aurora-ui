@@ -97,15 +97,12 @@ fn main() {
                             }),
                     )
                     .child(
-                        Button::new()
-                            .text("Login")
+                        button!("Login")
                             .width(220)
                             .height(40)
                             .border_radius(Corners::all(26.0))
                             .background_color(hsl!(0, 0.85, 0.64))
                             .hover_background_color(hsl!(0, 0.64, 0.6))
-                            .text_color(Color::WHITE)
-                            .text_hover_color(Color::WHITE)
                             .on_click({
                                 let submit = submit_btn.clone();
                                 move |_| submit.borrow_mut()()
