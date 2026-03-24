@@ -13,6 +13,7 @@ pub use crate::aurora_core::{hex, hexa, rgb, rgba, hsl, hsla};
 
 // Platform
 pub use aurora_platform::app::{App, AppWindow, FrameInfo, WindowMonitor, WindowPosition};
+pub use aurora_platform::errors::app::AppError;
 
 // Rendering
 pub use aurora_render::canvas::Canvas;
