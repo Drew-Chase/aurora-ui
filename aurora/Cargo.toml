@@ -4,7 +4,14 @@ version = "0.1.0"
 edition = "2024"
 description = "A GPU-accelerated, feature-gated UI framework for building fast, lightweight desktop applications in Rust. Custom Win11/macOS titlebars. ~1.2 MB minimal binary. Sub-100ms startup."
 authors = ["Drew Chase"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/drew-chase/aurora-ui"
+homepage = "https://github.com/drew-chase/aurora-ui"
+documentation = "https://github.com/Drew-Chase/aurora-ui/wiki"
 readme = "../README.md"
+keywords = ["gui", "ui", "desktop", "gpu", "framework"]
+categories = ["gui", "graphics", "rendering"]
+exclude = ["examples/", ".wiki/", ".github/"]
 
 [dependencies]
 aurora_core = { path = "../crates/aurora_core" }
