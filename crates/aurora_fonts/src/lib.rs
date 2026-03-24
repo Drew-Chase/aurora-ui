@@ -268,12 +268,53 @@ struct FontVariant {
 // ---------------------------------------------------------------------------
 
 fn cache_dir() -> PathBuf {
-    let base = std::env::var("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| std::env::temp_dir());
-    let dir = base.join("target").join(".fonts-cache");
+    let dir = workspace_target_dir().join(".fonts-cache");
     let _ = fs::create_dir_all(&dir);
     dir
+}
+
+/// Finds the workspace `target/` directory. First checks the current
+/// working directory for a workspace `Cargo.toml`, then walks up from
+/// `CARGO_MANIFEST_DIR` as a fallback.
+fn workspace_target_dir() -> PathBuf {
+    // Try CWD first — this is where the user ran `cargo build` from
+    if let Ok(cwd) = std::env::current_dir()
+        && is_workspace_root(&cwd)
+    {
+        let target = cwd.join("target");
+        let _ = fs::create_dir_all(&target);
+        return target;
+    }
+
+    // Fallback: walk up from CARGO_MANIFEST_DIR
+    let start = std::env::var("CARGO_MANIFEST_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| std::env::temp_dir());
+
+    let mut dir = start.as_path();
+    loop {
+        if is_workspace_root(dir) {
+            let target = dir.join("target");
+            let _ = fs::create_dir_all(&target);
+            return target;
+        }
+        match dir.parent() {
+            Some(parent) => dir = parent,
+            None => {
+                let target = start.join("target");
+                let _ = fs::create_dir_all(&target);
+                return target;
+            }
+        }
+    }
+}
+
+fn is_workspace_root(dir: &Path) -> bool {
+    let cargo_toml = dir.join("Cargo.toml");
+    cargo_toml.is_file()
+        && fs::read_to_string(&cargo_toml)
+            .map(|c| c.contains("[workspace]"))
+            .unwrap_or(false)
 }
 
 fn is_cache_valid(path: &Path) -> bool {
