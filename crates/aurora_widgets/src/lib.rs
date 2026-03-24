@@ -1,4 +1,6 @@
-/// Derive macro for generating builder-pattern setters on composite widget option structs.
+/// Attribute macro that turns a config struct into a full composite widget.
+pub use aurora_macros::composite_widget;
+/// Derive macro for generating builder-pattern setters (without Widget impl).
 pub use aurora_macros::CompositeWidget;
 
 /// A colored rectangle container with optional child, corners, and padding.

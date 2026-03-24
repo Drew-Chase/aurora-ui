@@ -20,8 +20,8 @@ pub use aurora_render::canvas::Canvas;
 
 // Widgets
 pub use aurora_widgets::box_widget::BoxWidget;
-pub use aurora_widgets::composite::{Composite, StateSetter};
-pub use aurora_macros::CompositeWidget;
+pub use aurora_widgets::composite::{Composite, CompositeBuilder, CompositeWrapper, StateSetter};
+pub use aurora_macros::{composite_widget, CompositeWidget};
 pub use aurora_widgets::interactables::touch_area::TouchArea;
 pub use aurora_widgets::layout::column::Column;
 pub use aurora_widgets::layout::position::{Position, Positioned};

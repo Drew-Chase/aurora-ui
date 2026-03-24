@@ -2,10 +2,9 @@ use aurora_ui::prelude::*;
 
 /// A toggle switch built by composing existing widgets.
 ///
-/// Uses `#[derive(CompositeWidget)]` to auto-generate builder setters,
-/// and lazily builds an internal `Composite` for state management.
-/// The API mirrors full widgets: `ToggleSwitch::new().on_color(...)`.
-#[derive(CompositeWidget)]
+/// `#[composite_widget]` generates setters, `new()`, and `impl Widget`.
+/// You just define the struct and implement `CompositeBuilder::build`.
+#[composite_widget]
 pub struct ToggleSwitch {
     pub track_width: u32,
     pub track_height: u32,
@@ -14,9 +13,6 @@ pub struct ToggleSwitch {
     pub on_color: Color,
     pub off_color: Color,
     pub knob_color: Color,
-
-    // Private — no setters generated, not visible to consumers.
-    inner: Option<Box<dyn Widget>>,
 }
 
 impl Default for ToggleSwitch {
@@ -29,17 +25,13 @@ impl Default for ToggleSwitch {
             on_color: Color::from_hex(0x4CAF50, false),
             off_color: Color::from_hex(0x9E9E9E, false),
             knob_color: Color::from_hex(0xFFFFFF, false),
-            inner: None,
+            __composite_inner: None,
         }
     }
 }
 
-impl ToggleSwitch {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    fn build_inner(&self) -> Box<dyn Widget> {
+impl CompositeBuilder for ToggleSwitch {
+    fn build(&self) -> Box<dyn Widget> {
         let track_width = self.track_width;
         let track_height = self.track_height;
         let knob_size = self.knob_size;
@@ -84,34 +76,5 @@ impl ToggleSwitch {
                     ),
             )
         }))
-    }
-}
-
-impl Widget for ToggleSwitch {
-    fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
-        if self.inner.is_none() {
-            self.inner = Some(self.build_inner());
-        }
-        self.inner.as_mut().unwrap().layout(available, ctx)
-    }
-
-    fn paint(&self, canvas: &mut Canvas, rect: Rect) {
-        if let Some(ref inner) = self.inner {
-            inner.paint(canvas, rect);
-        }
-    }
-
-    fn children(&self) -> &[Box<dyn Widget>] {
-        match &self.inner {
-            Some(inner) => inner.children(),
-            None => &[],
-        }
-    }
-
-    fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
-        match &mut self.inner {
-            Some(inner) => inner.event(event, rect),
-            None => EventResponse::default(),
-        }
     }
 }

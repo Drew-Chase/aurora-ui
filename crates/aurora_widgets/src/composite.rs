@@ -103,3 +103,86 @@ impl<S: 'static> Widget for Composite<S> {
 		}
 	}
 }
+
+/// Implement this trait on a config struct to define a composite widget.
+///
+/// Pair with `#[derive(CompositeWidget)]` to auto-generate builder setters
+/// and a `new()` constructor. The derive creates a [`CompositeWrapper`] that
+/// implements [`Widget`] by lazily calling your [`build`](CompositeBuilder::build)
+/// method on first layout.
+///
+/// # Example
+///
+/// ```ignore
+/// #[derive(Default, CompositeWidget)]
+/// pub struct MyToggle {
+///     pub on_color: Color,
+///     pub off_color: Color,
+/// }
+///
+/// impl CompositeBuilder for MyToggle {
+///     fn build(&self) -> Box<dyn Widget> {
+///         let on_color = self.on_color;
+///         let off_color = self.off_color;
+///         Box::new(Composite::new(false, move |&is_on, set_state| {
+///             // ... compose widget tree using on_color, off_color
+///         }))
+///     }
+/// }
+///
+/// // Usage: MyToggle::new().on_color(Color::RED)
+/// ```
+pub trait CompositeBuilder {
+	/// Builds the composed widget tree from the current configuration.
+	///
+	/// Called once on the first layout pass. The returned widget handles
+	/// all subsequent layout, paint, and event processing.
+	fn build(&self) -> Box<dyn Widget>;
+}
+
+/// Wraps a [`CompositeBuilder`] config and lazily builds its widget tree.
+///
+/// Created automatically by `#[derive(CompositeWidget)]` via the generated
+/// `new()` constructor. You should not need to construct this manually.
+pub struct CompositeWrapper<T> {
+	/// The configuration struct. Public so the derive macro can generate
+	/// setters that access it.
+	pub config: T,
+	inner: Option<Box<dyn Widget>>,
+}
+
+impl<T> CompositeWrapper<T> {
+	/// Creates a new wrapper around the given config.
+	pub fn new(config: T) -> Self {
+		Self { config, inner: None }
+	}
+}
+
+impl<T: CompositeBuilder> Widget for CompositeWrapper<T> {
+	fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
+		if self.inner.is_none() {
+			self.inner = Some(self.config.build());
+		}
+		self.inner.as_mut().unwrap().layout(available, ctx)
+	}
+
+	fn paint(&self, canvas: &mut Canvas, rect: Rect) {
+		if let Some(ref inner) = self.inner {
+			inner.paint(canvas, rect);
+		}
+	}
+
+	fn children(&self) -> &[Box<dyn Widget>] {
+		match &self.inner {
+			Some(inner) => inner.children(),
+			None => &[],
+		}
+	}
+
+	fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+		match &mut self.inner {
+			Some(inner) => inner.event(event, rect),
+			None => EventResponse::default(),
+		}
+	}
+}
