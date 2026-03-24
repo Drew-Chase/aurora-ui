@@ -5,10 +5,6 @@ set shell := ["bash", "-c"]
 doc open="false":
     cargo doc --no-deps --package aurora_ui --release {{ if open == "true" { "--open" } else { "" } }}
 
-# Runs the minimal example project in release mode
-run-example-minimal:
-    cargo run --package minimal_example --profile release
-
 # Builds all examples in release mode and reports binary size, startup time, and memory usage
 [windows]
 benchmark:
