@@ -259,12 +259,12 @@ fn close_window(window: &winit::window::Window) {
     use ::windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
     use ::windows::Win32::UI::WindowsAndMessaging::{PostMessageW, WM_CLOSE};
 
-    if let Ok(handle) = window.window_handle() {
-        if let RawWindowHandle::Win32(h) = handle.as_raw() {
-            let hwnd = HWND(h.hwnd.get() as *mut c_void);
-            unsafe {
-                let _ = PostMessageW(Some(hwnd), WM_CLOSE, WPARAM(0), LPARAM(0));
-            }
+    if let Ok(handle) = window.window_handle()
+        && let RawWindowHandle::Win32(h) = handle.as_raw()
+    {
+        let hwnd = HWND(h.hwnd.get() as *mut c_void);
+        unsafe {
+            let _ = PostMessageW(Some(hwnd), WM_CLOSE, WPARAM(0), LPARAM(0));
         }
     }
 }
