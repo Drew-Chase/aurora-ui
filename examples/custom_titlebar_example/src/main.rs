@@ -13,15 +13,6 @@ fn main() {
             let handle = window.window_handle().clone();
             window.root(
                 col!()
-                    .child(
-                        Positioned::fixed((50.0, 50.0)).child(
-                            BoxWidget::new()
-                                .width(50)
-                                .height(50)
-                                .background_color(Color::RED.opacity(0.5))
-                                .corners(Corners::all(5.0)),
-                        ),
-                    )
                     .child(titlebar(handle)),
             )
         })
