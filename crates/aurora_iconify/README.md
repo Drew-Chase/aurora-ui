@@ -51,12 +51,12 @@ let svg = Icon::tabler().arrow_left();
 
 Icon names are sanitized to valid Rust identifiers:
 
-| Icon name | Method name |
-|---|---|
+| Icon name         | Method name         |
+|-------------------|---------------------|
 | `calendar-2-fill` | `calendar_2_fill()` |
-| `arrow-left` | `arrow_left()` |
-| `3d-rotate` | `_3d_rotate()` |
-| `box` | `box_icon()` |
+| `arrow-left`      | `arrow_left()`      |
+| `3d-rotate`       | `_3d_rotate()`      |
+| `box`             | `box_icon()`        |
 
 ### Dynamic access
 
@@ -76,16 +76,16 @@ Fetched icon data is cached in `target/.iconify-cache/` relative to your project
 
 Browse all available sets at [icon-sets.iconify.design](https://icon-sets.iconify.design). Popular sets include:
 
-| Set | Prefix | Icons |
-|---|---|---|
+| Set              | Prefix             | Icons   |
+|------------------|--------------------|---------|
 | Material Symbols | `material-symbols` | 15,000+ |
-| Lucide | `lucide` | 1,500+ |
-| Tabler Icons | `tabler` | 5,600+ |
-| Phosphor | `ph` | 7,400+ |
-| Mage Icons | `mage` | 1,000+ |
-| Simple Icons | `simple-icons` | 3,100+ |
-| Heroicons | `heroicons` | 290+ |
-| Feather Icons | `feather` | 280+ |
+| Lucide           | `lucide`           | 1,500+  |
+| Tabler Icons     | `tabler`           | 5,600+  |
+| Phosphor         | `ph`               | 7,400+  |
+| Mage Icons       | `mage`             | 1,000+  |
+| Simple Icons     | `simple-icons`     | 3,100+  |
+| Heroicons        | `heroicons`        | 290+    |
+| Feather Icons    | `feather`          | 280+    |
 
 ## Requirements
 
