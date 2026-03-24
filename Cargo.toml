@@ -16,7 +16,7 @@ members = [
     "examples/minimal",
     "examples/text_example",
     "examples/button_example"
-, "examples/counter_example", "examples/custom_titlebar_example", "examples/scrollview_example", "examples/image_example", "examples/text_input_example"]
+, "examples/counter_example", "examples/custom_titlebar_example", "examples/scrollview_example", "examples/image_example", "examples/text_input_example", "examples/custom_widget"]
 default-members = [
     "aurora",
     "crates/aurora_a11y",
