@@ -1,3 +1,6 @@
+/// Derive macro for generating builder-pattern setters on composite widget option structs.
+pub use aurora_macros::CompositeWidget;
+
 /// A colored rectangle container with optional child, corners, and padding.
 pub mod box_widget;
 /// The [`Widget`](widgets::Widget) trait and layout context types.

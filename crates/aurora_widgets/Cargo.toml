@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 aurora_core = { path = "../aurora_core" }
+aurora_macros = { path = "../aurora_macros" }
 aurora_render = { path = "../aurora_render" }
 aurora_text = { path = "../aurora_text", optional = true }
 

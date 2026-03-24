@@ -17,7 +17,7 @@ fn main() -> Result<(), AppError> {
                     .spacing(30.0)
                     .align(Align::Center)
                     .justify(Justify::Center)
-                    // Composite widget toggle
+                    // Composite widget toggle (using derived builder pattern)
                     .child(
                         row!()
                             .spacing(12.0)
@@ -29,7 +29,10 @@ fn main() -> Result<(), AppError> {
                                     .height(28.0)
                                     .justify(Justify::Center),
                             )
-                            .child(composite_widget::toggle_switch()),
+                            .child(composite_widget::toggle_switch(
+                                composite_widget::ToggleOptions::default()
+                                    .on_color(Color::from_hex(0x2196F3, false)),
+                            )),
                     )
                     // Full widget toggle
                     .child(
