@@ -360,7 +360,7 @@ impl AppWindow {
             window_handle,
             gpu,
             root_widget: None,
-            cursor: winit::window::CursorIcon::Default,
+            _cursor: winit::window::CursorIcon::Default,
             last_mouse_position: None,
         })
     }

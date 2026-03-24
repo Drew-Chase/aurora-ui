@@ -106,23 +106,22 @@ fn render_path(path: &usvg::Path, transform: tiny_skia::Transform, pixmap: &mut 
     if let Some(stroke) = path.stroke()
         && let Some(paint) = convert_paint(stroke.paint(), stroke.opacity())
     {
-            let skia_stroke = tiny_skia::Stroke {
-                width: stroke.width().get(),
-                line_cap: match stroke.linecap() {
-                    usvg::LineCap::Butt => tiny_skia::LineCap::Butt,
-                    usvg::LineCap::Round => tiny_skia::LineCap::Round,
-                    usvg::LineCap::Square => tiny_skia::LineCap::Square,
-                },
-                line_join: match stroke.linejoin() {
-                    usvg::LineJoin::Miter | usvg::LineJoin::MiterClip => tiny_skia::LineJoin::Miter,
-                    usvg::LineJoin::Round => tiny_skia::LineJoin::Round,
-                    usvg::LineJoin::Bevel => tiny_skia::LineJoin::Bevel,
-                },
-                miter_limit: stroke.miterlimit().get(),
-                ..tiny_skia::Stroke::default()
-            };
-            pixmap.stroke_path(&skia_path, &paint, &skia_stroke, transform, None);
-        }
+        let skia_stroke = tiny_skia::Stroke {
+            width: stroke.width().get(),
+            line_cap: match stroke.linecap() {
+                usvg::LineCap::Butt => tiny_skia::LineCap::Butt,
+                usvg::LineCap::Round => tiny_skia::LineCap::Round,
+                usvg::LineCap::Square => tiny_skia::LineCap::Square,
+            },
+            line_join: match stroke.linejoin() {
+                usvg::LineJoin::Miter | usvg::LineJoin::MiterClip => tiny_skia::LineJoin::Miter,
+                usvg::LineJoin::Round => tiny_skia::LineJoin::Round,
+                usvg::LineJoin::Bevel => tiny_skia::LineJoin::Bevel,
+            },
+            miter_limit: stroke.miterlimit().get(),
+            ..tiny_skia::Stroke::default()
+        };
+        pixmap.stroke_path(&skia_path, &paint, &skia_stroke, transform, None);
     }
 }
 
