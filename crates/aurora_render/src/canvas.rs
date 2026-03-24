@@ -675,4 +675,110 @@ impl<'a> Canvas<'a> {
             }
         }
     }
+
+    /// Draws a line between two points with the given thickness and color.
+    ///
+    /// Uses Bresenham's algorithm for pixel-accurate line drawing.
+    /// Thickness is applied as a square brush centered on each pixel.
+    /// Respects the active clip rect.
+    pub fn draw_line(
+        &mut self,
+        from: impl Into<Point>,
+        to: impl Into<Point>,
+        thickness: u32,
+        color: impl Into<Color>,
+    ) {
+        let from = from.into();
+        let to = to.into();
+        let color = color.into();
+        if color.alpha == 0 || thickness == 0 {
+            return;
+        }
+        let pixel = color.to_rgb_u32();
+        let alpha = color.alpha;
+
+        let x0 = from.x as i32;
+        let y0 = from.y as i32;
+        let x1 = to.x as i32;
+        let y1 = to.y as i32;
+
+        let dx = (x1 - x0).abs();
+        let dy = -(y1 - y0).abs();
+        let sx = if x0 < x1 { 1 } else { -1 };
+        let sy = if y0 < y1 { 1 } else { -1 };
+        let mut err = dx + dy;
+
+        let mut x = x0;
+        let mut y = y0;
+
+        let half = (thickness as i32 - 1) / 2;
+        let extra = thickness as i32 - half - 1;
+
+        // Compute clip bounds
+        let (clip_x0, clip_y0, clip_x1, clip_y1) = if let Some(clip) = self.current_clip() {
+            (
+                clip.x1.max(0.0) as i32,
+                clip.y1.max(0.0) as i32,
+                clip.x2.max(0.0) as i32,
+                clip.y2.max(0.0) as i32,
+            )
+        } else {
+            (0, 0, self.width as i32, self.height as i32)
+        };
+
+        loop {
+            // Draw thickness square centered on (x, y)
+            for py in (y - half)..=(y + extra) {
+                if py < clip_y0 || py >= clip_y1 {
+                    continue;
+                }
+                let row_start = (py as u32 * self.width) as usize;
+                for px in (x - half)..=(x + extra) {
+                    if px < clip_x0 || px >= clip_x1 {
+                        continue;
+                    }
+                    let idx = row_start + px as usize;
+                    if idx < self.buffer.len() {
+                        if alpha == 255 {
+                            self.buffer[idx] = pixel;
+                        } else {
+                            let bg = self.buffer[idx];
+                            let a = alpha as u32;
+                            let inv_a = 255 - a;
+                            let bg_r = (bg >> 16) & 0xFF;
+                            let bg_g = (bg >> 8) & 0xFF;
+                            let bg_b = bg & 0xFF;
+                            let fg_r = (pixel >> 16) & 0xFF;
+                            let fg_g = (pixel >> 8) & 0xFF;
+                            let fg_b = pixel & 0xFF;
+                            let r = (fg_r * a + bg_r * inv_a) / 255;
+                            let g = (fg_g * a + bg_g * inv_a) / 255;
+                            let b = (fg_b * a + bg_b * inv_a) / 255;
+                            self.buffer[idx] = (r << 16) | (g << 8) | b;
+                        }
+                    }
+                }
+            }
+
+            if x == x1 && y == y1 {
+                break;
+            }
+
+            let e2 = 2 * err;
+            if e2 >= dy {
+                if x == x1 {
+                    break;
+                }
+                err += dy;
+                x += sx;
+            }
+            if e2 <= dx {
+                if y == y1 {
+                    break;
+                }
+                err += dx;
+                y += sy;
+            }
+        }
+    }
 }
