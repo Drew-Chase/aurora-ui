@@ -46,7 +46,7 @@ impl SvgData {
         let scale_x = width as f32 / size.width();
         let scale_y = height as f32 / size.height();
 
-        render_nodes(&self.tree.root(), tiny_skia::Transform::from_scale(scale_x, scale_y), &mut pixmap);
+        render_nodes(self.tree.root(), tiny_skia::Transform::from_scale(scale_x, scale_y), &mut pixmap);
 
         // Convert from premultiplied to straight alpha
         let data = pixmap.data();
@@ -93,18 +93,19 @@ fn render_path(path: &usvg::Path, transform: tiny_skia::Transform, pixmap: &mut 
         return;
     };
 
-    if let Some(ref fill) = path.fill() {
-        if let Some(paint) = convert_paint(&fill.paint(), fill.opacity()) {
-            let rule = match fill.rule() {
-                usvg::FillRule::NonZero => tiny_skia::FillRule::Winding,
-                usvg::FillRule::EvenOdd => tiny_skia::FillRule::EvenOdd,
-            };
-            pixmap.fill_path(&skia_path, &paint, rule, transform, None);
-        }
+    if let Some(fill) = path.fill()
+        && let Some(paint) = convert_paint(fill.paint(), fill.opacity())
+    {
+        let rule = match fill.rule() {
+            usvg::FillRule::NonZero => tiny_skia::FillRule::Winding,
+            usvg::FillRule::EvenOdd => tiny_skia::FillRule::EvenOdd,
+        };
+        pixmap.fill_path(&skia_path, &paint, rule, transform, None);
     }
 
-    if let Some(ref stroke) = path.stroke() {
-        if let Some(paint) = convert_paint(&stroke.paint(), stroke.opacity()) {
+    if let Some(stroke) = path.stroke()
+        && let Some(paint) = convert_paint(stroke.paint(), stroke.opacity())
+    {
             let skia_stroke = tiny_skia::Stroke {
                 width: stroke.width().get(),
                 line_cap: match stroke.linecap() {
@@ -164,10 +165,11 @@ fn convert_paint(paint: &usvg::Paint, opacity: usvg::Opacity) -> Option<tiny_ski
                 convert_spread(grad.spread_method()),
                 tiny_skia::Transform::identity(),
             )?;
-            let mut p = tiny_skia::Paint::default();
-            p.shader = shader;
-            p.anti_alias = true;
-            Some(p)
+            Some(tiny_skia::Paint {
+                shader,
+                anti_alias: true,
+                ..tiny_skia::Paint::default()
+            })
         }
         usvg::Paint::RadialGradient(grad) => {
             let stops = convert_stops(grad.stops(), alpha);
@@ -180,10 +182,11 @@ fn convert_paint(paint: &usvg::Paint, opacity: usvg::Opacity) -> Option<tiny_ski
                 convert_spread(grad.spread_method()),
                 tiny_skia::Transform::identity(),
             )?;
-            let mut p = tiny_skia::Paint::default();
-            p.shader = shader;
-            p.anti_alias = true;
-            Some(p)
+            Some(tiny_skia::Paint {
+                shader,
+                anti_alias: true,
+                ..tiny_skia::Paint::default()
+            })
         }
         usvg::Paint::Pattern(_) => None,
     }
@@ -194,7 +197,7 @@ fn convert_stops(stops: &[usvg::Stop], alpha: u8) -> Vec<tiny_skia::GradientStop
     stops
         .iter()
         .map(|s| {
-            let a = ((s.opacity().get() * alpha as f32) as u8).max(0);
+            let a = (s.opacity().get() * alpha as f32) as u8;
             tiny_skia::GradientStop::new(
                 s.offset().get(),
                 tiny_skia::Color::from_rgba8(s.color().red, s.color().green, s.color().blue, a),

@@ -8,7 +8,7 @@ use std::sync::Arc;
 /// the buffer is copied to the OS surface in a single memcpy. Smallest binary size
 /// of all backends — no GPU driver dependency.
 pub struct SoftbufferBackend {
-    context: softbuffer::Context<Arc<winit::window::Window>>,
+    _context: softbuffer::Context<Arc<winit::window::Window>>,
     surface: softbuffer::Surface<Arc<winit::window::Window>, Arc<winit::window::Window>>,
     buffer: Vec<u32>,
     width: u32,
@@ -23,7 +23,7 @@ impl SoftbufferBackend {
         let context = softbuffer::Context::new(window.clone())?;
         let surface = softbuffer::Surface::new(&context, window.clone())?;
         Ok(Self {
-            context,
+            _context: context,
             surface,
             buffer: Vec::new(),
             width: 0,

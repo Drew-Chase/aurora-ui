@@ -118,7 +118,7 @@ pub struct AppWindow {
     font_options: aurora_text::font_options::FontOptions,
     #[cfg(feature = "text")]
     pub swash_cache: aurora_text::cosmic_text::SwashCache,
-    pub(crate) cursor: winit::window::CursorIcon,
+    pub(crate) _cursor: winit::window::CursorIcon,
     pub(crate) last_mouse_position: Option<Point>,
 }
 
@@ -351,7 +351,7 @@ impl AppWindow {
                 font_options: config.font_options.clone(),
                 swash_cache,
                 root_widget: None,
-                cursor: winit::window::CursorIcon::Default,
+                _cursor: winit::window::CursorIcon::Default,
                 last_mouse_position: None,
             })
         }
@@ -764,13 +764,13 @@ where
                             },
                         ));
 
-                        if let winit::keyboard::Key::Character(c) = &event.logical_key {
-                            if !modifiers.ctrl && !modifiers.alt {
-                                for ch in c.chars() {
-                                    window.dispatch_event(&WidgetEvent::Keyboard(
-                                        KeyboardEvent::CharTyped(ch),
-                                    ));
-                                }
+                        if let winit::keyboard::Key::Character(c) = &event.logical_key
+                            && !modifiers.ctrl && !modifiers.alt
+                        {
+                            for ch in c.chars() {
+                                window.dispatch_event(&WidgetEvent::Keyboard(
+                                    KeyboardEvent::CharTyped(ch),
+                                ));
                             }
                         }
                     }

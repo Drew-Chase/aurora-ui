@@ -354,7 +354,7 @@ impl Widget for ScrollView {
                         rect.x1 + self.padding.left + self.child_size.width,
                         rect.y1 + self.padding.top - self.scroll_offset + self.child_size.height,
                     );
-                    return child.event(&WidgetEvent::Mouse(mouse.clone()), scrolled_rect);
+                    return child.event(&WidgetEvent::Mouse(*mouse), scrolled_rect);
                 }
                 EventResponse::default()
             }
@@ -405,7 +405,7 @@ impl Widget for ScrollView {
                         rect.x1 + self.padding.left + self.child_size.width,
                         rect.y1 + self.padding.top - self.scroll_offset + self.child_size.height,
                     );
-                    return child.event(&WidgetEvent::Mouse(mouse.clone()), scrolled_rect);
+                    return child.event(&WidgetEvent::Mouse(*mouse), scrolled_rect);
                 }
                 EventResponse::default()
             }

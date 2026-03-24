@@ -7,6 +7,8 @@ use aurora_render::canvas::Canvas;
 use std::rc::Rc;
 use std::cell::{Cell, RefCell};
 
+type BuildFn<S> = Box<dyn Fn(&S, StateSetter<S>) -> Box<dyn Widget>>;
+
 /// A stateful widget that rebuilds its child tree when state changes.
 ///
 /// Pairs a state value of type `S` with a build function that produces the
@@ -14,7 +16,7 @@ use std::cell::{Cell, RefCell};
 /// marks itself dirty and rebuilds its children on the next layout pass.
 pub struct Composite<S: 'static> {
 	state: Rc<RefCell<S>>,
-	build_fn: Box<dyn Fn(&S, StateSetter<S>) -> Box<dyn Widget>>,
+	build_fn: BuildFn<S>,
 	inner: Option<Box<dyn Widget>>,
 	dirty: Rc<Cell<bool>>,
 }

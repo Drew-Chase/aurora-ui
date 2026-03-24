@@ -21,7 +21,7 @@ first-class constraint — not an afterthought. Every subsystem (text rendering,
 widgets, animation, accessibility) is behind a feature gate. You pay only for
 what you use, in both binary size and startup time.
 
-```rust
+```rust,ignore
 use aurora_ui::prelude::*;
 
 fn main() {

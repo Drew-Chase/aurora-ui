@@ -71,6 +71,7 @@ impl TextLayout {
     /// Sub-pixel coverage is alpha-blended against the existing buffer contents.
     /// Out-of-bounds glyphs are clipped. An optional `clip` rect restricts
     /// rendering to a sub-region of the buffer.
+    #[allow(clippy::too_many_arguments)]
     pub fn render(
         &self,
         cache: &mut cosmic_text::SwashCache,

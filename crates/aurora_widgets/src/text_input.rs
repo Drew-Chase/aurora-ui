@@ -18,6 +18,8 @@ static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 
 /// Callback for key events. Receives the key and modifiers.
 pub type OnKeyCallback = Box<dyn FnMut(&Key, &Modifiers)>;
+/// Callback for text change events. Receives the current text value.
+pub type OnChangeCallback = Box<dyn FnMut(&str)>;
 
 /// A single-line text input field.
 ///
@@ -67,7 +69,7 @@ pub struct TextInput {
     placeholder_layout: Option<TextLayout>,
     cursor_pixel_x: f32,
     char_x_positions: Vec<f32>,
-    on_change: Option<Box<dyn FnMut(&str)>>,
+    on_change: Option<OnChangeCallback>,
     on_submit: Option<Box<dyn FnMut()>>,
     on_key_down: Option<OnKeyCallback>,
     on_key_up: Option<OnKeyCallback>,
@@ -260,12 +262,12 @@ impl TextInput {
     }
 
     fn delete_selection(&mut self) {
-        if let Some((lo, hi)) = self.selection_range() {
-            if lo != hi {
-                self.text.drain(lo..hi);
-                self.cursor_pos = lo;
-                self.selection_anchor = None;
-            }
+        if let Some((lo, hi)) = self.selection_range()
+            && lo != hi
+        {
+            self.text.drain(lo..hi);
+            self.cursor_pos = lo;
+            self.selection_anchor = None;
         }
     }
 
@@ -434,17 +436,16 @@ impl Widget for TextInput {
         let font_size = self.font.effective_size();
 
         // Draw selection highlight
-        if self.focused {
-            if let Some((lo, hi)) = self.selection_range() {
-                if lo != hi {
-                    let sel_x0 = text_x + self.pixel_x_for(lo);
-                    let sel_x1 = text_x + self.pixel_x_for(hi);
-                    canvas.fill_rect(
-                        Rect::new(sel_x0, text_y, sel_x1, text_y + font_size),
-                        self.selection_bg,
-                    );
-                }
-            }
+        if self.focused
+            && let Some((lo, hi)) = self.selection_range()
+            && lo != hi
+        {
+            let sel_x0 = text_x + self.pixel_x_for(lo);
+            let sel_x1 = text_x + self.pixel_x_for(hi);
+            canvas.fill_rect(
+                Rect::new(sel_x0, text_y, sel_x1, text_y + font_size),
+                self.selection_bg,
+            );
         }
 
         // Draw text or placeholder

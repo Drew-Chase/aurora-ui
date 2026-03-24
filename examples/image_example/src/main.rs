@@ -9,7 +9,7 @@ fn checkerboard(width: u32, height: u32, cell: u32) -> ImageData {
     let mut pixels = vec![0u8; (width * height * 4) as usize];
     for y in 0..height {
         for x in 0..width {
-            let dark = ((x / cell) + (y / cell)) % 2 == 0;
+            let dark = ((x / cell) + (y / cell)).is_multiple_of(2);
             let idx = ((y * width + x) * 4) as usize;
             if dark {
                 pixels[idx] = 60;
