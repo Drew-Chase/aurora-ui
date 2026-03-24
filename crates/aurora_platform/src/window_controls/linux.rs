@@ -20,6 +20,7 @@ const ICON_DISABLED: Color = Color::new(48, 48, 48, 76);
 const ICON_SIZE: f32 = 8.0;
 const ICON_THICKNESS: u32 = 1;
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn paint_button(
     canvas: &mut Canvas,
     rect: Rect,
@@ -28,6 +29,7 @@ pub(super) fn paint_button(
     is_pressed: bool,
     is_enabled: bool,
     is_maximized: bool,
+    _dark: bool,
 ) {
     let diameter = rect.x2 - rect.x1;
     let radius = diameter / 2.0;

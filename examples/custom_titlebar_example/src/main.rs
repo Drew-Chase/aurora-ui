@@ -11,7 +11,7 @@ fn main() {
         .title("Custom Titlebar Example")
         .min_size((310, 440))
         .position(WindowPosition::Center)
-        .background_color(TITLEBAR_BG)
+        .background_color(hsl!(0, 0.0, 0.1))
         .custom_titlebar(true)
         .run(|window, _frame_info| {
             let handle = window.window_handle().clone();
@@ -31,6 +31,7 @@ fn titlebar(window: std::sync::Arc<winit::window::Window>) -> impl Widget {
                 .child(
                     row!()
                         .height(TITLEBAR_HEIGHT as u32)
+                        .child(WindowControls::new(controls_handle).dark(true))
                         .child(
                             TouchArea::new()
                                 .on_mouse_down(move |button| {
@@ -40,8 +41,7 @@ fn titlebar(window: std::sync::Arc<winit::window::Window>) -> impl Widget {
                                 })
                                 .child(BoxWidget::new().background_color(TITLEBAR_BG)),
                         )
-                        .child(WindowControls::new(controls_handle)),
-                ),
+                )
         )
     })
 }

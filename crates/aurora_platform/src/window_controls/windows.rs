@@ -4,19 +4,28 @@ use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_render::canvas::Canvas;
 
-// Windows 11 titlebar button colors
-const HOVER_BG: Color = Color::new(229, 229, 229, 255); // #e5e5e5
-const PRESSED_BG: Color = Color::new(204, 204, 204, 255); // #cccccc
+// Windows 11 titlebar button colors — light theme
+const HOVER_BG_LIGHT: Color = Color::new(229, 229, 229, 255); // #e5e5e5
+const PRESSED_BG_LIGHT: Color = Color::new(204, 204, 204, 255); // #cccccc
+const ICON_COLOR_LIGHT: Color = Color::new(0, 0, 0, 255);
+const ICON_DISABLED_LIGHT: Color = Color::new(0, 0, 0, 76);
+
+// Windows 11 titlebar button colors — dark theme
+const HOVER_BG_DARK: Color = Color::new(255, 255, 255, 26); // white ~10%
+const PRESSED_BG_DARK: Color = Color::new(255, 255, 255, 15); // white ~6%
+const ICON_COLOR_DARK: Color = Color::new(255, 255, 255, 255);
+const ICON_DISABLED_DARK: Color = Color::new(255, 255, 255, 76);
+
+// Shared
 const CLOSE_HOVER_BG: Color = Color::new(196, 43, 28, 255); // #c42b1c
 const CLOSE_PRESSED_BG: Color = Color::new(181, 37, 23, 255); // #b52517
-const ICON_COLOR: Color = Color::new(0, 0, 0, 255);
 const ICON_ON_CLOSE_HOVER: Color = Color::new(255, 255, 255, 255);
-const ICON_DISABLED: Color = Color::new(0, 0, 0, 76); // ~30% opacity
 
 // Icon dimensions
 const ICON_SIZE: f32 = 10.0;
 const ICON_THICKNESS: u32 = 1;
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn paint_button(
     canvas: &mut Canvas,
     rect: Rect,
@@ -25,7 +34,13 @@ pub(super) fn paint_button(
     is_pressed: bool,
     is_enabled: bool,
     is_maximized: bool,
+    dark: bool,
 ) {
+    let hover_bg = if dark { HOVER_BG_DARK } else { HOVER_BG_LIGHT };
+    let pressed_bg = if dark { PRESSED_BG_DARK } else { PRESSED_BG_LIGHT };
+    let icon_normal = if dark { ICON_COLOR_DARK } else { ICON_COLOR_LIGHT };
+    let icon_disabled = if dark { ICON_DISABLED_DARK } else { ICON_DISABLED_LIGHT };
+
     // Background
     if is_hovered || is_pressed {
         let bg = match button {
@@ -38,9 +53,9 @@ pub(super) fn paint_button(
             }
             _ => {
                 if is_pressed {
-                    PRESSED_BG
+                    pressed_bg
                 } else {
-                    HOVER_BG
+                    hover_bg
                 }
             }
         };
@@ -49,11 +64,11 @@ pub(super) fn paint_button(
 
     // Icon color
     let icon_color = if !is_enabled {
-        ICON_DISABLED
+        icon_disabled
     } else if button == ControlButton::Close && (is_hovered || is_pressed) {
         ICON_ON_CLOSE_HOVER
     } else {
-        ICON_COLOR
+        icon_normal
     };
 
     // Center the icon in the button
@@ -88,40 +103,22 @@ pub(super) fn paint_button(
                 );
 
                 // Front rectangle (bottom-left, fully visible)
-                // First fill the area behind the front rect to cover the back rect's lines
-                canvas.fill_rect(
-                    Rect::new(
-                        cx - half,
-                        cy - half + offset,
-                        cx - half + small,
-                        cy - half + offset + small,
-                    ),
-                    if is_pressed {
-                        if button == ControlButton::Close {
-                            CLOSE_PRESSED_BG
-                        } else {
-                            PRESSED_BG
-                        }
-                    } else if is_hovered {
-                        if button == ControlButton::Close {
-                            CLOSE_HOVER_BG
-                        } else {
-                            HOVER_BG
-                        }
-                    } else {
-                        Color::TRANSPARENT
-                    },
+                // Clear the area behind the front rect to cover overlapping back rect lines
+                let front_rect = Rect::new(
+                    cx - half,
+                    cy - half + offset,
+                    cx - half + small,
+                    cy - half + offset + small,
                 );
-                canvas.stroke_rect(
-                    Rect::new(
-                        cx - half,
-                        cy - half + offset,
-                        cx - half + small,
-                        cy - half + offset + small,
-                    ),
-                    ICON_THICKNESS,
-                    icon_color,
-                );
+                let clear_color = if is_pressed {
+                    CLOSE_PRESSED_BG
+                } else if is_hovered {
+                    hover_bg
+                } else {
+                    Color::TRANSPARENT
+                };
+                canvas.fill_rect(front_rect, clear_color);
+                canvas.stroke_rect(front_rect, ICON_THICKNESS, icon_color);
             } else {
                 // Maximize icon: single rectangle outline
                 canvas.stroke_rect(

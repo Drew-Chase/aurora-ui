@@ -51,6 +51,9 @@ enum ControlButton {
 pub struct WindowControls {
     window: Arc<winit::window::Window>,
 
+    // Appearance
+    dark: bool,
+
     // Visibility
     show_minimize: bool,
     show_maximize: bool,
@@ -78,6 +81,7 @@ impl WindowControls {
     pub fn new(window: Arc<winit::window::Window>) -> Self {
         Self {
             window,
+            dark: false,
             show_minimize: true,
             show_maximize: true,
             show_close: true,
@@ -175,6 +179,16 @@ impl WindowControls {
     /// Overrides the close button action.
     pub fn on_close(mut self, f: impl FnMut() + 'static) -> Self {
         self.on_close = Some(Box::new(f));
+        self
+    }
+
+    /// Enables dark mode (white icons for dark titlebars).
+    ///
+    /// When `true`, icons render as white instead of black and hover
+    /// backgrounds use semi-transparent white overlays. Use this when
+    /// placing controls on a dark titlebar background.
+    pub fn dark(mut self, dark: bool) -> Self {
+        self.dark = dark;
         self
     }
 
@@ -393,6 +407,7 @@ impl Widget for WindowControls {
                 is_pressed,
                 is_enabled,
                 is_maximized,
+                self.dark,
             );
 
             #[cfg(target_os = "macos")]
@@ -414,6 +429,7 @@ impl Widget for WindowControls {
                 is_pressed,
                 is_enabled,
                 is_maximized,
+                self.dark,
             );
         }
     }
