@@ -2,7 +2,15 @@
 name = "aurora_iconify"
 version = "0.1.0"
 edition = "2024"
-description = "Compile-time icon embedding from iconify.design for AuroraUI"
+description = "Compile-time icon embedding from iconify.design — type-safe access to 200,000+ icons with zero runtime cost"
+authors = ["Drew Chase"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/drew-chase/aurora-ui"
+homepage = "https://github.com/drew-chase/aurora-ui"
+documentation = "https://docs.rs/aurora_iconify"
+readme = "README.md"
+keywords = ["icons", "iconify", "svg", "compile-time", "proc-macro"]
+categories = ["gui", "development-tools::procedural-macro-helpers"]
 
 [lib]
 proc-macro = true
