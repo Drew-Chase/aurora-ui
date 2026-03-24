@@ -36,13 +36,10 @@ fn main() {
 					.align(Align::Center)
 					.justify(Justify::Center)
 					.child(Text::new("Hello, world!").font_size(24.0))
-					.child(button(ButtonOptions {
-						text_options: Text::new("Click me")
-							.align(Align::Center)
-							.justify(Justify::Center),
-						on_click: Box::new(|_| println!("clicked")),
-						..Default::default()
-					})),
+					.child(
+						button!("Click me")
+							.on_click(|_| println!("clicked")),
+					),
 			);
 		})
 		.expect("Failed to run app");
@@ -65,7 +62,8 @@ fn main() {
 - **Feature-gated text rendering** — Font loading, shaping, and text widgets behind `text` feature flag
 - **Layout system** — `col!` and `row!` macros with flex alignment, `Stack`, `Positioned`, and `ScrollView`
 - **Image and SVG support** — PNG/JPEG decoding, SVG rasterization with gradient support, feature-gated
-- **Composite stateful widgets** — `Composite<S>` for widgets that rebuild on state change
+- **Composite widget macro** — `#[composite_widget]` generates builder setters, `new()`, and `impl Widget` from a config struct
+- **Iconify integration** — `aurora_iconify` fetches icons from [iconify.design](https://iconify.design) at compile time with type-safe access
 - **Incremental rendering** — Dirty-flag system skips unchanged subtrees
 - **Built-in benchmarking** — `just benchmark` reports binary size, startup time, and memory for every example
 - **Statically linked binaries** — Single executable, no runtime dependencies
@@ -133,6 +131,8 @@ aurora/
 ├── aurora_text       # Text shaping, layout, font management (optional)
 ├── aurora_layout     # Layout engine (planned)
 ├── aurora_widgets    # Widget library: layout, composites, interactables
+├── aurora_macros     # Proc macros: #[composite_widget], #[derive(CompositeWidget)]
+├── aurora_iconify    # Compile-time icon embedding from iconify.design
 ├── aurora_theme      # Theming system (planned)
 ├── aurora_animate    # Animation system (planned)
 ├── aurora_a11y       # Accessibility via AccessKit (planned)
@@ -153,6 +153,95 @@ Traffic light buttons are automatically positioned within your custom titlebar
 content.
 
 **Linux** — Client-side decorations on Wayland (deferred).
+
+## Custom Widgets
+
+Aurora provides two ways to build reusable widgets:
+
+### Composite Widgets (recommended)
+
+Use `#[composite_widget]` to compose existing widgets with builder-pattern
+ergonomics. Define a config struct, implement `CompositeBuilder`, and the
+macro generates `new()`, setters, and the full `Widget` impl.
+
+```rust
+#[composite_widget]
+pub struct MyCard {
+    pub width: u32,
+    pub background_color: Color,
+    #[composite(skip)]
+    pub on_click: Option<Box<dyn FnMut()>>,
+}
+
+impl CompositeBuilder for MyCard {
+    fn build(&self) -> Box<dyn Widget> {
+        Box::new(BoxWidget::new()
+            .width(self.width)
+            .background_color(self.background_color))
+    }
+}
+
+// Usage:
+MyCard::new().width(200).background_color(Color::RED)
+```
+
+Field attributes: `#[composite(rename = "bg")]`, `#[composite(skip)]`,
+`#[composite(into)]`, `#[composite(with_types = "impl Into<String>")]`.
+
+### Full Widgets
+
+Implement the `Widget` trait directly for complete control over layout,
+painting, and event handling. See `examples/custom_widget/` for a
+side-by-side comparison.
+
+## Button
+
+The `Button` widget accepts any child content via `.child()` or the
+`button!` macro:
+
+```rust
+// Text button (requires text feature):
+button!("Click me").on_click(|e| println!("clicked"))
+
+// Any widget as child:
+button!(my_icon_widget).on_click(|e| { ... })
+
+// Full builder:
+Button::new()
+    .child(my_widget)
+    .width(200)
+    .height(50)
+    .background_color(Color::RED)
+    .on_click(|e| { ... })
+    .on_hover(|hovering| { ... })
+```
+
+## Iconify Icons
+
+The `aurora_iconify` crate fetches icons from [iconify.design](https://iconify.design)
+at compile time. Over 200,000 icons from 150+ icon sets are available.
+
+```toml
+[dependencies]
+aurora_iconify = { path = "crates/aurora_iconify" }
+```
+
+```rust
+// Declare which icon sets to include (fetched at compile time):
+aurora_iconify::icon_sets!("mage", "lucide");
+
+// Type-safe access — one method per icon:
+let svg: &str = Icon::mage().calendar_2_fill();
+
+// Dynamic access by name:
+let svg: Option<&str> = Icon::mage().by_name("calendar-2-fill");
+
+// Dynamic set + name:
+let svg = Icon::from_set("mage").and_then(|s| s.by_name("calendar-2-fill"));
+```
+
+Icon data is cached locally for 7 days. All SVGs are embedded directly in
+the binary as `&'static str`.
 
 ## Platform Support
 
