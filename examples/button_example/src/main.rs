@@ -12,16 +12,13 @@ fn main() {
                     .spacing(10.0)
                     .align(Align::Center)
                     .justify(Justify::Center)
-                    .child(button(ButtonOptions {
-                        text_options: Text::new("Test")
-                            .align(Align::Center)
-                            .justify(Justify::Center)
-                            .font(FontOptions::new().size(14.0)),
-                        on_click: Box::new(|event| {
-                            println!("Button clicked at position: {:?}", event.position);
-                        }),
-                        ..Default::default()
-                    })),
+                    .child(
+                        Button::new()
+                            .text("Test")
+                            .on_click(|event| {
+                                println!("Button clicked at position: {:?}", event.position);
+                            }),
+                    ),
             );
         })
         .expect("Failed to run app");

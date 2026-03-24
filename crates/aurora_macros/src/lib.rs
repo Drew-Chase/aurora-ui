@@ -73,7 +73,17 @@ pub fn composite_widget(_attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
 
-    // Collect original fields (preserving attrs, vis, etc.)
+    // Collect fields, stripping #[composite(...)] attributes from the output
+    let cleaned_fields: Vec<_> = fields
+        .iter()
+        .map(|f| {
+            let mut f = f.clone();
+            f.attrs.retain(|a| !a.path().is_ident("composite"));
+            f
+        })
+        .collect();
+
+    // Also keep references to the originals for attribute parsing
     let original_fields: Vec<_> = fields.iter().collect();
 
     // Generate setters for pub fields
@@ -137,7 +147,7 @@ pub fn composite_widget(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let expanded = quote! {
         #(#attrs)*
         #vis struct #struct_name #generics #where_clause {
-            #(#original_fields,)*
+            #(#cleaned_fields,)*
             /// Internal storage for the built widget tree. Managed by the
             /// `#[composite_widget]` macro — set to `None` in your `Default` impl.
             #[doc(hidden)]

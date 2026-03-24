@@ -38,7 +38,7 @@ pub use aurora_text::font_options::{FontOptions, FontStyle, FontStretch, FontWei
 #[cfg(feature = "text")]
 pub use aurora_text::{font_manager::FontManager, text_layout::TextLayout};
 #[cfg(feature = "text")]
-pub use aurora_widgets::interactables::button::{button, ButtonOptions};
+pub use aurora_widgets::interactables::button::Button;
 #[cfg(feature = "text")]
 pub use aurora_widgets::text_widget::Text;
 #[cfg(feature = "text")]

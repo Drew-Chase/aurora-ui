@@ -4,9 +4,29 @@ This example implements the **same toggle switch widget** two different ways, so
 
 ## Composite Widget (`composite_widget.rs`)
 
-Builds the toggle by **composing existing widgets** — `TouchArea`, `BoxWidget`, `Positioned` — and managing state with `Composite<S>` and `StateSetter`.
+Builds the toggle by **composing existing widgets** — `TouchArea`, `BoxWidget`, `Positioned` — using the `#[composite_widget]` macro for zero-boilerplate builder pattern and `Widget` impl.
 
-This is similar to how you'd build components in React: assemble existing primitives, wire up callbacks to update state, and let the framework re-render.
+You define a config struct, implement `Default` and `CompositeBuilder::build()`, and you're done. The macro generates `new()`, builder setters for all `pub` fields, and the full `Widget` implementation.
+
+```rust
+#[composite_widget]
+pub struct ToggleSwitch {
+    pub on_color: Color,
+    pub off_color: Color,
+    // ...
+}
+
+impl CompositeBuilder for ToggleSwitch {
+    fn build(&self) -> Box<dyn Widget> {
+        // compose existing widgets here
+    }
+}
+
+// Usage:
+ToggleSwitch::new().on_color(hex!(0x2196F3))
+```
+
+This is similar to React components: assemble existing primitives, wire up callbacks to update state, and let the framework re-render.
 
 **Use when:**
 - Your widget is a combination of existing widgets with specific styling

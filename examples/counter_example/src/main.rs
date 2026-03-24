@@ -45,16 +45,18 @@ pub fn counter() -> impl Widget {
                 .spacing(10.0)
                 .justify(Justify::Center)
                 .align(Align::Center)
-                .child(button(ButtonOptions {
-                    text_options: Text::new("-")
-                        .font_size(20.0)
-                        .align(Align::Center)
-                        .justify(Justify::Center),
-                    width: 40,
-                    height: 40,
-                    on_click: Box::new(move |_| decrement_setter.set(|prev| prev.value -= 1)),
-                    ..ButtonOptions::default()
-                }))
+                .child(
+                    Button::new()
+                        .text_options(
+                            Text::new("-")
+                                .font_size(20.0)
+                                .align(Align::Center)
+                                .justify(Justify::Center),
+                        )
+                        .width(40)
+                        .height(40)
+                        .on_click(move |_| decrement_setter.set(|prev| prev.value -= 1)),
+                )
                 .child(
                     Text::new(state.value.to_string())
                         .font_size(24.0)
@@ -62,16 +64,18 @@ pub fn counter() -> impl Widget {
                         .justify(Justify::Center)
                         .align(Align::Center),
                 )
-                .child(button(ButtonOptions {
-                    text_options: Text::new("+")
-                        .font_size(20.0)
-                        .align(Align::Center)
-                        .justify(Justify::Center),
-                    width: 40,
-                    height: 40,
-                    on_click: Box::new(move |_| increment_setter.set(|prev| prev.value += 1)),
-                    ..ButtonOptions::default()
-                })),
+                .child(
+                    Button::new()
+                        .text_options(
+                            Text::new("+")
+                                .font_size(20.0)
+                                .align(Align::Center)
+                                .justify(Justify::Center),
+                        )
+                        .width(40)
+                        .height(40)
+                        .on_click(move |_| increment_setter.set(|prev| prev.value += 1)),
+                ),
         )
     })
 }
