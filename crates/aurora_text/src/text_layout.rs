@@ -105,16 +105,25 @@ impl TextLayout {
                 {
                     let glyph_w = image.placement.width as i32;
                     let glyph_h = image.placement.height as i32;
-                    let glyph_left = physical_glyph.x + image.placement.left;
-                    let glyph_top = physical_glyph.y - image.placement.top;
+                    let glyph_left = physical_glyph.x.saturating_add(image.placement.left);
+                    let glyph_top = physical_glyph.y.saturating_sub(image.placement.top);
+
+                    // Skip glyphs entirely outside the clip region
+                    if glyph_top.saturating_add(glyph_h) < clip_y0
+                        || glyph_top >= clip_y1
+                        || glyph_left.saturating_add(glyph_w) < clip_x0
+                        || glyph_left >= clip_x1
+                    {
+                        continue;
+                    }
 
                     for gy in 0..glyph_h {
-                        let py = glyph_top + gy;
+                        let py = glyph_top.saturating_add(gy);
                         if py < clip_y0 || py >= clip_y1 {
                             continue;
                         }
                         for gx in 0..glyph_w {
-                            let px = glyph_left + gx;
+                            let px = glyph_left.saturating_add(gx);
                             if px < clip_x0 || px >= clip_x1 {
                                 continue;
                             }
@@ -124,6 +133,9 @@ impl TextLayout {
                                 continue;
                             }
 
+                            if py < 0 || px < 0 {
+                                continue;
+                            }
                             let idx = (py as u32 * width + px as u32) as usize;
                             if idx < buffer.len() {
                                 if alpha == 255 {
