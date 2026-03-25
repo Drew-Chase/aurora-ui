@@ -180,19 +180,26 @@ impl Widget for Column {
             self.spacing
         };
 
+        // For alignment, use actual max child width when no explicit width is set
+        let align_width = if self.width.is_some() {
+            content_width
+        } else {
+            final_sizes.iter().map(|s| s.width).fold(0.0f32, f32::max)
+        };
+
         // Position each child
         self.child_rects.clear();
         for child_size in final_sizes.iter() {
             let x = self.padding.left
                 + match self.align {
                     Align::Start => 0.0,
-                    Align::Center => (content_width - child_size.width) / 2.0,
-                    Align::End => content_width - child_size.width,
+                    Align::Center => (align_width - child_size.width).max(0.0) / 2.0,
+                    Align::End => (align_width - child_size.width).max(0.0),
                     Align::Stretch => 0.0,
                 };
 
             let w = if self.align == Align::Stretch {
-                content_width
+                align_width
             } else {
                 child_size.width
             };
@@ -209,7 +216,7 @@ impl Widget for Column {
         };
         let final_height = match self.height {
             Some(h) => h as f32,
-            None => available.height,
+            None => total_child_height + total_spacing + self.padding.vertical(),
         };
         Size::new(final_width, final_height)
     }
