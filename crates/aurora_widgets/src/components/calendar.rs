@@ -29,7 +29,7 @@ pub struct Calendar {
     corners: Corners,
     selected_bg: Color,
     selected_fg: Color,
-    today_bg: Color,
+    _today_bg: Color,
     today_day: Option<u32>,
     on_select: Option<Box<dyn FnMut(u32)>>,
     on_month_change: Option<Box<dyn FnMut(u32, u32)>>,
@@ -53,7 +53,7 @@ impl Calendar {
             corners: Corners::all(9999.0),
             selected_bg: colors::primary(),
             selected_fg: colors::primary_foreground(),
-            today_bg: colors::accent(),
+            _today_bg: colors::accent(),
             today_day: None,
             on_select: None,
             on_month_change: None,
@@ -107,7 +107,7 @@ impl Calendar {
             1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
             4 | 6 | 9 | 11 => 30,
             2 => {
-                if (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 {
+                if (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400) {
                     29
                 } else {
                     28
@@ -123,7 +123,7 @@ impl Calendar {
         let t = [0u32, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
         let y = if month < 3 { year - 1 } else { year };
         let m = month as usize;
-        ((y + y / 4 - y / 100 + y / 400 + t[m - 1] + 1) % 7) as u32
+        (y + y / 4 - y / 100 + y / 400 + t[m - 1] + 1) % 7
     }
 
     fn month_name(month: u32) -> &'static str {
@@ -170,7 +170,7 @@ impl Calendar {
 
     fn total_rows(&self) -> u32 {
         let total_cells = self.first_weekday + self.days_in_month;
-        (total_cells + 6) / 7
+        total_cells.div_ceil(7)
     }
 }
 
@@ -209,7 +209,7 @@ impl Widget for Calendar {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(12.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, *wd, &opts, colors::foreground(), None);
+            let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, wd, &opts, colors::foreground(), None);
             self.weekday_layouts.push(Some(tl));
         }
 

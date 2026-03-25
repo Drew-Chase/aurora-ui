@@ -332,15 +332,15 @@ impl Widget for Combobox {
                         self.search.clear();
                     }
                     Key::Enter => {
-                        if let Some(hi) = self.hover_index {
-                            if hi < self.filtered_indices.len() {
-                                let real_idx = self.filtered_indices[hi];
-                                self.selected = Some(real_idx);
-                                self.open = false;
-                                self.search.clear();
-                                if let Some(ref mut cb) = self.on_select {
-                                    cb(real_idx);
-                                }
+                        if let Some(hi) = self.hover_index
+                            && hi < self.filtered_indices.len()
+                        {
+                            let real_idx = self.filtered_indices[hi];
+                            self.selected = Some(real_idx);
+                            self.open = false;
+                            self.search.clear();
+                            if let Some(ref mut cb) = self.on_select {
+                                cb(real_idx);
                             }
                         }
                     }

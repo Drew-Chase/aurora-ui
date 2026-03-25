@@ -161,16 +161,16 @@ impl Widget for HoverCard {
                         return resp;
                     }
                 }
-                if self.hovered {
-                    if let Some(ref mut content) = self.content {
-                        let content_rect = Rect::new(
-                            card_r.x1 + self.padding.left,
-                            card_r.y1 + self.padding.top,
-                            card_r.x1 + self.padding.left + self.content_size.width,
-                            card_r.y1 + self.padding.top + self.content_size.height,
-                        );
-                        return content.event(event, content_rect);
-                    }
+                if self.hovered
+                    && let Some(ref mut content) = self.content
+                {
+                    let content_rect = Rect::new(
+                        card_r.x1 + self.padding.left,
+                        card_r.y1 + self.padding.top,
+                        card_r.x1 + self.padding.left + self.content_size.width,
+                        card_r.y1 + self.padding.top + self.content_size.height,
+                    );
+                    return content.event(event, content_rect);
                 }
                 EventResponse::default()
             }

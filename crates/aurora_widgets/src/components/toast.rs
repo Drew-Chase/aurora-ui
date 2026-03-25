@@ -114,6 +114,7 @@ impl Toast {
         }
     }
 
+    #[allow(dead_code)]
     fn fg_color(&self) -> Color {
         match self.variant {
             ToastVariant::Default => colors::foreground(),

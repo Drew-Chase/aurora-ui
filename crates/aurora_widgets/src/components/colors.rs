@@ -5,7 +5,6 @@ use aurora_theme::slots;
 /// When a user theme is registered via aurora_theming::config!(), values
 /// come from the active profile. Otherwise the built-in light-mode
 /// defaults are used.
-
 pub fn background() -> Color { aurora_theme::color(slots::BACKGROUND) }
 pub fn foreground() -> Color { aurora_theme::color(slots::FOREGROUND) }
 pub fn muted() -> Color { aurora_theme::color(slots::MUTED) }

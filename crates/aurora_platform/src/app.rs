@@ -390,7 +390,7 @@ impl AppWindow {
             {
                 let backend =
                     aurora_gpu::backend::glow::GlowBackend::new(&window_handle, event_loop)
-                        .map_err(|err| AppError::GpuInitializationError(err))?;
+                        .map_err(AppError::GpuInitializationError)?;
                 Box::new(backend)
             }
             #[cfg(all(feature = "software", not(feature = "opengl"), not(feature = "wgpu_backend")))]

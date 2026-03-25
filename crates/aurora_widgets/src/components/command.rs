@@ -313,12 +313,12 @@ impl Widget for Command {
                         self.search.clear();
                     }
                     Key::Enter => {
-                        if let Some(hi) = self.hover_index {
-                            if hi < self.filtered_indices.len() {
-                                let cmd_idx = self.filtered_indices[hi];
-                                self.open = false;
-                                self.commands[cmd_idx].callback.as_mut()();
-                            }
+                        if let Some(hi) = self.hover_index
+                            && hi < self.filtered_indices.len()
+                        {
+                            let cmd_idx = self.filtered_indices[hi];
+                            self.open = false;
+                            self.commands[cmd_idx].callback.as_mut()();
                         }
                     }
                     Key::Down => {

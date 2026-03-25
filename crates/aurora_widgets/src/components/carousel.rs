@@ -268,13 +268,13 @@ impl Widget for Carousel {
                 EventResponse::default()
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) if rect.contains(pos) => {
-                if self.show_arrows && self.slides.len() > 1 {
-                    if self.prev_rect(&rect).contains(pos) || self.next_rect(&rect).contains(pos) {
-                        return EventResponse {
-                            cursor: Some(CursorIcon::Pointer),
-                            ..Default::default()
-                        };
-                    }
+                if self.show_arrows && self.slides.len() > 1
+                    && (self.prev_rect(&rect).contains(pos) || self.next_rect(&rect).contains(pos))
+                {
+                    return EventResponse {
+                        cursor: Some(CursorIcon::Pointer),
+                        ..Default::default()
+                    };
                 }
                 if let Some(slide) = self.slides.get_mut(self.current) {
                     return slide.event(event, rect);

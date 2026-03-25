@@ -295,18 +295,18 @@ impl Widget for DropdownMenu {
                 }
                 if self.open {
                     let mr = self.menu_rect(&rect);
-                    if mr.contains(&e.position) {
-                        if let Some(idx) = self.item_index_at(e.position.y, &mr) {
-                            self.open = false;
-                            self.start_anim(false);
-                            if let Some(ref mut cb) = self.on_select {
-                                cb(idx);
-                            }
-                            return EventResponse {
-                                handled: true,
-                                ..Default::default()
-                            };
+                    if mr.contains(&e.position)
+                        && let Some(idx) = self.item_index_at(e.position.y, &mr)
+                    {
+                        self.open = false;
+                        self.start_anim(false);
+                        if let Some(ref mut cb) = self.on_select {
+                            cb(idx);
                         }
+                        return EventResponse {
+                            handled: true,
+                            ..Default::default()
+                        };
                     }
                     // Click outside closes
                     self.open = false;

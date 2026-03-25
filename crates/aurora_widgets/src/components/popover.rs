@@ -158,14 +158,14 @@ impl Widget for Popover {
             self.trigger_size = trigger.layout(available, ctx);
         }
 
-        if self.open {
-            if let Some(ref mut content) = self.content {
-                let content_available = Size::new(
-                    (available.width - self.padding.left - self.padding.right).max(0.0),
-                    f32::MAX,
-                );
-                self.content_size = content.layout(content_available, ctx);
-            }
+        if self.open
+            && let Some(ref mut content) = self.content
+        {
+            let content_available = Size::new(
+                (available.width - self.padding.left - self.padding.right).max(0.0),
+                f32::MAX,
+            );
+            self.content_size = content.layout(content_available, ctx);
         }
 
         self.trigger_size

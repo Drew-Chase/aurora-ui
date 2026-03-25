@@ -187,7 +187,6 @@ impl Widget for Tabs {
         let mut x = rect.x1;
         for (i, tab_w) in self.tab_widths.iter().enumerate() {
             let tab_rect = Rect::new(x, rect.y1, x + tab_w, tab_bar_bottom);
-            let is_selected = i == self.selected;
 
             // Tab label
             if let Some(Some(tl)) = self.tab_layouts.get(i) {
@@ -286,7 +285,7 @@ impl Widget for Tabs {
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) if rect.contains(pos) => {
                 if pos.y < tab_bar_bottom {
                     let mut x = rect.x1;
-                    for (_, tab_w) in self.tab_widths.iter().enumerate() {
+                    for tab_w in self.tab_widths.iter() {
                         let tab_rect = Rect::new(x, rect.y1, x + tab_w, tab_bar_bottom);
                         if tab_rect.contains(pos) {
                             return EventResponse {

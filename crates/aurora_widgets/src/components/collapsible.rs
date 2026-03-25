@@ -172,24 +172,24 @@ impl Widget for Collapsible {
         );
 
         // Content (clipped for animation)
-        if t > 0.0 {
-            if let Some(ref child) = self.child {
-                let content_area_top = rect.y1 + self.header_height;
-                let visible_h = (self.content_padding.top + self.child_size.height + self.content_padding.bottom) * t;
-                let clip = Rect::new(rect.x1, content_area_top, rect.x2, content_area_top + visible_h);
-                canvas.push_clip(clip);
+        if t > 0.0
+            && let Some(ref child) = self.child
+        {
+            let content_area_top = rect.y1 + self.header_height;
+            let visible_h = (self.content_padding.top + self.child_size.height + self.content_padding.bottom) * t;
+            let clip = Rect::new(rect.x1, content_area_top, rect.x2, content_area_top + visible_h);
+            canvas.push_clip(clip);
 
-                let content_y = content_area_top + self.content_padding.top;
-                let content_rect = Rect::new(
-                    rect.x1 + self.content_padding.left,
-                    content_y,
-                    rect.x1 + self.content_padding.left + self.child_size.width,
-                    content_y + self.child_size.height,
-                );
-                child.paint(canvas, content_rect);
+            let content_y = content_area_top + self.content_padding.top;
+            let content_rect = Rect::new(
+                rect.x1 + self.content_padding.left,
+                content_y,
+                rect.x1 + self.content_padding.left + self.child_size.width,
+                content_y + self.child_size.height,
+            );
+            child.paint(canvas, content_rect);
 
-                canvas.pop_clip();
-            }
+            canvas.pop_clip();
         }
     }
 
@@ -227,17 +227,17 @@ impl Widget for Collapsible {
                 }
             }
             _ => {
-                if self.expanded {
-                    if let Some(ref mut child) = self.child {
-                        let content_y = rect.y1 + self.header_height + self.content_padding.top;
-                        let content_rect = Rect::new(
-                            rect.x1 + self.content_padding.left,
-                            content_y,
-                            rect.x1 + self.content_padding.left + self.child_size.width,
-                            content_y + self.child_size.height,
-                        );
-                        return child.event(event, content_rect);
-                    }
+                if self.expanded
+                    && let Some(ref mut child) = self.child
+                {
+                    let content_y = rect.y1 + self.header_height + self.content_padding.top;
+                    let content_rect = Rect::new(
+                        rect.x1 + self.content_padding.left,
+                        content_y,
+                        rect.x1 + self.content_padding.left + self.child_size.width,
+                        content_y + self.child_size.height,
+                    );
+                    return child.event(event, content_rect);
                 }
                 EventResponse::default()
             }

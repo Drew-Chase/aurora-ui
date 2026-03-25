@@ -95,10 +95,10 @@ impl InputOtp {
         if let Some(ref mut cb) = self.on_change {
             cb(&s);
         }
-        if self.value.len() == self.length {
-            if let Some(ref mut cb) = self.on_complete {
-                cb(&s);
-            }
+        if self.value.len() == self.length
+            && let Some(ref mut cb) = self.on_complete
+        {
+            cb(&s);
         }
     }
 }

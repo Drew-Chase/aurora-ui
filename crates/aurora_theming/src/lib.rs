@@ -28,8 +28,6 @@ pub fn config(input: TokenStream) -> TokenStream {
     // Resolve relative to the calling crate's manifest dir
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".into());
     let full_path = std::path::Path::new(&manifest_dir).join(&path_str);
-    let abs_path_str = full_path.to_string_lossy().to_string();
-
     let json_str = match std::fs::read_to_string(&full_path) {
         Ok(s) => s,
         Err(e) => {
@@ -315,13 +313,12 @@ fn collect_sorted_keys(
 ) -> Vec<String> {
     let mut all_keys = BTreeMap::new();
     for pname in profiles {
-        if let Some(profile) = root.get(pname.as_str()) {
-            if let Some(cat) = profile.get(category) {
-                if let Some(obj) = cat.as_object() {
-                    for key in obj.keys() {
-                        all_keys.entry(key.clone()).or_insert(());
-                    }
-                }
+        if let Some(profile) = root.get(pname.as_str())
+            && let Some(cat) = profile.get(category)
+            && let Some(obj) = cat.as_object()
+        {
+            for key in obj.keys() {
+                all_keys.entry(key.clone()).or_insert(());
             }
         }
     }
@@ -405,7 +402,7 @@ fn parse_f32_token(val: Option<&serde_json::Value>) -> proc_macro2::TokenStream 
 }
 
 fn to_pascal_case(s: &str) -> String {
-    s.split(|c: char| c == '_' || c == '-' || c == ' ')
+    s.split(['_', '-', ' '])
         .filter(|part| !part.is_empty())
         .map(|part| {
             let mut chars = part.chars();
