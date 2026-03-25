@@ -374,10 +374,19 @@ impl AppWindow {
     pub(crate) fn new(
         window_handle: Arc<winit::window::Window>,
         config: &App,
+        event_loop: &ActiveEventLoop,
     ) -> Result<Self, AppError> {
         let gpu: Box<dyn GpuContext> = {
-            #[cfg(feature = "software")]
+            #[cfg(feature = "opengl")]
             {
+                let backend =
+                    aurora_gpu::backend::glow::GlowBackend::new(&window_handle, event_loop)
+                        .map_err(|err| AppError::GpuInitializationError(err))?;
+                Box::new(backend)
+            }
+            #[cfg(all(feature = "software", not(feature = "opengl")))]
+            {
+                let _ = event_loop; // suppress unused warning
                 let backend =
                     aurora_gpu::backend::softbuffer::SoftbufferBackend::new(window_handle.clone())
                         .map_err(|err| AppError::GpuInitializationError(err.to_string()))?;
@@ -725,7 +734,7 @@ where
                 if config.custom_titlebar {
                     crate::windows_titlebar::apply(&handle);
                 }
-                match AppWindow::new(handle, config) {
+                match AppWindow::new(handle, config, event_loop) {
                     Ok(app_window) => Some(app_window),
                     Err(err) => {
                         log::error!("Failed to create window: {}", err);

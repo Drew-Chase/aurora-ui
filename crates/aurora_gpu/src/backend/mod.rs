@@ -2,3 +2,6 @@
 
 #[cfg(feature = "software")]
 pub mod softbuffer;
+
+#[cfg(feature = "opengl")]
+pub mod glow;

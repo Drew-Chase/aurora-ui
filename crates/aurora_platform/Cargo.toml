@@ -35,6 +35,7 @@ objc2-foundation = { version = "0.3.2", features = ["NSObject"] }
 [features]
 default = ["software"]
 software = ["aurora_gpu/software"]
+opengl = ["aurora_gpu/opengl"]
 text = ["dep:aurora_text", "aurora_render/text", "aurora_widgets/text"]
 image = ["dep:image", "aurora_render/image", "aurora_widgets/image"]
 svg = ["aurora_render/svg", "aurora_widgets/svg"]

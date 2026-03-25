@@ -27,6 +27,7 @@ aurora_animate = { path = "../crates/aurora_animate", optional = true }
 [features]
 default = ["software"]
 software = ["aurora_gpu/software"]
+opengl = ["aurora_gpu/opengl", "aurora_platform/opengl"]
 text = ["dep:aurora_text", "aurora_platform/text", "aurora_render/text", "aurora_widgets/text"]
 image = ["aurora_platform/image", "aurora_render/image", "aurora_widgets/image"]
 svg = ["aurora_platform/svg", "aurora_render/svg", "aurora_widgets/svg"]
