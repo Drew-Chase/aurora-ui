@@ -73,6 +73,9 @@ fn main() {
             let bounce_x = bounce_tween.value();
             let cycle_color = color_cycle.value();
 
+            println!("Position: {}, Color: {:?}, Opacity: {}, Bounce: {}, Cycle: {}",
+                pos_x, anim_color, opacity, bounce_x, cycle_color);
+
             window.root(
                 col!()
                     .spacing(20.0)
