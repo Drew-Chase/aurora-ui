@@ -202,7 +202,12 @@ fn content_area(page_index: usize) -> impl Widget {
 fn page_header(title: &str, description: &str) -> Column {
     col!()
         .spacing(4.0)
-        .child(Text::new(title).font_size(32.0).font_weight(FontWeight::Bold).color(HEADING_COLOR))
+        .child(
+            Text::new(title)
+                .font_size(32.0)
+                .font_weight(FontWeight::Bold)
+                .color(HEADING_COLOR),
+        )
         .child(Text::new(description).font_size(14.0).color(MUTED_COLOR))
         .child(BoxWidget::new().height(24))
         .child(separator::Separator::new())
@@ -211,7 +216,12 @@ fn page_header(title: &str, description: &str) -> Column {
 fn example_section(title: &str, description: &str) -> Column {
     col!()
         .spacing(4.0)
-        .child(Text::new(title).font_size(16.0).font_weight(FontWeight::SemiBold).color(HEADING_COLOR))
+        .child(
+            Text::new(title)
+                .font_size(16.0)
+                .font_weight(FontWeight::SemiBold)
+                .color(HEADING_COLOR),
+        )
         .child(Text::new(description).font_size(14.0).color(MUTED_COLOR))
 }
 
@@ -237,28 +247,7 @@ fn page_accordion() -> impl Widget {
         .child(example_section(
             "Default",
             "Click a heading to expand its content.",
-        )).child(accordion::Accordion::new()
-                         .width(500.0)
-                         .section(
-                             "Is it accessible?",
-                             typography::Typography::paragraph(
-                                 "Yes. It adheres to the WAI-ARIA design pattern.",
-                             ),
-                         )
-                         .section(
-                             "Is it styled?",
-                             typography::Typography::paragraph(
-                                 "Yes. It comes with default styles that match the other components.",
-                             ),
-                         )
-                         .section(
-                             "Is it animated?",
-                             typography::Typography::paragraph(
-                                 "Yes. It smoothly animates the content open and closed.",
-                             ),
-                         )
-                         .expanded(0),
-    )
+        ))
         .child(example_card(
             accordion::Accordion::new()
                 .width(500.0)
@@ -569,9 +558,11 @@ fn page_input() -> impl Widget {
                         .input(TextInput::new().placeholder("Enter your email")),
                 )
                 .child(
-                    field::Field::new("Password")
-                        .width(350.0)
-                        .input(TextInput::new().placeholder("Enter your password")),
+                    field::Field::new("Password").width(350.0).input(
+                        TextInput::new()
+                            .password(true)
+                            .placeholder("Enter your password"),
+                    ),
                 ),
         ))
 }
