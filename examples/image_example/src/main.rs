@@ -60,6 +60,7 @@ fn main() {
         .size((600, 700))
         .min_size((400, 300))
         .position(WindowPosition::Center)
+        .icon(include_bytes!("../../../logo.png"))
         .background_color(Color::from_rgb(30, 30, 30))
         .run(move |window, _frame_info| {
             window.root(
