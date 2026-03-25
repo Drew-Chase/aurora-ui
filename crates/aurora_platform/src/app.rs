@@ -377,16 +377,24 @@ impl AppWindow {
         event_loop: &ActiveEventLoop,
     ) -> Result<Self, AppError> {
         let gpu: Box<dyn GpuContext> = {
-            #[cfg(feature = "opengl")]
+            #[cfg(feature = "wgpu_backend")]
+            {
+                let _ = event_loop;
+                let backend =
+                    aurora_gpu::backend::wgpu::WgpuBackend::new(window_handle.clone())
+                        .map_err(|err| AppError::GpuInitializationError(err))?;
+                Box::new(backend)
+            }
+            #[cfg(all(feature = "opengl", not(feature = "wgpu_backend")))]
             {
                 let backend =
                     aurora_gpu::backend::glow::GlowBackend::new(&window_handle, event_loop)
                         .map_err(|err| AppError::GpuInitializationError(err))?;
                 Box::new(backend)
             }
-            #[cfg(all(feature = "software", not(feature = "opengl")))]
+            #[cfg(all(feature = "software", not(feature = "opengl"), not(feature = "wgpu_backend")))]
             {
-                let _ = event_loop; // suppress unused warning
+                let _ = event_loop;
                 let backend =
                     aurora_gpu::backend::softbuffer::SoftbufferBackend::new(window_handle.clone())
                         .map_err(|err| AppError::GpuInitializationError(err.to_string()))?;

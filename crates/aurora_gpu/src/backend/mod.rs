@@ -5,3 +5,6 @@ pub mod softbuffer;
 
 #[cfg(feature = "opengl")]
 pub mod glow;
+
+#[cfg(feature = "wgpu_backend")]
+pub mod wgpu;
