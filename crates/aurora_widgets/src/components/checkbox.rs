@@ -144,19 +144,10 @@ impl Widget for Checkbox {
             let cx = x + s * 0.5;
             let cy = y + s * 0.5;
 
-            // Checkmark control points, relative to center, then scaled
-            let p1 = Point::new(
-                cx + (s * 0.25 - s * 0.5) * t,
-                cy + (s * 0.5 - s * 0.5) * t,
-            );
-            let p2 = Point::new(
-                cx + (s * 0.45 - s * 0.5) * t,
-                cy + (s * 0.7 - s * 0.5) * t,
-            );
-            let p3 = Point::new(
-                cx + (s * 0.75 - s * 0.5) * t,
-                cy + (s * 0.3 - s * 0.5) * t,
-            );
+            // Checkmark control points, offset from center, scaled by t
+            let p1 = Point::new(cx + s * -0.25 * t, cy);
+            let p2 = Point::new(cx + s * -0.05 * t, cy + s * 0.2 * t);
+            let p3 = Point::new(cx + s * 0.25 * t, cy + s * -0.2 * t);
 
             let check_alpha = (t * 255.0).min(255.0) as u8;
             let check_color = aurora_core::color::Color::new(
