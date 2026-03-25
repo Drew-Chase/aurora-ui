@@ -104,6 +104,10 @@ impl<S: 'static> Widget for Composite<S> {
 			None => EventResponse::default(),
 		}
 	}
+
+	fn needs_animation(&self) -> bool {
+		self.inner.as_ref().map_or(false, |w| w.needs_animation())
+	}
 }
 
 /// Implement this trait on a config struct to define a composite widget.
@@ -186,5 +190,9 @@ impl<T: CompositeBuilder> Widget for CompositeWrapper<T> {
 			Some(inner) => inner.event(event, rect),
 			None => EventResponse::default(),
 		}
+	}
+
+	fn needs_animation(&self) -> bool {
+		self.inner.as_ref().map_or(false, |w| w.needs_animation())
 	}
 }

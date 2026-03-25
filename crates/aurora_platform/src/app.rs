@@ -509,6 +509,11 @@ impl AppWindow {
 
             let rect = Rect::from_size(available);
             widget.paint(&mut canvas, rect);
+
+            // Auto-schedule next frame when any widget has active animations
+            if widget.needs_animation() {
+                self.next_frame_requested = true;
+            }
         }
     }
 

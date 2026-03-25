@@ -45,6 +45,11 @@ pub trait Widget {
     fn widget_id(&self) -> Option<u64> {
         None
     }
+    /// Returns `true` if this widget (or any descendant) requires continuous
+    /// animation frames. The default walks [`children`](Widget::children).
+    fn needs_animation(&self) -> bool {
+        self.children().iter().any(|c| c.needs_animation())
+    }
 }
 
 /// Context passed to [`Widget::layout`] during the layout phase.
