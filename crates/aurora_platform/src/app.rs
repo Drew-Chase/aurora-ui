@@ -743,6 +743,40 @@ where
 
     }
 
+    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        let Some(window) = self.window.as_mut() else {
+            return;
+        };
+
+        if window.next_frame_requested {
+            window.next_frame_requested = false;
+
+            // Direct render — paints client area only, no WM_PAINT / window frame redraw
+            let physical = window.window_handle.inner_size();
+            let frame_info = FrameInfo {
+                width: physical.width,
+                height: physical.height,
+                scale_factor: window.window_handle.scale_factor(),
+            };
+            let bg = self.config.background_color;
+            window.gpu.resize(frame_info.width, frame_info.height);
+            window.clear(bg);
+            (self.on_render)(window, frame_info);
+            window.layout_and_paint();
+            window.present();
+        }
+
+        if window.next_frame_requested {
+            // Animation still active — schedule next frame at ~60fps
+            event_loop.set_control_flow(winit::event_loop::ControlFlow::WaitUntil(
+                std::time::Instant::now() + std::time::Duration::from_millis(16),
+            ));
+        } else {
+            // No animation — sleep until next event
+            event_loop.set_control_flow(winit::event_loop::ControlFlow::Wait);
+        }
+    }
+
     fn window_event(
         &mut self,
         event_loop: &ActiveEventLoop,
@@ -781,9 +815,6 @@ where
                 (self.on_render)(window, frame_info);
                 window.layout_and_paint();
                 window.present();
-                if window.next_frame_requested {
-                    window.request_redraw();
-                }
             }
             WindowEvent::Resized(physical_size) => {
                 let frame_info = FrameInfo {
@@ -796,7 +827,6 @@ where
                 (self.on_render)(window, frame_info);
                 window.layout_and_paint();
                 window.present();
-                window.request_redraw();
             }
             WindowEvent::ScaleFactorChanged { .. } => {
                 window.request_redraw();
