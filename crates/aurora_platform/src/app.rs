@@ -829,13 +829,13 @@ where
                 window.present();
             }
             WindowEvent::ScaleFactorChanged { .. } => {
-                window.request_redraw();
+                window.request_next_frame();
             }
             WindowEvent::CursorMoved { position, .. } => {
                 let pos = Point::new(position.x as f32, position.y as f32);
                 self.current_cursor_position = Some(pos);
                 window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)));
-                window.request_redraw();
+                window.request_next_frame();
             }
             WindowEvent::MouseInput { state, button, .. } => {
                 if let Some(current_cursor_position) = self.current_cursor_position {
@@ -846,7 +846,7 @@ where
                             position: current_cursor_position,
                         },
                     )));
-                    window.request_redraw();
+                    window.request_next_frame();
                 }
             }
             WindowEvent::MouseWheel { delta, .. } => {
@@ -857,7 +857,7 @@ where
                 window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseScrollEvent(
                     scroll_delta,
                 )));
-                window.request_redraw();
+                window.request_next_frame();
             }
             WindowEvent::KeyboardInput { event, .. } => {
                 let modifiers = Modifiers {
@@ -896,7 +896,7 @@ where
                         ));
                     }
                 }
-                window.request_redraw();
+                window.request_next_frame();
             }
             WindowEvent::ModifiersChanged(mods) => {
                 self.current_modifiers = mods.state();
