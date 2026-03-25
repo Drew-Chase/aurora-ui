@@ -9,7 +9,7 @@ const TITLEBAR_BG: Color = Color::new(32, 32, 32, 255);
 fn main() {
     App::new()
         .title("Custom Titlebar Example")
-        .icon(include_bytes!("../icon.png"))
+        .icon(include_bytes!("../../../logo.png"))
         .min_size((310, 440))
         .position(WindowPosition::Center)
         .background_color(hsl!(0, 0.0, 0.1))
@@ -45,7 +45,7 @@ fn titlebar(window: std::sync::Arc<winit::window::Window>) -> impl Widget {
                             .height(TITLEBAR_HEIGHT as u32)
                             .child(
                                 TouchArea::new()
-                                    .child(Text::new(window.title()).color(Color::WHITE).justify(Justify::Center).padding(Edges::symmetric(13.0, 0.0)).font_size(13.0))
+                                    .child(Text::new(window.title()).color(Color::WHITE).justify(Justify::Center).padding(Edges::symmetric(13.0, 0.0)).height(TITLEBAR_HEIGHT).font_size(13.0))
                                     .on_mouse_down(move |button| {
                                         if button == MouseButton::Left {
                                             drag_handle
