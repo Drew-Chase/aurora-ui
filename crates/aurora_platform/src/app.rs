@@ -146,6 +146,7 @@ struct AppHandler<F> {
     current_modifiers: winit::keyboard::ModifiersState,
     benchmark: bool,
     start_time: std::time::Instant,
+    resized_this_cycle: bool,
 }
 
 /// Per-frame information passed to the render callback.
@@ -337,6 +338,7 @@ impl App {
             current_modifiers: winit::keyboard::ModifiersState::default(),
             benchmark,
             start_time,
+            resized_this_cycle: false,
         };
         let event_loop = winit::event_loop::EventLoop::new().map_err(AppError::from)?;
         event_loop
@@ -744,11 +746,16 @@ where
     }
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        // Skip animation render if we already rendered inline during a Resized event
+        // this cycle. Winit dispatches about_to_wait inside the Windows resize modal
+        // loop, and rendering here would block it, causing resize jank.
+        let resized = std::mem::take(&mut self.resized_this_cycle);
+
         let Some(window) = self.window.as_mut() else {
             return;
         };
 
-        if window.next_frame_requested {
+        if window.next_frame_requested && !resized {
             window.next_frame_requested = false;
 
             // Direct render — paints client area only, no WM_PAINT / window frame redraw
@@ -827,6 +834,7 @@ where
                 (self.on_render)(window, frame_info);
                 window.layout_and_paint();
                 window.present();
+                self.resized_this_cycle = true;
             }
             WindowEvent::ScaleFactorChanged { .. } => {
                 window.request_next_frame();
