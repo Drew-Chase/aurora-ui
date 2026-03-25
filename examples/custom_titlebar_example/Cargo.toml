@@ -4,4 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-aurora_ui = {path="../../aurora", features = ["software", "text"]}
+aurora_ui = {path="../../aurora", features = ["software", "text", "image"]}
+
+[build-dependencies]
+winresource = "0.1"
+image = { version = "0.25", default-features = false, features = ["png", "ico"] }

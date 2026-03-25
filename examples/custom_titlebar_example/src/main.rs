@@ -9,6 +9,7 @@ const TITLEBAR_BG: Color = Color::new(32, 32, 32, 255);
 fn main() {
     App::new()
         .title("Custom Titlebar Example")
+        .icon(include_bytes!("../icon.png"))
         .min_size((310, 440))
         .position(WindowPosition::Center)
         .background_color(hsl!(0, 0.0, 0.1))
