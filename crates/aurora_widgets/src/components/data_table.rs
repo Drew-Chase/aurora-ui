@@ -1,6 +1,5 @@
 use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::color::Color;
-use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::cursor_icon::CursorIcon;
@@ -208,7 +207,7 @@ impl Widget for DataTable {
 
         for (col, _) in self.column_widths.iter().enumerate() {
             let cell_x = rect.x1 + self.column_widths[..col].iter().sum::<f32>();
-            if let Some(Some(ref tl)) = self.header_layouts.get(col) {
+            if let Some(Some(tl)) = self.header_layouts.get(col) {
                 let th = tl.size().height;
                 let tx = cell_x + 12.0;
                 let ty = rect.y1 + (self.header_height - th) / 2.0;
@@ -237,7 +236,7 @@ impl Widget for DataTable {
 
             for (col, _) in self.column_widths.iter().enumerate() {
                 let cell_x = rect.x1 + self.column_widths[..col].iter().sum::<f32>();
-                if let Some(Some(ref tl)) = row_layouts.get(col) {
+                if let Some(Some(tl)) = row_layouts.get(col) {
                     let th = tl.size().height;
                     let tx = cell_x + 12.0;
                     let ty = row_y + (self.row_height - th) / 2.0;

@@ -154,7 +154,7 @@ impl Widget for Menubar {
                 canvas.fill_rect(menu_rect, self.hover_bg);
             }
 
-            if let Some(Some(ref tl)) = self.menu_layouts.get(i) {
+            if let Some(Some(tl)) = self.menu_layouts.get(i) {
                 let _s = tl.size(); let tw = _s.width; let th = _s.height;
                 let tx = menu_rect.x1 + (menu_rect.width() - tw) / 2.0;
                 let ty = menu_rect.y1 + (menu_rect.height() - th) / 2.0;
@@ -181,7 +181,7 @@ impl Widget for Menubar {
                         canvas.fill_rounded_rect(item_rect, item_corners, self.hover_bg);
                     }
 
-                    if let Some(ref tl) = layout {
+                    if let Some(tl) = layout {
                         let th = tl.size().height;
                         let tx = item_rect.x1 + 8.0;
                         let ty = iy + (self.item_height - th) / 2.0;

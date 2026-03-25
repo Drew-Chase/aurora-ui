@@ -1,7 +1,6 @@
 use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
-use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::cursor_icon::CursorIcon;
@@ -240,7 +239,7 @@ impl Widget for Calendar {
 
         // Prev button
         if let Some(ref tl) = self.prev_layout {
-            let _s = tl.size(); let tw = _s.width; let th = _s.height;
+            let _s = tl.size(); let _tw = _s.width; let th = _s.height;
             let tx = header_rect.x1 + 8.0;
             let ty = header_rect.y1 + (self.header_height - th) / 2.0;
             canvas.draw_text(tl, tx as i32, ty as i32);
@@ -265,7 +264,7 @@ impl Widget for Calendar {
         // Weekday headers
         let weekday_y = rect.y1 + self.header_height;
         for (col, layout) in self.weekday_layouts.iter().enumerate() {
-            if let Some(ref tl) = layout {
+            if let Some(tl) = layout {
                 let _s = tl.size(); let tw = _s.width; let th = _s.height;
                 let cx = rect.x1 + col as f32 * self.cell_size + self.cell_size / 2.0;
                 let tx = cx - tw / 2.0;
@@ -294,7 +293,7 @@ impl Widget for Calendar {
                 canvas.stroke_rounded_rect(cell_rect, self.corners, 1, colors::PRIMARY);
             }
 
-            if let Some(Some(ref tl)) = self.day_layouts.get((day - 1) as usize) {
+            if let Some(Some(tl)) = self.day_layouts.get((day - 1) as usize) {
                 let _s = tl.size(); let tw = _s.width; let th = _s.height;
                 let tx = cx + (self.cell_size - tw) / 2.0;
                 let ty = cy + (self.cell_size - th) / 2.0;

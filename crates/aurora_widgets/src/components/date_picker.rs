@@ -2,7 +2,6 @@ use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
-use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::cursor_icon::CursorIcon;
@@ -127,7 +126,7 @@ impl Widget for DatePicker {
             self.placeholder.clone()
         };
 
-        let text_color = if self.selected_day.is_some() {
+        let _text_color = if self.selected_day.is_some() {
             colors::FOREGROUND
         } else {
             colors::MUTED_FOREGROUND

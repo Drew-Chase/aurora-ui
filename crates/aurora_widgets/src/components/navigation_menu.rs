@@ -140,7 +140,7 @@ impl Widget for NavigationMenu {
             }
 
             // Label
-            if let Some(Some(ref tl)) = self.item_layouts.get(i) {
+            if let Some(Some(tl)) = self.item_layouts.get(i) {
                 let th = tl.size().height;
                 let tx = rect.x1 + self.indicator_width + 8.0 + self.padding_x;
                 let ty = y + (self.item_height - th) / 2.0;

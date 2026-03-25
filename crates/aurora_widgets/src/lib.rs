@@ -28,3 +28,7 @@ pub mod image_widget;
 /// SVG image widget (requires the `svg` feature).
 #[cfg(feature = "svg")]
 pub mod svg_widget;
+
+/// Component library — display, interactive, data, and overlay widgets.
+#[cfg(feature = "text")]
+pub mod components;

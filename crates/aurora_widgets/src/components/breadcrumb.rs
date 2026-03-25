@@ -1,6 +1,4 @@
 use crate::widgets::{EventResponse, LayoutCtx, Widget};
-use aurora_core::color::Color;
-use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::cursor_icon::CursorIcon;
@@ -122,7 +120,7 @@ impl Widget for Breadcrumb {
         let last_idx = self.items.len().saturating_sub(1);
 
         for (i, item_w) in self.item_widths.iter().enumerate() {
-            if let Some(Some(ref tl)) = self.item_layouts.get(i) {
+            if let Some(Some(tl)) = self.item_layouts.get(i) {
                 let th = tl.size().height;
                 let ty = rect.y1 + (rect.height() - th) / 2.0;
                 canvas.draw_text(tl, x as i32, ty as i32);
@@ -131,7 +129,7 @@ impl Widget for Breadcrumb {
 
             if i < last_idx {
                 x += self.spacing;
-                if let Some(Some(ref sep_tl)) = self.separator_layouts.get(i) {
+                if let Some(Some(sep_tl)) = self.separator_layouts.get(i) {
                     let sh = sep_tl.size().height;
                     let sy = rect.y1 + (rect.height() - sh) / 2.0;
                     canvas.draw_text(sep_tl, x as i32, sy as i32);

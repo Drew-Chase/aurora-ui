@@ -1,5 +1,4 @@
 use crate::widgets::{EventResponse, LayoutCtx, Widget};
-use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
@@ -163,7 +162,7 @@ impl Widget for Pagination {
                 canvas.stroke_rounded_rect(btn_rect, self.corners, 1, colors::BORDER);
             }
 
-            if let Some(Some(ref tl)) = self.page_layouts.get(i) {
+            if let Some(Some(tl)) = self.page_layouts.get(i) {
                 let _s = tl.size(); let tw = _s.width; let th = _s.height;
                 let tx = btn_rect.x1 + (self.button_size - tw) / 2.0;
                 let ty = btn_rect.y1 + (self.button_size - th) / 2.0;

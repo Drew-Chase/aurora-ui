@@ -146,7 +146,7 @@ impl Widget for Tabs {
             let is_selected = i == self.selected;
 
             // Tab label
-            if let Some(Some(ref tl)) = self.tab_layouts.get(i) {
+            if let Some(Some(tl)) = self.tab_layouts.get(i) {
                 let _s = tl.size(); let tw = _s.width; let th = _s.height;
                 let tx = tab_rect.x1 + (tab_rect.width() - tw) / 2.0;
                 let ty = tab_rect.y1 + (tab_rect.height() - th) / 2.0;

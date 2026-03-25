@@ -137,7 +137,7 @@ impl Widget for Select {
             self.placeholder.clone()
         };
 
-        let text_color = if self.selected.is_some() {
+        let _text_color = if self.selected.is_some() {
             colors::FOREGROUND
         } else {
             colors::MUTED_FOREGROUND
@@ -215,7 +215,7 @@ impl Widget for Select {
                 canvas.fill_rounded_rect(item_rect, item_corners, self.hover_bg);
             }
 
-            if let Some(Some(ref tl)) = self.option_layouts.get(i) {
+            if let Some(Some(tl)) = self.option_layouts.get(i) {
                 let th = tl.size().height;
                 let tx = item_rect.x1 + 8.0;
                 let ty = y + (self.item_height - th) / 2.0;

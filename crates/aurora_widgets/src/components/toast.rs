@@ -126,7 +126,7 @@ impl Toast {
 }
 
 impl Widget for Toast {
-    fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
+    fn layout(&mut self, _available: Size, ctx: &mut LayoutCtx) -> Size {
         if !self.visible {
             return Size::new(0.0, 0.0);
         }

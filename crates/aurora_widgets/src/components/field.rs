@@ -1,5 +1,4 @@
 use crate::widgets::{EventResponse, LayoutCtx, Widget};
-use aurora_core::color::Color;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::WidgetEvent;

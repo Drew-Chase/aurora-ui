@@ -4,7 +4,7 @@ use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::cursor_icon::CursorIcon;
-use aurora_core::kmi::keyboard::{Key, KeyboardEvent, Modifiers};
+use aurora_core::kmi::keyboard::{Key, KeyboardEvent};
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
@@ -142,7 +142,7 @@ impl Widget for InputOtp {
             canvas.stroke_rounded_rect(cell_rect, self.corners, 1, border);
 
             // Character
-            if let Some(Some(ref tl)) = self.char_layouts.get(i) {
+            if let Some(Some(tl)) = self.char_layouts.get(i) {
                 let _s = tl.size(); let tw = _s.width; let th = _s.height;
                 let tx = cell_rect.x1 + (self.cell_size - tw) / 2.0;
                 let ty = cell_rect.y1 + (self.cell_size - th) / 2.0;

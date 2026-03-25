@@ -144,7 +144,7 @@ impl Widget for Command {
         } else {
             self.search.clone()
         };
-        let text_color = if self.search.is_empty() {
+        let _text_color = if self.search.is_empty() {
             colors::MUTED_FOREGROUND
         } else {
             colors::FOREGROUND
@@ -219,7 +219,7 @@ impl Widget for Command {
                 canvas.fill_rounded_rect(item_rect, item_corners, self.hover_bg);
             }
 
-            if let Some(Some(ref tl)) = self.item_layouts.get(i) {
+            if let Some(Some(tl)) = self.item_layouts.get(i) {
                 let th = tl.size().height;
                 let tx = item_rect.x1 + 8.0;
                 let ty = y + (self.item_height - th) / 2.0;

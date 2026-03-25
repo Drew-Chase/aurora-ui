@@ -98,7 +98,7 @@ impl Widget for ButtonGroup {
         let mut total_w = 0.0;
 
         for (i, label) in self.buttons.iter().enumerate() {
-            let is_selected = self.selected == Some(i);
+            let _is_selected = self.selected == Some(i);
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
@@ -138,7 +138,7 @@ impl Widget for ButtonGroup {
             }
 
             // Label
-            if let Some(Some(ref tl)) = self.button_layouts.get(i) {
+            if let Some(Some(tl)) = self.button_layouts.get(i) {
                 let _s = tl.size(); let tw = _s.width; let th = _s.height;
                 let tx = btn_rect.x1 + (btn_rect.width() - tw) / 2.0;
                 let ty = btn_rect.y1 + (btn_rect.height() - th) / 2.0;

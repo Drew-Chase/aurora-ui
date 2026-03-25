@@ -4,7 +4,6 @@ use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
-use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
@@ -121,7 +120,7 @@ impl Dialog {
     }
 
     fn dialog_rect(&self, viewport: &Rect) -> Rect {
-        let inner_w = self.width - self.padding.left - self.padding.right;
+        let _inner_w = self.width - self.padding.left - self.padding.right;
         let mut total_h = self.padding.top;
         if self.title.is_some() {
             total_h += self.title_height + 16.0;
