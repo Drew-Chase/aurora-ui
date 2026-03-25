@@ -6,8 +6,11 @@ use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
+use std::time::Instant;
 
 use super::colors;
+
+const ANIM_DURATION: f32 = 0.2; // seconds
 
 /// A tab bar with switchable content panels.
 ///
@@ -31,6 +34,12 @@ pub struct Tabs {
     tab_layouts: Vec<Option<aurora_text::text_layout::TextLayout>>,
     tab_widths: Vec<f32>,
     content_sizes: Vec<Size>,
+    /// Animated indicator x-position (left edge)
+    indicator_from_x: f32,
+    indicator_from_w: f32,
+    indicator_to_x: f32,
+    indicator_to_w: f32,
+    indicator_anim_start: Instant,
 }
 
 struct TabEntry {
@@ -52,6 +61,11 @@ impl Tabs {
             tab_layouts: Vec::new(),
             tab_widths: Vec::new(),
             content_sizes: Vec::new(),
+            indicator_from_x: 0.0,
+            indicator_from_w: 0.0,
+            indicator_to_x: 0.0,
+            indicator_to_w: 0.0,
+            indicator_anim_start: Instant::now(),
         }
     }
 
@@ -86,6 +100,27 @@ impl Tabs {
     pub fn on_change(mut self, cb: impl FnMut(usize) + 'static) -> Self {
         self.on_change = Some(Box::new(cb));
         self
+    }
+
+    /// Returns the (x, width) of tab at `index`, offset from `base_x`.
+    fn tab_x_and_width(&self, index: usize, base_x: f32) -> (f32, f32) {
+        let mut x = base_x;
+        for (i, tw) in self.tab_widths.iter().enumerate() {
+            if i == index {
+                return (x, *tw);
+            }
+            x += tw;
+        }
+        (base_x, 0.0)
+    }
+
+    fn current_indicator(&self) -> (f32, f32) {
+        let elapsed = self.indicator_anim_start.elapsed().as_secs_f32();
+        let t = (elapsed / ANIM_DURATION).min(1.0);
+        let eased = 1.0 - (1.0 - t).powi(3);
+        let ix = self.indicator_from_x + (self.indicator_to_x - self.indicator_from_x) * eased;
+        let iw = self.indicator_from_w + (self.indicator_to_w - self.indicator_from_w) * eased;
+        (ix, iw)
     }
 }
 
@@ -127,6 +162,15 @@ impl Widget for Tabs {
             }
         }
 
+        // Initialize indicator position if not yet animated
+        if self.indicator_anim_start.elapsed().as_secs_f32() >= ANIM_DURATION {
+            let (tx, tw) = self.tab_x_and_width(self.selected, 0.0);
+            self.indicator_to_x = tx;
+            self.indicator_to_w = tw;
+            self.indicator_from_x = tx;
+            self.indicator_from_w = tw;
+        }
+
         let h = self.tab_height + max_content_h;
         Size::new(w, h)
     }
@@ -153,20 +197,25 @@ impl Widget for Tabs {
                 canvas.draw_text(tl, tx as i32, ty as i32);
             }
 
-            // Active indicator
-            if is_selected {
-                canvas.fill_rect(
-                    Rect::new(
-                        tab_rect.x1,
-                        tab_bar_bottom - self.indicator_height,
-                        tab_rect.x2,
-                        tab_bar_bottom,
-                    ),
-                    self.indicator_color,
-                );
-            }
-
             x += tab_w;
+        }
+
+        // Animated indicator
+        if !self.tab_widths.is_empty() {
+            let elapsed = self.indicator_anim_start.elapsed().as_secs_f32();
+            let t = (elapsed / ANIM_DURATION).min(1.0);
+            let eased = 1.0 - (1.0 - t).powi(3);
+            let ix = self.indicator_from_x + (self.indicator_to_x - self.indicator_from_x) * eased;
+            let iw = self.indicator_from_w + (self.indicator_to_w - self.indicator_from_w) * eased;
+            canvas.fill_rect(
+                Rect::new(
+                    ix,
+                    tab_bar_bottom - self.indicator_height,
+                    ix + iw,
+                    tab_bar_bottom,
+                ),
+                self.indicator_color,
+            );
         }
 
         // Paint selected content
@@ -199,6 +248,15 @@ impl Widget for Tabs {
                     for (i, tab_w) in self.tab_widths.iter().enumerate() {
                         let tab_rect = Rect::new(x, rect.y1, x + tab_w, tab_bar_bottom);
                         if tab_rect.contains(&e.position) {
+                            // Start indicator slide animation
+                            let (cur_x, cur_w) = self.current_indicator();
+                            self.indicator_from_x = cur_x;
+                            self.indicator_from_w = cur_w;
+                            let (to_x, to_w) = self.tab_x_and_width(i, rect.x1);
+                            self.indicator_to_x = to_x;
+                            self.indicator_to_w = to_w;
+                            self.indicator_anim_start = Instant::now();
+
                             self.selected = i;
                             if let Some(ref mut cb) = self.on_change {
                                 cb(i);
@@ -266,5 +324,9 @@ impl Widget for Tabs {
                 EventResponse::default()
             }
         }
+    }
+
+    fn needs_animation(&self) -> bool {
+        self.indicator_anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
 }
