@@ -1,7 +1,8 @@
-use crate::widgets::{LayoutCtx, Widget};
+use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 /// An overlay container that layers children on top of each other.
@@ -109,5 +110,15 @@ impl Widget for Stack {
 
     fn children(&self) -> &[Box<dyn Widget>] {
         &self.children
+    }
+
+    fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
+        for child in &mut self.children {
+            let response = child.event(_event, _rect);
+            if response.handled {
+                return response;
+            }
+        }
+        EventResponse::default()
     }
 }
