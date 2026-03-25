@@ -58,55 +58,102 @@ fn main() {
         .expect("Failed to run app");
 }
 
+/// App state: selected page + selected theme profile.
+#[derive(Clone, Copy)]
+struct GalleryState {
+    page: usize,
+    profile: usize,
+}
+
 fn gallery() -> impl Widget {
-    Composite::new(0usize, move |&page_index, set_state| {
-        Box::new(
-            row!()
-                .align(Align::Stretch)
-                // Sidebar
-                .child(sidebar_widget(page_index, set_state.clone()))
-                // Main content
-                .child(content_area(page_index)),
-        )
-    })
+    Composite::new(
+        GalleryState { page: 0, profile: 0 },
+        move |state, set_state| {
+            // Apply the selected theme profile
+            theme::set(unsafe {
+                std::mem::transmute::<usize, theme::ProfileId>(
+                    state.profile.min(theme::profile_count() - 1),
+                )
+            });
+
+            Box::new(
+                row!()
+                    .align(Align::Stretch)
+                    .child(sidebar_widget(state.page, state.profile, set_state.clone()))
+                    .child(content_area(state.page)),
+            )
+        },
+    )
 }
 
 // ---------------------------------------------------------------------------
 // Sidebar
 // ---------------------------------------------------------------------------
 
-fn sidebar_widget(active: usize, setter: StateSetter<usize>) -> impl Widget {
-    let mut sidebar = col!()
+fn sidebar_widget(
+    active_page: usize,
+    active_profile: usize,
+    setter: StateSetter<GalleryState>,
+) -> impl Widget {
+    // Theme profile dropdown
+    let profile_setter = setter.clone();
+    let theme_select = select::Select::new()
+        .placeholder("Theme")
+        .option("Dark")
+        .option("Candy")
+        .option("Light")
+        .selected(active_profile)
+        .width(196.0)
+        .height(32.0)
+        .on_change(move |idx| {
+            profile_setter.set(move |s| s.profile = idx);
+        });
+
+    // Scrollable component list
+    let mut items = col!()
         .width(220)
-        .padding(Edges::new(16.0, 12.0, 16.0, 12.0))
+        .padding(Edges::new(0.0, 12.0, 16.0, 12.0))
         .spacing(2.0);
 
-    // Title
-    sidebar = sidebar.child(
-        Text::new("Components")
-            .font_size(13.0)
-            .font_weight(FontWeight::SemiBold)
-            .color(Color::new(161, 161, 170, 255))
-            .padding(Edges::new(8.0, 8.0, 16.0, 8.0)),
-    );
-
     for (i, name) in PAGES.iter().enumerate() {
-        let is_active = i == active;
+        let is_active = i == active_page;
         let set = setter.clone();
-        sidebar = sidebar.child(sidebar_item(name, is_active, move || {
+        items = items.child(sidebar_item(name, is_active, move || {
             let set = set.clone();
-            set.set(move |state| *state = i);
+            set.set(move |s| s.page = i);
         }));
     }
 
+    // Layout: fixed header (dropdown + title) above scrollable list
     BoxWidget::new()
         .width(220)
         .background_color(Color::new(15, 15, 15, 255))
         .child(
-            ScrollView::new()
-                .scrollbar_width(4.0)
-                .scrollbar_thumb_color(Color::WHITE.opacity(0.5))
-                .child(sidebar),
+            col!()
+                .width(220)
+                .spacing(0.0)
+                // Fixed header: dropdown + "Components" label
+                .child(
+                    col!()
+                        .width(220)
+                        .padding(Edges::new(12.0, 12.0, 0.0, 12.0))
+                        .spacing(12.0)
+                        .child(theme_select)
+                        .child(
+                            Text::new("Components")
+                                .font_size(13.0)
+                                .font_weight(FontWeight::SemiBold)
+                                .color(Color::new(161, 161, 170, 255))
+                                .padding(Edges::new(0.0, 8.0, 4.0, 8.0)),
+                        ),
+                )
+                // Scrollable item list
+                .child(
+                    ScrollView::new()
+                        .scrollbar_width(4.0)
+                        .scrollbar_thumb_color(Color::WHITE.opacity(0.5))
+                        .child(items),
+                ),
         )
 }
 
