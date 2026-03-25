@@ -8,8 +8,11 @@ use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
+use std::time::Instant;
 
 use super::colors;
+
+const ANIM_DURATION: f32 = 0.2; // seconds
 
 /// A single section in an accordion.
 struct AccordionSection {
@@ -18,10 +21,32 @@ struct AccordionSection {
     expanded: bool,
     title_layout: Option<aurora_text::text_layout::TextLayout>,
     content_size: Size,
+    /// 0.0 = collapsed, 1.0 = expanded
+    anim_from: f32,
+    anim_to: f32,
+    anim_start: Instant,
+}
+
+impl AccordionSection {
+    fn current_t(&self) -> f32 {
+        let elapsed = self.anim_start.elapsed().as_secs_f32();
+        let t = (elapsed / ANIM_DURATION).min(1.0);
+        let eased = 1.0 - (1.0 - t).powi(3);
+        self.anim_from + (self.anim_to - self.anim_from) * eased
+    }
+
+    fn is_animating(&self) -> bool {
+        self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
+    }
+
+    fn visible_content_height(&self, padding: &Edges) -> f32 {
+        let t = self.current_t();
+        (padding.top + self.content_size.height + padding.bottom) * t
+    }
 }
 
 /// Expandable sections with a title and content. Click a section title to toggle
-/// its content visibility.
+/// its content visibility. Content animates open and closed.
 ///
 /// # Example
 /// ```ignore
@@ -66,6 +91,9 @@ impl Accordion {
             expanded: false,
             title_layout: None,
             content_size: Size::default(),
+            anim_from: 0.0,
+            anim_to: 0.0,
+            anim_start: Instant::now(),
         });
         self
     }
@@ -73,6 +101,8 @@ impl Accordion {
     pub fn expanded(mut self, index: usize) -> Self {
         if let Some(section) = self.sections.get_mut(index) {
             section.expanded = true;
+            section.anim_from = 1.0;
+            section.anim_to = 1.0;
         }
         self
     }
@@ -103,12 +133,7 @@ impl Accordion {
     }
 
     fn section_height(&self, i: usize) -> f32 {
-        let s = &self.sections[i];
-        let mut h = self.header_height;
-        if s.expanded {
-            h += self.content_padding.top + s.content_size.height + self.content_padding.bottom;
-        }
-        h
+        self.header_height + self.sections[i].visible_content_height(&self.content_padding)
     }
 }
 
@@ -134,16 +159,12 @@ impl Widget for Accordion {
             );
             section.title_layout = Some(tl);
 
-            // Layout content
-            if section.expanded {
-                let content_available = Size::new(inner_w.max(0.0), f32::MAX);
-                section.content_size = section.content.layout(content_available, ctx);
-            }
+            // Always layout content so we know its height for animation
+            let content_available = Size::new(inner_w.max(0.0), f32::MAX);
+            section.content_size = section.content.layout(content_available, ctx);
 
             total_h += self.header_height;
-            if section.expanded {
-                total_h += self.content_padding.top + section.content_size.height + self.content_padding.bottom;
-            }
+            total_h += section.visible_content_height(&self.content_padding);
             if i > 0 {
                 total_h += self.spacing;
             }
@@ -161,6 +182,7 @@ impl Widget for Accordion {
             }
 
             let sec_h = self.section_height(i);
+            let t = section.current_t();
 
             // Header background
             if self.header_bg.alpha > 0 {
@@ -176,32 +198,30 @@ impl Widget for Accordion {
                 canvas.draw_text(tl, tx as i32, ty as i32);
             }
 
-            // Chevron indicator
+            // Animated chevron: rotates from right-pointing to down-pointing
             let chevron_x = rect.x2 - self.header_padding.right - 10.0;
             let chevron_cy = y + self.header_height / 2.0;
-            if section.expanded {
-                canvas.draw_line(
-                    Point::new(chevron_x - 4.0, chevron_cy - 2.0),
-                    Point::new(chevron_x, chevron_cy + 2.0),
-                    1, colors::MUTED_FOREGROUND,
-                );
-                canvas.draw_line(
-                    Point::new(chevron_x, chevron_cy + 2.0),
-                    Point::new(chevron_x + 4.0, chevron_cy - 2.0),
-                    1, colors::MUTED_FOREGROUND,
-                );
-            } else {
-                canvas.draw_line(
-                    Point::new(chevron_x - 2.0, chevron_cy - 4.0),
-                    Point::new(chevron_x + 2.0, chevron_cy),
-                    1, colors::MUTED_FOREGROUND,
-                );
-                canvas.draw_line(
-                    Point::new(chevron_x + 2.0, chevron_cy),
-                    Point::new(chevron_x - 2.0, chevron_cy + 4.0),
-                    1, colors::MUTED_FOREGROUND,
-                );
-            }
+            // Interpolate rotation: t=0 → right chevron, t=1 → down chevron
+            let angle = t * std::f32::consts::FRAC_PI_2; // 0 to 90 degrees
+            let cos_a = angle.cos();
+            let sin_a = angle.sin();
+            // Right-pointing chevron points: (-2,-4)->(2,0) and (2,0)->(-2,4)
+            let rotate = |dx: f32, dy: f32| -> (f32, f32) {
+                (dx * cos_a - dy * sin_a, dx * sin_a + dy * cos_a)
+            };
+            let (dx1, dy1) = rotate(-2.0, -4.0);
+            let (dx2, dy2) = rotate(2.0, 0.0);
+            let (dx3, dy3) = rotate(-2.0, 4.0);
+            canvas.draw_line(
+                Point::new(chevron_x + dx1, chevron_cy + dy1),
+                Point::new(chevron_x + dx2, chevron_cy + dy2),
+                1, colors::MUTED_FOREGROUND,
+            );
+            canvas.draw_line(
+                Point::new(chevron_x + dx2, chevron_cy + dy2),
+                Point::new(chevron_x + dx3, chevron_cy + dy3),
+                1, colors::MUTED_FOREGROUND,
+            );
 
             // Bottom border
             let border_y = y + self.header_height;
@@ -210,9 +230,14 @@ impl Widget for Accordion {
                 self.border_color,
             );
 
-            // Content
-            if section.expanded {
-                let content_y = y + self.header_height + self.content_padding.top;
+            // Content (clipped for animation)
+            if t > 0.0 {
+                let content_area_top = y + self.header_height;
+                let visible_h = section.visible_content_height(&self.content_padding);
+                let clip = Rect::new(rect.x1, content_area_top, rect.x2, content_area_top + visible_h);
+                canvas.push_clip(clip);
+
+                let content_y = content_area_top + self.content_padding.top;
                 let content_rect = Rect::new(
                     rect.x1 + self.content_padding.left,
                     content_y,
@@ -220,6 +245,8 @@ impl Widget for Accordion {
                     content_y + section.content_size.height,
                 );
                 section.content.paint(canvas, content_rect);
+
+                canvas.pop_clip();
             }
 
             y += sec_h;
@@ -247,10 +274,16 @@ impl Widget for Accordion {
                             for j in 0..self.sections.len() {
                                 if j != i {
                                     self.sections[j].expanded = false;
+                                    self.sections[j].anim_from = self.sections[j].current_t();
+                                    self.sections[j].anim_to = 0.0;
+                                    self.sections[j].anim_start = Instant::now();
                                 }
                             }
                         }
                         self.sections[i].expanded = new_state;
+                        self.sections[i].anim_from = self.sections[i].current_t();
+                        self.sections[i].anim_to = if new_state { 1.0 } else { 0.0 };
+                        self.sections[i].anim_start = Instant::now();
                         if let Some(ref mut cb) = self.on_change {
                             cb(i, self.sections[i].expanded);
                         }
@@ -330,5 +363,9 @@ impl Widget for Accordion {
                 EventResponse::default()
             }
         }
+    }
+
+    fn needs_animation(&self) -> bool {
+        self.sections.iter().any(|s| s.is_animating())
     }
 }
