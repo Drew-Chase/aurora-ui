@@ -451,16 +451,17 @@ impl AppWindow {
             if let Some(pos) = self.last_mouse_position {
                 let rect = Rect::from_size(available);
                 let response = widget.event(&WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)), rect);
-                let cursor = response.cursor.unwrap_or(CursorIcon::Default);
-                let winit_cursor = match cursor {
-                    CursorIcon::Default => winit::window::CursorIcon::Default,
-                    CursorIcon::Pointer => winit::window::CursorIcon::Pointer,
-                    CursorIcon::Text => winit::window::CursorIcon::Text,
-                    CursorIcon::Grab => winit::window::CursorIcon::Grab,
-                    CursorIcon::Grabbing => winit::window::CursorIcon::Grabbing,
-                    CursorIcon::NotAllowed => winit::window::CursorIcon::NotAllowed,
-                };
-                self.window_handle.set_cursor(winit_cursor);
+                if let Some(cursor) = response.cursor {
+                    let winit_cursor = match cursor {
+                        CursorIcon::Default => winit::window::CursorIcon::Default,
+                        CursorIcon::Pointer => winit::window::CursorIcon::Pointer,
+                        CursorIcon::Text => winit::window::CursorIcon::Text,
+                        CursorIcon::Grab => winit::window::CursorIcon::Grab,
+                        CursorIcon::Grabbing => winit::window::CursorIcon::Grabbing,
+                        CursorIcon::NotAllowed => winit::window::CursorIcon::NotAllowed,
+                    };
+                    self.window_handle.set_cursor(winit_cursor);
+                }
 
                 // Re-layout if hover dirtied any composites
                 {
