@@ -7,6 +7,7 @@ edition = "2024"
 aurora_core = { path = "../aurora_core" }
 aurora_macros = { path = "../aurora_macros" }
 aurora_render = { path = "../aurora_render" }
+aurora_theme = { path = "../aurora_theme" }
 aurora_text = { path = "../aurora_text", optional = true }
 
 

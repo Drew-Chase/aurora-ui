@@ -13,3 +13,5 @@ pub use aurora_text;
 #[cfg(feature = "animate")]
 pub use aurora_animate;
 pub use aurora_widgets;
+pub use aurora_theme;
+pub use aurora_theming;
