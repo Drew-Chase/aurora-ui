@@ -22,6 +22,7 @@ use crate::geometry::size::Size;
 /// assert_eq!(margin.vertical(), 32.0);
 /// ```
 #[derive(Copy, Clone, Debug, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Edges {
     pub top: f32,
     pub right: f32,

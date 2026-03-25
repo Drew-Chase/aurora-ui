@@ -25,6 +25,7 @@
 /// c.top_mut(8.0).left_mut(4.0);
 /// ```
 #[derive(Copy, Clone, Debug, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Corners {
     pub top_left: f32,
     pub top_right: f32,

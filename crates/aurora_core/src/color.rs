@@ -17,6 +17,7 @@ pub trait IntoColor {
 /// Colors can be constructed from hex values, RGB/RGBA components, or HSL/HSLA values.
 /// The [`Display`] implementation formats the color as a CSS-style `#rrggbb` hex string.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Color {
     /// Red channel (0–255).
     pub red: u8,
