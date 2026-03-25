@@ -13,7 +13,7 @@ fn main() {
             let mut res = winresource::WindowsResource::new();
             res.set_icon(ico_path.to_str().unwrap());
             res.compile().expect("Failed to compile Windows resources");
-        }else{
+        } else {
             panic!("Failed to find icon: {}", png_path.display());
         }
     }
