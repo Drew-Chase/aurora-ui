@@ -1,8 +1,9 @@
-use crate::widgets::{LayoutCtx, Widget};
+use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 /// A basic rectangular container with background color, corner radii, and optional child.
@@ -116,6 +117,15 @@ impl Widget for BoxWidget {
         match &self.child {
             Some(child) => std::slice::from_ref(child),
             None => &[]
+        }
+    }
+
+    fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        if let Some(child) = &mut self.child {
+            let translated = self.child_rect.translate(&rect.origin());
+            child.event(event, translated)
+        } else {
+            EventResponse::default()
         }
     }
 }
