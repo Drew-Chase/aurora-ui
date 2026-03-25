@@ -1,0 +1,197 @@
+use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use aurora_core::color::Color;
+use aurora_core::geometry::corners::Corners;
+use aurora_core::geometry::rect::Rect;
+use aurora_core::geometry::size::Size;
+use aurora_core::kmi::cursor_icon::CursorIcon;
+use aurora_core::kmi::mouse::{MouseEvent, MouseState};
+use aurora_core::kmi::WidgetEvent;
+use aurora_render::canvas::Canvas;
+
+use super::colors;
+
+/// A group of buttons arranged in a row with shared borders.
+///
+/// # Example
+/// ```ignore
+/// ButtonGroup::new()
+///     .button("Left")
+///     .button("Center")
+///     .button("Right")
+///     .selected(0)
+///     .on_click(|idx| println!("clicked: {idx}"))
+/// ```
+pub struct ButtonGroup {
+    buttons: Vec<String>,
+    selected: Option<usize>,
+    height: f32,
+    padding: f32,
+    border_color: Color,
+    selected_bg: Color,
+    selected_fg: Color,
+    normal_fg: Color,
+    corners: Corners,
+    on_click: Option<Box<dyn FnMut(usize)>>,
+    button_layouts: Vec<Option<aurora_text::text_layout::TextLayout>>,
+    button_widths: Vec<f32>,
+}
+
+impl ButtonGroup {
+    pub fn new() -> Self {
+        Self {
+            buttons: Vec::new(),
+            selected: None,
+            height: 36.0,
+            padding: 16.0,
+            border_color: colors::BORDER,
+            selected_bg: colors::PRIMARY,
+            selected_fg: colors::PRIMARY_FOREGROUND,
+            normal_fg: colors::FOREGROUND,
+            corners: Corners::all(6.0),
+            on_click: None,
+            button_layouts: Vec::new(),
+            button_widths: Vec::new(),
+        }
+    }
+
+    pub fn button(mut self, label: impl Into<String>) -> Self {
+        self.buttons.push(label.into());
+        self
+    }
+
+    pub fn selected(mut self, index: usize) -> Self {
+        self.selected = Some(index);
+        self
+    }
+
+    pub fn height(mut self, height: f32) -> Self {
+        self.height = height;
+        self
+    }
+
+    pub fn corners(mut self, corners: Corners) -> Self {
+        self.corners = corners;
+        self
+    }
+
+    pub fn selected_bg(mut self, color: Color) -> Self {
+        self.selected_bg = color;
+        self
+    }
+
+    pub fn on_click(mut self, cb: impl FnMut(usize) + 'static) -> Self {
+        self.on_click = Some(Box::new(cb));
+        self
+    }
+}
+
+impl Default for ButtonGroup {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Widget for ButtonGroup {
+    fn layout(&mut self, _available: Size, ctx: &mut LayoutCtx) -> Size {
+        self.button_layouts.clear();
+        self.button_widths.clear();
+        let mut total_w = 0.0;
+
+        for (i, label) in self.buttons.iter().enumerate() {
+            let is_selected = self.selected == Some(i);
+            let mut opts = ctx.font_options.clone();
+            opts.size = Some(14.0);
+            opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, colors::FOREGROUND, None);
+            tl.set_max_width(ctx.font_manager, f32::MAX);
+            let tw = tl.size().width;
+            let btn_w = tw + self.padding * 2.0;
+            self.button_widths.push(btn_w);
+            total_w += btn_w;
+            self.button_layouts.push(Some(tl));
+        }
+
+        Size::new(total_w, self.height)
+    }
+
+    fn paint(&self, canvas: &mut Canvas, rect: Rect) {
+        // Outer border
+        canvas.stroke_rounded_rect(rect, self.corners, 1, self.border_color);
+
+        let mut x = rect.x1;
+        for (i, btn_w) in self.button_widths.iter().enumerate() {
+            let btn_rect = Rect::new(x, rect.y1, x + btn_w, rect.y2);
+            let is_selected = self.selected == Some(i);
+
+            if is_selected {
+                // Use rounded corners only for first/last, square for middle
+                let btn_corners = if i == 0 && self.buttons.len() == 1 {
+                    self.corners
+                } else if i == 0 {
+                    Corners::new(self.corners.top_left, 0.0, 0.0, self.corners.bottom_left)
+                } else if i == self.buttons.len() - 1 {
+                    Corners::new(0.0, self.corners.top_right, self.corners.bottom_right, 0.0)
+                } else {
+                    Corners::zero()
+                };
+                canvas.fill_rounded_rect(btn_rect, btn_corners, self.selected_bg);
+            }
+
+            // Label
+            if let Some(Some(ref tl)) = self.button_layouts.get(i) {
+                let _s = tl.size(); let tw = _s.width; let th = _s.height;
+                let tx = btn_rect.x1 + (btn_rect.width() - tw) / 2.0;
+                let ty = btn_rect.y1 + (btn_rect.height() - th) / 2.0;
+                canvas.draw_text(tl, tx as i32, ty as i32);
+            }
+
+            // Vertical separator between buttons (except last)
+            if i < self.buttons.len() - 1 {
+                let sep_x = x + btn_w;
+                canvas.fill_rect(
+                    Rect::new(sep_x - 0.5, rect.y1 + 2.0, sep_x + 0.5, rect.y2 - 2.0),
+                    self.border_color,
+                );
+            }
+
+            x += btn_w;
+        }
+    }
+
+    fn children(&self) -> &[Box<dyn Widget>] {
+        &[]
+    }
+
+    fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        match event {
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
+                if e.state == MouseState::Pressed && rect.contains(&e.position) =>
+            {
+                let mut x = rect.x1;
+                for (i, btn_w) in self.button_widths.iter().enumerate() {
+                    let btn_rect = Rect::new(x, rect.y1, x + btn_w, rect.y2);
+                    if btn_rect.contains(&e.position) {
+                        self.selected = Some(i);
+                        if let Some(ref mut cb) = self.on_click {
+                            cb(i);
+                        }
+                        return EventResponse {
+                            handled: true,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
+                    }
+                    x += btn_w;
+                }
+                EventResponse::default()
+            }
+            WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) if rect.contains(pos) => {
+                EventResponse {
+                    cursor: Some(CursorIcon::Pointer),
+                    ..Default::default()
+                }
+            }
+            _ => EventResponse::default(),
+        }
+    }
+}
