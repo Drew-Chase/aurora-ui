@@ -165,12 +165,6 @@ pub fn config(input: TokenStream) -> TokenStream {
     let corner_refs: Vec<_> = (0..num_profiles).map(|i| { let n = format_ident!("CORNERS_{}", i); quote! { &#n } }).collect();
     let value_refs: Vec<_> = (0..num_profiles).map(|i| { let n = format_ident!("VALUES_{}", i); quote! { &#n } }).collect();
 
-    // Bare names for init()
-    let color_names: Vec<_> = (0..num_profiles).map(|i| format_ident!("COLORS_{}", i)).collect();
-    let edge_names: Vec<_> = (0..num_profiles).map(|i| format_ident!("EDGES_{}", i)).collect();
-    let corner_names: Vec<_> = (0..num_profiles).map(|i| format_ident!("CORNERS_{}", i)).collect();
-    let value_names: Vec<_> = (0..num_profiles).map(|i| format_ident!("VALUES_{}", i)).collect();
-
     // Accessor functions per key
     let color_fns: Vec<_> = color_keys.iter().enumerate().map(|(i, key)| {
         let fn_name = format_ident!("{}", key);
@@ -195,10 +189,6 @@ pub fn config(input: TokenStream) -> TokenStream {
     let output = quote! {
         #[allow(dead_code)]
         pub mod theme {
-            // Track the theme file for cargo rebuild detection.
-            // The file content is NOT stored — only used for change detection.
-            const _: &[u8] = include_bytes!(#abs_path_str);
-
             #[derive(Debug, Clone, Copy, PartialEq, Eq)]
             #[repr(usize)]
             pub enum ProfileId {
@@ -221,7 +211,6 @@ pub fn config(input: TokenStream) -> TokenStream {
                 NAMES[id as usize]
             }
 
-            // Static profile data
             #(#color_arrays)*
             #(#edge_arrays)*
             #(#corner_arrays)*
@@ -231,17 +220,6 @@ pub fn config(input: TokenStream) -> TokenStream {
             static PROFILE_EDGES: [&[aurora_theme::Edges; #num_edges]; #num_profiles] = [#(#edge_refs),*];
             static PROFILE_CORNERS: [&[aurora_theme::Corners; #num_corners]; #num_profiles] = [#(#corner_refs),*];
             static PROFILE_VALUES: [&[f32; #num_values]; #num_profiles] = [#(#value_refs),*];
-
-            /// Initialize the aurora_theme runtime with this theme's data.
-            pub fn init() {
-                aurora_theme::init(aurora_theme::ThemeData {
-                    profile_names: vec![#(#name_strs),*],
-                    colors: vec![#(#color_names.to_vec()),*],
-                    edges: vec![#(#edge_names.to_vec()),*],
-                    corners: vec![#(#corner_names.to_vec()),*],
-                    values: vec![#(#value_names.to_vec()),*],
-                });
-            }
 
             pub mod colors {
                 use super::*;
