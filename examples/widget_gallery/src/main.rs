@@ -10,6 +10,7 @@ fn main() {
         .title("Aurora Widget Gallery")
         .size((900, 700))
         .position(WindowPosition::Center)
+        .resizable(false)
         .use_system_fonts()
         .font_options(FontOptions::new().family("Segoe UI"))
         .run(move |window, _frame_info| {
