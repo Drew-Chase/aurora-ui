@@ -8,10 +8,14 @@ use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
+use std::time::Instant;
 
 use super::colors;
 
+const ANIM_DURATION: f32 = 0.2; // seconds
+
 /// A single collapsible section with a title and toggleable content.
+/// Content animates open and closed.
 ///
 /// # Example
 /// ```ignore
@@ -30,6 +34,10 @@ pub struct Collapsible {
     on_toggle: Option<Box<dyn FnMut(bool)>>,
     title_layout: Option<aurora_text::text_layout::TextLayout>,
     child_size: Size,
+    /// 0.0 = collapsed, 1.0 = expanded
+    anim_from: f32,
+    anim_to: f32,
+    anim_start: Instant,
 }
 
 impl Collapsible {
@@ -45,11 +53,17 @@ impl Collapsible {
             on_toggle: None,
             title_layout: None,
             child_size: Size::default(),
+            anim_from: 0.0,
+            anim_to: 0.0,
+            anim_start: Instant::now(),
         }
     }
 
     pub fn expanded(mut self, expanded: bool) -> Self {
         self.expanded = expanded;
+        let t = if expanded { 1.0 } else { 0.0 };
+        self.anim_from = t;
+        self.anim_to = t;
         self
     }
 
@@ -82,6 +96,13 @@ impl Collapsible {
         self.on_toggle = Some(Box::new(cb));
         self
     }
+
+    fn current_t(&self) -> f32 {
+        let elapsed = self.anim_start.elapsed().as_secs_f32();
+        let t = (elapsed / ANIM_DURATION).min(1.0);
+        let eased = 1.0 - (1.0 - t).powi(3);
+        self.anim_from + (self.anim_to - self.anim_from) * eased
+    }
 }
 
 impl Widget for Collapsible {
@@ -95,54 +116,45 @@ impl Widget for Collapsible {
         let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.title, &opts, colors::FOREGROUND, None);
         self.title_layout = Some(tl);
 
-        let mut total_h = self.header_height;
-
-        if self.expanded {
-            if let Some(ref mut child) = self.child {
-                let content_w = w - self.content_padding.left - self.content_padding.right;
-                let content_available = Size::new(content_w.max(0.0), f32::MAX);
-                self.child_size = child.layout(content_available, ctx);
-                total_h += self.content_padding.top + self.child_size.height + self.content_padding.bottom;
-            }
+        // Always layout child for animation height
+        if let Some(ref mut child) = self.child {
+            let content_w = w - self.content_padding.left - self.content_padding.right;
+            let content_available = Size::new(content_w.max(0.0), f32::MAX);
+            self.child_size = child.layout(content_available, ctx);
         }
+
+        let t = self.current_t();
+        let content_h = (self.content_padding.top + self.child_size.height + self.content_padding.bottom) * t;
+        let total_h = self.header_height + content_h;
 
         Size::new(w, total_h)
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
-        // Header
-        let header_rect = Rect::new(rect.x1, rect.y1, rect.x2, rect.y1 + self.header_height);
+        let t = self.current_t();
 
-        // Chevron
+        // Chevron: rotates from right-pointing (t=0) to down-pointing (t=1)
         let chevron_x = rect.x1 + 8.0;
         let chevron_cy = rect.y1 + self.header_height / 2.0;
-        if self.expanded {
-            canvas.draw_line(
-                Point::new(chevron_x - 4.0, chevron_cy - 2.0),
-                Point::new(chevron_x, chevron_cy + 2.0),
-                1,
-                colors::MUTED_FOREGROUND,
-            );
-            canvas.draw_line(
-                Point::new(chevron_x, chevron_cy + 2.0),
-                Point::new(chevron_x + 4.0, chevron_cy - 2.0),
-                1,
-                colors::MUTED_FOREGROUND,
-            );
-        } else {
-            canvas.draw_line(
-                Point::new(chevron_x - 2.0, chevron_cy - 4.0),
-                Point::new(chevron_x + 2.0, chevron_cy),
-                1,
-                colors::MUTED_FOREGROUND,
-            );
-            canvas.draw_line(
-                Point::new(chevron_x + 2.0, chevron_cy),
-                Point::new(chevron_x - 2.0, chevron_cy + 4.0),
-                1,
-                colors::MUTED_FOREGROUND,
-            );
-        }
+        let angle = t * std::f32::consts::FRAC_PI_2;
+        let cos_a = angle.cos();
+        let sin_a = angle.sin();
+        let rotate = |dx: f32, dy: f32| -> (f32, f32) {
+            (dx * cos_a - dy * sin_a, dx * sin_a + dy * cos_a)
+        };
+        let (dx1, dy1) = rotate(-2.0, -4.0);
+        let (dx2, dy2) = rotate(2.0, 0.0);
+        let (dx3, dy3) = rotate(-2.0, 4.0);
+        canvas.draw_line(
+            Point::new(chevron_x + dx1, chevron_cy + dy1),
+            Point::new(chevron_x + dx2, chevron_cy + dy2),
+            1, colors::MUTED_FOREGROUND,
+        );
+        canvas.draw_line(
+            Point::new(chevron_x + dx2, chevron_cy + dy2),
+            Point::new(chevron_x + dx3, chevron_cy + dy3),
+            1, colors::MUTED_FOREGROUND,
+        );
 
         // Title text
         if let Some(ref tl) = self.title_layout {
@@ -153,15 +165,21 @@ impl Widget for Collapsible {
         }
 
         // Bottom border on header
+        let border_y = rect.y1 + self.header_height;
         canvas.fill_rect(
-            Rect::new(rect.x1, header_rect.y2 - 1.0, rect.x2, header_rect.y2),
+            Rect::new(rect.x1, border_y - 1.0, rect.x2, border_y),
             self.border_color,
         );
 
-        // Content
-        if self.expanded {
+        // Content (clipped for animation)
+        if t > 0.0 {
             if let Some(ref child) = self.child {
-                let content_y = rect.y1 + self.header_height + self.content_padding.top;
+                let content_area_top = rect.y1 + self.header_height;
+                let visible_h = (self.content_padding.top + self.child_size.height + self.content_padding.bottom) * t;
+                let clip = Rect::new(rect.x1, content_area_top, rect.x2, content_area_top + visible_h);
+                canvas.push_clip(clip);
+
+                let content_y = content_area_top + self.content_padding.top;
                 let content_rect = Rect::new(
                     rect.x1 + self.content_padding.left,
                     content_y,
@@ -169,6 +187,8 @@ impl Widget for Collapsible {
                     content_y + self.child_size.height,
                 );
                 child.paint(canvas, content_rect);
+
+                canvas.pop_clip();
             }
         }
     }
@@ -188,6 +208,9 @@ impl Widget for Collapsible {
                 if e.state == MouseState::Pressed && header_rect.contains(&e.position) =>
             {
                 self.expanded = !self.expanded;
+                self.anim_from = self.current_t();
+                self.anim_to = if self.expanded { 1.0 } else { 0.0 };
+                self.anim_start = Instant::now();
                 if let Some(ref mut cb) = self.on_toggle {
                     cb(self.expanded);
                 }
@@ -219,5 +242,9 @@ impl Widget for Collapsible {
                 EventResponse::default()
             }
         }
+    }
+
+    fn needs_animation(&self) -> bool {
+        self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
 }
