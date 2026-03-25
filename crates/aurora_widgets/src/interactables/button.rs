@@ -11,17 +11,18 @@ use aurora_core::kmi::mouse::MouseClickEvent;
 use aurora_core::kmi::WidgetEvent;
 use aurora_macros::composite_widget;
 use aurora_render::canvas::Canvas;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
+use std::time::Instant;
 
 type ClickHandler = Rc<RefCell<OnClickCallback>>;
 type HoverHandler = Rc<RefCell<Box<dyn FnMut(bool)>>>;
 
+const ANIM_DURATION: f32 = 0.12; // seconds
+
 /// A styled button widget that wraps any child widget.
 ///
-/// Uses `#[composite_widget]` for builder-pattern setters and automatic
-/// `Widget` implementation. Internally manages hover state via a
-/// [`Composite`].
+/// Background color transitions smoothly between normal and hover states.
 ///
 /// # Examples
 ///
@@ -112,6 +113,22 @@ impl Button {
     }
 }
 
+#[derive(Clone, Copy)]
+struct AnimData {
+    from: f32,
+    to: f32,
+    start: Instant,
+}
+
+impl AnimData {
+    fn current_t(&self) -> f32 {
+        let elapsed = self.start.elapsed().as_secs_f32();
+        let t = (elapsed / ANIM_DURATION).min(1.0);
+        let eased = 1.0 - (1.0 - t).powi(3);
+        self.from + (self.to - self.from) * eased
+    }
+}
+
 #[derive(Default, Copy, Clone)]
 struct ButtonState {
     is_hovering: bool,
@@ -129,21 +146,27 @@ impl CompositeBuilder for Button {
         let height = self.height;
         let hover_cursor = self.hover_cursor;
 
+        // Shared animation state that persists across Composite rebuilds
+        let anim = Rc::new(Cell::new(AnimData {
+            from: 0.0,
+            to: 0.0,
+            start: Instant::now(),
+        }));
+
+        let anim_for_closure = anim.clone();
+
         Box::new(Composite::new(
             ButtonState::default(),
-            move |state, set_state| {
+            move |_state, set_state| {
                 let setter = set_state.clone();
                 let click_handler = on_click.clone();
                 let on_hover = on_hover.clone();
                 let child = child.clone();
+                let anim = anim_for_closure.clone();
 
                 let mut box_widget = BoxWidget::new()
                     .corners(border_radius)
-                    .background_color(if state.is_hovering {
-                        hover_background
-                    } else {
-                        background
-                    })
+                    .background_color(Color::TRANSPARENT)
                     .width(width)
                     .height(height);
 
@@ -162,8 +185,22 @@ impl CompositeBuilder for Button {
                 Box::new(
                     TouchArea::new()
                         .hover_cursor(hover_cursor)
-                        .child(box_widget)
+                        .child(AnimatedBg {
+                            normal: background,
+                            hover: hover_background,
+                            corners: border_radius,
+                            anim: anim.clone(),
+                            inner: box_widget,
+                        })
                         .on_hover(move |_position, hovering| {
+                            let data = anim.get();
+                            let new_data = AnimData {
+                                from: data.current_t(),
+                                to: if hovering { 1.0 } else { 0.0 },
+                                start: Instant::now(),
+                            };
+                            anim.set(new_data);
+
                             setter.set(|prev| {
                                 prev.is_hovering = hovering;
                             });
@@ -177,6 +214,41 @@ impl CompositeBuilder for Button {
                 )
             },
         ))
+    }
+}
+
+/// Wraps a BoxWidget and paints an animated background color behind it.
+struct AnimatedBg {
+    normal: Color,
+    hover: Color,
+    corners: Corners,
+    anim: Rc<Cell<AnimData>>,
+    inner: BoxWidget,
+}
+
+impl Widget for AnimatedBg {
+    fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
+        self.inner.layout(available, ctx)
+    }
+
+    fn paint(&self, canvas: &mut Canvas, rect: Rect) {
+        let t = self.anim.get().current_t();
+        let bg = self.normal.lerp(&self.hover, t);
+        canvas.fill_rounded_rect(rect, self.corners, bg);
+        self.inner.paint(canvas, rect);
+    }
+
+    fn children(&self) -> &[Box<dyn Widget>] {
+        self.inner.children()
+    }
+
+    fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        self.inner.event(event, rect)
+    }
+
+    fn needs_animation(&self) -> bool {
+        self.anim.get().start.elapsed().as_secs_f32() < ANIM_DURATION
+            || self.inner.needs_animation()
     }
 }
 
@@ -207,17 +279,6 @@ impl Widget for ChildProxy {
     }
 }
 
-/// Creates a [`Button`] with a child widget.
-///
-/// # Examples
-///
-/// ```ignore
-/// // Text button (requires `text` feature):
-/// button!("Click me")
-///
-/// // Any widget as child:
-/// button!(Image::new(my_image))
-/// ```
 /// Creates a [`Button`] with a child widget or text label.
 ///
 /// String literals are passed to [`Button::text()`] (requires `text` feature).

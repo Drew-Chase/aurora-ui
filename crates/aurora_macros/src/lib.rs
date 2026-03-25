@@ -190,6 +190,10 @@ pub fn composite_widget(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     None => EventResponse::default(),
                 }
             }
+
+            fn needs_animation(&self) -> bool {
+                self.__composite_inner.as_ref().map_or(false, |w| w.needs_animation())
+            }
         }
     };
 
