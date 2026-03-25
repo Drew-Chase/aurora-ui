@@ -7,10 +7,15 @@ use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
+use std::time::Instant;
 
 use super::colors;
 
+const ANIM_DURATION: f32 = 0.15; // seconds
+
 /// A toggle switch with on/off state.
+///
+/// The thumb slides smoothly when toggled and the track color transitions.
 ///
 /// # Example
 /// ```ignore
@@ -27,6 +32,11 @@ pub struct Switch {
     off_color: Color,
     thumb_color: Color,
     on_change: Option<Box<dyn FnMut(bool)>>,
+    /// 0.0 = fully off, 1.0 = fully on
+    anim_progress: f32,
+    anim_start: Instant,
+    anim_from: f32,
+    anim_to: f32,
 }
 
 impl Switch {
@@ -40,11 +50,19 @@ impl Switch {
             off_color: colors::INPUT_BORDER,
             thumb_color: Color::WHITE,
             on_change: None,
+            anim_progress: 0.0,
+            anim_start: Instant::now(),
+            anim_from: 0.0,
+            anim_to: 0.0,
         }
     }
 
     pub fn checked(mut self, checked: bool) -> Self {
         self.checked = checked;
+        let t = if checked { 1.0 } else { 0.0 };
+        self.anim_progress = t;
+        self.anim_from = t;
+        self.anim_to = t;
         self
     }
 
@@ -67,6 +85,14 @@ impl Switch {
         self.on_change = Some(Box::new(cb));
         self
     }
+
+    fn current_t(&self) -> f32 {
+        let elapsed = self.anim_start.elapsed().as_secs_f32();
+        let t = (elapsed / ANIM_DURATION).min(1.0);
+        // Ease-out cubic
+        let eased = 1.0 - (1.0 - t).powi(3);
+        self.anim_from + (self.anim_to - self.anim_from) * eased
+    }
 }
 
 impl Default for Switch {
@@ -81,22 +107,20 @@ impl Widget for Switch {
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
+        let t = self.current_t();
+
+        // Interpolate track color
+        let track_color = Color::lerp(&self.off_color, &self.on_color, t);
         let track_corners = Corners::all(self.track_height / 2.0);
-        let track_color = if self.checked {
-            self.on_color
-        } else {
-            self.off_color
-        };
         canvas.fill_rounded_rect(rect, track_corners, track_color);
 
-        // Thumb
+        // Thumb slides from left to right
         let thumb_padding = 2.0;
         let thumb_size = self.track_height - thumb_padding * 2.0;
-        let thumb_x = if self.checked {
-            rect.x2 - thumb_size - thumb_padding
-        } else {
-            rect.x1 + thumb_padding
-        };
+        let left_x = rect.x1 + thumb_padding;
+        let right_x = rect.x2 - thumb_size - thumb_padding;
+        let thumb_x = left_x + (right_x - left_x) * t;
+
         let thumb_rect = Rect::new(
             thumb_x,
             rect.y1 + thumb_padding,
@@ -120,6 +144,11 @@ impl Widget for Switch {
                 if e.state == MouseState::Pressed && rect.contains(&e.position) =>
             {
                 self.checked = !self.checked;
+                // Start animation from current visual position
+                self.anim_from = self.current_t();
+                self.anim_to = if self.checked { 1.0 } else { 0.0 };
+                self.anim_start = Instant::now();
+
                 if let Some(ref mut cb) = self.on_change {
                     cb(self.checked);
                 }
@@ -137,5 +166,10 @@ impl Widget for Switch {
             }
             _ => EventResponse::default(),
         }
+    }
+
+    fn needs_animation(&self) -> bool {
+        (self.anim_progress - self.anim_to).abs() > f32::EPSILON
+            || self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
 }
