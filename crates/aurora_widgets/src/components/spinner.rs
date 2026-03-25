@@ -1,16 +1,18 @@
 use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::color::Color;
+use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
+use std::time::Instant;
 
 use super::colors;
 
 /// A loading spinner indicator.
 ///
-/// Draws a circular track with a partial arc to indicate loading.
-/// Without animation feature, displays a static partial ring.
+/// Draws a circular track with a rotating arc. Animates automatically
+/// without any external setup.
 ///
 /// # Example
 /// ```ignore
@@ -23,6 +25,7 @@ pub struct Spinner {
     track_color: Color,
     color: Color,
     thickness: f32,
+    start_time: Instant,
 }
 
 impl Spinner {
@@ -32,6 +35,7 @@ impl Spinner {
             track_color: colors::MUTED,
             color: colors::PRIMARY,
             thickness: 3.0,
+            start_time: Instant::now(),
         }
     }
 
@@ -72,7 +76,7 @@ impl Widget for Spinner {
         let cy = rect.y1 + rect.height() / 2.0;
         let r = (self.diameter / 2.0) - self.thickness / 2.0;
 
-        // Draw a circle track using stroke
+        // Draw the background track ring
         let track_rect = Rect::new(
             cx - r - self.thickness / 2.0,
             cy - r - self.thickness / 2.0,
@@ -82,17 +86,24 @@ impl Widget for Spinner {
         let corners = aurora_core::geometry::corners::Corners::all(r + self.thickness / 2.0);
         canvas.stroke_rounded_rect(track_rect, corners, self.thickness as u32, self.track_color);
 
-        // Draw a partial arc (top-right quadrant) as a simple indicator
-        // Since we don't have arc drawing, draw a small filled circle at the top
-        let indicator_size = self.thickness * 2.0;
-        let indicator_rect = Rect::new(
-            cx - indicator_size / 2.0,
-            rect.y1,
-            cx + indicator_size / 2.0,
-            rect.y1 + indicator_size,
-        );
-        let ind_corners = aurora_core::geometry::corners::Corners::all(indicator_size / 2.0);
-        canvas.fill_rounded_rect(indicator_rect, ind_corners, self.color);
+        // Draw the rotating arc
+        let elapsed = self.start_time.elapsed().as_secs_f32();
+        let speed = 1.5; // rotations per second
+        let base_angle = elapsed * speed * std::f32::consts::TAU;
+        let arc_sweep = std::f32::consts::TAU * 0.3; // 108-degree arc
+
+        let segments = 24;
+        let stroke = self.thickness as u32;
+        for i in 0..segments {
+            let t0 = i as f32 / segments as f32;
+            let t1 = (i + 1) as f32 / segments as f32;
+            let a0 = base_angle + t0 * arc_sweep;
+            let a1 = base_angle + t1 * arc_sweep;
+
+            let from = Point::new(cx + r * a0.cos(), cy + r * a0.sin());
+            let to = Point::new(cx + r * a1.cos(), cy + r * a1.sin());
+            canvas.draw_line(from, to, stroke, self.color);
+        }
     }
 
     fn children(&self) -> &[Box<dyn Widget>] {
@@ -101,5 +112,9 @@ impl Widget for Spinner {
 
     fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
         EventResponse::default()
+    }
+
+    fn needs_animation(&self) -> bool {
+        true
     }
 }
