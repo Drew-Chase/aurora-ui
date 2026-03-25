@@ -9,8 +9,11 @@ use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 use aurora_text::font_options::FontWeight;
 use aurora_text::text_layout::TextLayout;
+use std::time::Instant;
 
 use super::colors;
+
+const ANIM_DURATION: f32 = 0.12; // seconds
 
 /// Toggle variant style.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -20,7 +23,7 @@ pub enum ToggleVariant {
     Outline,
 }
 
-/// A pressable toggle button.
+/// A pressable toggle button. The background smoothly transitions on press.
 ///
 /// # Example
 /// ```ignore
@@ -39,6 +42,10 @@ pub struct Toggle {
     child: Option<Box<dyn Widget>>,
     child_size: Size,
     label_layout: Option<TextLayout>,
+    /// 0.0 = unpressed, 1.0 = pressed
+    anim_from: f32,
+    anim_to: f32,
+    anim_start: Instant,
 }
 
 impl Toggle {
@@ -54,6 +61,9 @@ impl Toggle {
             child: None,
             child_size: Size::default(),
             label_layout: None,
+            anim_from: 0.0,
+            anim_to: 0.0,
+            anim_start: Instant::now(),
         }
     }
 
@@ -69,11 +79,17 @@ impl Toggle {
             child: Some(Box::new(widget)),
             child_size: Size::default(),
             label_layout: None,
+            anim_from: 0.0,
+            anim_to: 0.0,
+            anim_start: Instant::now(),
         }
     }
 
     pub fn pressed(mut self, pressed: bool) -> Self {
         self.pressed = pressed;
+        let t = if pressed { 1.0 } else { 0.0 };
+        self.anim_from = t;
+        self.anim_to = t;
         self
     }
 
@@ -100,6 +116,13 @@ impl Toggle {
     pub fn on_change(mut self, cb: impl FnMut(bool) + 'static) -> Self {
         self.on_change = Some(Box::new(cb));
         self
+    }
+
+    fn current_t(&self) -> f32 {
+        let elapsed = self.anim_start.elapsed().as_secs_f32();
+        let t = (elapsed / ANIM_DURATION).min(1.0);
+        let eased = 1.0 - (1.0 - t).powi(3);
+        self.anim_from + (self.anim_to - self.anim_from) * eased
     }
 }
 
@@ -131,18 +154,29 @@ impl Widget for Toggle {
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
         let corners = Corners::all(6.0);
+        let t = self.current_t();
 
-        let bg = if self.pressed {
-            colors::ACCENT
-        } else {
-            Color::TRANSPARENT
-        };
-
+        // Animated background
+        let bg = Color::TRANSPARENT.lerp(&colors::ACCENT, t);
         if bg.alpha > 0 {
             canvas.fill_rounded_rect(rect, corners, bg);
         }
-        if matches!(self.variant, ToggleVariant::Outline) || self.pressed {
-            canvas.stroke_rounded_rect(rect, corners, 1, colors::BORDER);
+
+        // Border: always show for outline variant, fade in for default when pressed
+        let show_border = matches!(self.variant, ToggleVariant::Outline) || t > 0.0;
+        if show_border {
+            let border_alpha = if matches!(self.variant, ToggleVariant::Outline) {
+                255
+            } else {
+                (t * 255.0).min(255.0) as u8
+            };
+            let border_color = Color::new(
+                colors::BORDER.red,
+                colors::BORDER.green,
+                colors::BORDER.blue,
+                border_alpha,
+            );
+            canvas.stroke_rounded_rect(rect, corners, 1, border_color);
         }
 
         if let Some(ref tl) = self.label_layout {
@@ -175,6 +209,9 @@ impl Widget for Toggle {
                 if e.state == MouseState::Pressed && rect.contains(&e.position) =>
             {
                 self.pressed = !self.pressed;
+                self.anim_from = self.current_t();
+                self.anim_to = if self.pressed { 1.0 } else { 0.0 };
+                self.anim_start = Instant::now();
                 if let Some(ref mut cb) = self.on_change {
                     cb(self.pressed);
                 }
@@ -192,5 +229,9 @@ impl Widget for Toggle {
             }
             _ => EventResponse::default(),
         }
+    }
+
+    fn needs_animation(&self) -> bool {
+        self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
 }
