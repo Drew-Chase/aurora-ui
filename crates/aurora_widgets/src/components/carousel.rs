@@ -160,8 +160,8 @@ impl Widget for Carousel {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(18.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Bold);
-        self.prev_layout = Some(aurora_text::text_layout::TextLayout::new(ctx.font_manager, "<", &opts, colors::FOREGROUND, None));
-        self.next_layout = Some(aurora_text::text_layout::TextLayout::new(ctx.font_manager, ">", &opts, colors::FOREGROUND, None));
+        self.prev_layout = Some(aurora_text::text_layout::TextLayout::new(ctx.font_manager, "<", &opts, colors::foreground(), None));
+        self.next_layout = Some(aurora_text::text_layout::TextLayout::new(ctx.font_manager, ">", &opts, colors::foreground(), None));
 
         if self.current >= self.slides.len() && !self.slides.is_empty() {
             self.current = 0;
@@ -188,7 +188,7 @@ impl Widget for Carousel {
             // Previous
             let pr = self.prev_rect(&rect);
             canvas.fill_rounded_rect(pr, arrow_corners, arrow_bg);
-            canvas.stroke_rounded_rect(pr, arrow_corners, 1, colors::BORDER);
+            canvas.stroke_rounded_rect(pr, arrow_corners, 1, colors::border());
             if let Some(ref tl) = self.prev_layout {
                 let _s = tl.size(); let tw = _s.width; let th = _s.height;
                 let tx = pr.x1 + (pr.width() - tw) / 2.0;
@@ -199,7 +199,7 @@ impl Widget for Carousel {
             // Next
             let nr = self.next_rect(&rect);
             canvas.fill_rounded_rect(nr, arrow_corners, arrow_bg);
-            canvas.stroke_rounded_rect(nr, arrow_corners, 1, colors::BORDER);
+            canvas.stroke_rounded_rect(nr, arrow_corners, 1, colors::border());
             if let Some(ref tl) = self.next_layout {
                 let _s = tl.size(); let tw = _s.width; let th = _s.height;
                 let tx = nr.x1 + (nr.width() - tw) / 2.0;
@@ -225,7 +225,7 @@ impl Widget for Carousel {
                 );
                 let dot_corners = Corners::all(self.indicator_size / 2.0);
                 let color = if i == self.current {
-                    colors::PRIMARY
+                    colors::primary()
                 } else {
                     Color::new(255, 255, 255, 180)
                 };

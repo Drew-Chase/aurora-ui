@@ -29,8 +29,8 @@ impl Progress {
     pub fn new() -> Self {
         Self {
             value: 0.0,
-            track_color: colors::SECONDARY,
-            fill_color: colors::PRIMARY,
+            track_color: colors::secondary(),
+            fill_color: colors::primary(),
             height: 8.0,
             width: None,
             corners: Corners::all(9999.0),

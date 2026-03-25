@@ -55,10 +55,10 @@ impl TextArea {
             cursor_pos: 0,
             placeholder: String::new(),
             rows: 3,
-            background: colors::BACKGROUND,
-            border_color: colors::INPUT_BORDER,
-            text_color: colors::FOREGROUND,
-            placeholder_color: colors::MUTED_FOREGROUND,
+            background: colors::background(),
+            border_color: colors::input_border(),
+            text_color: colors::foreground(),
+            placeholder_color: colors::muted_foreground(),
             corners: Corners::all(6.0),
             padding: Edges::new(8.0, 12.0, 8.0, 12.0),
             font_size: 14.0,
@@ -160,7 +160,7 @@ impl Widget for TextArea {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(self.font_size);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.text, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.text, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
             self.text_layout = Some(tl);
         } else {
@@ -172,7 +172,7 @@ impl Widget for TextArea {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(self.font_size);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.placeholder, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.placeholder, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
             self.placeholder_layout = Some(tl);
         } else {
@@ -187,7 +187,7 @@ impl Widget for TextArea {
         canvas.fill_rounded_rect(rect, self.corners, self.background);
 
         // Border
-        let border_color = if self.focused { colors::RING } else { self.border_color };
+        let border_color = if self.focused { colors::ring() } else { self.border_color };
         canvas.stroke_rounded_rect(rect, self.corners, 1, border_color);
 
         // Clip text area

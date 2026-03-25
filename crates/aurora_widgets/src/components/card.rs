@@ -34,8 +34,8 @@ impl Card {
     pub fn new() -> Self {
         Self {
             children: Vec::new(),
-            background_color: colors::CARD,
-            border_color: colors::BORDER,
+            background_color: colors::card(),
+            border_color: colors::border(),
             border_width: 1.0,
             corners: Corners::all(8.0),
             padding: Edges::new(24.0, 24.0, 24.0, 24.0),

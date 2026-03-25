@@ -87,17 +87,17 @@ impl Alert {
 
     fn border_color(&self) -> aurora_core::color::Color {
         match self.variant {
-            AlertVariant::Default => colors::BORDER,
-            AlertVariant::Destructive => colors::DESTRUCTIVE,
-            AlertVariant::Success => colors::SUCCESS,
-            AlertVariant::Warning => colors::WARNING,
-            AlertVariant::Info => colors::INFO,
+            AlertVariant::Default => colors::border(),
+            AlertVariant::Destructive => colors::destructive(),
+            AlertVariant::Success => colors::success(),
+            AlertVariant::Warning => colors::warning(),
+            AlertVariant::Info => colors::info(),
         }
     }
 
     fn bg_color(&self) -> aurora_core::color::Color {
         match self.variant {
-            AlertVariant::Default => colors::BACKGROUND,
+            AlertVariant::Default => colors::background(),
             AlertVariant::Destructive => aurora_core::color::Color::new(254, 242, 242, 255),
             AlertVariant::Success => aurora_core::color::Color::new(240, 253, 244, 255),
             AlertVariant::Warning => aurora_core::color::Color::new(254, 252, 232, 255),
@@ -107,8 +107,8 @@ impl Alert {
 
     fn fg_color(&self) -> aurora_core::color::Color {
         match self.variant {
-            AlertVariant::Default => colors::FOREGROUND,
-            AlertVariant::Destructive => colors::DESTRUCTIVE,
+            AlertVariant::Default => colors::foreground(),
+            AlertVariant::Destructive => colors::destructive(),
             AlertVariant::Success => aurora_core::color::Color::new(22, 163, 74, 255),
             AlertVariant::Warning => aurora_core::color::Color::new(161, 98, 7, 255),
             AlertVariant::Info => aurora_core::color::Color::new(37, 99, 235, 255),
@@ -146,7 +146,7 @@ impl Widget for Alert {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(FontWeight::Normal);
-            let mut tl = TextLayout::new(ctx.font_manager, desc, &opts, colors::MUTED_FOREGROUND, None);
+            let mut tl = TextLayout::new(ctx.font_manager, desc, &opts, colors::muted_foreground(), None);
             tl.set_max_width(ctx.font_manager, inner_w);
             let ts = tl.size();
             total_h += ts.height;

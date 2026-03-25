@@ -44,10 +44,10 @@ impl Table {
             row_height: 48.0,
             header_height: 48.0,
             column_widths: Vec::new(),
-            border_color: colors::BORDER,
-            header_bg: colors::MUTED,
-            header_fg: colors::MUTED_FOREGROUND,
-            row_bg: colors::BACKGROUND,
+            border_color: colors::border(),
+            header_bg: colors::muted(),
+            header_fg: colors::muted_foreground(),
+            row_bg: colors::background(),
             alt_row_bg: Color::new(250, 250, 250, 255),
             striped: true,
             width: None,
@@ -124,7 +124,7 @@ impl Widget for Table {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(12.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, header, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, header, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, col_w - 24.0);
             self.header_layouts.push(Some(tl));
         }
@@ -137,7 +137,7 @@ impl Widget for Table {
                 let mut opts = ctx.font_options.clone();
                 opts.size = Some(14.0);
                 opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-                let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, cell, &opts, colors::FOREGROUND, None);
+                let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, cell, &opts, colors::foreground(), None);
                 tl.set_max_width(ctx.font_manager, col_w - 24.0);
                 row_layouts.push(Some(tl));
             }

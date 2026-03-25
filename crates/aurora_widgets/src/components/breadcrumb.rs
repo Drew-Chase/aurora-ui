@@ -90,7 +90,7 @@ impl Widget for Breadcrumb {
             } else {
                 aurora_text::font_options::FontWeight::Normal
             });
-            let fg = if is_last { colors::FOREGROUND } else { colors::MUTED_FOREGROUND };
+            let fg = if is_last { colors::foreground() } else { colors::muted_foreground() };
             let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, fg, None);
             tl.set_max_width(ctx.font_manager, f32::MAX);
             let tw = tl.size().width;
@@ -103,7 +103,7 @@ impl Widget for Breadcrumb {
                 let mut sep_opts = ctx.font_options.clone();
                 sep_opts.size = Some(14.0);
                 sep_opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-                let mut sep_tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.separator, &sep_opts, colors::MUTED_FOREGROUND, None);
+                let mut sep_tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.separator, &sep_opts, colors::muted_foreground(), None);
                 sep_tl.set_max_width(ctx.font_manager, f32::MAX);
                 let sw = sep_tl.size().width;
                 self.separator_width = sw;

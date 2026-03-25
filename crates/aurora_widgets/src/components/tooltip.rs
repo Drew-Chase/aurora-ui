@@ -55,8 +55,8 @@ impl Tooltip {
             child: None,
             side: TooltipSide::Top,
             offset: 6.0,
-            background: colors::PRIMARY,
-            foreground: colors::PRIMARY_FOREGROUND,
+            background: colors::primary(),
+            foreground: colors::primary_foreground(),
             corners: Corners::all(4.0),
             padding: Edges::new(4.0, 8.0, 4.0, 8.0),
             hovered: false,
@@ -142,7 +142,7 @@ impl Widget for Tooltip {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(12.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.text, &opts, colors::FOREGROUND, None);
+        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.text, &opts, colors::foreground(), None);
         tl.set_max_width(ctx.font_manager, f32::MAX);
         let _s = tl.size(); let tw = _s.width; let th = _s.height;
         self.tooltip_size = Size::new(

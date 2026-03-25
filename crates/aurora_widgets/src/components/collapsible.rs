@@ -48,7 +48,7 @@ impl Collapsible {
             child: None,
             header_height: 40.0,
             content_padding: Edges::new(8.0, 0.0, 8.0, 0.0),
-            border_color: colors::BORDER,
+            border_color: colors::border(),
             width: None,
             on_toggle: None,
             title_layout: None,
@@ -113,7 +113,7 @@ impl Widget for Collapsible {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-        let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.title, &opts, colors::FOREGROUND, None);
+        let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.title, &opts, colors::foreground(), None);
         self.title_layout = Some(tl);
 
         // Always layout child for animation height
@@ -148,12 +148,12 @@ impl Widget for Collapsible {
         canvas.draw_line(
             Point::new(chevron_x + dx1, chevron_cy + dy1),
             Point::new(chevron_x + dx2, chevron_cy + dy2),
-            1, colors::MUTED_FOREGROUND,
+            1, colors::muted_foreground(),
         );
         canvas.draw_line(
             Point::new(chevron_x + dx2, chevron_cy + dy2),
             Point::new(chevron_x + dx3, chevron_cy + dy3),
-            1, colors::MUTED_FOREGROUND,
+            1, colors::muted_foreground(),
         );
 
         // Title text

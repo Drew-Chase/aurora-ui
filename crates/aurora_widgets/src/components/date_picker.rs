@@ -49,8 +49,8 @@ impl DatePicker {
             placeholder: "Pick a date".to_string(),
             open: false,
             height: 40.0,
-            background: colors::BACKGROUND,
-            border_color: colors::INPUT_BORDER,
+            background: colors::background(),
+            border_color: colors::input_border(),
             corners: Corners::all(6.0),
             padding: Edges::new(0.0, 12.0, 0.0, 12.0),
             width: None,
@@ -127,16 +127,16 @@ impl Widget for DatePicker {
         };
 
         let _text_color = if self.selected_day.is_some() {
-            colors::FOREGROUND
+            colors::foreground()
         } else {
-            colors::MUTED_FOREGROUND
+            colors::muted_foreground()
         };
 
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
         let inner_w = w - self.padding.left - self.padding.right;
-        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &display_text, &opts, colors::FOREGROUND, None);
+        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &display_text, &opts, colors::foreground(), None);
         tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
         self.display_layout = Some(tl);
 
@@ -153,7 +153,7 @@ impl Widget for DatePicker {
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
         // Input box
-        let border_color = if self.open { colors::RING } else { self.border_color };
+        let border_color = if self.open { colors::ring() } else { self.border_color };
         canvas.fill_rounded_rect(rect, self.corners, self.background);
         canvas.stroke_rounded_rect(rect, self.corners, 1, border_color);
 
@@ -171,11 +171,11 @@ impl Widget for DatePicker {
         canvas.stroke_rect(
             Rect::new(icon_x, icon_y + 2.0, icon_x + 14.0, icon_y + 14.0),
             1u32,
-            colors::MUTED_FOREGROUND,
+            colors::muted_foreground(),
         );
         canvas.fill_rect(
             Rect::new(icon_x, icon_y + 6.0, icon_x + 14.0, icon_y + 7.0),
-            colors::MUTED_FOREGROUND,
+            colors::muted_foreground(),
         );
 
         if !self.open {
@@ -185,8 +185,8 @@ impl Widget for DatePicker {
         // Calendar dropdown
         let dr = self.dropdown_rect(&rect);
         let drop_corners = Corners::all(8.0);
-        canvas.fill_rounded_rect(dr, drop_corners, colors::POPOVER);
-        canvas.stroke_rounded_rect(dr, drop_corners, 1, colors::BORDER);
+        canvas.fill_rounded_rect(dr, drop_corners, colors::popover());
+        canvas.stroke_rounded_rect(dr, drop_corners, 1, colors::border());
 
         let cal_rect = Rect::new(
             dr.x1 + 8.0,

@@ -41,6 +41,7 @@ const PAGES: &[&str] = &[
 ];
 
 fn main() {
+    theme::init();
     let mut initialized = false;
 
     App::new()

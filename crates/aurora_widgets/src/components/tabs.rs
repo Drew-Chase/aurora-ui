@@ -55,7 +55,7 @@ impl Tabs {
             tab_height: 40.0,
             tab_padding: 16.0,
             indicator_height: 2.0,
-            indicator_color: colors::PRIMARY,
+            indicator_color: colors::primary(),
             width: None,
             on_change: None,
             tab_layouts: Vec::new(),
@@ -142,7 +142,7 @@ impl Widget for Tabs {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &tab.label, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &tab.label, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, f32::MAX);
             let tw = tl.size().width;
             self.tab_widths.push(tw + self.tab_padding * 2.0);
@@ -180,7 +180,7 @@ impl Widget for Tabs {
         let tab_bar_bottom = rect.y1 + self.tab_height;
         canvas.fill_rect(
             Rect::new(rect.x1, tab_bar_bottom - 1.0, rect.x2, tab_bar_bottom),
-            colors::BORDER,
+            colors::border(),
         );
 
         // Paint tabs

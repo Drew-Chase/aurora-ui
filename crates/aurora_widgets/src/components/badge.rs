@@ -65,25 +65,25 @@ impl Badge {
 
     fn bg_color(&self) -> aurora_core::color::Color {
         match self.variant {
-            BadgeVariant::Default => colors::PRIMARY,
-            BadgeVariant::Secondary => colors::SECONDARY,
-            BadgeVariant::Destructive => colors::DESTRUCTIVE,
+            BadgeVariant::Default => colors::primary(),
+            BadgeVariant::Secondary => colors::secondary(),
+            BadgeVariant::Destructive => colors::destructive(),
             BadgeVariant::Outline => aurora_core::color::Color::TRANSPARENT,
-            BadgeVariant::Success => colors::SUCCESS,
-            BadgeVariant::Warning => colors::WARNING,
-            BadgeVariant::Info => colors::INFO,
+            BadgeVariant::Success => colors::success(),
+            BadgeVariant::Warning => colors::warning(),
+            BadgeVariant::Info => colors::info(),
         }
     }
 
     fn fg_color(&self) -> aurora_core::color::Color {
         match self.variant {
-            BadgeVariant::Default => colors::PRIMARY_FOREGROUND,
-            BadgeVariant::Secondary => colors::SECONDARY_FOREGROUND,
-            BadgeVariant::Destructive => colors::DESTRUCTIVE_FOREGROUND,
-            BadgeVariant::Outline => colors::FOREGROUND,
-            BadgeVariant::Success => colors::SUCCESS_FOREGROUND,
-            BadgeVariant::Warning => colors::WARNING_FOREGROUND,
-            BadgeVariant::Info => colors::INFO_FOREGROUND,
+            BadgeVariant::Default => colors::primary_foreground(),
+            BadgeVariant::Secondary => colors::secondary_foreground(),
+            BadgeVariant::Destructive => colors::destructive_foreground(),
+            BadgeVariant::Outline => colors::foreground(),
+            BadgeVariant::Success => colors::success_foreground(),
+            BadgeVariant::Warning => colors::warning_foreground(),
+            BadgeVariant::Info => colors::info_foreground(),
         }
     }
 }
@@ -110,7 +110,7 @@ impl Widget for Badge {
             canvas.fill_rounded_rect(rect, self.corners, bg);
         }
         if matches!(self.variant, BadgeVariant::Outline) {
-            canvas.stroke_rounded_rect(rect, self.corners, 1, colors::BORDER);
+            canvas.stroke_rounded_rect(rect, self.corners, 1, colors::border());
         }
         if let Some(ref tl) = self.layout {
             let ts = tl.size();

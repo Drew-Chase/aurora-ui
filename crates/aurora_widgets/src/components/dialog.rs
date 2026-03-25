@@ -46,9 +46,9 @@ impl Dialog {
             title: None,
             content: None,
             footer: None,
-            backdrop_color: colors::OVERLAY,
-            background: colors::BACKGROUND,
-            border_color: colors::BORDER,
+            backdrop_color: colors::overlay(),
+            background: colors::background(),
+            border_color: colors::border(),
             corners: Corners::all(12.0),
             padding: Edges::new(24.0, 24.0, 24.0, 24.0),
             width: 400.0,
@@ -162,7 +162,7 @@ impl Widget for Dialog {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(18.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Bold);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, title, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, title, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, inner_w);
             let th = tl.size().height;
             self.title_height = th;

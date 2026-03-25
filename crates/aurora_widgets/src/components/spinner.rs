@@ -32,8 +32,8 @@ impl Spinner {
     pub fn new() -> Self {
         Self {
             diameter: 24.0,
-            track_color: colors::MUTED,
-            color: colors::PRIMARY,
+            track_color: colors::muted(),
+            color: colors::primary(),
             thickness: 3.0,
             start_time: Instant::now(),
         }

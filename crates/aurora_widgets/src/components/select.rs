@@ -61,9 +61,9 @@ impl Select {
             height: 40.0,
             item_height: 36.0,
             dropdown_width: None,
-            background: colors::BACKGROUND,
-            border_color: colors::INPUT_BORDER,
-            hover_bg: colors::ACCENT,
+            background: colors::background(),
+            border_color: colors::input_border(),
+            hover_bg: colors::accent(),
             corners: Corners::all(6.0),
             padding: Edges::new(0.0, 12.0, 0.0, 12.0),
             disabled: false,
@@ -175,16 +175,16 @@ impl Widget for Select {
         };
 
         let _text_color = if self.selected.is_some() {
-            colors::FOREGROUND
+            colors::foreground()
         } else {
-            colors::MUTED_FOREGROUND
+            colors::muted_foreground()
         };
 
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
         let inner_w = w - self.padding.left - self.padding.right - 20.0;
-        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &display_text, &opts, colors::FOREGROUND, None);
+        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &display_text, &opts, colors::foreground(), None);
         tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
         self.selected_layout = Some(tl);
 
@@ -194,7 +194,7 @@ impl Widget for Select {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, option, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, option, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
             self.option_layouts.push(Some(tl));
         }
@@ -204,7 +204,7 @@ impl Widget for Select {
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
         // Trigger box
-        let border_color = if self.open { colors::RING } else { self.border_color };
+        let border_color = if self.open { colors::ring() } else { self.border_color };
         canvas.fill_rounded_rect(rect, self.corners, self.background);
         canvas.stroke_rounded_rect(rect, self.corners, 1, border_color);
 
@@ -223,13 +223,13 @@ impl Widget for Select {
             Point::new(chevron_x - 4.0, chevron_y - 2.0),
             Point::new(chevron_x, chevron_y + 2.0),
             1,
-            colors::MUTED_FOREGROUND,
+            colors::muted_foreground(),
         );
         canvas.draw_line(
             Point::new(chevron_x, chevron_y + 2.0),
             Point::new(chevron_x + 4.0, chevron_y - 2.0),
             1,
-            colors::MUTED_FOREGROUND,
+            colors::muted_foreground(),
         );
 
     }
@@ -247,8 +247,8 @@ impl Widget for Select {
         let clip = Rect::new(dr.x1, dr.y1, dr.x2, dr.y1 + visible_h);
         canvas.push_clip(clip);
 
-        canvas.fill_rounded_rect(dr, self.corners, colors::POPOVER);
-        canvas.stroke_rounded_rect(dr, self.corners, 1, colors::BORDER);
+        canvas.fill_rounded_rect(dr, self.corners, colors::popover());
+        canvas.stroke_rounded_rect(dr, self.corners, 1, colors::border());
 
         let mut y = dr.y1 + 4.0;
         for (i, _option) in self.options.iter().enumerate() {

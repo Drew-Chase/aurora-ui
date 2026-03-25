@@ -108,7 +108,7 @@ impl Widget for Pagination {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-        let prev_tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, "<", &opts, colors::FOREGROUND, None);
+        let prev_tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, "<", &opts, colors::foreground(), None);
         self.prev_layout = Some(prev_tl);
 
         // Page number buttons
@@ -120,14 +120,14 @@ impl Widget for Pagination {
             } else {
                 aurora_text::font_options::FontWeight::Normal
             });
-            let fg = if page == self.current_page { colors::PRIMARY_FOREGROUND } else { colors::FOREGROUND };
+            let fg = if page == self.current_page { colors::primary_foreground() } else { colors::foreground() };
             let text = page.to_string();
             let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &text, &opts, fg, None);
             self.page_layouts.push(Some(tl));
         }
 
         // Next button
-        let next_tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, ">", &opts, colors::FOREGROUND, None);
+        let next_tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, ">", &opts, colors::foreground(), None);
         self.next_layout = Some(next_tl);
 
         // Total width: prev + pages + next + spacing
@@ -142,7 +142,7 @@ impl Widget for Pagination {
 
         // Prev button
         let prev_rect = Rect::new(x, rect.y1, x + self.button_size, rect.y2);
-        canvas.stroke_rounded_rect(prev_rect, self.corners, 1, colors::BORDER);
+        canvas.stroke_rounded_rect(prev_rect, self.corners, 1, colors::border());
         if let Some(ref tl) = self.prev_layout {
             let _s = tl.size(); let tw = _s.width; let th = _s.height;
             let tx = prev_rect.x1 + (self.button_size - tw) / 2.0;
@@ -157,9 +157,9 @@ impl Widget for Pagination {
             let is_current = page == self.current_page;
 
             if is_current {
-                canvas.fill_rounded_rect(btn_rect, self.corners, colors::PRIMARY);
+                canvas.fill_rounded_rect(btn_rect, self.corners, colors::primary());
             } else {
-                canvas.stroke_rounded_rect(btn_rect, self.corners, 1, colors::BORDER);
+                canvas.stroke_rounded_rect(btn_rect, self.corners, 1, colors::border());
             }
 
             if let Some(Some(tl)) = self.page_layouts.get(i) {
@@ -174,7 +174,7 @@ impl Widget for Pagination {
 
         // Next button
         let next_rect = Rect::new(x, rect.y1, x + self.button_size, rect.y2);
-        canvas.stroke_rounded_rect(next_rect, self.corners, 1, colors::BORDER);
+        canvas.stroke_rounded_rect(next_rect, self.corners, 1, colors::border());
         if let Some(ref tl) = self.next_layout {
             let _s = tl.size(); let tw = _s.width; let th = _s.height;
             let tx = next_rect.x1 + (self.button_size - tw) / 2.0;

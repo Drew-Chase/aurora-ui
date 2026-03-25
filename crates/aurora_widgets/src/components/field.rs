@@ -94,7 +94,7 @@ impl Widget for Field {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &label_text, &opts, colors::FOREGROUND, None);
+        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &label_text, &opts, colors::foreground(), None);
         tl.set_max_width(ctx.font_manager, w);
         let _s = tl.size(); let lw = _s.width; let lh = _s.height;
         self.label_size = Size::new(lw, lh);
@@ -113,7 +113,7 @@ impl Widget for Field {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(12.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, desc, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, desc, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, w);
             let _s = tl.size(); let dw = _s.width; let dh = _s.height;
             self.desc_size = Size::new(dw, dh);
@@ -126,7 +126,7 @@ impl Widget for Field {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(12.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, error, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, error, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, w);
             let _s = tl.size(); let ew = _s.width; let eh = _s.height;
             self.error_size = Size::new(ew, eh);

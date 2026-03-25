@@ -54,9 +54,9 @@ impl Command {
             width: 500.0,
             item_height: 40.0,
             max_items: 10,
-            background: colors::POPOVER,
-            border_color: colors::BORDER,
-            hover_bg: colors::ACCENT,
+            background: colors::popover(),
+            border_color: colors::border(),
+            hover_bg: colors::accent(),
             corners: Corners::all(12.0),
             padding: Edges::new(8.0, 8.0, 8.0, 8.0),
             hover_index: None,
@@ -145,15 +145,15 @@ impl Widget for Command {
             self.search.clone()
         };
         let _text_color = if self.search.is_empty() {
-            colors::MUTED_FOREGROUND
+            colors::muted_foreground()
         } else {
-            colors::FOREGROUND
+            colors::foreground()
         };
 
         let mut opts = ctx.font_options.clone();
         opts.size = Some(16.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &display, &opts, colors::FOREGROUND, None);
+        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &display, &opts, colors::foreground(), None);
         tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
         self.input_layout = Some(tl);
 
@@ -164,7 +164,7 @@ impl Widget for Command {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
             self.item_layouts.push(Some(tl));
         }
@@ -178,7 +178,7 @@ impl Widget for Command {
         }
 
         // Backdrop
-        canvas.fill_rect(rect, colors::OVERLAY);
+        canvas.fill_rect(rect, colors::overlay());
 
         let pr = self.palette_rect(&rect);
         canvas.fill_rounded_rect(pr, self.corners, self.background);
@@ -200,7 +200,7 @@ impl Widget for Command {
         if !self.filtered_indices.is_empty() {
             canvas.fill_rect(
                 Rect::new(pr.x1, y, pr.x2, y + 1.0),
-                colors::BORDER,
+                colors::border(),
             );
             y += 1.0;
         }

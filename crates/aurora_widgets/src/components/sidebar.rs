@@ -44,9 +44,9 @@ impl Sidebar {
             main: None,
             side: SidebarSide::Left,
             sidebar_width: 250.0,
-            border_color: colors::BORDER,
-            sidebar_bg: colors::BACKGROUND,
-            main_bg: colors::BACKGROUND,
+            border_color: colors::border(),
+            sidebar_bg: colors::background(),
+            main_bg: colors::background(),
             sidebar_size: Size::default(),
             main_size: Size::default(),
         }

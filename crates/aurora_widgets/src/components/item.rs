@@ -50,7 +50,7 @@ impl Item {
             padding_x: 12.0,
             padding_y: 8.0,
             spacing: 12.0,
-            hover_bg: colors::ACCENT,
+            hover_bg: colors::accent(),
             corners: Corners::all(6.0),
             hovered: false,
             on_click: None,
@@ -123,7 +123,7 @@ impl Widget for Item {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.label, &opts, colors::FOREGROUND, None);
+        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.label, &opts, colors::foreground(), None);
         tl.set_max_width(ctx.font_manager, text_w);
         let lh = tl.size().height;
         self.label_height = lh;
@@ -135,7 +135,7 @@ impl Widget for Item {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(12.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, desc, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, desc, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, text_w);
             let dh = tl.size().height;
             self.desc_height = dh;

@@ -186,6 +186,43 @@ pub fn config(input: TokenStream) -> TokenStream {
         quote! { pub fn #fn_name() -> f32 { PROFILE_VALUES[aurora_theme::current_profile()][#i] } }
     }).collect();
 
+    // Build well-known slot registration: for each profile, build a 26-color array
+    // mapping well-known names to their aurora_theme::slots indices.
+    let well_known: &[(&str, usize)] = &[
+        ("background", 0), ("foreground", 1), ("muted", 2), ("muted_foreground", 3),
+        ("border", 4), ("input_border", 5), ("ring", 6), ("primary", 7),
+        ("primary_foreground", 8), ("secondary", 9), ("secondary_foreground", 10),
+        ("accent", 11), ("accent_foreground", 12), ("destructive", 13),
+        ("destructive_foreground", 14), ("success", 15), ("success_foreground", 16),
+        ("warning", 17), ("warning_foreground", 18), ("info", 19),
+        ("info_foreground", 20), ("card", 21), ("card_foreground", 22),
+        ("popover", 23), ("popover_foreground", 24), ("overlay", 25),
+    ];
+
+    let mut slot_colors_per_profile: Vec<Vec<proc_macro2::TokenStream>> = Vec::new();
+    for pname in &profile_names {
+        let profile = root_obj.get(pname.as_str()).cloned().unwrap_or_default();
+        let mut slots: Vec<proc_macro2::TokenStream> = Vec::new();
+        for &(name, _slot) in well_known {
+            let val = get_val(&profile, "colors", name)
+                .or_else(|| get_val(&default_profile, "colors", name));
+            if let Some(v) = val {
+                slots.push(parse_color_token(Some(&v)));
+            } else {
+                // Use the built-in default from aurora_theme
+                let idx = _slot;
+                slots.push(quote! { aurora_theme::DEFAULT_COLORS[#idx] });
+            }
+        }
+        slot_colors_per_profile.push(slots);
+    }
+
+    let slot_arrays: Vec<_> = slot_colors_per_profile.iter().enumerate().map(|(i, slots)| {
+        let name = format_ident!("SLOT_COLORS_{}", i);
+        quote! { static #name: [aurora_theme::Color; 26] = [#(#slots),*]; }
+    }).collect();
+    let slot_names: Vec<_> = (0..num_profiles).map(|i| format_ident!("SLOT_COLORS_{}", i)).collect();
+
     let output = quote! {
         #[allow(dead_code)]
         pub mod theme {
@@ -211,6 +248,18 @@ pub fn config(input: TokenStream) -> TokenStream {
                 NAMES[id as usize]
             }
 
+            // Well-known slot color arrays (for aurora_theme registration)
+            #(#slot_arrays)*
+
+            /// Register the user theme with aurora_theme so all widgets
+            /// pick up the correct colors. Call once at startup.
+            pub fn init() {
+                aurora_theme::register_colors(
+                    vec![#(#slot_names.to_vec()),*]
+                );
+            }
+
+            // Custom theme color arrays (for direct theme::colors::* access)
             #(#color_arrays)*
             #(#edge_arrays)*
             #(#corner_arrays)*

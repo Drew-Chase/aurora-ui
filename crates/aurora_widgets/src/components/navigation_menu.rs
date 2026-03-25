@@ -47,8 +47,8 @@ impl NavigationMenu {
             spacing: 2.0,
             padding_x: 12.0,
             indicator_width: 3.0,
-            indicator_color: colors::PRIMARY,
-            hover_bg: colors::ACCENT,
+            indicator_color: colors::primary(),
+            hover_bg: colors::accent(),
             corners: Corners::all(6.0),
             width: None,
             on_select: None,
@@ -103,7 +103,7 @@ impl Widget for NavigationMenu {
             } else {
                 aurora_text::font_options::FontWeight::Normal
             });
-            let fg = if is_selected { colors::FOREGROUND } else { colors::MUTED_FOREGROUND };
+            let fg = if is_selected { colors::foreground() } else { colors::muted_foreground() };
             let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, fg, None);
             tl.set_max_width(ctx.font_manager, w - self.padding_x * 2.0 - self.indicator_width - 8.0);
             self.item_layouts.push(Some(tl));

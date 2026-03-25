@@ -33,9 +33,9 @@ impl Kbd {
         Self {
             text: text.into(),
             font_size: 12.0,
-            background_color: colors::MUTED,
-            foreground_color: colors::MUTED_FOREGROUND,
-            border_color: colors::BORDER,
+            background_color: colors::muted(),
+            foreground_color: colors::muted_foreground(),
+            border_color: colors::border(),
             corners: Corners::all(4.0),
             layout: None,
         }

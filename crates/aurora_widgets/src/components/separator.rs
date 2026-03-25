@@ -36,7 +36,7 @@ impl Separator {
         Self {
             orientation: SeparatorOrientation::Horizontal,
             thickness: 1.0,
-            color: colors::BORDER,
+            color: colors::border(),
             width: None,
             height: None,
         }

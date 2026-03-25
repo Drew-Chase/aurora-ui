@@ -43,10 +43,10 @@ impl ButtonGroup {
             selected: None,
             height: 36.0,
             padding: 16.0,
-            border_color: colors::BORDER,
-            selected_bg: colors::PRIMARY,
-            selected_fg: colors::PRIMARY_FOREGROUND,
-            normal_fg: colors::FOREGROUND,
+            border_color: colors::border(),
+            selected_bg: colors::primary(),
+            selected_fg: colors::primary_foreground(),
+            normal_fg: colors::foreground(),
             corners: Corners::all(6.0),
             on_click: None,
             button_layouts: Vec::new(),
@@ -102,7 +102,7 @@ impl Widget for ButtonGroup {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, f32::MAX);
             let tw = tl.size().width;
             let btn_w = tw + self.padding * 2.0;

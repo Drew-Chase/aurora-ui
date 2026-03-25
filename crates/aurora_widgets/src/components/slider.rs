@@ -45,8 +45,8 @@ impl Slider {
             step: None,
             track_height: 6.0,
             thumb_size: 20.0,
-            track_color: colors::SECONDARY,
-            fill_color: colors::PRIMARY,
+            track_color: colors::secondary(),
+            fill_color: colors::primary(),
             thumb_color: Color::WHITE,
             width: None,
             disabled: false,
@@ -165,7 +165,7 @@ impl Widget for Slider {
         );
         let thumb_corners = Corners::all(self.thumb_size / 2.0);
         canvas.fill_rounded_rect(thumb_rect, thumb_corners, self.thumb_color);
-        canvas.stroke_rounded_rect(thumb_rect, thumb_corners, 1, colors::BORDER);
+        canvas.stroke_rounded_rect(thumb_rect, thumb_corners, 1, colors::border());
     }
 
     fn children(&self) -> &[Box<dyn Widget>] {

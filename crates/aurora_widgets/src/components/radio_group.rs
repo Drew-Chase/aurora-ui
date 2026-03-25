@@ -131,7 +131,7 @@ impl Widget for RadioGroup {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(FontWeight::Normal);
-            let mut tl = TextLayout::new(ctx.font_manager, label, &opts, colors::FOREGROUND, None);
+            let mut tl = TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, available.width - self.radio_size - 8.0);
             let ts = tl.size();
             let item_h = ts.height.max(self.radio_size);
@@ -165,15 +165,15 @@ impl Widget for RadioGroup {
             let border_alpha = ((1.0 - t) * 255.0).min(255.0) as u8;
             if border_alpha > 0 {
                 let border_color = aurora_core::color::Color::new(
-                    colors::INPUT_BORDER.red,
-                    colors::INPUT_BORDER.green,
-                    colors::INPUT_BORDER.blue,
+                    colors::input_border().red,
+                    colors::input_border().green,
+                    colors::input_border().blue,
                     border_alpha,
                 );
                 canvas.stroke_rounded_rect(circle_rect, circle_corners, 2, border_color);
             }
             if t > 0.0 {
-                let fill = colors::BACKGROUND.lerp(&colors::PRIMARY, t);
+                let fill = colors::background().lerp(&colors::primary(), t);
                 canvas.fill_rounded_rect(circle_rect, circle_corners, fill);
 
                 // Inner dot scales in
@@ -186,7 +186,7 @@ impl Widget for RadioGroup {
                         circle_rect.y1 + (self.radio_size + dot_size) / 2.0,
                     );
                     let dot_corners = Corners::all(dot_size / 2.0);
-                    canvas.fill_rounded_rect(dot_rect, dot_corners, colors::PRIMARY_FOREGROUND);
+                    canvas.fill_rounded_rect(dot_rect, dot_corners, colors::primary_foreground());
                 }
             }
 

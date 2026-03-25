@@ -76,7 +76,7 @@ impl Accordion {
             header_height: 44.0,
             header_padding: Edges::new(0.0, 16.0, 0.0, 16.0),
             content_padding: Edges::new(0.0, 16.0, 16.0, 16.0),
-            border_color: colors::BORDER,
+            border_color: colors::border(),
             header_bg: Color::TRANSPARENT,
             spacing: 0.0,
             width: None,
@@ -155,7 +155,7 @@ impl Widget for Accordion {
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
             let tl = aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, &section.title, &opts, colors::FOREGROUND, None,
+                ctx.font_manager, &section.title, &opts, colors::foreground(), None,
             );
             section.title_layout = Some(tl);
 
@@ -215,12 +215,12 @@ impl Widget for Accordion {
             canvas.draw_line(
                 Point::new(chevron_x + dx1, chevron_cy + dy1),
                 Point::new(chevron_x + dx2, chevron_cy + dy2),
-                1, colors::MUTED_FOREGROUND,
+                1, colors::muted_foreground(),
             );
             canvas.draw_line(
                 Point::new(chevron_x + dx2, chevron_cy + dy2),
                 Point::new(chevron_x + dx3, chevron_cy + dy3),
-                1, colors::MUTED_FOREGROUND,
+                1, colors::muted_foreground(),
             );
 
             // Bottom border

@@ -62,9 +62,9 @@ impl DataTable {
             sort_direction: SortDirection::None,
             row_height: 48.0,
             header_height: 48.0,
-            border_color: colors::BORDER,
-            header_bg: colors::MUTED,
-            header_fg: colors::MUTED_FOREGROUND,
+            border_color: colors::border(),
+            header_bg: colors::muted(),
+            header_fg: colors::muted_foreground(),
             striped: true,
             width: None,
             column_widths: Vec::new(),
@@ -170,7 +170,7 @@ impl Widget for DataTable {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(12.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &text, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &text, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, col_w - 24.0);
             self.header_layouts.push(Some(tl));
         }
@@ -185,7 +185,7 @@ impl Widget for DataTable {
                 let mut opts = ctx.font_options.clone();
                 opts.size = Some(14.0);
                 opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-                let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, cell, &opts, colors::FOREGROUND, None);
+                let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, cell, &opts, colors::foreground(), None);
                 tl.set_max_width(ctx.font_manager, cw - 24.0);
                 row_layouts.push(Some(tl));
             }
@@ -227,7 +227,7 @@ impl Widget for DataTable {
             let bg = if self.striped && display_idx % 2 == 1 {
                 Color::new(250, 250, 250, 255)
             } else {
-                colors::BACKGROUND
+                colors::background()
             };
             canvas.fill_rect(
                 Rect::new(rect.x1, row_y, rect.x2, row_y + self.row_height),

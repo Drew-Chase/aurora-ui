@@ -25,7 +25,7 @@ impl Label {
         Self {
             text: text.into(),
             font_size: 14.0,
-            color: colors::FOREGROUND,
+            color: colors::foreground(),
             font_weight: FontWeight::Medium,
             width: None,
             height: None,

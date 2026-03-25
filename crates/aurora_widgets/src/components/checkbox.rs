@@ -106,9 +106,9 @@ impl Widget for Checkbox {
             opts.size = Some(14.0);
             opts.weight = Some(FontWeight::Normal);
             let label_color = if self.disabled {
-                colors::MUTED_FOREGROUND
+                colors::muted_foreground()
             } else {
-                colors::FOREGROUND
+                colors::foreground()
             };
             let max_label_w = available.width - self.size - 8.0;
             let mut tl = TextLayout::new(ctx.font_manager, label, &opts, label_color, None);
@@ -134,7 +134,7 @@ impl Widget for Checkbox {
 
         if t > 0.0 {
             // Interpolate from border-only to filled primary
-            let bg = colors::BACKGROUND.lerp(&colors::PRIMARY, t);
+            let bg = colors::background().lerp(&colors::primary(), t);
             canvas.fill_rounded_rect(box_rect, corners, bg);
 
             // Draw checkmark scaled by t (from center)
@@ -151,9 +151,9 @@ impl Widget for Checkbox {
 
             let check_alpha = (t * 255.0).min(255.0) as u8;
             let check_color = aurora_core::color::Color::new(
-                colors::PRIMARY_FOREGROUND.red,
-                colors::PRIMARY_FOREGROUND.green,
-                colors::PRIMARY_FOREGROUND.blue,
+                colors::primary_foreground().red,
+                colors::primary_foreground().green,
+                colors::primary_foreground().blue,
                 check_alpha,
             );
             canvas.draw_line(p1, p2, 2, check_color);
@@ -164,9 +164,9 @@ impl Widget for Checkbox {
             // Draw border that fades out as we fill
             let border_alpha = ((1.0 - t) * 255.0).min(255.0) as u8;
             let border_color = aurora_core::color::Color::new(
-                colors::INPUT_BORDER.red,
-                colors::INPUT_BORDER.green,
-                colors::INPUT_BORDER.blue,
+                colors::input_border().red,
+                colors::input_border().green,
+                colors::input_border().blue,
                 border_alpha,
             );
             canvas.stroke_rounded_rect(box_rect, corners, 2, border_color);

@@ -130,9 +130,9 @@ impl Typography {
 
     fn default_color(&self) -> Color {
         match self.level {
-            TypographyLevel::Muted => colors::MUTED_FOREGROUND,
-            TypographyLevel::Lead => colors::MUTED_FOREGROUND,
-            _ => colors::FOREGROUND,
+            TypographyLevel::Muted => colors::muted_foreground(),
+            TypographyLevel::Lead => colors::muted_foreground(),
+            _ => colors::foreground(),
         }
     }
 }
@@ -165,7 +165,7 @@ impl Widget for Typography {
         if matches!(self.level, TypographyLevel::InlineCode) {
             let bg_rect = Rect::new(rect.x1 - 2.0, rect.y1, rect.x2 + 2.0, rect.y2);
             let corners = Corners::all(3.0);
-            canvas.fill_rounded_rect(bg_rect, corners, colors::MUTED);
+            canvas.fill_rounded_rect(bg_rect, corners, colors::muted());
         }
 
         if let Some(ref tl) = self.layout {

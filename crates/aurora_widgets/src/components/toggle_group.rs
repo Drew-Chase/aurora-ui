@@ -81,7 +81,7 @@ impl Widget for ToggleGroup {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(FontWeight::Medium);
-            let mut tl = TextLayout::new(ctx.font_manager, label, &opts, colors::FOREGROUND, None);
+            let mut tl = TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, f32::MAX);
             let ts = tl.size();
             let item_w = ts.width + pad * 2.0;
@@ -95,7 +95,7 @@ impl Widget for ToggleGroup {
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
         let outer_corners = Corners::all(6.0);
-        canvas.stroke_rounded_rect(rect, outer_corners, 1, colors::BORDER);
+        canvas.stroke_rounded_rect(rect, outer_corners, 1, colors::border());
 
         let mut x = rect.x1;
         for (i, item_w) in self.item_widths.iter().enumerate() {
@@ -103,7 +103,7 @@ impl Widget for ToggleGroup {
             let is_selected = self.selected == Some(i);
 
             if is_selected {
-                canvas.fill_rounded_rect(item_rect, outer_corners, colors::ACCENT);
+                canvas.fill_rounded_rect(item_rect, outer_corners, colors::accent());
             }
 
             if let Some(Some(tl)) = self.item_layouts.get(i) {
@@ -118,7 +118,7 @@ impl Widget for ToggleGroup {
                 let sep_x = x + item_w;
                 canvas.fill_rect(
                     Rect::new(sep_x - 0.5, rect.y1 + 4.0, sep_x + 0.5, rect.y2 - 4.0),
-                    colors::BORDER,
+                    colors::border(),
                 );
             }
 

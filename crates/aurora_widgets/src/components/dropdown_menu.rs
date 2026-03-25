@@ -62,9 +62,9 @@ impl DropdownMenu {
             open: false,
             item_height: 36.0,
             width: 200.0,
-            background: colors::POPOVER,
-            border_color: colors::BORDER,
-            hover_bg: colors::ACCENT,
+            background: colors::popover(),
+            border_color: colors::border(),
+            hover_bg: colors::accent(),
             corners: Corners::all(8.0),
             padding: Edges::new(4.0, 4.0, 4.0, 4.0),
             on_select: None,
@@ -188,7 +188,7 @@ impl Widget for DropdownMenu {
                     let mut opts = ctx.font_options.clone();
                     opts.size = Some(14.0);
                     opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-                    let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, colors::FOREGROUND, None);
+                    let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
                     tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
                     self.item_layouts.push(Some(tl));
                 }
@@ -263,7 +263,7 @@ impl Widget for DropdownMenu {
                     let sep_y = y + 4.0;
                     canvas.fill_rect(
                         Rect::new(full_mr.x1 + self.padding.left, sep_y, full_mr.x2 - self.padding.right, sep_y + 1.0),
-                        colors::BORDER,
+                        colors::border(),
                     );
                     y += 9.0;
                     layout_idx += 1;

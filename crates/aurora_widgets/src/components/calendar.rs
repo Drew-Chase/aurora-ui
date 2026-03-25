@@ -51,9 +51,9 @@ impl Calendar {
             cell_size: 40.0,
             header_height: 40.0,
             corners: Corners::all(9999.0),
-            selected_bg: colors::PRIMARY,
-            selected_fg: colors::PRIMARY_FOREGROUND,
-            today_bg: colors::ACCENT,
+            selected_bg: colors::primary(),
+            selected_fg: colors::primary_foreground(),
+            today_bg: colors::accent(),
             today_day: None,
             on_select: None,
             on_month_change: None,
@@ -192,15 +192,15 @@ impl Widget for Calendar {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-        let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &month_str, &opts, colors::FOREGROUND, None);
+        let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &month_str, &opts, colors::foreground(), None);
         self.month_label_layout = Some(tl);
 
         // Prev/Next arrows
         let mut arrow_opts = ctx.font_options.clone();
         arrow_opts.size = Some(14.0);
         arrow_opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-        self.prev_layout = Some(aurora_text::text_layout::TextLayout::new(ctx.font_manager, "<", &arrow_opts, colors::FOREGROUND, None));
-        self.next_layout = Some(aurora_text::text_layout::TextLayout::new(ctx.font_manager, ">", &arrow_opts, colors::FOREGROUND, None));
+        self.prev_layout = Some(aurora_text::text_layout::TextLayout::new(ctx.font_manager, "<", &arrow_opts, colors::foreground(), None));
+        self.next_layout = Some(aurora_text::text_layout::TextLayout::new(ctx.font_manager, ">", &arrow_opts, colors::foreground(), None));
 
         // Weekday headers
         self.weekday_layouts.clear();
@@ -209,7 +209,7 @@ impl Widget for Calendar {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(12.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, *wd, &opts, colors::FOREGROUND, None);
+            let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, *wd, &opts, colors::foreground(), None);
             self.weekday_layouts.push(Some(tl));
         }
 
@@ -220,7 +220,7 @@ impl Widget for Calendar {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let fg = if is_selected { self.selected_fg } else { colors::FOREGROUND };
+            let fg = if is_selected { self.selected_fg } else { colors::foreground() };
             let text = day.to_string();
             let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &text, &opts, fg, None);
             self.day_layouts.push(Some(tl));
@@ -290,7 +290,7 @@ impl Widget for Calendar {
             if is_selected {
                 canvas.fill_rounded_rect(cell_rect, self.corners, self.selected_bg);
             } else if is_today {
-                canvas.stroke_rounded_rect(cell_rect, self.corners, 1, colors::PRIMARY);
+                canvas.stroke_rounded_rect(cell_rect, self.corners, 1, colors::primary());
             }
 
             if let Some(Some(tl)) = self.day_layouts.get((day - 1) as usize) {

@@ -96,7 +96,7 @@ impl Toast {
 
     fn bg_color(&self) -> Color {
         match self.variant {
-            ToastVariant::Default => colors::BACKGROUND,
+            ToastVariant::Default => colors::background(),
             ToastVariant::Success => Color::new(240, 253, 244, 255),
             ToastVariant::Error => Color::new(254, 242, 242, 255),
             ToastVariant::Warning => Color::new(254, 252, 232, 255),
@@ -106,19 +106,19 @@ impl Toast {
 
     fn border_color(&self) -> Color {
         match self.variant {
-            ToastVariant::Default => colors::BORDER,
-            ToastVariant::Success => colors::SUCCESS,
-            ToastVariant::Error => colors::DESTRUCTIVE,
-            ToastVariant::Warning => colors::WARNING,
-            ToastVariant::Info => colors::INFO,
+            ToastVariant::Default => colors::border(),
+            ToastVariant::Success => colors::success(),
+            ToastVariant::Error => colors::destructive(),
+            ToastVariant::Warning => colors::warning(),
+            ToastVariant::Info => colors::info(),
         }
     }
 
     fn fg_color(&self) -> Color {
         match self.variant {
-            ToastVariant::Default => colors::FOREGROUND,
+            ToastVariant::Default => colors::foreground(),
             ToastVariant::Success => Color::new(22, 163, 74, 255),
-            ToastVariant::Error => colors::DESTRUCTIVE,
+            ToastVariant::Error => colors::destructive(),
             ToastVariant::Warning => Color::new(161, 98, 7, 255),
             ToastVariant::Info => Color::new(37, 99, 235, 255),
         }
@@ -138,7 +138,7 @@ impl Widget for Toast {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, title, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, title, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
             let th = tl.size().height;
             self.title_height = th;
@@ -149,7 +149,7 @@ impl Widget for Toast {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.message, &opts, colors::FOREGROUND, None);
+        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.message, &opts, colors::foreground(), None);
         tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
         let mh = tl.size().height;
         self.message_height = mh;
@@ -192,13 +192,13 @@ impl Widget for Toast {
             Point::new(close_x - 4.0, close_y),
             Point::new(close_x + 4.0, close_y + 8.0),
             1,
-            colors::MUTED_FOREGROUND,
+            colors::muted_foreground(),
         );
         canvas.draw_line(
             Point::new(close_x + 4.0, close_y),
             Point::new(close_x - 4.0, close_y + 8.0),
             1,
-            colors::MUTED_FOREGROUND,
+            colors::muted_foreground(),
         );
     }
 

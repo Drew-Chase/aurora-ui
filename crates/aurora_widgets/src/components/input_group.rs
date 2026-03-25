@@ -39,8 +39,8 @@ impl InputGroup {
             input: Box::new(input),
             prefix: None,
             suffix: None,
-            border_color: colors::INPUT_BORDER,
-            background: colors::BACKGROUND,
+            border_color: colors::input_border(),
+            background: colors::background(),
             corners: Corners::all(6.0),
             height: Some(40.0),
             width: None,
@@ -137,7 +137,7 @@ impl Widget for InputGroup {
             // Separator
             canvas.fill_rect(
                 Rect::new(x - self.spacing / 2.0 - 0.5, rect.y1 + 4.0, x - self.spacing / 2.0 + 0.5, rect.y2 - 4.0),
-                colors::BORDER,
+                colors::border(),
             );
         }
 
@@ -152,7 +152,7 @@ impl Widget for InputGroup {
             // Separator
             canvas.fill_rect(
                 Rect::new(x - self.spacing / 2.0 - 0.5, rect.y1 + 4.0, x - self.spacing / 2.0 + 0.5, rect.y2 - 4.0),
-                colors::BORDER,
+                colors::border(),
             );
 
             let sy = cy - self.suffix_size.height / 2.0;

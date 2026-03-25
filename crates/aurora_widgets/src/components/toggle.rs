@@ -135,7 +135,7 @@ impl Widget for Toggle {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(FontWeight::Medium);
-            let mut tl = TextLayout::new(ctx.font_manager, label, &opts, colors::FOREGROUND, None);
+            let mut tl = TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, f32::MAX);
             let ts = tl.size();
             content_w = ts.width;
@@ -157,7 +157,7 @@ impl Widget for Toggle {
         let t = self.current_t();
 
         // Animated background
-        let bg = Color::TRANSPARENT.lerp(&colors::ACCENT, t);
+        let bg = Color::TRANSPARENT.lerp(&colors::accent(), t);
         if bg.alpha > 0 {
             canvas.fill_rounded_rect(rect, corners, bg);
         }
@@ -171,9 +171,9 @@ impl Widget for Toggle {
                 (t * 255.0).min(255.0) as u8
             };
             let border_color = Color::new(
-                colors::BORDER.red,
-                colors::BORDER.green,
-                colors::BORDER.blue,
+                colors::border().red,
+                colors::border().green,
+                colors::border().blue,
                 border_alpha,
             );
             canvas.stroke_rounded_rect(rect, corners, 1, border_color);

@@ -49,9 +49,9 @@ impl InputOtp {
             cursor: 0,
             cell_size: 44.0,
             spacing: 8.0,
-            background: colors::BACKGROUND,
-            border_color: colors::INPUT_BORDER,
-            focused_border: colors::RING,
+            background: colors::background(),
+            border_color: colors::input_border(),
+            focused_border: colors::ring(),
             corners: Corners::all(8.0),
             focused: false,
             tab_index: None,
@@ -116,7 +116,7 @@ impl Widget for InputOtp {
                 let mut opts = ctx.font_options.clone();
                 opts.size = Some(20.0);
                 opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-                let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &text, &opts, colors::FOREGROUND, None);
+                let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &text, &opts, colors::foreground(), None);
                 self.char_layouts.push(Some(tl));
             } else {
                 self.char_layouts.push(None);
@@ -159,7 +159,7 @@ impl Widget for InputOtp {
                     cell_rect.y1 + (self.cell_size + dot_size) / 2.0,
                 );
                 let dot_corners = Corners::all(dot_size / 2.0);
-                canvas.fill_rounded_rect(dot_rect, dot_corners, colors::MUTED_FOREGROUND);
+                canvas.fill_rounded_rect(dot_rect, dot_corners, colors::muted_foreground());
             }
 
             x += self.cell_size + self.spacing;

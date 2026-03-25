@@ -29,7 +29,7 @@ impl Skeleton {
         Self {
             width: None,
             height: Some(20.0),
-            color: colors::MUTED,
+            color: colors::muted(),
             corners: Corners::all(4.0),
         }
     }
@@ -59,7 +59,7 @@ impl Skeleton {
         Self {
             width: Some(size),
             height: Some(size),
-            color: colors::MUTED,
+            color: colors::muted(),
             corners: Corners::all(size / 2.0),
         }
     }

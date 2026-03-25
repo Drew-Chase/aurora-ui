@@ -50,9 +50,9 @@ impl Menubar {
             height: 36.0,
             item_height: 32.0,
             padding: 12.0,
-            background: colors::BACKGROUND,
-            border_color: colors::BORDER,
-            hover_bg: colors::ACCENT,
+            background: colors::background(),
+            border_color: colors::border(),
+            hover_bg: colors::accent(),
             active_menu: None,
             hover_item: None,
             on_select: None,
@@ -114,7 +114,7 @@ impl Widget for Menubar {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &menu.label, &opts, colors::FOREGROUND, None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &menu.label, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, f32::MAX);
             let tw = tl.size().width;
             self.menu_widths.push(tw + self.padding * 2.0);
@@ -126,7 +126,7 @@ impl Widget for Menubar {
                 let mut opts = ctx.font_options.clone();
                 opts.size = Some(14.0);
                 opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-                let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, item, &opts, colors::FOREGROUND, None);
+                let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, item, &opts, colors::foreground(), None);
                 tl.set_max_width(ctx.font_manager, self.dropdown_width - 24.0);
                 layouts.push(Some(tl));
             }
@@ -168,7 +168,7 @@ impl Widget for Menubar {
         if let Some(menu_idx) = self.active_menu {
             let dr = self.dropdown_rect(menu_idx, &rect);
             let drop_corners = Corners::all(6.0);
-            canvas.fill_rounded_rect(dr, drop_corners, colors::POPOVER);
+            canvas.fill_rounded_rect(dr, drop_corners, colors::popover());
             canvas.stroke_rounded_rect(dr, drop_corners, 1, self.border_color);
 
             let mut iy = dr.y1 + 4.0;

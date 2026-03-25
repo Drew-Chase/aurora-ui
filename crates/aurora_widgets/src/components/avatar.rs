@@ -42,8 +42,8 @@ impl Avatar {
         Self {
             initials: None,
             size_preset: AvatarSize::Medium,
-            background_color: colors::MUTED,
-            foreground_color: colors::MUTED_FOREGROUND,
+            background_color: colors::muted(),
+            foreground_color: colors::muted_foreground(),
             custom_size: None,
             layout: None,
         }
