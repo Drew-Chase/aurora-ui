@@ -103,7 +103,6 @@ pub struct App {
     pub font_options: aurora_text::font_options::FontOptions,
     #[cfg(feature = "text")]
     pub fonts: Vec<&'static [u8]>,
-    pub continuous_redraw: bool,
 }
 
 /// Decoded RGBA icon data for setting the window icon.
@@ -136,6 +135,7 @@ pub struct AppWindow {
     pub swash_cache: aurora_text::cosmic_text::SwashCache,
     pub(crate) _cursor: winit::window::CursorIcon,
     pub(crate) last_mouse_position: Option<Point>,
+    next_frame_requested: bool,
 }
 
 struct AppHandler<F> {
@@ -146,7 +146,6 @@ struct AppHandler<F> {
     current_modifiers: winit::keyboard::ModifiersState,
     benchmark: bool,
     start_time: std::time::Instant,
-    continuous_redraw: bool,
 }
 
 /// Per-frame information passed to the render callback.
@@ -264,17 +263,6 @@ impl App {
         self
     }
 
-    /// Enables continuous redrawing every frame.
-    ///
-    /// When `true`, the event loop requests a new frame after each paint,
-    /// creating a continuous render loop suitable for animations. When `false`
-    /// (the default), the window only redraws in response to user input or
-    /// window events.
-    pub fn continuous_redraw(mut self, enabled: bool) -> Self {
-        self.continuous_redraw = enabled;
-        self
-    }
-
     /// Sets the global font options applied to all text widgets by default.
     ///
     /// Individual widgets can override any field via their own builder methods.
@@ -341,7 +329,6 @@ impl App {
     {
         let benchmark = std::env::var("AURORA_BENCHMARK").is_ok();
         let start_time = std::time::Instant::now();
-        let continuous_redraw = self.continuous_redraw;
         let mut app_handler = AppHandler {
             config: self,
             on_render,
@@ -350,7 +337,6 @@ impl App {
             current_modifiers: winit::keyboard::ModifiersState::default(),
             benchmark,
             start_time,
-            continuous_redraw,
         };
         let event_loop = winit::event_loop::EventLoop::new().map_err(AppError::from)?;
         event_loop
@@ -378,7 +364,6 @@ impl Default for App {
             font_options: aurora_text::font_options::FontOptions::default(),
             #[cfg(feature = "text")]
             fonts: vec![],
-            continuous_redraw: false,
         }
     }
 }
@@ -420,6 +405,7 @@ impl AppWindow {
                 root_widget: None,
                 _cursor: winit::window::CursorIcon::Default,
                 last_mouse_position: None,
+                next_frame_requested: false,
             })
         }
         #[cfg(not(feature = "text"))]
@@ -429,6 +415,7 @@ impl AppWindow {
             root_widget: None,
             _cursor: winit::window::CursorIcon::Default,
             last_mouse_position: None,
+            next_frame_requested: false,
         })
     }
     /// Lays out and paints a root widget tree into the window.
@@ -604,6 +591,19 @@ impl AppWindow {
         self.window_handle.request_redraw();
     }
 
+    /// Requests that the render callback be invoked again on the next frame.
+    ///
+    /// Call this from your render callback when you have active animations
+    /// or other state that needs continuous updates. The actual redraw is
+    /// scheduled after the current frame finishes presenting, so it does not
+    /// interfere with the current paint cycle.
+    ///
+    /// When no call to `request_next_frame` is made, the window only redraws
+    /// in response to user input or window events.
+    pub fn request_next_frame(&mut self) {
+        self.next_frame_requested = true;
+    }
+
     /// Returns a shared reference to the underlying [`winit::window::Window`].
     pub fn window_handle(&self) -> Arc<winit::window::Window> {
         self.window_handle.clone()
@@ -745,14 +745,6 @@ where
 
     }
 
-    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        if self.continuous_redraw {
-            if let Some(window) = &self.window {
-                window.request_redraw();
-            }
-        }
-    }
-
     fn window_event(
         &mut self,
         event_loop: &ActiveEventLoop,
@@ -787,9 +779,13 @@ where
                 };
                 window.gpu.resize(frame_info.width, frame_info.height);
                 window.clear(background_color);
+                window.next_frame_requested = false;
                 (self.on_render)(window, frame_info);
                 window.layout_and_paint();
                 window.present();
+                if window.next_frame_requested {
+                    window.request_redraw();
+                }
             }
             WindowEvent::Resized(physical_size) => {
                 let frame_info = FrameInfo {

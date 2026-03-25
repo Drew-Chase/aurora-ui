@@ -40,7 +40,6 @@ fn main() {
         .position(WindowPosition::Center)
         .use_system_fonts()
         .font_options(FontOptions::new().family("Segoe UI"))
-        .continuous_redraw(true)
         .run(move |window, _frame_info| {
             // Compute delta time
             let now = Instant::now();
@@ -58,6 +57,14 @@ fn main() {
             breathe.tick(dt);
             bounce_tween.tick(dt);
             color_cycle.tick(dt);
+
+            // Request next frame while any animation is active
+            if !pos_tween.is_finished() || !color_tween.is_finished()
+                || !breathe.is_finished() || !bounce_tween.is_finished()
+                || !color_cycle.is_finished()
+            {
+                window.request_next_frame();
+            }
 
             // Read current values
             let pos_x = pos_tween.value();
