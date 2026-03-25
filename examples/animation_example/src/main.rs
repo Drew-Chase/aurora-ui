@@ -41,6 +41,9 @@ fn main() {
         .use_system_fonts()
         .font_options(FontOptions::new().family("Segoe UI"))
         .run(move |window, _frame_info| {
+            // Request continuous repainting for animation
+            window.request_redraw();
+
             // Compute delta time
             let now = Instant::now();
             let dt = if started {
