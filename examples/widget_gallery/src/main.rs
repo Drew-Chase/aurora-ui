@@ -4,14 +4,19 @@ use aurora_ui::prelude::*;
 use aurora_ui::aurora_widgets::components::*;
 
 fn main() {
+    let mut initialized = false;
+
     App::new()
         .title("Aurora Widget Gallery")
         .size((900, 700))
         .position(WindowPosition::Center)
         .use_system_fonts()
         .font_options(FontOptions::new().family("Segoe UI"))
-        .run(|window, _frame_info| {
-            window.root(gallery());
+        .run(move |window, _frame_info| {
+            if !initialized {
+                window.root(gallery());
+                initialized = true;
+            }
         })
         .expect("Failed to run app");
 }
