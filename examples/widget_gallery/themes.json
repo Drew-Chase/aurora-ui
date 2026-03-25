@@ -1,6 +1,7 @@
 {
   "_": {
     "colors": {
+      "super_duper_test_color": "#ff00ff",
       "background": "#09090b",
       "foreground": "#fafafa",
       "muted": "#27272a",
