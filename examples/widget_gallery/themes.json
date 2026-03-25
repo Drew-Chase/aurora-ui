@@ -1,13 +1,12 @@
 {
   "_": {
     "colors": {
-      "super_duper_test_color": "#ff00ff",
       "background": "#09090b",
       "foreground": "#fafafa",
       "muted": "#27272a",
       "muted_foreground": "#a1a1aa",
       "border": "#27272a",
-      "input_border": "#27272a",
+      "input_border": "#3f3f46",
       "ring": "#d4d4d8",
       "primary": "#fafafa",
       "primary_foreground": "#09090b",
@@ -23,11 +22,15 @@
       "warning_foreground": "#09090b",
       "info": "#3b82f6",
       "info_foreground": "#fafafa",
-      "card": "#09090b",
+      "card": "#18181b",
       "card_foreground": "#fafafa",
-      "popover": "#09090b",
+      "popover": "#18181b",
       "popover_foreground": "#fafafa",
-      "overlay": { "r": 0, "g": 0, "b": 0, "a": 128 }
+      "overlay": { "r": 0, "g": 0, "b": 0, "a": 128 },
+      "sidebar": "#0f0f11",
+      "sidebar_foreground": "#a1a1aa",
+      "sidebar_accent": "#27272a",
+      "sidebar_accent_foreground": "#fafafa"
     },
     "edges": {
       "button_padding": { "top": 8, "right": 16, "bottom": 8, "left": 16 }
@@ -47,8 +50,8 @@
       "muted": "#f4f4f5",
       "muted_foreground": "#71717a",
       "border": "#e4e4e7",
-      "input_border": "#e4e4e7",
-      "ring": "#09090b",
+      "input_border": "#d4d4d8",
+      "ring": "#18181b",
       "primary": "#18181b",
       "primary_foreground": "#fafafa",
       "secondary": "#f4f4f5",
@@ -58,10 +61,14 @@
       "destructive": "#ef4444",
       "destructive_foreground": "#fafafa",
       "warning_foreground": "#422006",
-      "card": "#ffffff",
+      "card": "#f4f4f5",
       "card_foreground": "#09090b",
       "popover": "#ffffff",
-      "popover_foreground": "#09090b"
+      "popover_foreground": "#09090b",
+      "sidebar": "#f4f4f5",
+      "sidebar_foreground": "#71717a",
+      "sidebar_accent": "#e4e4e7",
+      "sidebar_accent_foreground": "#09090b"
     }
   },
   "candy": {
@@ -71,7 +78,7 @@
       "muted": "#2d1b4e",
       "muted_foreground": "#c084fc",
       "border": "#3b1f6e",
-      "input_border": "#3b1f6e",
+      "input_border": "#4c2888",
       "ring": "#e879f9",
       "primary": "#e879f9",
       "primary_foreground": "#1a0a2e",
@@ -87,10 +94,14 @@
       "warning_foreground": "#1a0a2e",
       "info": "#67e8f9",
       "info_foreground": "#1a0a2e",
-      "card": "#1a0a2e",
+      "card": "#231342",
       "card_foreground": "#f8e8ff",
       "popover": "#2d1b4e",
-      "popover_foreground": "#f8e8ff"
+      "popover_foreground": "#f8e8ff",
+      "sidebar": "#150828",
+      "sidebar_foreground": "#c084fc",
+      "sidebar_accent": "#3b1f6e",
+      "sidebar_accent_foreground": "#f0abfc"
     }
   }
 }

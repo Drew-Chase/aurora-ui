@@ -108,6 +108,8 @@ fn sidebar_widget(
         .selected(active_profile)
         .width(196.0)
         .height(32.0)
+        .background(theme::colors::sidebar_accent())
+        .border_color(theme::colors::border())
         .on_change(move |idx| {
             profile_setter.set(move |s| s.profile = idx);
         });
@@ -130,7 +132,7 @@ fn sidebar_widget(
     // Layout: fixed header (dropdown + title) above scrollable list
     BoxWidget::new()
         .width(220)
-        .background_color(theme::colors::card())
+        .background_color(theme::colors::sidebar())
         .child(
             col!()
                 .width(220)
@@ -146,7 +148,7 @@ fn sidebar_widget(
                             Text::new("Components")
                                 .font_size(13.0)
                                 .font_weight(FontWeight::SemiBold)
-                                .color(Color::new(161, 161, 170, 255))
+                                .color(theme::colors::sidebar_foreground())
                                 .padding(Edges::new(0.0, 8.0, 4.0, 8.0)),
                         ),
                 )
@@ -162,14 +164,14 @@ fn sidebar_widget(
 
 fn sidebar_item(name: &str, active: bool, on_click: impl FnMut() + 'static) -> impl Widget {
     let bg = if active {
-        theme::colors::accent()
+        theme::colors::sidebar_accent()
     } else {
         Color::TRANSPARENT
     };
     let text_color = if active {
-        theme::colors::foreground()
+        theme::colors::sidebar_accent_foreground()
     } else {
-        theme::colors::muted_foreground()
+        theme::colors::sidebar_foreground()
     };
     let mut on_click = on_click;
 
@@ -269,7 +271,7 @@ pub fn example_section(title: &str, description: &str) -> Column {
 
 pub fn example_card(child: impl Widget + 'static) -> impl Widget {
     BoxWidget::new()
-        .background_color(Color::new(24, 24, 27, 255))
+        .background_color(theme::colors::card())
         .corners(Corners::all(8.0))
         .padding(Edges::all(32.0))
         .child(child)

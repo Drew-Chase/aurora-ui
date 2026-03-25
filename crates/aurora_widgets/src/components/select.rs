@@ -113,6 +113,16 @@ impl Select {
         self
     }
 
+    pub fn background(mut self, color: Color) -> Self {
+        self.background = color;
+        self
+    }
+
+    pub fn border_color(mut self, color: Color) -> Self {
+        self.border_color = color;
+        self
+    }
+
     pub fn on_change(mut self, cb: impl FnMut(usize) + 'static) -> Self {
         self.on_change = Some(Box::new(cb));
         self
