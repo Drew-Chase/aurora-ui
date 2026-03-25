@@ -83,24 +83,33 @@ impl Widget for BoxWidget {
             Some(w) => w as f32,
             None => available.width,
         };
-        let height = match self.height {
-            Some(h) => h as f32,
-            None => available.height,
+
+        // Layout child to determine content height
+        let inner_w = (width - self.padding.horizontal()).max(0.0);
+        let inner_h = match self.height {
+            Some(h) => ((h as f32) - self.padding.vertical()).max(0.0),
+            None => (available.height - self.padding.vertical()).max(0.0),
         };
 
-        let content_size = Size::new(
-            (width - self.padding.horizontal()).max(0.0),
-            (height - self.padding.vertical()).max(0.0),
-        );
-        if let Some(child) = &mut self.child {
-            let child_size = child.layout(content_size, ctx);
+        let child_size = if let Some(child) = &mut self.child {
+            let content_area = Size::new(inner_w, inner_h);
+            let cs = child.layout(content_area, ctx);
             self.child_rect = Rect::new(
                 self.padding.left,
                 self.padding.top,
-                self.padding.left + child_size.width.min(content_size.width),
-                self.padding.top + child_size.height.min(content_size.height),
+                self.padding.left + cs.width.min(inner_w),
+                self.padding.top + cs.height.min(inner_h),
             );
-        }
+            cs
+        } else {
+            Size::default()
+        };
+
+        // Without explicit height, size to content instead of filling available space
+        let height = match self.height {
+            Some(h) => h as f32,
+            None => child_size.height + self.padding.vertical(),
+        };
 
         Size::new(width.min(available.width), height.min(available.height))
     }
