@@ -520,7 +520,13 @@ impl AppWindow {
         let rect = Rect::from_size((width as f32, height as f32).into());
         if let Some(ref mut widget) = self.root_widget {
             let response = widget.event(event, rect);
-            if let Some(cursor) = response.cursor {
+            let is_mouse_move = matches!(event, WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(_)));
+            let cursor = response.cursor.or(if is_mouse_move {
+                Some(CursorIcon::Default)
+            } else {
+                None
+            });
+            if let Some(cursor) = cursor {
                 let winit_cursor = match cursor {
                     CursorIcon::Default => winit::window::CursorIcon::Default,
                     CursorIcon::Pointer => winit::window::CursorIcon::Pointer,
