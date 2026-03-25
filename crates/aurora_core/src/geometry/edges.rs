@@ -32,7 +32,7 @@ pub struct Edges {
 
 impl Edges {
     /// Creates edges from individual values in CSS order (top, right, bottom, left).
-    pub fn new(top: f32, right: f32, bottom: f32, left: f32) -> Self {
+    pub const fn new(top: f32, right: f32, bottom: f32, left: f32) -> Self {
         Self {
             top,
             bottom,
@@ -42,7 +42,7 @@ impl Edges {
     }
 
     /// Returns edges where all sides are zero.
-    pub fn zero() -> Self {
+    pub const fn zero() -> Self {
         Self {
             top: 0.0,
             bottom: 0.0,
@@ -52,7 +52,7 @@ impl Edges {
     }
 
     /// Returns edges where all four sides share the same value.
-    pub fn all(value: f32) -> Self {
+    pub const fn all(value: f32) -> Self {
         Self {
             top: value,
             bottom: value,

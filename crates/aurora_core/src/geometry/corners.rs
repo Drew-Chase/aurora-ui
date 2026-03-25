@@ -35,7 +35,7 @@ pub struct Corners {
 
 impl Corners {
     /// Creates corners from individual radii (top-left, top-right, bottom-right, bottom-left).
-    pub fn new(top_left: f32, top_right: f32, bottom_right: f32, bottom_left: f32) -> Self {
+    pub const fn new(top_left: f32, top_right: f32, bottom_right: f32, bottom_left: f32) -> Self {
         Self {
             top_left,
             top_right,
@@ -45,7 +45,7 @@ impl Corners {
     }
 
     /// Returns corners where all four radii share the same value.
-    pub fn all(radius: f32) -> Self {
+    pub const fn all(radius: f32) -> Self {
         Corners {
             top_left: radius,
             top_right: radius,
@@ -55,7 +55,7 @@ impl Corners {
     }
 
     /// Returns corners with all radii set to zero.
-    pub fn zero() -> Self {
+    pub const fn zero() -> Self {
         Self::all(0.0)
     }
 
