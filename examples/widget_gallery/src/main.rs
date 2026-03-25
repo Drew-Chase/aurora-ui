@@ -220,12 +220,7 @@ fn example_card(child: impl Widget + 'static) -> impl Widget {
         .background_color(Color::new(24, 24, 27, 255))
         .corners(Corners::all(8.0))
         .padding(Edges::all(32.0))
-        .child(
-            col!()
-                .align(Align::Center)
-                .justify(Justify::Center)
-                .child(child),
-        )
+        .child(child)
 }
 
 // ---------------------------------------------------------------------------
@@ -242,7 +237,28 @@ fn page_accordion() -> impl Widget {
         .child(example_section(
             "Default",
             "Click a heading to expand its content.",
-        ))
+        )).child(accordion::Accordion::new()
+                         .width(500.0)
+                         .section(
+                             "Is it accessible?",
+                             typography::Typography::paragraph(
+                                 "Yes. It adheres to the WAI-ARIA design pattern.",
+                             ),
+                         )
+                         .section(
+                             "Is it styled?",
+                             typography::Typography::paragraph(
+                                 "Yes. It comes with default styles that match the other components.",
+                             ),
+                         )
+                         .section(
+                             "Is it animated?",
+                             typography::Typography::paragraph(
+                                 "Yes. It smoothly animates the content open and closed.",
+                             ),
+                         )
+                         .expanded(0),
+    )
         .child(example_card(
             accordion::Accordion::new()
                 .width(500.0)
