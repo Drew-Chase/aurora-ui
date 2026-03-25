@@ -12,7 +12,7 @@ aurora_gpu = { path = "../aurora_gpu", default-features = false }
 aurora_render = { path = "../aurora_render" }
 aurora_widgets = {path = "../aurora_widgets"}
 aurora_text = {path = "../aurora_text", optional = true}
-
+image = { version = "0.25", optional = true, default-features = false, features = ["png", "jpeg"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.62.2", features = [
@@ -36,5 +36,5 @@ objc2-foundation = { version = "0.3.2", features = ["NSObject"] }
 default = ["software"]
 software = ["aurora_gpu/software"]
 text = ["dep:aurora_text", "aurora_render/text", "aurora_widgets/text"]
-image = ["aurora_render/image", "aurora_widgets/image"]
+image = ["dep:image", "aurora_render/image", "aurora_widgets/image"]
 svg = ["aurora_render/svg", "aurora_widgets/svg"]

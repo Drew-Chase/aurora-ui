@@ -98,10 +98,25 @@ pub struct App {
     pub monitor: WindowMonitor,
     pub background_color: Color,
     pub use_system_font: bool,
+    pub icon: Option<IconData>,
     #[cfg(feature = "text")]
     pub font_options: aurora_text::font_options::FontOptions,
     #[cfg(feature = "text")]
     pub fonts: Vec<&'static [u8]>,
+}
+
+/// Decoded RGBA icon data for setting the window icon.
+///
+/// Create with [`IconData::from_rgba`] (always available) or
+/// [`App::icon`] (requires the `image` feature for PNG/JPEG decoding).
+#[derive(Clone)]
+pub struct IconData {
+    /// RGBA pixel data, 4 bytes per pixel.
+    pub rgba: Vec<u8>,
+    /// Icon width in pixels.
+    pub width: u32,
+    /// Icon height in pixels.
+    pub height: u32,
 }
 
 /// Handle to the underlying OS window.
@@ -266,6 +281,41 @@ impl App {
         self
     }
 
+    /// Sets the window icon from pre-decoded RGBA pixel data.
+    ///
+    /// The data must be `width * height * 4` bytes (one `[R, G, B, A]` per pixel).
+    /// This sets the taskbar icon and the titlebar icon on platforms that support it.
+    pub fn icon_rgba(mut self, rgba: Vec<u8>, width: u32, height: u32) -> Self {
+        self.icon = Some(IconData {
+            rgba,
+            width,
+            height,
+        });
+        self
+    }
+
+    /// Sets the window icon by decoding an image (PNG, JPEG) from raw bytes.
+    ///
+    /// Typically used with `include_bytes!("icon.png")`.
+    /// This sets the taskbar icon and the titlebar icon on platforms that support it.
+    #[cfg(feature = "image")]
+    pub fn icon(mut self, bytes: &[u8]) -> Self {
+        match image::load_from_memory(bytes) {
+            Ok(img) => {
+                let rgba = img.to_rgba8();
+                self.icon = Some(IconData {
+                    width: rgba.width(),
+                    height: rgba.height(),
+                    rgba: rgba.into_raw(),
+                });
+            }
+            Err(e) => {
+                log::error!("Failed to decode icon image: {}", e);
+            }
+        }
+        self
+    }
+
     /// Opens the window and enters the event loop.
     ///
     /// The `on_render` callback is invoked on every [`RedrawRequested`](WindowEvent::RedrawRequested)
@@ -308,6 +358,7 @@ impl Default for App {
             monitor: WindowMonitor::Primary,
             background_color: Color::WHITE,
             use_system_font: false,
+            icon: None,
             #[cfg(feature = "text")]
             font_options: aurora_text::font_options::FontOptions::default(),
             #[cfg(feature = "text")]
@@ -635,6 +686,20 @@ where
         if let Some(min_size) = min_size {
             attributes = attributes
                 .with_min_inner_size(dpi::LogicalSize::new(min_size.width, min_size.height));
+        }
+        if let Some(icon_data) = &config.icon {
+            match winit::window::Icon::from_rgba(
+                icon_data.rgba.clone(),
+                icon_data.width,
+                icon_data.height,
+            ) {
+                Ok(icon) => {
+                    attributes = attributes.with_window_icon(Some(icon));
+                }
+                Err(e) => {
+                    log::error!("Failed to create window icon: {}", e);
+                }
+            }
         }
         self.window = match event_loop.create_window(attributes) {
             Ok(window) => {
