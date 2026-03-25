@@ -3,17 +3,8 @@
 use aurora_ui::aurora_widgets::components::*;
 use aurora_ui::prelude::*;
 
-// Sidebar background and active highlight colors
-const SIDEBAR_BG: Color = Color::new(15, 15, 15, 255);
-const SIDEBAR_ACTIVE_BG: Color = Color::new(39, 39, 42, 255);
-const SIDEBAR_TEXT: Color = Color::new(161, 161, 170, 255);
-const SIDEBAR_ACTIVE_TEXT: Color = Color::new(250, 250, 250, 255);
-const CONTENT_BG: Color = Color::new(9, 9, 11, 255);
-
-// Text colors for dark theme (the default component palette is light-theme)
-const HEADING_COLOR: Color = Color::new(250, 250, 250, 255);
-const BODY_COLOR: Color = Color::new(212, 212, 216, 255);
-const MUTED_COLOR: Color = Color::new(113, 113, 122, 255);
+// Load theme profiles from JSON at compile time
+aurora_ui::aurora_theming::config!("themes.json");
 
 /// Names shown in the sidebar, in display order.
 const PAGES: &[&str] = &[
@@ -48,6 +39,7 @@ const PAGES: &[&str] = &[
 ];
 
 fn main() {
+    theme::init();
     let mut initialized = false;
 
     App::new()
@@ -56,7 +48,7 @@ fn main() {
         .min_size((900, 600))
         .position(WindowPosition::Center)
         .use_system_fonts()
-        .background_color(CONTENT_BG)
+        .background_color(theme::colors::background())
         .font_options(FontOptions::new().family("Segoe UI"))
         .run(move |window, _frame_info| {
             if !initialized {
@@ -110,7 +102,7 @@ fn sidebar_widget(active: usize, setter: StateSetter<usize>) -> impl Widget {
 
     BoxWidget::new()
         .width(220)
-        .background_color(SIDEBAR_BG)
+        .background_color(Color::new(15, 15, 15, 255))
         .child(
             ScrollView::new()
                 .scrollbar_width(4.0)
@@ -121,14 +113,14 @@ fn sidebar_widget(active: usize, setter: StateSetter<usize>) -> impl Widget {
 
 fn sidebar_item(name: &str, active: bool, on_click: impl FnMut() + 'static) -> impl Widget {
     let bg = if active {
-        SIDEBAR_ACTIVE_BG
+        theme::colors::accent()
     } else {
         Color::TRANSPARENT
     };
     let text_color = if active {
-        SIDEBAR_ACTIVE_TEXT
+        theme::colors::foreground()
     } else {
-        SIDEBAR_TEXT
+        theme::colors::muted_foreground()
     };
     let mut on_click = on_click;
 
@@ -206,9 +198,9 @@ fn page_header(title: &str, description: &str) -> Column {
             Text::new(title)
                 .font_size(32.0)
                 .font_weight(FontWeight::Bold)
-                .color(HEADING_COLOR),
+                .color(theme::colors::foreground()),
         )
-        .child(Text::new(description).font_size(14.0).color(MUTED_COLOR))
+        .child(Text::new(description).font_size(14.0).color(theme::colors::muted_foreground()))
         .child(BoxWidget::new().height(24))
         .child(separator::Separator::new())
 }
@@ -220,9 +212,9 @@ fn example_section(title: &str, description: &str) -> Column {
             Text::new(title)
                 .font_size(16.0)
                 .font_weight(FontWeight::SemiBold)
-                .color(HEADING_COLOR),
+                .color(theme::colors::foreground()),
         )
-        .child(Text::new(description).font_size(14.0).color(MUTED_COLOR))
+        .child(Text::new(description).font_size(14.0).color(theme::colors::muted_foreground()))
 }
 
 fn example_card(child: impl Widget + 'static) -> impl Widget {

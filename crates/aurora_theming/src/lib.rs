@@ -198,7 +198,7 @@ pub fn config(input: TokenStream) -> TokenStream {
         .map(|(i, colors)| {
             let name = format_ident!("COLORS_{}", i);
             quote! {
-                static #name: [aurora_core::color::Color; #num_colors] = [#(#colors),*];
+                static #name: [aurora_theme::Color; #num_colors] = [#(#colors),*];
             }
         })
         .collect();
@@ -209,7 +209,7 @@ pub fn config(input: TokenStream) -> TokenStream {
         .map(|(i, edges)| {
             let name = format_ident!("EDGES_{}", i);
             quote! {
-                static #name: [aurora_core::geometry::edges::Edges; #num_edges] = [#(#edges),*];
+                static #name: [aurora_theme::Edges; #num_edges] = [#(#edges),*];
             }
         })
         .collect();
@@ -220,7 +220,7 @@ pub fn config(input: TokenStream) -> TokenStream {
         .map(|(i, corners)| {
             let name = format_ident!("CORNERS_{}", i);
             quote! {
-                static #name: [aurora_core::geometry::corners::Corners; #num_corners] = [#(#corners),*];
+                static #name: [aurora_theme::Corners; #num_corners] = [#(#corners),*];
             }
         })
         .collect();
@@ -269,7 +269,7 @@ pub fn config(input: TokenStream) -> TokenStream {
         .map(|(i, key)| {
             let fn_name = format_ident!("{}", key);
             quote! {
-                pub fn #fn_name() -> aurora_core::color::Color {
+                pub fn #fn_name() -> aurora_theme::Color {
                     PROFILE_COLORS[aurora_theme::current_profile()][#i]
                 }
             }
@@ -282,7 +282,7 @@ pub fn config(input: TokenStream) -> TokenStream {
         .map(|(i, key)| {
             let fn_name = format_ident!("{}", key);
             quote! {
-                pub fn #fn_name() -> aurora_core::geometry::edges::Edges {
+                pub fn #fn_name() -> aurora_theme::Edges {
                     PROFILE_EDGES[aurora_theme::current_profile()][#i]
                 }
             }
@@ -295,7 +295,7 @@ pub fn config(input: TokenStream) -> TokenStream {
         .map(|(i, key)| {
             let fn_name = format_ident!("{}", key);
             quote! {
-                pub fn #fn_name() -> aurora_core::geometry::corners::Corners {
+                pub fn #fn_name() -> aurora_theme::Corners {
                     PROFILE_CORNERS[aurora_theme::current_profile()][#i]
                 }
             }
@@ -353,9 +353,9 @@ pub fn config(input: TokenStream) -> TokenStream {
             #(#corner_arrays)*
             #(#value_arrays)*
 
-            static PROFILE_COLORS: [&[aurora_core::color::Color; #num_colors]; #num_profiles] = [#(#color_refs),*];
-            static PROFILE_EDGES: [&[aurora_core::geometry::edges::Edges; #num_edges]; #num_profiles] = [#(#edge_refs),*];
-            static PROFILE_CORNERS: [&[aurora_core::geometry::corners::Corners; #num_corners]; #num_profiles] = [#(#corner_refs),*];
+            static PROFILE_COLORS: [&[aurora_theme::Color; #num_colors]; #num_profiles] = [#(#color_refs),*];
+            static PROFILE_EDGES: [&[aurora_theme::Edges; #num_edges]; #num_profiles] = [#(#edge_refs),*];
+            static PROFILE_CORNERS: [&[aurora_theme::Corners; #num_corners]; #num_profiles] = [#(#corner_refs),*];
             static PROFILE_VALUES: [&[f32; #num_values]; #num_profiles] = [#(#value_refs),*];
 
             /// Initialize the aurora_theme runtime with this theme's data.
@@ -446,16 +446,16 @@ fn parse_color_token(val: Option<&serde_json::Value>) -> proc_macro2::TokenStrea
                 }
                 _ => (0, 0, 0, 255),
             };
-            quote! { aurora_core::color::Color::new(#r, #g, #b, #a) }
+            quote! { aurora_theme::Color::new(#r, #g, #b, #a) }
         }
         Some(serde_json::Value::Object(obj)) => {
             let r = obj.get("r").or(obj.get("red")).and_then(|v| v.as_u64()).unwrap_or(0) as u8;
             let g = obj.get("g").or(obj.get("green")).and_then(|v| v.as_u64()).unwrap_or(0) as u8;
             let b = obj.get("b").or(obj.get("blue")).and_then(|v| v.as_u64()).unwrap_or(0) as u8;
             let a = obj.get("a").or(obj.get("alpha")).and_then(|v| v.as_u64()).unwrap_or(255) as u8;
-            quote! { aurora_core::color::Color::new(#r, #g, #b, #a) }
+            quote! { aurora_theme::Color::new(#r, #g, #b, #a) }
         }
-        _ => quote! { aurora_core::color::Color::new(0, 0, 0, 255) },
+        _ => quote! { aurora_theme::Color::new(0, 0, 0, 255) },
     }
 }
 
@@ -466,13 +466,13 @@ fn parse_edges_token(val: Option<&serde_json::Value>) -> proc_macro2::TokenStrea
             let right = obj.get("right").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
             let bottom = obj.get("bottom").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
             let left = obj.get("left").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
-            quote! { aurora_core::geometry::edges::Edges::new(#top, #right, #bottom, #left) }
+            quote! { aurora_theme::Edges::new(#top, #right, #bottom, #left) }
         }
         Some(serde_json::Value::Number(n)) => {
             let v = n.as_f64().unwrap_or(0.0) as f32;
-            quote! { aurora_core::geometry::edges::Edges::all(#v) }
+            quote! { aurora_theme::Edges::all(#v) }
         }
-        _ => quote! { aurora_core::geometry::edges::Edges::zero() },
+        _ => quote! { aurora_theme::Edges::zero() },
     }
 }
 
@@ -483,13 +483,13 @@ fn parse_corners_token(val: Option<&serde_json::Value>) -> proc_macro2::TokenStr
             let tr = obj.get("top_right").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
             let br = obj.get("bottom_right").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
             let bl = obj.get("bottom_left").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
-            quote! { aurora_core::geometry::corners::Corners::new(#tl, #tr, #br, #bl) }
+            quote! { aurora_theme::Corners::new(#tl, #tr, #br, #bl) }
         }
         Some(serde_json::Value::Number(n)) => {
             let v = n.as_f64().unwrap_or(0.0) as f32;
-            quote! { aurora_core::geometry::corners::Corners::all(#v) }
+            quote! { aurora_theme::Corners::all(#v) }
         }
-        _ => quote! { aurora_core::geometry::corners::Corners::zero() },
+        _ => quote! { aurora_theme::Corners::zero() },
     }
 }
 

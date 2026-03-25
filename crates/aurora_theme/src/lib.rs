@@ -8,9 +8,12 @@
 //! Widgets read from the active profile through the [`colors`] module
 //! (well-known keys) or through index-based access for custom keys.
 
-use aurora_core::color::Color;
-use aurora_core::geometry::corners::Corners;
-use aurora_core::geometry::edges::Edges;
+// Re-export core types so the proc macro can reference them via aurora_theme::
+pub use aurora_core;
+pub use aurora_core::color::Color;
+pub use aurora_core::geometry::corners::Corners;
+pub use aurora_core::geometry::edges::Edges;
+
 use std::cell::Cell;
 use std::sync::OnceLock;
 

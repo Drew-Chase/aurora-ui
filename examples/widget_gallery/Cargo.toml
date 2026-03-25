@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 aurora_ui = { path = "../../aurora", features = ["opengl", "text", "animate"] }
+aurora_theme = { path = "../../crates/aurora_theme" }
