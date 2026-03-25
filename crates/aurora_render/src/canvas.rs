@@ -875,11 +875,11 @@ impl<'a> Canvas<'a> {
         let x1 = to.x as i32;
         let y1 = to.y as i32;
 
-        let dx = (x1 - x0).abs();
-        let dy = -(y1 - y0).abs();
+        let dx = x1.saturating_sub(x0).abs();
+        let dy = y1.saturating_sub(y0).abs().saturating_neg();
         let sx = if x0 < x1 { 1 } else { -1 };
         let sy = if y0 < y1 { 1 } else { -1 };
-        let mut err = dx + dy;
+        let mut err = dx.saturating_add(dy);
 
         let mut x = x0;
         let mut y = y0;
@@ -901,12 +901,12 @@ impl<'a> Canvas<'a> {
 
         loop {
             // Draw thickness square centered on (x, y)
-            for py in (y - half)..=(y + extra) {
-                if py < clip_y0 || py >= clip_y1 {
+            for py in (y.saturating_sub(half))..=(y.saturating_add(extra)) {
+                if py < clip_y0 || py >= clip_y1 || py < 0 {
                     continue;
                 }
                 let row_start = (py as u32 * self.width) as usize;
-                for px in (x - half)..=(x + extra) {
+                for px in (x.saturating_sub(half))..=(x.saturating_add(extra)) {
                     if px < clip_x0 || px >= clip_x1 {
                         continue;
                     }
@@ -937,20 +937,20 @@ impl<'a> Canvas<'a> {
                 break;
             }
 
-            let e2 = 2 * err;
+            let e2 = err.saturating_mul(2);
             if e2 >= dy {
                 if x == x1 {
                     break;
                 }
-                err += dy;
-                x += sx;
+                err = err.saturating_add(dy);
+                x = x.saturating_add(sx);
             }
             if e2 <= dx {
                 if y == y1 {
                     break;
                 }
-                err += dx;
-                y += sy;
+                err = err.saturating_add(dx);
+                y = y.saturating_add(sy);
             }
         }
     }
