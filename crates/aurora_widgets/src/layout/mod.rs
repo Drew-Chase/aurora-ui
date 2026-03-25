@@ -16,6 +16,8 @@ pub mod position;
 pub mod stack;
 /// Scrollable viewport container.
 pub mod scrollview;
+/// Displays one of N children based on a selected index.
+pub mod content_switch;
 
 /// Controls distribution of children along the main axis.
 ///
