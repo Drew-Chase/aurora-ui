@@ -237,6 +237,13 @@ pub fn config(input: TokenStream) -> TokenStream {
         .collect();
 
     // Refs for the profile table
+    // Bare names for init (need .to_vec())
+    let color_names: Vec<_> = (0..num_profiles).map(|i| format_ident!("COLORS_{}", i)).collect();
+    let edge_names: Vec<_> = (0..num_profiles).map(|i| format_ident!("EDGES_{}", i)).collect();
+    let corner_names: Vec<_> = (0..num_profiles).map(|i| format_ident!("CORNERS_{}", i)).collect();
+    let value_names: Vec<_> = (0..num_profiles).map(|i| format_ident!("VALUES_{}", i)).collect();
+
+    // Refs for static tables
     let color_refs: Vec<_> = (0..num_profiles)
         .map(|i| {
             let name = format_ident!("COLORS_{}", i);
@@ -363,10 +370,10 @@ pub fn config(input: TokenStream) -> TokenStream {
             pub fn init() {
                 aurora_theme::init(aurora_theme::ThemeData {
                     profile_names: vec![#(#name_strs),*],
-                    colors: vec![#(Vec::from(#color_refs.as_slice())),*],
-                    edges: vec![#(Vec::from(#edge_refs.as_slice())),*],
-                    corners: vec![#(Vec::from(#corner_refs.as_slice())),*],
-                    values: vec![#(Vec::from(#value_refs.as_slice())),*],
+                    colors: vec![#(#color_names.to_vec()),*],
+                    edges: vec![#(#edge_names.to_vec()),*],
+                    corners: vec![#(#corner_names.to_vec()),*],
+                    values: vec![#(#value_names.to_vec()),*],
                 });
             }
 
