@@ -178,19 +178,26 @@ impl Widget for Row {
             self.spacing
         };
 
+        // For alignment, use actual max child height when no explicit height is set
+        let align_height = if self.height.is_some() {
+            content_height
+        } else {
+            final_sizes.iter().map(|s| s.height).fold(0.0f32, f32::max)
+        };
+
         // Position each child
         self.child_rects.clear();
         for child_size in final_sizes.iter() {
             let y = self.padding.top
                 + match self.align {
                     Align::Start => 0.0,
-                    Align::Center => (content_height - child_size.height) / 2.0,
-                    Align::End => content_height - child_size.height,
+                    Align::Center => (align_height - child_size.height) / 2.0,
+                    Align::End => align_height - child_size.height,
                     Align::Stretch => 0.0,
                 };
 
             let h = if self.align == Align::Stretch {
-                content_height
+                align_height
             } else {
                 child_size.height
             };
@@ -205,9 +212,10 @@ impl Widget for Row {
             Some(w) => w as f32,
             None => available.width,
         };
+        let max_child_height = final_sizes.iter().map(|s| s.height).fold(0.0f32, f32::max);
         let final_height = match self.height {
             Some(h) => h as f32,
-            None => available.height,
+            None => max_child_height + self.padding.vertical(),
         };
         Size::new(final_width, final_height)
     }
