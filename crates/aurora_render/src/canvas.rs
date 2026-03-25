@@ -29,6 +29,33 @@ pub struct Canvas<'a> {
 }
 
 impl<'a> Canvas<'a> {
+    /// Blends a single foreground pixel into the buffer at `index` with the given alpha.
+    ///
+    /// Used for antialiased edge pixels where coverage produces a reduced effective alpha.
+    #[inline]
+    fn blend_pixel(buffer: &mut [u32], index: usize, pixel: u32, alpha: u8) {
+        if alpha == 0 || index >= buffer.len() {
+            return;
+        }
+        if alpha == 255 {
+            buffer[index] = pixel;
+            return;
+        }
+        let a = alpha as u32;
+        let inv_a = 255 - a;
+        let fg_r = (pixel >> 16) & 0xFF;
+        let fg_g = (pixel >> 8) & 0xFF;
+        let fg_b = pixel & 0xFF;
+        let bg = buffer[index];
+        let bg_r = (bg >> 16) & 0xFF;
+        let bg_g = (bg >> 8) & 0xFF;
+        let bg_b = bg & 0xFF;
+        let r = (fg_r * a + bg_r * inv_a) / 255;
+        let g = (fg_g * a + bg_g * inv_a) / 255;
+        let b = (fg_b * a + bg_b * inv_a) / 255;
+        buffer[index] = (r << 16) | (g << 8) | b;
+    }
+
     /// Blends a foreground color into a buffer span, handling both opaque and transparent cases.
     fn blend_span(buffer: &mut [u32], pixel: u32, alpha: u8) {
         if alpha == 255 {
@@ -257,32 +284,47 @@ impl<'a> Canvas<'a> {
 
         for y in y0..y1 {
             let fy = y as f32 + 0.5;
-            let mut row_x0 = x0;
-            let mut row_x1 = x1;
+            // Solid span boundaries (first and last fully-covered pixels)
+            let mut solid_x0 = x0;
+            let mut solid_x1 = x1;
+            // AA edge pixels: (pixel x, coverage 0.0..1.0)
+            let mut left_aa: Option<(u32, f32)> = None;
+            let mut right_aa: Option<(u32, f32)> = None;
 
             if y < top_band_end {
                 // Top-left corner clips the left edge rightward
                 if tl > 0.0 && fy < tl_cy {
                     let dy = fy - tl_cy;
-                    let r2 = tl * tl;
-                    let dx2 = r2 - dy * dy;
+                    let dx2 = tl * tl - dy * dy;
                     if dx2 > 0.0 {
-                        let edge = (tl_cx - dx2.sqrt()) as u32;
-                        row_x0 = row_x0.max(edge.max(x0));
+                        let edge_f = tl_cx - dx2.sqrt();
+                        let floor = edge_f.floor();
+                        let fract = edge_f - floor;
+                        let aa_x = floor as i32;
+                        let coverage = 1.0 - fract;
+                        solid_x0 = solid_x0.max(edge_f.ceil() as u32);
+                        if coverage > 0.001 && aa_x >= x0 as i32 && (aa_x as u32) < x1 {
+                            left_aa = Some((aa_x as u32, coverage));
+                        }
                     } else {
-                        row_x0 = row_x0.max((tl_cx as u32).min(x1));
+                        solid_x0 = solid_x0.max((tl_cx as u32).min(x1));
                     }
                 }
                 // Top-right corner clips the right edge leftward
                 if tr > 0.0 && fy < tr_cy {
                     let dy = fy - tr_cy;
-                    let r2 = tr * tr;
-                    let dx2 = r2 - dy * dy;
+                    let dx2 = tr * tr - dy * dy;
                     if dx2 > 0.0 {
-                        let edge = (tr_cx + dx2.sqrt()).ceil() as u32;
-                        row_x1 = row_x1.min(edge.max(x0));
+                        let edge_f = tr_cx + dx2.sqrt();
+                        let floor = edge_f.floor();
+                        let fract = edge_f - floor;
+                        let aa_x = floor as i32;
+                        solid_x1 = solid_x1.min(floor as u32);
+                        if fract > 0.001 && aa_x >= x0 as i32 && (aa_x as u32) < x1 {
+                            right_aa = Some((aa_x as u32, fract));
+                        }
                     } else {
-                        row_x1 = row_x1.min((tr_cx as u32).max(x0));
+                        solid_x1 = solid_x1.min((tr_cx as u32).max(x0));
                     }
                 }
             }
@@ -291,35 +333,61 @@ impl<'a> Canvas<'a> {
                 // Bottom-left corner clips the left edge rightward
                 if bl > 0.0 && fy > bl_cy {
                     let dy = fy - bl_cy;
-                    let r2 = bl * bl;
-                    let dx2 = r2 - dy * dy;
+                    let dx2 = bl * bl - dy * dy;
                     if dx2 > 0.0 {
-                        let edge = (bl_cx - dx2.sqrt()) as u32;
-                        row_x0 = row_x0.max(edge.max(x0));
+                        let edge_f = bl_cx - dx2.sqrt();
+                        let floor = edge_f.floor();
+                        let fract = edge_f - floor;
+                        let aa_x = floor as i32;
+                        let coverage = 1.0 - fract;
+                        solid_x0 = solid_x0.max(edge_f.ceil() as u32);
+                        if coverage > 0.001 && aa_x >= x0 as i32 && (aa_x as u32) < x1 {
+                            left_aa = Some((aa_x as u32, coverage));
+                        }
                     } else {
-                        row_x0 = row_x0.max((bl_cx as u32).min(x1));
+                        solid_x0 = solid_x0.max((bl_cx as u32).min(x1));
                     }
                 }
                 // Bottom-right corner clips the right edge leftward
                 if br > 0.0 && fy > br_cy {
                     let dy = fy - br_cy;
-                    let r2 = br * br;
-                    let dx2 = r2 - dy * dy;
+                    let dx2 = br * br - dy * dy;
                     if dx2 > 0.0 {
-                        let edge = (br_cx + dx2.sqrt()).ceil() as u32;
-                        row_x1 = row_x1.min(edge.max(x0));
+                        let edge_f = br_cx + dx2.sqrt();
+                        let floor = edge_f.floor();
+                        let fract = edge_f - floor;
+                        let aa_x = floor as i32;
+                        solid_x1 = solid_x1.min(floor as u32);
+                        if fract > 0.001 && aa_x >= x0 as i32 && (aa_x as u32) < x1 {
+                            right_aa = Some((aa_x as u32, fract));
+                        }
                     } else {
-                        row_x1 = row_x1.min((br_cx as u32).max(x0));
+                        solid_x1 = solid_x1.min((br_cx as u32).max(x0));
                     }
                 }
             }
 
-            if row_x0 < row_x1 {
-                let row_start = (y * self.width + row_x0) as usize;
-                let row_end = (y * self.width + row_x1) as usize;
+            // Render left AA edge pixel
+            if let Some((aa_x, coverage)) = left_aa {
+                let eff_alpha = (coverage * alpha as f32) as u8;
+                let idx = (y * self.width + aa_x) as usize;
+                Self::blend_pixel(self.buffer, idx, pixel, eff_alpha);
+            }
+
+            // Render solid interior span
+            if solid_x0 < solid_x1 {
+                let row_start = (y * self.width + solid_x0) as usize;
+                let row_end = (y * self.width + solid_x1) as usize;
                 if row_end <= self.buffer.len() {
                     Self::blend_span(&mut self.buffer[row_start..row_end], pixel, alpha);
                 }
+            }
+
+            // Render right AA edge pixel
+            if let Some((aa_x, coverage)) = right_aa {
+                let eff_alpha = (coverage * alpha as f32) as u8;
+                let idx = (y * self.width + aa_x) as usize;
+                Self::blend_pixel(self.buffer, idx, pixel, eff_alpha);
             }
         }
     }
@@ -477,27 +545,44 @@ impl<'a> Canvas<'a> {
         for y in y0..y1 {
             let fy = y as f32 + 0.5;
 
-            // Outer edges (clipped by corner arcs)
-            let mut out_left = x0;
-            let mut out_right = x1;
+            // Outer edges with AA
+            let mut out_solid_left = x0;
+            let mut out_solid_right = x1;
+            let mut out_left_aa: Option<(u32, f32)> = None;
+            let mut out_right_aa: Option<(u32, f32)> = None;
 
             if y < top_band_end {
                 if tl > 0.0 && fy < tl_cy {
                     let dy = fy - tl_cy;
                     let dx2 = tl * tl - dy * dy;
                     if dx2 > 0.0 {
-                        out_left = out_left.max((tl_cx - dx2.sqrt()) as u32).max(x0);
+                        let edge_f = tl_cx - dx2.sqrt();
+                        let floor = edge_f.floor();
+                        let fract = edge_f - floor;
+                        let aa_x = floor as i32;
+                        let coverage = 1.0 - fract;
+                        out_solid_left = out_solid_left.max(edge_f.ceil() as u32);
+                        if coverage > 0.001 && aa_x >= x0 as i32 && (aa_x as u32) < x1 {
+                            out_left_aa = Some((aa_x as u32, coverage));
+                        }
                     } else {
-                        out_left = out_left.max((tl_cx as u32).min(x1));
+                        out_solid_left = out_solid_left.max((tl_cx as u32).min(x1));
                     }
                 }
                 if tr > 0.0 && fy < tr_cy {
                     let dy = fy - tr_cy;
                     let dx2 = tr * tr - dy * dy;
                     if dx2 > 0.0 {
-                        out_right = out_right.min((tr_cx + dx2.sqrt()).ceil() as u32).max(x0);
+                        let edge_f = tr_cx + dx2.sqrt();
+                        let floor = edge_f.floor();
+                        let fract = edge_f - floor;
+                        let aa_x = floor as i32;
+                        out_solid_right = out_solid_right.min(floor as u32);
+                        if fract > 0.001 && aa_x >= x0 as i32 && (aa_x as u32) < x1 {
+                            out_right_aa = Some((aa_x as u32, fract));
+                        }
                     } else {
-                        out_right = out_right.min((tr_cx as u32).max(x0));
+                        out_solid_right = out_solid_right.min((tr_cx as u32).max(x0));
                     }
                 }
             }
@@ -506,58 +591,104 @@ impl<'a> Canvas<'a> {
                     let dy = fy - bl_cy;
                     let dx2 = bl * bl - dy * dy;
                     if dx2 > 0.0 {
-                        out_left = out_left.max((bl_cx - dx2.sqrt()) as u32).max(x0);
+                        let edge_f = bl_cx - dx2.sqrt();
+                        let floor = edge_f.floor();
+                        let fract = edge_f - floor;
+                        let aa_x = floor as i32;
+                        let coverage = 1.0 - fract;
+                        out_solid_left = out_solid_left.max(edge_f.ceil() as u32);
+                        if coverage > 0.001 && aa_x >= x0 as i32 && (aa_x as u32) < x1 {
+                            out_left_aa = Some((aa_x as u32, coverage));
+                        }
                     } else {
-                        out_left = out_left.max((bl_cx as u32).min(x1));
+                        out_solid_left = out_solid_left.max((bl_cx as u32).min(x1));
                     }
                 }
                 if br > 0.0 && fy > br_cy {
                     let dy = fy - br_cy;
                     let dx2 = br * br - dy * dy;
                     if dx2 > 0.0 {
-                        out_right = out_right.min((br_cx + dx2.sqrt()).ceil() as u32).max(x0);
+                        let edge_f = br_cx + dx2.sqrt();
+                        let floor = edge_f.floor();
+                        let fract = edge_f - floor;
+                        let aa_x = floor as i32;
+                        out_solid_right = out_solid_right.min(floor as u32);
+                        if fract > 0.001 && aa_x >= x0 as i32 && (aa_x as u32) < x1 {
+                            out_right_aa = Some((aa_x as u32, fract));
+                        }
                     } else {
-                        out_right = out_right.min((br_cx as u32).max(x0));
+                        out_solid_right = out_solid_right.min((br_cx as u32).max(x0));
                     }
                 }
             }
 
-            if out_left >= out_right {
+            if out_solid_left >= out_solid_right && out_left_aa.is_none() && out_right_aa.is_none()
+            {
                 continue;
             }
 
-            // If this row is in the top/bottom thickness band, fill entire outer span
+            // If this row is in the top/bottom thickness band, fill entire outer span with AA edges
             if fy < in_top || fy >= in_bottom {
-                let start = (y * self.width + out_left) as usize;
-                let end = (y * self.width + out_right) as usize;
-                if end <= self.buffer.len() {
-                    Self::blend_span(&mut self.buffer[start..end], pixel, alpha);
+                if let Some((aa_x, coverage)) = out_left_aa {
+                    let eff_alpha = (coverage * alpha as f32) as u8;
+                    let idx = (y * self.width + aa_x) as usize;
+                    Self::blend_pixel(self.buffer, idx, pixel, eff_alpha);
+                }
+                if out_solid_left < out_solid_right {
+                    let start = (y * self.width + out_solid_left) as usize;
+                    let end = (y * self.width + out_solid_right) as usize;
+                    if end <= self.buffer.len() {
+                        Self::blend_span(&mut self.buffer[start..end], pixel, alpha);
+                    }
+                }
+                if let Some((aa_x, coverage)) = out_right_aa {
+                    let eff_alpha = (coverage * alpha as f32) as u8;
+                    let idx = (y * self.width + aa_x) as usize;
+                    Self::blend_pixel(self.buffer, idx, pixel, eff_alpha);
                 }
                 continue;
             }
 
-            // Inner edges (clipped by inner corner arcs)
-            let mut inn_left = (in_left.max(0.0) as u32).min(self.width);
-            let mut inn_right = (in_right.max(0.0) as u32).min(self.width);
+            // Inner edges with AA
+            let mut inn_solid_left = (in_left.max(0.0) as u32).min(self.width);
+            let mut inn_solid_right = (in_right.max(0.0) as u32).min(self.width);
+            let mut inn_left_aa: Option<(u32, f32)> = None;
+            let mut inn_right_aa: Option<(u32, f32)> = None;
 
-            // Inner corners use the same centers but smaller radii
             if y < top_band_end {
                 if tl_in > 0.0 && fy < tl_cy {
                     let dy = fy - tl_cy;
                     let dx2 = tl_in * tl_in - dy * dy;
                     if dx2 > 0.0 {
-                        inn_left = inn_left.max((tl_cx - dx2.sqrt()) as u32).max(x0);
+                        let edge_f = tl_cx - dx2.sqrt();
+                        let floor = edge_f.floor();
+                        let fract = edge_f - floor;
+                        let aa_x = floor as i32;
+                        inn_solid_left = inn_solid_left.max(edge_f.ceil() as u32);
+                        // Inner left edge is a right-boundary of the left strip
+                        if fract > 0.001 && aa_x >= x0 as i32 && (aa_x as u32) < x1 {
+                            inn_left_aa = Some((aa_x as u32, fract));
+                        }
                     } else {
-                        inn_left = inn_left.max((tl_cx as u32).min(x1));
+                        inn_solid_left = inn_solid_left.max((tl_cx as u32).min(x1));
                     }
                 }
                 if tr_in > 0.0 && fy < tr_cy {
                     let dy = fy - tr_cy;
                     let dx2 = tr_in * tr_in - dy * dy;
                     if dx2 > 0.0 {
-                        inn_right = inn_right.min((tr_cx + dx2.sqrt()).ceil() as u32).max(x0);
+                        let edge_f = tr_cx + dx2.sqrt();
+                        let floor = edge_f.floor();
+                        let fract = edge_f - floor;
+                        let aa_x = floor as i32;
+                        inn_solid_right = inn_solid_right.min(floor as u32);
+                        // Inner right edge is a left-boundary of the right strip
+                        let coverage = 1.0 - fract;
+                        if coverage > 0.001 && aa_x >= x0 as i32 && (aa_x as u32) < x1 {
+                            inn_right_aa = Some((aa_x as u32, coverage));
+                        }
                     } else {
-                        inn_right = inn_right.min((tr_cx as u32).max(x0));
+                        inn_solid_right = inn_solid_right.min((tr_cx as u32).max(x0));
                     }
                 }
             }
@@ -566,37 +697,79 @@ impl<'a> Canvas<'a> {
                     let dy = fy - bl_cy;
                     let dx2 = bl_in * bl_in - dy * dy;
                     if dx2 > 0.0 {
-                        inn_left = inn_left.max((bl_cx - dx2.sqrt()) as u32).max(x0);
+                        let edge_f = bl_cx - dx2.sqrt();
+                        let floor = edge_f.floor();
+                        let fract = edge_f - floor;
+                        let aa_x = floor as i32;
+                        inn_solid_left = inn_solid_left.max(edge_f.ceil() as u32);
+                        if fract > 0.001 && aa_x >= x0 as i32 && (aa_x as u32) < x1 {
+                            inn_left_aa = Some((aa_x as u32, fract));
+                        }
                     } else {
-                        inn_left = inn_left.max((bl_cx as u32).min(x1));
+                        inn_solid_left = inn_solid_left.max((bl_cx as u32).min(x1));
                     }
                 }
                 if br_in > 0.0 && fy > br_cy {
                     let dy = fy - br_cy;
                     let dx2 = br_in * br_in - dy * dy;
                     if dx2 > 0.0 {
-                        inn_right = inn_right.min((br_cx + dx2.sqrt()).ceil() as u32).max(x0);
+                        let edge_f = br_cx + dx2.sqrt();
+                        let floor = edge_f.floor();
+                        let fract = edge_f - floor;
+                        let aa_x = floor as i32;
+                        inn_solid_right = inn_solid_right.min(floor as u32);
+                        let coverage = 1.0 - fract;
+                        if coverage > 0.001 && aa_x >= x0 as i32 && (aa_x as u32) < x1 {
+                            inn_right_aa = Some((aa_x as u32, coverage));
+                        }
                     } else {
-                        inn_right = inn_right.min((br_cx as u32).max(x0));
+                        inn_solid_right = inn_solid_right.min((br_cx as u32).max(x0));
                     }
                 }
             }
 
-            // Left border strip
-            if out_left < inn_left {
-                let start = (y * self.width + out_left) as usize;
-                let end = (y * self.width + inn_left.min(out_right)) as usize;
+            // Left border strip: outer-left AA, solid span, inner-left AA
+            let strip_left_start = out_solid_left;
+            let strip_left_end = inn_solid_left.min(out_solid_right);
+
+            if let Some((aa_x, coverage)) = out_left_aa {
+                let eff_alpha = (coverage * alpha as f32) as u8;
+                let idx = (y * self.width + aa_x) as usize;
+                Self::blend_pixel(self.buffer, idx, pixel, eff_alpha);
+            }
+            if strip_left_start < strip_left_end {
+                let start = (y * self.width + strip_left_start) as usize;
+                let end = (y * self.width + strip_left_end) as usize;
                 if end <= self.buffer.len() {
                     Self::blend_span(&mut self.buffer[start..end], pixel, alpha);
                 }
             }
-            // Right border strip
-            if inn_right < out_right {
-                let start = (y * self.width + inn_right.max(out_left)) as usize;
-                let end = (y * self.width + out_right) as usize;
+            if let Some((aa_x, coverage)) = inn_left_aa {
+                let eff_alpha = (coverage * alpha as f32) as u8;
+                let idx = (y * self.width + aa_x) as usize;
+                Self::blend_pixel(self.buffer, idx, pixel, eff_alpha);
+            }
+
+            // Right border strip: inner-right AA, solid span, outer-right AA
+            let strip_right_start = inn_solid_right.max(out_solid_left);
+            let strip_right_end = out_solid_right;
+
+            if let Some((aa_x, coverage)) = inn_right_aa {
+                let eff_alpha = (coverage * alpha as f32) as u8;
+                let idx = (y * self.width + aa_x) as usize;
+                Self::blend_pixel(self.buffer, idx, pixel, eff_alpha);
+            }
+            if strip_right_start < strip_right_end {
+                let start = (y * self.width + strip_right_start) as usize;
+                let end = (y * self.width + strip_right_end) as usize;
                 if end <= self.buffer.len() {
                     Self::blend_span(&mut self.buffer[start..end], pixel, alpha);
                 }
+            }
+            if let Some((aa_x, coverage)) = out_right_aa {
+                let eff_alpha = (coverage * alpha as f32) as u8;
+                let idx = (y * self.width + aa_x) as usize;
+                Self::blend_pixel(self.buffer, idx, pixel, eff_alpha);
             }
         }
     }
