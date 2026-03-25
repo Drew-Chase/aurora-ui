@@ -26,7 +26,8 @@ members = [
     "examples/text_input_example",
     "examples/custom_widget",
     "examples/iconify_example",
-    "examples/fonts_example"
+    "examples/fonts_example",
+    "examples/animation_example"
 ]
 default-members = [
     "aurora",

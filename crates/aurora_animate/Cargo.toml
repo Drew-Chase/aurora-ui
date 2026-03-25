@@ -2,5 +2,7 @@
 name = "aurora_animate"
 version = "0.1.0"
 edition = "2024"
+description = "Animation library for AuroraUI — tweens, easing, keyframes, and timelines."
 
 [dependencies]
+aurora_core = { path = "../aurora_core" }

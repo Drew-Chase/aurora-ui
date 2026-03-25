@@ -1,14 +1,17 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+#![doc = include_str!("../README.md")]
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub mod animatable;
+pub mod easing;
+pub mod keyframes;
+pub mod loop_mode;
+pub mod preset;
+pub mod timeline;
+pub mod tween;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use animatable::Animatable;
+pub use easing::Easing;
+pub use keyframes::{Keyframe, KeyframeAnimation};
+pub use loop_mode::LoopMode;
+pub use preset::Preset;
+pub use timeline::Timeline;
+pub use tween::Tween;

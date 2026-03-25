@@ -55,3 +55,9 @@ pub use aurora_widgets::image_widget::{Image, ImageFit};
 pub use aurora_render::svg_data::SvgData;
 #[cfg(feature = "svg")]
 pub use aurora_widgets::svg_widget::Svg;
+
+// Animation (feature-gated)
+#[cfg(feature = "animate")]
+pub use aurora_animate::{
+    Animatable, Easing, Keyframe, KeyframeAnimation, LoopMode, Preset, Timeline, Tween,
+};

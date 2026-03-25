@@ -10,4 +10,6 @@ pub use aurora_platform;
 pub use aurora_render;
 #[cfg(feature = "text")]
 pub use aurora_text;
+#[cfg(feature = "animate")]
+pub use aurora_animate;
 pub use aurora_widgets;
