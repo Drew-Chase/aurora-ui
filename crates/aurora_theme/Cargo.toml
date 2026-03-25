@@ -2,5 +2,7 @@
 name = "aurora_theme"
 version = "0.1.0"
 edition = "2024"
+description = "Runtime theme profile management for Aurora UI."
 
 [dependencies]
+aurora_core = { path = "../aurora_core" }
