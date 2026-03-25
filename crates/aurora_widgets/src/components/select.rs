@@ -222,12 +222,15 @@ impl Widget for Select {
             colors::MUTED_FOREGROUND,
         );
 
+    }
+
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
         let t = self.current_t();
         if t <= 0.0 {
             return;
         }
 
-        // Animated dropdown panel
+        // Animated dropdown panel (painted above all siblings)
         let full_h = self.full_dropdown_height();
         let visible_h = full_h * t;
         let dr = self.dropdown_rect(&rect);

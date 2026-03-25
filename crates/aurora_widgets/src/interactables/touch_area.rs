@@ -117,6 +117,13 @@ impl Widget for TouchArea {
         }
     }
 
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+        if let Some(child) = self.child.as_ref() {
+            let translated = self.child_rect.translate(&rect.origin());
+            child.paint_overlay(canvas, translated);
+        }
+    }
+
     fn children(&self) -> &[Box<dyn Widget>] {
         match &self.child {
             Some(child) => std::slice::from_ref(child),

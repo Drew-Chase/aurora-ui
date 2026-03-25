@@ -226,6 +226,13 @@ impl Widget for Row {
         }
     }
 
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+        for (child, child_rect) in self.children.iter().zip(self.child_rects.iter()) {
+            let translated = child_rect.translate(&rect.origin());
+            child.paint_overlay(canvas, translated);
+        }
+    }
+
     fn children(&self) -> &[Box<dyn Widget>] {
         &self.children
     }

@@ -177,6 +177,12 @@ pub fn composite_widget(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 }
             }
 
+            fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+                if let Some(ref inner) = self.__composite_inner {
+                    inner.paint_overlay(canvas, rect);
+                }
+            }
+
             fn children(&self) -> &[Box<dyn Widget>] {
                 match &self.__composite_inner {
                     Some(inner) => inner.children(),

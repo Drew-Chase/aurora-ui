@@ -509,6 +509,8 @@ impl AppWindow {
 
             let rect = Rect::from_size(available);
             widget.paint(&mut canvas, rect);
+            // Overlay pass — dropdowns, popups paint above all siblings
+            widget.paint_overlay(&mut canvas, rect);
 
             // Auto-schedule next frame when any widget has active animations
             if widget.needs_animation() {

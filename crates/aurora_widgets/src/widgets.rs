@@ -29,6 +29,10 @@ pub trait Widget {
     fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size;
     /// Draws the widget into the canvas at the given rectangle.
     fn paint(&self, canvas: &mut Canvas, rect: Rect);
+    /// Draws overlay content (dropdowns, popups) that must appear above all siblings.
+    /// Called after the entire widget tree has been painted via [`paint`].
+    /// Containers must override this to forward to children.
+    fn paint_overlay(&self, _canvas: &mut Canvas, _rect: Rect) {}
     /// Returns the widget's child widgets.
     fn children(&self) -> &[Box<dyn Widget>];
     /// Handles a widget event within the given bounds. Returns an [`EventResponse`].

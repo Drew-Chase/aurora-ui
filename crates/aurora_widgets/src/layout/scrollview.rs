@@ -294,6 +294,18 @@ impl Widget for ScrollView {
         }
     }
 
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+        if let Some(child) = &self.child {
+            let scrolled_rect = Rect::new(
+                rect.x1 + self.padding.left,
+                rect.y1 + self.padding.top - self.scroll_offset,
+                rect.x1 + self.padding.left + self.child_size.width,
+                rect.y1 + self.padding.top - self.scroll_offset + self.child_size.height,
+            );
+            child.paint_overlay(canvas, scrolled_rect);
+        }
+    }
+
     fn children(&self) -> &[Box<dyn Widget>] {
         match &self.child {
             Some(child) => std::slice::from_ref(child),

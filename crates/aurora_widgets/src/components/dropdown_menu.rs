@@ -202,17 +202,19 @@ impl Widget for DropdownMenu {
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
-        // Trigger
+        // Trigger only — menu panel is painted in paint_overlay
         if let Some(ref trigger) = self.trigger {
             trigger.paint(canvas, rect);
         }
+    }
 
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
         let t = self.current_t();
         if t <= 0.0 {
             return;
         }
 
-        // Menu panel with animated height
+        // Menu panel with animated height (painted above all siblings)
         let full_h = self.full_menu_height();
         let visible_h = full_h * t;
         let mr = Rect::new(
@@ -222,10 +224,8 @@ impl Widget for DropdownMenu {
             rect.y2 + 4.0 + visible_h,
         );
 
-        // Clip to animated bounds
         canvas.push_clip(mr);
 
-        // Draw at full size inside clip
         let full_mr = self.menu_rect(&rect);
         canvas.fill_rounded_rect(full_mr, self.corners, self.background);
         canvas.stroke_rounded_rect(full_mr, self.corners, 1, self.border_color);

@@ -63,6 +63,12 @@ impl Widget for ContentSwitch {
         }
     }
 
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+        if let Some(child) = self.items.get(self.selected) {
+            child.paint_overlay(canvas, rect);
+        }
+    }
+
     fn children(&self) -> &[Box<dyn Widget>] {
         if self.selected < self.items.len() {
             &self.items[self.selected..=self.selected]

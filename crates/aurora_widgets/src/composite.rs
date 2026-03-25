@@ -91,6 +91,12 @@ impl<S: 'static> Widget for Composite<S> {
 		}
 	}
 
+	fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+		if let Some(ref inner) = self.inner {
+			inner.paint_overlay(canvas, rect);
+		}
+	}
+
 	fn children(&self) -> &[Box<dyn Widget>] {
 		match &self.inner {
 			Some(inner) => inner.children(),
@@ -175,6 +181,12 @@ impl<T: CompositeBuilder> Widget for CompositeWrapper<T> {
 	fn paint(&self, canvas: &mut Canvas, rect: Rect) {
 		if let Some(ref inner) = self.inner {
 			inner.paint(canvas, rect);
+		}
+	}
+
+	fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+		if let Some(ref inner) = self.inner {
+			inner.paint_overlay(canvas, rect);
 		}
 	}
 
