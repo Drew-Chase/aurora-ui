@@ -363,10 +363,10 @@ pub fn config(input: TokenStream) -> TokenStream {
             pub fn init() {
                 aurora_theme::init(aurora_theme::ThemeData {
                     profile_names: vec![#(#name_strs),*],
-                    colors: vec![#(#color_refs.to_vec()),*],
-                    edges: vec![#(#edge_refs.to_vec()),*],
-                    corners: vec![#(#corner_refs.to_vec()),*],
-                    values: vec![#(#value_refs.to_vec()),*],
+                    colors: vec![#(Vec::from(#color_refs.as_slice())),*],
+                    edges: vec![#(Vec::from(#edge_refs.as_slice())),*],
+                    corners: vec![#(Vec::from(#corner_refs.as_slice())),*],
+                    values: vec![#(Vec::from(#value_refs.as_slice())),*],
                 });
             }
 
