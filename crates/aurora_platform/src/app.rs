@@ -103,6 +103,7 @@ pub struct App {
     pub font_options: aurora_text::font_options::FontOptions,
     #[cfg(feature = "text")]
     pub fonts: Vec<&'static [u8]>,
+    pub continuous_redraw: bool,
 }
 
 /// Decoded RGBA icon data for setting the window icon.
@@ -145,6 +146,7 @@ struct AppHandler<F> {
     current_modifiers: winit::keyboard::ModifiersState,
     benchmark: bool,
     start_time: std::time::Instant,
+    continuous_redraw: bool,
 }
 
 /// Per-frame information passed to the render callback.
@@ -262,6 +264,17 @@ impl App {
         self
     }
 
+    /// Enables continuous redrawing every frame.
+    ///
+    /// When `true`, the event loop requests a new frame after each paint,
+    /// creating a continuous render loop suitable for animations. When `false`
+    /// (the default), the window only redraws in response to user input or
+    /// window events.
+    pub fn continuous_redraw(mut self, enabled: bool) -> Self {
+        self.continuous_redraw = enabled;
+        self
+    }
+
     /// Sets the global font options applied to all text widgets by default.
     ///
     /// Individual widgets can override any field via their own builder methods.
@@ -328,6 +341,7 @@ impl App {
     {
         let benchmark = std::env::var("AURORA_BENCHMARK").is_ok();
         let start_time = std::time::Instant::now();
+        let continuous_redraw = self.continuous_redraw;
         let mut app_handler = AppHandler {
             config: self,
             on_render,
@@ -336,6 +350,7 @@ impl App {
             current_modifiers: winit::keyboard::ModifiersState::default(),
             benchmark,
             start_time,
+            continuous_redraw,
         };
         let event_loop = winit::event_loop::EventLoop::new().map_err(AppError::from)?;
         event_loop
@@ -363,6 +378,7 @@ impl Default for App {
             font_options: aurora_text::font_options::FontOptions::default(),
             #[cfg(feature = "text")]
             fonts: vec![],
+            continuous_redraw: false,
         }
     }
 }
@@ -727,6 +743,14 @@ where
             win.window_handle.set_visible(true);
         }
 
+    }
+
+    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+        if self.continuous_redraw {
+            if let Some(window) = &self.window {
+                window.request_redraw();
+            }
+        }
     }
 
     fn window_event(
