@@ -47,9 +47,10 @@ fn main() {
         .min_size((900, 600))
         .position(WindowPosition::Center)
         .use_system_fonts()
-        .background_color(theme::colors::background())
         .font_options(FontOptions::new().family("Segoe UI"))
         .run(move |window, _frame_info| {
+            // Update background color each frame so theme changes take effect
+            window.set_background_color(theme::colors::background());
             if !initialized {
                 window.root(gallery());
                 initialized = true;

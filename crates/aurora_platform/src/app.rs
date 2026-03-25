@@ -136,6 +136,7 @@ pub struct AppWindow {
     pub(crate) _cursor: winit::window::CursorIcon,
     pub(crate) last_mouse_position: Option<Point>,
     next_frame_requested: bool,
+    pub(crate) background_color: Color,
 }
 
 struct AppHandler<F> {
@@ -425,6 +426,7 @@ impl AppWindow {
                 _cursor: winit::window::CursorIcon::Default,
                 last_mouse_position: None,
                 next_frame_requested: false,
+                background_color: config.background_color,
             })
         }
         #[cfg(not(feature = "text"))]
@@ -435,6 +437,7 @@ impl AppWindow {
             _cursor: winit::window::CursorIcon::Default,
             last_mouse_position: None,
             next_frame_requested: false,
+            background_color: config.background_color,
         })
     }
     /// Lays out and paints a root widget tree into the window.
@@ -639,6 +642,14 @@ impl AppWindow {
     pub fn window_handle(&self) -> Arc<winit::window::Window> {
         self.window_handle.clone()
     }
+    /// Sets the background color used to clear the window before each frame.
+    ///
+    /// Call this from the render callback to dynamically change the background,
+    /// for example when switching theme profiles.
+    pub fn set_background_color(&mut self, color: Color) {
+        self.background_color = color;
+    }
+
     /// Clears the GPU buffer to the given color.
     pub fn clear(&mut self, color: Color) {
         self.gpu.clear(color);
@@ -796,9 +807,8 @@ where
                 height: physical.height,
                 scale_factor: window.window_handle.scale_factor(),
             };
-            let bg = self.config.background_color;
             window.gpu.resize(frame_info.width, frame_info.height);
-            window.clear(bg);
+            window.clear(window.background_color);
             (self.on_render)(window, frame_info);
             window.layout_and_paint();
             window.present();
@@ -825,7 +835,6 @@ where
             .window
             .as_mut()
             .expect("Window redraw request without a valid window");
-        let background_color = self.config.background_color;
         match event {
             WindowEvent::CloseRequested => {
                 log::trace!("Window close requested");
@@ -848,7 +857,7 @@ where
                     scale_factor: window.window_handle.scale_factor(),
                 };
                 window.gpu.resize(frame_info.width, frame_info.height);
-                window.clear(background_color);
+                window.clear(window.background_color);
                 window.next_frame_requested = false;
                 (self.on_render)(window, frame_info);
                 window.layout_and_paint();
@@ -861,7 +870,7 @@ where
                     scale_factor: window.window_handle.scale_factor(),
                 };
                 window.gpu.resize(frame_info.width, frame_info.height);
-                window.clear(background_color);
+                window.clear(window.background_color);
                 (self.on_render)(window, frame_info);
                 window.layout_and_paint();
                 window.present();
