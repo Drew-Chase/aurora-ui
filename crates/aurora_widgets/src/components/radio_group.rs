@@ -8,10 +8,49 @@ use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 use aurora_text::font_options::FontWeight;
 use aurora_text::text_layout::TextLayout;
+use std::time::Instant;
 
 use super::colors;
 
+const ANIM_DURATION: f32 = 0.15; // seconds
+
+/// Per-item animation state for fill/dot transitions.
+struct ItemAnim {
+    from: f32,
+    to: f32,
+    start: Instant,
+}
+
+impl ItemAnim {
+    fn new(selected: bool) -> Self {
+        let t = if selected { 1.0 } else { 0.0 };
+        Self {
+            from: t,
+            to: t,
+            start: Instant::now(),
+        }
+    }
+
+    fn current_t(&self) -> f32 {
+        let elapsed = self.start.elapsed().as_secs_f32();
+        let t = (elapsed / ANIM_DURATION).min(1.0);
+        let eased = 1.0 - (1.0 - t).powi(3);
+        self.from + (self.to - self.from) * eased
+    }
+
+    fn is_animating(&self) -> bool {
+        self.start.elapsed().as_secs_f32() < ANIM_DURATION
+    }
+
+    fn animate_to(&mut self, target: f32) {
+        self.from = self.current_t();
+        self.to = target;
+        self.start = Instant::now();
+    }
+}
+
 /// A group of radio buttons where exactly one can be selected.
+/// The fill and dot animate on selection change.
 ///
 /// # Example
 /// ```ignore
@@ -30,6 +69,7 @@ pub struct RadioGroup {
     on_change: Option<Box<dyn FnMut(usize)>>,
     item_layouts: Vec<Option<TextLayout>>,
     item_heights: Vec<f32>,
+    anims: Vec<ItemAnim>,
 }
 
 impl RadioGroup {
@@ -42,16 +82,25 @@ impl RadioGroup {
             on_change: None,
             item_layouts: Vec::new(),
             item_heights: Vec::new(),
+            anims: Vec::new(),
         }
     }
 
     pub fn item(mut self, label: impl Into<String>) -> Self {
+        let idx = self.items.len();
         self.items.push(label.into());
+        self.anims.push(ItemAnim::new(idx == self.selected));
         self
     }
 
     pub fn selected(mut self, index: usize) -> Self {
         self.selected = index;
+        // Reset animation state for all items
+        for (i, anim) in self.anims.iter_mut().enumerate() {
+            let t = if i == index { 1.0 } else { 0.0 };
+            anim.from = t;
+            anim.to = t;
+        }
         self
     }
 
@@ -100,7 +149,7 @@ impl Widget for RadioGroup {
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
         let mut y = rect.y1;
         for (i, item_h) in self.item_heights.iter().enumerate() {
-            let is_selected = self.selected == i;
+            let t = self.anims.get(i).map_or(0.0, |a| a.current_t());
 
             // Radio circle
             let circle_y = y + (item_h - self.radio_size) / 2.0;
@@ -112,20 +161,33 @@ impl Widget for RadioGroup {
             );
             let circle_corners = Corners::all(self.radio_size / 2.0);
 
-            if is_selected {
-                canvas.fill_rounded_rect(circle_rect, circle_corners, colors::PRIMARY);
-                // Inner dot
-                let dot_size = self.radio_size * 0.4;
-                let dot_rect = Rect::new(
-                    circle_rect.x1 + (self.radio_size - dot_size) / 2.0,
-                    circle_rect.y1 + (self.radio_size - dot_size) / 2.0,
-                    circle_rect.x1 + (self.radio_size + dot_size) / 2.0,
-                    circle_rect.y1 + (self.radio_size + dot_size) / 2.0,
+            // Interpolate border → filled
+            let border_alpha = ((1.0 - t) * 255.0).min(255.0) as u8;
+            if border_alpha > 0 {
+                let border_color = aurora_core::color::Color::new(
+                    colors::INPUT_BORDER.red,
+                    colors::INPUT_BORDER.green,
+                    colors::INPUT_BORDER.blue,
+                    border_alpha,
                 );
-                let dot_corners = Corners::all(dot_size / 2.0);
-                canvas.fill_rounded_rect(dot_rect, dot_corners, colors::PRIMARY_FOREGROUND);
-            } else {
-                canvas.stroke_rounded_rect(circle_rect, circle_corners, 2, colors::INPUT_BORDER);
+                canvas.stroke_rounded_rect(circle_rect, circle_corners, 2, border_color);
+            }
+            if t > 0.0 {
+                let fill = colors::BACKGROUND.lerp(&colors::PRIMARY, t);
+                canvas.fill_rounded_rect(circle_rect, circle_corners, fill);
+
+                // Inner dot scales in
+                let dot_size = self.radio_size * 0.4 * t;
+                if dot_size > 0.5 {
+                    let dot_rect = Rect::new(
+                        circle_rect.x1 + (self.radio_size - dot_size) / 2.0,
+                        circle_rect.y1 + (self.radio_size - dot_size) / 2.0,
+                        circle_rect.x1 + (self.radio_size + dot_size) / 2.0,
+                        circle_rect.y1 + (self.radio_size + dot_size) / 2.0,
+                    );
+                    let dot_corners = Corners::all(dot_size / 2.0);
+                    canvas.fill_rounded_rect(dot_rect, dot_corners, colors::PRIMARY_FOREGROUND);
+                }
             }
 
             // Label
@@ -153,7 +215,16 @@ impl Widget for RadioGroup {
                 for (i, item_h) in self.item_heights.iter().enumerate() {
                     let item_rect = Rect::new(rect.x1, y, rect.x2, y + item_h);
                     if item_rect.contains(&e.position) {
+                        let prev = self.selected;
                         self.selected = i;
+                        // Animate previous selection out
+                        if prev < self.anims.len() {
+                            self.anims[prev].animate_to(0.0);
+                        }
+                        // Animate new selection in
+                        if i < self.anims.len() {
+                            self.anims[i].animate_to(1.0);
+                        }
                         if let Some(ref mut cb) = self.on_change {
                             cb(i);
                         }
@@ -175,5 +246,9 @@ impl Widget for RadioGroup {
             }
             _ => EventResponse::default(),
         }
+    }
+
+    fn needs_animation(&self) -> bool {
+        self.anims.iter().any(|a| a.is_animating())
     }
 }
