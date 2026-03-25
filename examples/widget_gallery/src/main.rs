@@ -74,11 +74,8 @@ fn gallery() -> impl Widget {
         GalleryState { page: 0, profile: 0 },
         move |state, set_state| {
             // Apply the selected theme profile
-            theme::set(unsafe {
-                std::mem::transmute::<usize, theme::ProfileId>(
-                    state.profile.min(theme::profile_count() - 1),
-                )
-            });
+            let profiles = [theme::ProfileId::Default, theme::ProfileId::Candy, theme::ProfileId::Light];
+            theme::set(profiles[state.profile.min(profiles.len() - 1)]);
 
             Box::new(
                 row!()

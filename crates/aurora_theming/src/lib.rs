@@ -132,6 +132,13 @@ pub fn config(input: TokenStream) -> TokenStream {
         quote! { #s }
     }).collect();
 
+    // Generate match arms for current() -> ProfileId (avoids unsafe transmute)
+    let current_match_arms: Vec<_> = profile_names.iter().enumerate().map(|(i, name)| {
+        let variant = if name == "_" { format_ident!("Default") } else { format_ident!("{}", to_pascal_case(name)) };
+        quote! { #i => ProfileId::#variant }
+    }).collect();
+    let first_variant = if profile_names[0] == "_" { format_ident!("Default") } else { format_ident!("{}", to_pascal_case(&profile_names[0])) };
+
     let num_profiles = profile_names.len();
     let num_colors = color_keys.len();
     let num_edges = edge_keys.len();
@@ -203,15 +210,14 @@ pub fn config(input: TokenStream) -> TokenStream {
     for pname in &profile_names {
         let profile = root_obj.get(pname.as_str()).cloned().unwrap_or_default();
         let mut slots: Vec<proc_macro2::TokenStream> = Vec::new();
-        for &(name, _slot) in well_known {
+        for &(name, slot_idx) in well_known {
             let val = get_val(&profile, "colors", name)
                 .or_else(|| get_val(&default_profile, "colors", name));
             if let Some(v) = val {
                 slots.push(parse_color_token(Some(&v)));
             } else {
                 // Use the built-in default from aurora_theme
-                let idx = _slot;
-                slots.push(quote! { aurora_theme::DEFAULT_COLORS[#idx] });
+                slots.push(quote! { aurora_theme::DEFAULT_COLORS[#slot_idx] });
             }
         }
         slot_colors_per_profile.push(slots);
@@ -237,8 +243,10 @@ pub fn config(input: TokenStream) -> TokenStream {
             }
 
             pub fn current() -> ProfileId {
-                let id = aurora_theme::current_profile();
-                unsafe { std::mem::transmute::<usize, ProfileId>(id.min(#num_profiles - 1)) }
+                match aurora_theme::current_profile() {
+                    #(#current_match_arms,)*
+                    _ => ProfileId::#first_variant,
+                }
             }
 
             pub fn profile_count() -> usize { #num_profiles }

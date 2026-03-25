@@ -112,7 +112,7 @@ impl<S: 'static> Widget for Composite<S> {
 	}
 
 	fn needs_animation(&self) -> bool {
-		self.inner.as_ref().map_or(false, |w| w.needs_animation())
+		self.inner.as_ref().is_some_and(|w| w.needs_animation())
 	}
 }
 
@@ -205,6 +205,6 @@ impl<T: CompositeBuilder> Widget for CompositeWrapper<T> {
 	}
 
 	fn needs_animation(&self) -> bool {
-		self.inner.as_ref().map_or(false, |w| w.needs_animation())
+		self.inner.as_ref().is_some_and(|w| w.needs_animation())
 	}
 }
