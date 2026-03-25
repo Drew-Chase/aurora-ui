@@ -9,8 +9,11 @@ use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
+use std::time::Instant;
 
 use super::colors;
+
+const ANIM_DURATION: f32 = 0.18; // seconds
 
 /// A select dropdown input that shows a list of options.
 ///
@@ -42,6 +45,10 @@ pub struct Select {
     selected_layout: Option<aurora_text::text_layout::TextLayout>,
     option_layouts: Vec<Option<aurora_text::text_layout::TextLayout>>,
     hover_index: Option<usize>,
+    /// 0.0 = closed, 1.0 = open
+    anim_from: f32,
+    anim_to: f32,
+    anim_start: Instant,
 }
 
 impl Select {
@@ -65,6 +72,9 @@ impl Select {
             selected_layout: None,
             option_layouts: Vec::new(),
             hover_index: None,
+            anim_from: 0.0,
+            anim_to: 0.0,
+            anim_start: Instant::now(),
         }
     }
 
@@ -108,15 +118,32 @@ impl Select {
         self
     }
 
+    fn full_dropdown_height(&self) -> f32 {
+        8.0 + self.item_height * self.options.len() as f32 + 8.0
+    }
+
     fn dropdown_rect(&self, trigger_rect: &Rect) -> Rect {
         let w = self.dropdown_width.unwrap_or(trigger_rect.width());
-        let h = 8.0 + self.item_height * self.options.len() as f32 + 8.0;
+        let h = self.full_dropdown_height();
         Rect::new(
             trigger_rect.x1,
             trigger_rect.y2 + 4.0,
             trigger_rect.x1 + w,
             trigger_rect.y2 + 4.0 + h,
         )
+    }
+
+    fn current_t(&self) -> f32 {
+        let elapsed = self.anim_start.elapsed().as_secs_f32();
+        let t = (elapsed / ANIM_DURATION).min(1.0);
+        let eased = 1.0 - (1.0 - t).powi(3);
+        self.anim_from + (self.anim_to - self.anim_from) * eased
+    }
+
+    fn start_anim(&mut self, opening: bool) {
+        self.anim_from = self.current_t();
+        self.anim_to = if opening { 1.0 } else { 0.0 };
+        self.anim_start = Instant::now();
     }
 }
 
@@ -195,12 +222,18 @@ impl Widget for Select {
             colors::MUTED_FOREGROUND,
         );
 
-        if !self.open {
+        let t = self.current_t();
+        if t <= 0.0 {
             return;
         }
 
-        // Dropdown panel
+        // Animated dropdown panel
+        let full_h = self.full_dropdown_height();
+        let visible_h = full_h * t;
         let dr = self.dropdown_rect(&rect);
+        let clip = Rect::new(dr.x1, dr.y1, dr.x2, dr.y1 + visible_h);
+        canvas.push_clip(clip);
+
         canvas.fill_rounded_rect(dr, self.corners, colors::POPOVER);
         canvas.stroke_rounded_rect(dr, self.corners, 1, colors::BORDER);
 
@@ -224,6 +257,8 @@ impl Widget for Select {
 
             y += self.item_height;
         }
+
+        canvas.pop_clip();
     }
 
     fn children(&self) -> &[Box<dyn Widget>] {
@@ -241,6 +276,7 @@ impl Widget for Select {
             {
                 if rect.contains(&e.position) {
                     self.open = !self.open;
+                    self.start_anim(self.open);
                     self.hover_index = None;
                     return EventResponse {
                         handled: true,
@@ -256,6 +292,7 @@ impl Widget for Select {
                         if idx < self.options.len() {
                             self.selected = Some(idx);
                             self.open = false;
+                            self.start_anim(false);
                             if let Some(ref mut cb) = self.on_change {
                                 cb(idx);
                             }
@@ -266,6 +303,7 @@ impl Widget for Select {
                         }
                     }
                     self.open = false;
+                    self.start_anim(false);
                     return EventResponse {
                         handled: true,
                         ..Default::default()
@@ -298,5 +336,9 @@ impl Widget for Select {
             }
             _ => EventResponse::default(),
         }
+    }
+
+    fn needs_animation(&self) -> bool {
+        self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
 }
