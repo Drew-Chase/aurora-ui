@@ -57,7 +57,7 @@ fn main() {
 
 ## Features
 
-- **Software rendering** — CPU rendering via softbuffer (only backend currently implemented; GPU backends planned)
+- **Pluggable GPU backends** — Software (softbuffer), OpenGL 3.3 (glow), and Vulkan/Metal/DX12 (wgpu) — swap with a feature flag, zero code changes
 - **Custom window titlebars** — Windows 11 DWM rounded corners, drop shadow, and edge-resize via `WM_NCHITTEST` subclassing
 - **Feature-gated text rendering** — Font loading, shaping, and text widgets behind `text` feature flag
 - **Layout system** — `col!` and `row!` macros with flex alignment, `Stack`, `Positioned`, and `ScrollView`
@@ -87,14 +87,38 @@ enable text rendering and widgets that depend on it:
 aurora_ui = { path = "path/to/aurora-ui/aurora", features = ["software", "text"] }
 ```
 
+To use GPU-accelerated presentation instead (OpenGL or Vulkan/Metal/DX12):
+
+```toml
+# OpenGL 3.3 — fast startup, broad compatibility
+aurora_ui = { path = "path/to/aurora-ui/aurora", features = ["opengl", "text"] }
+
+# Vulkan/Metal/DX12 — best per-platform rendering
+aurora_ui = { path = "path/to/aurora-ui/aurora", features = ["wgpu_backend", "text"] }
+```
+
+No code changes needed — just swap the feature flag.
+
 ## Feature Flags
+
+### GPU Backends (pick one)
+
+| Feature        | Backend                        | Binary impact | Default |
+|----------------|--------------------------------|---------------|---------|
+| `software`     | softbuffer (GDI/CPU)           | ~0 KB         | Yes     |
+| `opengl`       | glow (OpenGL 3.3)              | ~200 KB       | No      |
+| `wgpu_backend` | wgpu (Vulkan/Metal/DX12)       | ~2 MB         | No      |
+
+When multiple backends are enabled, priority is: wgpu > opengl > software.
+
+### Content Features
 
 | Feature    | What it adds                                 | Default |
 |------------|----------------------------------------------|---------|
-| `software` | CPU software rendering via softbuffer        | Yes     |
 | `text`     | Font loading, shaping, text widgets, buttons | No      |
 | `image`    | PNG/JPEG decoding and Image widget           | No      |
 | `svg`      | SVG parsing, rasterization, and Svg widget   | No      |
+| `animate`  | Tweens, easing, keyframes, timelines         | No      |
 
 ## Performance
 
@@ -126,7 +150,7 @@ clean dependency boundaries.
 aurora/
 ├── aurora_core       # Zero-dep types: color, geometry, events, IDs
 ├── aurora_platform   # Windowing, event loop, native handles, custom titlebar
-├── aurora_gpu        # GPU abstraction with pluggable backends
+├── aurora_gpu        # GPU abstraction: softbuffer, glow (OpenGL), wgpu (Vulkan/Metal/DX12)
 ├── aurora_render     # 2D drawing: rounded rects, paths, images
 ├── aurora_text       # Text shaping, layout, font management (optional)
 ├── aurora_layout     # Layout engine (planned)
@@ -134,7 +158,7 @@ aurora/
 ├── aurora_macros     # Proc macros: #[composite_widget], #[derive(CompositeWidget)]
 ├── aurora_iconify    # Compile-time icon embedding from iconify.design
 ├── aurora_theme      # Theming system (planned)
-├── aurora_animate    # Animation system (planned)
+├── aurora_animate    # Animation: tweens, easing, keyframes, timelines, presets
 ├── aurora_a11y       # Accessibility via AccessKit (planned)
 └── aurora (facade)   # Public API — re-exports everything
 ```
@@ -245,14 +269,12 @@ the binary as `&'static str`.
 
 ## Platform Support
 
-| Platform        | Backend               | Status    |
-|-----------------|-----------------------|-----------|
-| Windows 10/11   | Software (softbuffer) | Primary   |
-| macOS 11+       | Software (softbuffer) | Primary   |
-| Linux (X11)     | Software (softbuffer) | Supported |
-| Linux (Wayland) | Software (softbuffer) | Supported |
-
-GPU backends (OpenGL via glow, Vulkan/Metal/DX12 via wgpu) are planned but not yet implemented.
+| Platform        | software (GDI) | opengl (GL 3.3) | wgpu (Vulkan/Metal/DX12) |
+|-----------------|:--------------:|:---------------:|:------------------------:|
+| Windows 10/11   | Primary        | Supported       | Supported (DX12)         |
+| macOS 11+       | Primary        | Supported       | Supported (Metal)        |
+| Linux (X11)     | Supported      | Supported       | Supported (Vulkan)       |
+| Linux (Wayland) | Supported      | Supported       | Supported (Vulkan)       |
 
 ## Building from Source
 
