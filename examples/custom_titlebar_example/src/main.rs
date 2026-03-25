@@ -13,6 +13,7 @@ fn main() {
         .position(WindowPosition::Center)
         .background_color(hsl!(0, 0.0, 0.1))
         .custom_titlebar(true)
+        .use_system_fonts()
         .run(|window, _frame_info| {
             let handle = window.window_handle().clone();
             window.root(col!().child(titlebar(handle)));
@@ -26,22 +27,34 @@ fn titlebar(window: std::sync::Arc<winit::window::Window>) -> impl Widget {
         let controls_handle = window.clone();
 
         Box::new(
-            Positioned::fixed((0.0, 0.0))
-                .height(TITLEBAR_HEIGHT)
+            Stack::new()
                 .child(
-                    row!()
-                        .height(TITLEBAR_HEIGHT as u32)
-                        .child(WindowControls::new(controls_handle).dark(true))
-                        .child(
-                            TouchArea::new()
-                                .on_mouse_down(move |button| {
-                                    if button == MouseButton::Left {
-                                        drag_handle.drag_window().expect("Failed to drag window");
-                                    }
-                                })
-                                .child(BoxWidget::new().background_color(TITLEBAR_BG)),
-                        )
+                    Positioned::fixed((0.0, 0.0))
+                        .height(TITLEBAR_HEIGHT)
+                        .child(BoxWidget::new().background_color(TITLEBAR_BG)),
                 )
+                .child(
+                    Positioned::fixed((0.0, 0.0))
+                        .height(TITLEBAR_HEIGHT)
+                        .child(WindowControls::new(controls_handle).dark(true)),
+                )
+                .child(
+                    Positioned::fixed((0.0, 0.0)).height(TITLEBAR_HEIGHT).child(
+                        row!()
+                            .height(TITLEBAR_HEIGHT as u32)
+                            .child(
+                                TouchArea::new()
+                                    .child(Text::new(window.title()).color(Color::WHITE).justify(Justify::Center).padding(Edges::symmetric(13.0, 0.0)).font_size(13.0))
+                                    .on_mouse_down(move |button| {
+                                        if button == MouseButton::Left {
+                                            drag_handle
+                                                .drag_window()
+                                                .expect("Failed to drag window");
+                                        }
+                                    }),
+                            )
+                    ),
+                ),
         )
     })
 }
