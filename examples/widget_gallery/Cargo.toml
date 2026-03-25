@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-aurora_ui = { path = "../../aurora", features = ["software", "text", "animate"] }
+aurora_ui = { path = "../../aurora", features = ["opengl", "text", "animate"] }
