@@ -258,10 +258,15 @@ impl Widget for Row {
             MouseEvent::MouseMoveEvent(p) => *p,
             MouseEvent::MouseClickEvent(c) => c.position,
             MouseEvent::MouseScrollEvent(_) => {
-                return EventResponse {
-                    handled: false,
-                    ..EventResponse::default()
-                };
+                // Forward scroll to all children so ScrollViews can handle it
+                for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
+                    let translated = child_rect.translate(&rect.origin());
+                    let response = child.event(event, translated);
+                    if response.handled {
+                        return response;
+                    }
+                }
+                return EventResponse::default();
             }
         };
 

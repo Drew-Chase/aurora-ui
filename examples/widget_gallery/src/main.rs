@@ -106,7 +106,7 @@ fn sidebar_widget(active: usize, setter: StateSetter<usize>) -> impl Widget {
     BoxWidget::new()
         .width(220)
         .background_color(SIDEBAR_BG)
-        .child(ScrollView::new().scrollbar_width(4.0).child(sidebar))
+        .child(ScrollView::new().scrollbar_width(4.0).scrollbar_thumb_color(Color::WHITE).child(sidebar))
 }
 
 fn sidebar_item(
@@ -133,6 +133,7 @@ fn sidebar_item(
                     Text::new(name)
                         .font_size(13.0)
                         .color(text_color)
+                        .height(32.0)
                         .justify(Justify::Center),
                 ),
         )

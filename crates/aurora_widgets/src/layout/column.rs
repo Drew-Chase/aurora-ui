@@ -260,10 +260,17 @@ impl Widget for Column {
         let pos = match mouse {
             MouseEvent::MouseMoveEvent(p) => *p,
             MouseEvent::MouseClickEvent(c) => c.position,
-            MouseEvent::MouseScrollEvent(_) => return EventResponse{
-                handled: false,
-                ..EventResponse::default()
-            },
+            MouseEvent::MouseScrollEvent(_) => {
+                // Forward scroll to all children so ScrollViews can handle it
+                for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
+                    let translated = child_rect.translate(&rect.origin());
+                    let response = child.event(event, translated);
+                    if response.handled {
+                        return response;
+                    }
+                }
+                return EventResponse::default();
+            }
         };
 
         let is_move = matches!(mouse, MouseEvent::MouseMoveEvent(_));
