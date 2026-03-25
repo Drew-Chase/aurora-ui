@@ -1,0 +1,17 @@
+use aurora_ui::aurora_widgets::components::*;
+use aurora_ui::prelude::*;
+
+pub fn page_progress() -> impl Widget {
+    col!()
+        .spacing(24.0)
+        .child(crate::page_header("Progress", "Displays an indicator showing the completion progress of a task."))
+        .child(crate::example_section("Default", "Progress bars at different values."))
+        .child(crate::example_card(
+            col!()
+                .spacing(16.0)
+                .child(progress::Progress::new().value(0.25).width(400.0))
+                .child(progress::Progress::new().value(0.50).width(400.0).color(Color::new(59, 130, 246, 255)))
+                .child(progress::Progress::new().value(0.75).width(400.0).color(Color::new(76, 175, 80, 255)))
+                .child(progress::Progress::new().value(1.0).width(400.0).color(Color::new(234, 67, 53, 255)))
+        ))
+}
