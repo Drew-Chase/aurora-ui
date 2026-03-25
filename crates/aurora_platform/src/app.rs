@@ -423,9 +423,7 @@ impl AppWindow {
     /// Runs the layout phase (computing sizes) then the paint phase (drawing
     /// into the canvas) for the given widget and all its children.
     pub fn root(&mut self, widget: impl Widget + 'static) {
-        if self.root_widget.is_none() {
-            self.root_widget = Some(Box::new(widget));
-        }
+        self.root_widget = Some(Box::new(widget));
     }
 
     pub(crate) fn layout_and_paint(&mut self) {
