@@ -166,10 +166,8 @@ impl Widget for Text {
         let text_size = text_layout.size();
 
         let width = self.width.unwrap_or(available.width).min(available.width);
-        let height = self
-            .height
-            .unwrap_or(available.height)
-            .min(available.height);
+        let content_height = text_size.height + self.padding.vertical();
+        let height = self.height.unwrap_or(content_height).min(available.height);
 
         let available_height = height - self.padding.top - self.padding.bottom;
         let leftover = (available_height - text_size.height).max(0.0);
