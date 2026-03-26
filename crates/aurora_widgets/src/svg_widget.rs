@@ -27,6 +27,7 @@ pub struct Svg {
     data: Arc<SvgData>,
     width: Option<f32>,
     height: Option<f32>,
+    color: Option<aurora_core::color::Color>,
     rasterized: Option<RasterizedSvg>,
 }
 
@@ -43,6 +44,7 @@ impl Svg {
             data,
             width: None,
             height: None,
+            color: None,
             rasterized: None,
         }
     }
@@ -56,6 +58,12 @@ impl Svg {
     /// Sets a fixed height in pixels.
     pub fn height(mut self, height: f32) -> Self {
         self.height = Some(height);
+        self
+    }
+
+    /// Tints the icon to the given color, replacing RGB while preserving alpha.
+    pub fn color(mut self, color: impl Into<aurora_core::color::Color>) -> Self {
+        self.color = Some(color.into());
         self
     }
 }
@@ -75,7 +83,17 @@ impl Widget for Svg {
             None => true,
         };
         if needs_raster && rw > 0 && rh > 0 {
-            let pixels = self.data.render(rw, rh);
+            let mut pixels = self.data.render(rw, rh);
+            // Apply color tint: replace RGB of non-transparent pixels
+            if let Some(tint) = self.color {
+                for chunk in pixels.chunks_exact_mut(4) {
+                    if chunk[3] > 0 {
+                        chunk[0] = tint.red;
+                        chunk[1] = tint.green;
+                        chunk[2] = tint.blue;
+                    }
+                }
+            }
             self.rasterized = Some(RasterizedSvg {
                 pixels,
                 width: rw,
