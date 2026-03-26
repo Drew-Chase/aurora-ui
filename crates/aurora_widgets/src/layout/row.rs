@@ -291,8 +291,12 @@ impl Widget for Row {
                 if translated.contains(&pos) {
                     cursor = response.cursor;
                 }
-            } else if translated.contains(&pos) && response.handled {
-                handled = true;
+            } else if response.handled {
+                return EventResponse {
+                    handled: true,
+                    cursor: response.cursor,
+                    ..Default::default()
+                };
             }
         }
         EventResponse {
