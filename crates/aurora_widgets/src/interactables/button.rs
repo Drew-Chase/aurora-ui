@@ -58,6 +58,12 @@ pub struct Button {
     /// Label text set via `.text()`. Built into a Text widget lazily in `build()`.
     #[composite(skip)]
     label: Option<String>,
+    /// Widget placed before the label/child (e.g. an icon).
+    #[composite(skip)]
+    start: Option<Rc<RefCell<Box<dyn Widget>>>>,
+    /// Widget placed after the label/child (e.g. an icon).
+    #[composite(skip)]
+    end: Option<Rc<RefCell<Box<dyn Widget>>>>,
     /// Click callback. Use `.on_click()` to set.
     #[composite(skip)]
     on_click: ClickHandler,
@@ -71,6 +77,8 @@ impl Default for Button {
         Self {
             child: None,
             label: None,
+            start: None,
+            end: None,
             on_click: Rc::new(RefCell::new(Box::new(|_| {}))),
             on_hover: None,
             width: 100,
@@ -101,6 +109,18 @@ impl Button {
     /// ```
     pub fn text(mut self, text: impl Into<String>) -> Self {
         self.label = Some(text.into());
+        self
+    }
+
+    /// Sets a widget to display before the label (e.g. an icon).
+    pub fn start(mut self, widget: impl Widget + 'static) -> Self {
+        self.start = Some(Rc::new(RefCell::new(Box::new(widget))));
+        self
+    }
+
+    /// Sets a widget to display after the label (e.g. an icon).
+    pub fn end(mut self, widget: impl Widget + 'static) -> Self {
+        self.end = Some(Rc::new(RefCell::new(Box::new(widget))));
         self
     }
 
@@ -153,19 +173,19 @@ impl CompositeBuilder for Button {
             self.label.as_ref().and_then(|label| {
                 #[cfg(feature = "text")]
                 {
-                    use crate::layout::{Align, Justify};
                     use crate::text_widget::Text;
                     let text_widget = Text::new(label.clone())
                         .color(self.foreground_color)
                         .height(self.height as f32)
-                        .align(Align::Center)
-                        .justify(Justify::Center);
+                        .justify(crate::layout::Justify::Center);
                     Some(Rc::new(RefCell::new(Box::new(text_widget) as Box<dyn Widget>)))
                 }
                 #[cfg(not(feature = "text"))]
                 { let _ = label; None }
             })
         };
+        let start = self.start.clone();
+        let end = self.end.clone();
         let width = self.width;
         let height = self.height;
         let hover_cursor = self.hover_cursor;
@@ -186,21 +206,50 @@ impl CompositeBuilder for Button {
                 let click_handler = on_click.clone();
                 let on_hover = on_hover.clone();
                 let child = child.clone();
+                let start = start.clone();
+                let end = end.clone();
                 let anim = anim_for_closure.clone();
 
+                let has_slots = start.is_some() || end.is_some();
                 let mut box_widget = BoxWidget::new()
                     .corners(border_radius)
                     .background_color(Color::TRANSPARENT)
                     .width(width)
                     .height(height);
 
-                if let Some(child) = child {
-                    let child_ref = child.borrow();
-                    // Clone the child's children structure for display
-                    // We use the child directly via paint delegation
-                    drop(child_ref);
+                if has_slots {
+                    // Use a Row to arrange start, content, end
+                    use crate::layout::{Align, Justify};
+                    use crate::layout::row::Row;
+                    let mut content_row = Row::new()
+                        .spacing(8.0)
+                        .align(Align::Center)
+                        .justify(Justify::Center);
+                    if let Some(s) = start {
+                        content_row = content_row.child(ChildProxy {
+                            inner: s,
+                            width: height as f32,
+                            height: height as f32,
+                        });
+                    }
+                    if let Some(c) = child {
+                        content_row = content_row.child(ChildProxy {
+                            inner: c,
+                            width: width as f32,
+                            height: height as f32,
+                        });
+                    }
+                    if let Some(e) = end {
+                        content_row = content_row.child(ChildProxy {
+                            inner: e,
+                            width: height as f32,
+                            height: height as f32,
+                        });
+                    }
+                    box_widget = box_widget.child(content_row);
+                } else if let Some(child) = child {
                     box_widget = box_widget.child(ChildProxy {
-                        inner: child.clone(),
+                        inner: child,
                         width: width as f32,
                         height: height as f32,
                     });

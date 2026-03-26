@@ -1,6 +1,14 @@
 use aurora_ui::aurora_widgets::components::*;
 use aurora_ui::prelude::*;
 use crate::theme;
+use std::sync::Arc;
+
+aurora_iconify::icon_sets!("lucide");
+
+fn icon(svg_str: &str, size: f32) -> Svg {
+    let data = Arc::new(SvgData::from_bytes(svg_str.as_bytes()).unwrap());
+    Svg::new(data).width(size).height(size)
+}
 
 pub fn page_button() -> impl Widget {
     col!()
@@ -14,5 +22,42 @@ pub fn page_button() -> impl Widget {
                 .child(button!("Primary").background_color(colors::primary()).hover_background_color(colors::primary().opacity(0.8)).foreground_color(colors::primary_foreground()).border_radius(theme::corners::button_radius()).width(100).height(36))
                 .child(button!("Secondary").background_color(colors::secondary()).hover_background_color(colors::secondary().opacity(0.8)).foreground_color(colors::secondary_foreground()).border_radius(theme::corners::button_radius()).width(110).height(36))
                 .child(button!("Destructive").background_color(colors::destructive()).hover_background_color(colors::destructive().opacity(0.8)).foreground_color(colors::destructive_foreground()).border_radius(theme::corners::button_radius()).width(120).height(36))
+        ))
+        .child(crate::example_section("With Icons", "Buttons with start and end icon slots."))
+        .child(crate::example_card(
+            row!()
+                .spacing(12.0)
+                .align(Align::Center)
+                .child(
+                    button!("Send")
+                        .start(icon(Icon::lucide().send(), 16.0))
+                        .background_color(colors::primary())
+                        .hover_background_color(colors::primary().opacity(0.8))
+                        .foreground_color(colors::primary_foreground())
+                        .border_radius(Corners::all(6.0))
+                        .width(110)
+                        .height(36),
+                )
+                .child(
+                    button!("Next")
+                        .end(icon(Icon::lucide().arrow_right(), 16.0))
+                        .background_color(colors::secondary())
+                        .hover_background_color(colors::secondary().opacity(0.8))
+                        .foreground_color(colors::secondary_foreground())
+                        .border_radius(Corners::all(6.0))
+                        .width(110)
+                        .height(36),
+                )
+                .child(
+                    button!("Save")
+                        .start(icon(Icon::lucide().save(), 16.0))
+                        .end(icon(Icon::lucide().check(), 16.0))
+                        .background_color(colors::primary())
+                        .hover_background_color(colors::primary().opacity(0.8))
+                        .foreground_color(colors::primary_foreground())
+                        .border_radius(Corners::all(6.0))
+                        .width(120)
+                        .height(36),
+                )
         ))
 }
