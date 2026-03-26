@@ -236,7 +236,7 @@ fn content_area(page_index: usize, scroll: ScrollState) -> impl Widget {
     use pages::*;
     ScrollView::new()
         .scrollbar_thumb_color(theme::colors::foreground().opacity(0.5))
-        .padding(Edges::new(48.0, 48.0, 48.0, 48.0))
+        .padding(Edges::new(48.0, 80.0, 48.0, 48.0))
         .state(scroll)
         .child(
             ContentSwitch::new()

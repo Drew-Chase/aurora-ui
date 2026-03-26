@@ -2,14 +2,21 @@ use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
+use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_render::canvas::Canvas;
 use aurora_syntax::{SyntaxSet, TokenType};
 use aurora_theme::slots;
 use std::ops::Range;
+use std::time::Instant;
 
 use super::colors;
+
+const COPY_BTN_SIZE: f32 = 28.0;
+const COPY_BTN_MARGIN: f32 = 8.0;
+const COPIED_DISPLAY_SECS: f32 = 1.5;
 
 /// A code block widget with syntax highlighting and line numbers.
 ///
@@ -39,6 +46,10 @@ pub struct CodeBlock {
     line_height: f32,
     cached_code: String,
     cached_language: String,
+    // Copy button state
+    copy_hover: bool,
+    copied_at: Option<Instant>,
+    copy_label: Option<aurora_text::text_layout::TextLayout>,
 }
 
 impl CodeBlock {
@@ -59,6 +70,9 @@ impl CodeBlock {
             line_height: 0.0,
             cached_code: String::new(),
             cached_language: String::new(),
+            copy_hover: false,
+            copied_at: None,
+            copy_label: None,
         }
     }
 
@@ -100,6 +114,15 @@ impl CodeBlock {
     pub fn width(mut self, width: f32) -> Self {
         self.width = Some(width);
         self
+    }
+
+    fn copy_btn_rect(rect: &Rect) -> Rect {
+        Rect::new(
+            rect.x2 - COPY_BTN_SIZE - COPY_BTN_MARGIN,
+            rect.y1 + COPY_BTN_MARGIN,
+            rect.x2 - COPY_BTN_MARGIN,
+            rect.y1 + COPY_BTN_MARGIN + COPY_BTN_SIZE,
+        )
     }
 
     fn token_color(token: TokenType) -> Color {
@@ -199,6 +222,19 @@ impl Widget for CodeBlock {
             }
         }
 
+        // Build copy button label
+        let is_copied = self.copied_at.is_some_and(|t| t.elapsed().as_secs_f32() < COPIED_DISPLAY_SECS);
+        let copy_text = if is_copied { "Copied!" } else { "Copy" };
+        let mut copy_opts = ctx.font_options.clone();
+        copy_opts.size = Some(11.0);
+        self.copy_label = Some(aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            copy_text,
+            &copy_opts,
+            colors::muted_foreground(),
+            None,
+        ));
+
         let num_lines = lines.len();
         let content_height =
             num_lines as f32 * self.line_height + self.padding.vertical();
@@ -245,13 +281,58 @@ impl Widget for CodeBlock {
                 canvas.draw_rich_text(tl, code_x as i32, y as i32, &color_ranges);
             }
         }
+
+        // Draw copy button
+        let btn = Self::copy_btn_rect(&rect);
+        let btn_bg = if self.copy_hover {
+            colors::border()
+        } else {
+            colors::muted_foreground().opacity(0.15)
+        };
+        canvas.fill_rounded_rect(btn, Corners::all(4.0), btn_bg);
+        if let Some(ref label) = self.copy_label {
+            let ls = label.size();
+            let lx = btn.x1 + (btn.width() - ls.width) / 2.0;
+            let ly = btn.y1 + (btn.height() - ls.height) / 2.0;
+            canvas.draw_text(label, lx as i32, ly as i32);
+        }
     }
 
     fn children(&self) -> &[Box<dyn Widget>] {
         &[]
     }
 
-    fn event(&mut self, _event: &aurora_core::kmi::WidgetEvent, _rect: Rect) -> EventResponse {
+    fn event(&mut self, event: &aurora_core::kmi::WidgetEvent, rect: Rect) -> EventResponse {
+        let mouse = match event {
+            aurora_core::kmi::WidgetEvent::Mouse(m) => m,
+            _ => return EventResponse::default(),
+        };
+        let btn = Self::copy_btn_rect(&rect);
+        match mouse {
+            MouseEvent::MouseMoveEvent(pos) => {
+                self.copy_hover = btn.contains(pos);
+                if self.copy_hover {
+                    return EventResponse {
+                        cursor: Some(aurora_core::kmi::cursor_icon::CursorIcon::Pointer),
+                        ..Default::default()
+                    };
+                }
+            }
+            MouseEvent::MouseClickEvent(click)
+                if click.state == MouseState::Released && btn.contains(&click.position) =>
+            {
+                if let Ok(mut clipboard) = arboard::Clipboard::new() {
+                    let _ = clipboard.set_text(&self.code);
+                }
+                self.copied_at = Some(Instant::now());
+                return EventResponse { handled: true, ..Default::default() };
+            }
+            _ => {}
+        }
         EventResponse::default()
+    }
+
+    fn needs_animation(&self) -> bool {
+        self.copied_at.is_some_and(|t| t.elapsed().as_secs_f32() < COPIED_DISPLAY_SECS)
     }
 }
