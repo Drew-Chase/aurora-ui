@@ -37,6 +37,7 @@
       <sourceFolder url="file://$MODULE_DIR$/examples/animation_example/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/widget_gallery/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/aurora_theming/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_syntax/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/examples/fonts_example/target" />
       <excludeFolder url="file://$MODULE_DIR$/examples/iconify_example/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
