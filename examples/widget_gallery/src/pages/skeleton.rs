@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_skeleton() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Skeleton", "Used to show a placeholder while content is loading."))
         .child(crate::example_section("Default", "Skeleton shapes for loading states."))
         .child(crate::example_card(

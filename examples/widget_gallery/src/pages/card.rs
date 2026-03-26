@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_card() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Card", "Displays a card with header, content, and footer."))
         .child(crate::example_section("Default", "A card with title and description."))
         .child(crate::example_card(

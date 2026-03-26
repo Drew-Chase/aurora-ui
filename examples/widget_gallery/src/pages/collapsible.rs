@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_collapsible() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Collapsible", "An interactive component that expands and collapses content."))
         .child(crate::example_section("Default", "Click the header to toggle content."))
         .child(crate::example_card(

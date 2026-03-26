@@ -13,6 +13,7 @@ fn icon(svg_str: &str, size: f32, color: Color) -> Svg {
 pub fn page_button() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Button", "Displays a button or a component that looks like a button."))
         .child(crate::example_section("Default", "A standard button with hover animation."))
         .child(crate::example_card(

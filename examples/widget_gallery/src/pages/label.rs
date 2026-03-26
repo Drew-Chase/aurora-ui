@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_label() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Label", "Renders an accessible label associated with controls."))
         .child(crate::example_section("Default", "Labels for form controls."))
         .child(crate::example_card(

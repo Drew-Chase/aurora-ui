@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_avatar() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Avatar", "An image element with a fallback for representing the user."))
         .child(crate::example_section("Sizes", "Avatars come in small, medium, and large sizes."))
         .child(crate::example_card(

@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_input() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Input", "A text input field for user data entry."))
         .child(crate::example_section("Default", "A basic text input."))
         .child(crate::example_card(

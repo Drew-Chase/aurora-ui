@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_badge() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Badge", "Displays a badge or a component that looks like a badge."))
         .child(crate::example_section("Variants", "Badges come in several visual styles."))
         .child(crate::example_card(

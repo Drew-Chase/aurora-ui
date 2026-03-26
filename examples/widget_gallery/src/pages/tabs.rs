@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_tabs() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Tabs", "A set of layered sections of content shown one at a time."))
         .child(crate::example_section("Default", "Click a tab to switch content."))
         .child(crate::example_card(

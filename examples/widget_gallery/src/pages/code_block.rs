@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_code_block() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header(
             "Code Block",
             "Renders code with syntax highlighting and line numbers.",

@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_kbd() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Keyboard Shortcut", "A visual indicator for keyboard shortcuts."))
         .child(crate::example_section("Default", "Display keyboard shortcuts."))
         .child(crate::example_card(

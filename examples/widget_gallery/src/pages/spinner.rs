@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_spinner() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Spinner", "A loading indicator that rotates continuously."))
         .child(crate::example_section("Sizes", "Spinners at different sizes."))
         .child(crate::example_card(

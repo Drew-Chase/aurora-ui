@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_slider() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Slider", "An input where the user selects a value from within a given range."))
         .child(crate::example_section("Default", "Drag the thumb to set a value."))
         .child(crate::example_card(

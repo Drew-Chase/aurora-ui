@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_checkbox() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Checkbox", "A control that allows the user to toggle between checked and not checked."))
         .child(crate::example_section("Basic", "A simple checkbox with a label."))
         .child(crate::example_card(

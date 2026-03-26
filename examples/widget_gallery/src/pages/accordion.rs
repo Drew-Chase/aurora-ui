@@ -3,6 +3,7 @@ use aurora_ui::prelude::*;
 
 pub fn page_accordion() -> impl Widget {
     col!()
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .spacing(24.0)
         .child(crate::page_header("Accordion", "A vertically stacked set of interactive headings that reveal content."))
         .child(crate::example_section("Default", "Click a heading to expand its content."))

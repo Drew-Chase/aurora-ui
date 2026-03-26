@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_toggle() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Toggle", "A two-state button that can be on or off."))
         .child(crate::example_section("Variants", "Default and outline toggle styles."))
         .child(crate::example_card(

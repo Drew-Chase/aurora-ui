@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_separator() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Separator", "Visually separates content."))
         .child(crate::example_section("Default", "A horizontal rule to divide sections."))
         .child(crate::example_card(

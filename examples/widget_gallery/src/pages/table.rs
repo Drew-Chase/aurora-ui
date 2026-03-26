@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_table() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Table", "A responsive table component for displaying tabular data."))
         .child(crate::example_section("Default", "A basic data table."))
         .child(crate::example_card(

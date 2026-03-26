@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_alert() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Alert", "Displays a callout for important information."))
         .child(crate::example_section("Variants", "Alerts come in several semantic variants."))
         .child(crate::example_card(

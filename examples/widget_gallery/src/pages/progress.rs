@@ -4,6 +4,7 @@ use aurora_ui::prelude::*;
 pub fn page_progress() -> impl Widget {
     col!()
         .spacing(24.0)
+        .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
         .child(crate::page_header("Progress", "Displays an indicator showing the completion progress of a task."))
         .child(crate::example_section("Default", "Progress bars at different values."))
         .child(crate::example_card(
