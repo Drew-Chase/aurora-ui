@@ -55,6 +55,9 @@ pub struct Button {
     /// Child widget displayed inside the button.
     #[composite(skip)]
     child: Option<Rc<RefCell<Box<dyn Widget>>>>,
+    /// Label text set via `.text()`. Built into a Text widget lazily in `build()`.
+    #[composite(skip)]
+    label: Option<String>,
     /// Click callback. Use `.on_click()` to set.
     #[composite(skip)]
     on_click: ClickHandler,
@@ -67,6 +70,7 @@ impl Default for Button {
     fn default() -> Self {
         Self {
             child: None,
+            label: None,
             on_click: Rc::new(RefCell::new(Box::new(|_| {}))),
             on_hover: None,
             width: 100,
@@ -90,18 +94,14 @@ impl Button {
 
     /// Sets the button label text with default centering.
     ///
-    /// Convenience method — equivalent to `.child(Text::new(text).align(...).justify(...))`.
-    #[cfg(feature = "text")]
-    pub fn text(self, text: impl Into<String>) -> Self {
-        use crate::layout::{Align, Justify};
-        use crate::text_widget::Text;
-        let color = self.foreground_color;
-        self.child(
-            Text::new(text.into())
-                .color(color)
-                .align(Align::Center)
-                .justify(Justify::Center),
-        )
+    /// The text color is determined by [`foreground_color`](Self::foreground_color),
+    /// so you can set it in any order:
+    /// ```ignore
+    /// button!("Save").foreground_color(colors::primary_foreground())
+    /// ```
+    pub fn text(mut self, text: impl Into<String>) -> Self {
+        self.label = Some(text.into());
+        self
     }
 
     /// Sets the click callback.
@@ -146,7 +146,25 @@ impl CompositeBuilder for Button {
         let background = self.background_color;
         let hover_background = self.hover_background_color;
         let border_radius = self.border_radius;
-        let child = self.child.clone();
+        // Build a Text child from the label if no explicit child was set
+        let child = if self.child.is_some() {
+            self.child.clone()
+        } else {
+            self.label.as_ref().and_then(|label| {
+                #[cfg(feature = "text")]
+                {
+                    use crate::layout::{Align, Justify};
+                    use crate::text_widget::Text;
+                    let text_widget = Text::new(label.clone())
+                        .color(self.foreground_color)
+                        .align(Align::Center)
+                        .justify(Justify::Center);
+                    Some(Rc::new(RefCell::new(Box::new(text_widget) as Box<dyn Widget>)))
+                }
+                #[cfg(not(feature = "text"))]
+                { let _ = label; None }
+            })
+        };
         let width = self.width;
         let height = self.height;
         let hover_cursor = self.hover_cursor;
