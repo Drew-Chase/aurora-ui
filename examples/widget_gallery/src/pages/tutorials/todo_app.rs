@@ -157,6 +157,8 @@ struct TodoState {
     input: String,
 }
 
+const TODO_INPUT_ID: u64 = 0xA0A0_0001;
+
 fn todo_demo() -> impl Widget {
     Composite::new(
         TodoState {
@@ -215,6 +217,7 @@ fn todo_demo() -> impl Widget {
                             .align(Align::Center)
                             .child(
                                 TextInput::new()
+                                    .id(TODO_INPUT_ID)
                                     .text(&state.input)
                                     .placeholder("What needs to be done?")
                                     .width(260.0)

@@ -135,6 +135,7 @@ pub struct AppWindow {
     pub swash_cache: aurora_text::cosmic_text::SwashCache,
     pub(crate) _cursor: winit::window::CursorIcon,
     pub(crate) last_mouse_position: Option<Point>,
+    pub(crate) focused_widget_id: Option<u64>,
     next_frame_requested: bool,
     pub(crate) background_color: Color,
 }
@@ -425,6 +426,7 @@ impl AppWindow {
                 root_widget: None,
                 _cursor: winit::window::CursorIcon::Default,
                 last_mouse_position: None,
+                focused_widget_id: None,
                 next_frame_requested: false,
                 background_color: config.background_color,
             })
@@ -464,6 +466,13 @@ impl AppWindow {
                 let mut ctx = LayoutCtx;
 
                 widget.layout(available, &mut ctx);
+            }
+
+            // Restore focus on rebuilt widgets so TextInput focus survives
+            // Composite rebuilds triggered by on_change state updates.
+            if let Some(focus_id) = self.focused_widget_id {
+                let rect = Rect::from_size(available);
+                widget.event(&WidgetEvent::Focus(focus_id), rect);
             }
 
             // Restore hover state on rebuilt widgets so visual hover and cursor
@@ -547,6 +556,16 @@ impl AppWindow {
                 };
                 self.window_handle.set_cursor(winit_cursor);
             }
+            // Track focused widget for restoration after Composite rebuilds
+            if let Some(id) = response.request_focus {
+                self.focused_widget_id = Some(id);
+            } else if matches!(event, WidgetEvent::Mouse(MouseEvent::MouseClickEvent(_))) && response.handled {
+                // A click was handled but didn't request focus — clear focus
+                if response.request_focus.is_none() {
+                    self.focused_widget_id = None;
+                }
+            }
+
             // Handle tab focus cycling
             if response.focus_next || response.focus_prev {
                 let mut tab_widgets: Vec<(u32, u64)> = Vec::new();
@@ -573,6 +592,7 @@ impl AppWindow {
 
                     let (_, target_id) = tab_widgets[next];
                     widget.event(&WidgetEvent::Focus(target_id), rect);
+                    self.focused_widget_id = Some(target_id);
                 }
             }
         }

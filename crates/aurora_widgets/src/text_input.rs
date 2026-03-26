@@ -134,6 +134,16 @@ impl TextInput {
         self
     }
 
+    /// Sets a stable widget ID that persists across Composite rebuilds.
+    ///
+    /// Use this when the TextInput is inside a Composite whose state changes
+    /// on every keystroke — it allows the framework to restore focus after
+    /// the widget tree is rebuilt.
+    pub fn id(mut self, id: u64) -> Self {
+        self.id = id;
+        self
+    }
+
     /// Sets the tab index for keyboard navigation.
     ///
     /// When Tab is pressed, focus moves to the widget with the next higher

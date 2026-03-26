@@ -184,6 +184,9 @@ struct FormData {
     agree_terms: bool,
 }
 
+const FORM_NAME_ID: u64 = 0xA0A0_0010;
+const FORM_EMAIL_ID: u64 = 0xA0A0_0011;
+
 fn form_demo() -> impl Widget {
     Composite::new(FormData::default(), |state, setter| {
         let name_setter = setter.clone();
@@ -206,6 +209,7 @@ fn form_demo() -> impl Widget {
                         )
                         .child(
                             TextInput::new()
+                                .id(FORM_NAME_ID)
                                 .text(&state.name)
                                 .placeholder("John Doe")
                                 .width(300.0)
@@ -227,6 +231,7 @@ fn form_demo() -> impl Widget {
                         )
                         .child(
                             TextInput::new()
+                                .id(FORM_EMAIL_ID)
                                 .text(&state.email)
                                 .placeholder("john@example.com")
                                 .width(300.0)
