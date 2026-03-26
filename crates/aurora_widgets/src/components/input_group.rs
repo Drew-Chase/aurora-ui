@@ -40,7 +40,7 @@ impl InputGroup {
             prefix: None,
             suffix: None,
             border_color: colors::input_border(),
-            background: colors::background(),
+            background: colors::muted(),
             corners: Corners::all(6.0),
             height: Some(40.0),
             width: None,

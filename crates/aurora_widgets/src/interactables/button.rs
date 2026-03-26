@@ -94,6 +94,7 @@ impl Button {
         use crate::text_widget::Text;
         self.child(
             Text::new(text.into())
+                .color(aurora_theme::color(aurora_theme::slots::PRIMARY_FOREGROUND))
                 .align(Align::Center)
                 .justify(Justify::Center),
         )
