@@ -630,10 +630,67 @@ impl Widget for TextInput {
                     };
                 }
 
+                // Ctrl+C — copy selection to clipboard
+                if modifiers.ctrl && *key == Key::Character('c') {
+                    #[cfg(feature = "syntax")]
+                    if let Some((lo, hi)) = self.selection_range() {
+                        if let Ok(mut cb) = arboard::Clipboard::new() {
+                            let _ = cb.set_text(&self.text[lo..hi]);
+                        }
+                    }
+                    return EventResponse {
+                        handled: true,
+                        ..Default::default()
+                    };
+                }
+
+                // Ctrl+X — cut selection to clipboard
+                if modifiers.ctrl && *key == Key::Character('x') {
+                    #[cfg(feature = "syntax")]
+                    if let Some((lo, hi)) = self.selection_range() {
+                        if let Ok(mut cb) = arboard::Clipboard::new() {
+                            let _ = cb.set_text(&self.text[lo..hi]);
+                        }
+                    }
+                    if self.has_selection() {
+                        self.delete_selection();
+                        self.clear_selection();
+                        self.notify_change();
+                    }
+                    return EventResponse {
+                        handled: true,
+                        ..Default::default()
+                    };
+                }
+
+                // Ctrl+V — paste from clipboard
+                if modifiers.ctrl && *key == Key::Character('v') {
+                    #[cfg(feature = "syntax")]
+                    if let Ok(mut cb) = arboard::Clipboard::new() {
+                        if let Ok(text) = cb.get_text() {
+                            if self.has_selection() {
+                                self.delete_selection();
+                            }
+                            self.text.insert_str(self.cursor_pos, &text);
+                            self.cursor_pos += text.len();
+                            self.clear_selection();
+                            self.notify_change();
+                        }
+                    }
+                    return EventResponse {
+                        handled: true,
+                        ..Default::default()
+                    };
+                }
+
                 match key {
                     Key::Backspace => {
                         if self.has_selection() {
                             self.delete_selection();
+                        } else if modifiers.ctrl {
+                            let boundary = prev_word_boundary(&self.text, self.cursor_pos);
+                            self.text.drain(boundary..self.cursor_pos);
+                            self.cursor_pos = boundary;
                         } else if self.cursor_pos > 0 {
                             let prev = self.text[..self.cursor_pos]
                                 .char_indices()
@@ -649,6 +706,9 @@ impl Widget for TextInput {
                     Key::Delete => {
                         if self.has_selection() {
                             self.delete_selection();
+                        } else if modifiers.ctrl {
+                            let boundary = next_word_boundary(&self.text, self.cursor_pos);
+                            self.text.drain(self.cursor_pos..boundary);
                         } else if self.cursor_pos < self.text.len() {
                             let next = self.text[self.cursor_pos..]
                                 .char_indices()

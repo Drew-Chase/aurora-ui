@@ -957,13 +957,23 @@ where
                             },
                         ));
 
-                        if let winit::keyboard::Key::Character(c) = &event.logical_key
-                            && !modifiers.ctrl && !modifiers.alt
-                        {
-                            for ch in c.chars() {
-                                window.dispatch_event(&WidgetEvent::Keyboard(
-                                    KeyboardEvent::CharTyped(ch),
-                                ));
+                        if !modifiers.ctrl && !modifiers.alt {
+                            match &event.logical_key {
+                                winit::keyboard::Key::Character(c) => {
+                                    for ch in c.chars() {
+                                        window.dispatch_event(&WidgetEvent::Keyboard(
+                                            KeyboardEvent::CharTyped(ch),
+                                        ));
+                                    }
+                                }
+                                winit::keyboard::Key::Named(
+                                    winit::keyboard::NamedKey::Space,
+                                ) => {
+                                    window.dispatch_event(&WidgetEvent::Keyboard(
+                                        KeyboardEvent::CharTyped(' '),
+                                    ));
+                                }
+                                _ => {}
                             }
                         }
                     }
@@ -1028,6 +1038,7 @@ fn translate_key(key: &winit::keyboard::Key) -> Key {
             winit::keyboard::NamedKey::Enter => Key::Enter,
             winit::keyboard::NamedKey::Tab => Key::Tab,
             winit::keyboard::NamedKey::Escape => Key::Escape,
+            winit::keyboard::NamedKey::Space => Key::Character(' '),
             _ => Key::Other,
         },
         winit::keyboard::Key::Character(c) => {
