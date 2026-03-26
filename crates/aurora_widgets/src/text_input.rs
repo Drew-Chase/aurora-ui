@@ -68,6 +68,7 @@ pub struct TextInput {
     text_layout: Option<TextLayout>,
     placeholder_layout: Option<TextLayout>,
     cursor_pixel_x: f32,
+    scroll_offset: f32,
     char_x_positions: Vec<f32>,
     on_change: Option<OnChangeCallback>,
     on_submit: Option<Box<dyn FnMut()>>,
@@ -101,6 +102,7 @@ impl Default for TextInput {
             text_layout: None,
             placeholder_layout: None,
             cursor_pixel_x: 0.0,
+            scroll_offset: 0.0,
             char_x_positions: Vec::new(),
             mouse_down: false,
             on_change: None,
@@ -396,17 +398,18 @@ impl Widget for TextInput {
 
         let display = self.display_text();
 
-        // Build text layout from display text (masked or real)
+        let content_width = max_width;
+
+        // Build text layout from display text — no max_width so text stays on one line
         if !display.is_empty() {
-            let mut tl =
+            let tl =
                 TextLayout::new(ctx.font_manager, &display, &resolved, self.color, None);
-            tl.set_max_width(ctx.font_manager, max_width);
             self.text_layout = Some(tl);
         } else {
             self.text_layout = None;
         }
 
-        // Build placeholder layout
+        // Build placeholder layout — constrained to widget width
         if !self.placeholder.is_empty() && self.text.is_empty() {
             let mut pl = TextLayout::new(
                 ctx.font_manager,
@@ -415,7 +418,7 @@ impl Widget for TextInput {
                 self.placeholder_color,
                 None,
             );
-            pl.set_max_width(ctx.font_manager, max_width);
+            pl.set_max_width(ctx.font_manager, content_width);
             self.placeholder_layout = Some(pl);
         } else {
             self.placeholder_layout = None;
@@ -432,6 +435,17 @@ impl Widget for TextInput {
 
         self.cursor_pixel_x = self.pixel_x_for(self.cursor_pos);
 
+        // Scroll to keep cursor visible within the content area
+        if self.cursor_pixel_x - self.scroll_offset > content_width {
+            self.scroll_offset = self.cursor_pixel_x - content_width;
+        }
+        if self.cursor_pixel_x - self.scroll_offset < 0.0 {
+            self.scroll_offset = self.cursor_pixel_x;
+        }
+        if self.scroll_offset < 0.0 {
+            self.scroll_offset = 0.0;
+        }
+
         Size::new(w, h)
     }
 
@@ -443,7 +457,15 @@ impl Widget for TextInput {
         };
         canvas.fill_rounded_rect(rect, self.corners, bg);
 
-        let text_x = rect.x1 + self.padding.left;
+        let content_rect = Rect::new(
+            rect.x1 + self.padding.left,
+            rect.y1 + self.padding.top,
+            rect.x2 - self.padding.right,
+            rect.y2 - self.padding.bottom,
+        );
+        canvas.push_clip(content_rect);
+
+        let text_x = rect.x1 + self.padding.left - self.scroll_offset;
         let text_y = rect.y1 + self.padding.top;
         let font_size = self.font.effective_size();
 
@@ -464,7 +486,7 @@ impl Widget for TextInput {
         if let Some(ref tl) = self.text_layout {
             canvas.draw_text(tl, text_x as i32, text_y as i32);
         } else if let Some(ref pl) = self.placeholder_layout {
-            canvas.draw_text(pl, text_x as i32, text_y as i32);
+            canvas.draw_text(pl, (rect.x1 + self.padding.left) as i32, text_y as i32);
         }
 
         // Draw cursor
@@ -475,6 +497,8 @@ impl Widget for TextInput {
                 self.color,
             );
         }
+
+        canvas.pop_clip();
     }
 
     fn children(&self) -> &[Box<dyn Widget>] {
@@ -523,7 +547,7 @@ impl Widget for TextInput {
                     self.focused = true;
                     self.mouse_down = true;
 
-                    let click_x = click.position.x - rect.x1 - self.padding.left;
+                    let click_x = click.position.x - rect.x1 - self.padding.left + self.scroll_offset;
                     let new_pos = self.byte_pos_for_x(click_x);
                     self.cursor_pos = new_pos;
                     self.clear_selection();
@@ -548,7 +572,7 @@ impl Widget for TextInput {
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
                 if self.mouse_down && self.focused {
-                    let drag_x = pos.x - rect.x1 - self.padding.left;
+                    let drag_x = pos.x - rect.x1 - self.padding.left + self.scroll_offset;
                     let new_pos = self.byte_pos_for_x(drag_x);
                     if self.selection_anchor.is_none() {
                         self.selection_anchor = Some(self.cursor_pos);
