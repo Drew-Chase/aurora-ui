@@ -155,6 +155,28 @@ impl<'a> Canvas<'a> {
         );
     }
 
+    /// Draws text with per-range coloring for syntax highlighting.
+    #[cfg(feature = "text")]
+    pub fn draw_rich_text(
+        &mut self,
+        layout: &TextLayout,
+        x: i32,
+        y: i32,
+        ranges: &[(std::ops::Range<usize>, aurora_core::color::Color)],
+    ) {
+        let clip = self.clip_stack.last().copied();
+        layout.render_rich(
+            self.swash_cache,
+            self.font_manager,
+            self.buffer,
+            self.width,
+            x,
+            y,
+            clip.as_ref(),
+            ranges,
+        );
+    }
+
     /// Fills an axis-aligned rectangle with a solid color.
     ///
     /// Coordinates are clamped to the canvas bounds and the active clip rect.
