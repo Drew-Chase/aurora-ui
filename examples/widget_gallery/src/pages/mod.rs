@@ -1,3 +1,5 @@
+mod getting_started;
+mod tutorials;
 mod code_block;
 mod accordion;
 mod alert;
@@ -28,6 +30,8 @@ mod toggle;
 mod toggle_group;
 mod typography;
 
+pub use getting_started::*;
+pub use tutorials::*;
 pub use code_block::page_code_block;
 pub use accordion::page_accordion;
 pub use alert::page_alert;

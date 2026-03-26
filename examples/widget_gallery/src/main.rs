@@ -8,37 +8,56 @@ use aurora_ui::prelude::*;
 // Load theme profiles from JSON at compile time
 aurora_ui::aurora_theming::config!("themes.json");
 
-/// Names shown in the sidebar, in display order.
-const PAGES: &[&str] = &[
-    "Accordion",
-    "Alert",
-    "Avatar",
-    "Badge",
-    "Breadcrumb",
-    "Button",
-    "Card",
-    "Code Block",
-    "Checkbox",
-    "Collapsible",
-    "Dropdown Menu",
-    "Empty State",
-    "Input",
-    "Kbd",
-    "Label",
-    "Pagination",
-    "Progress",
-    "Radio Group",
-    "Select",
-    "Separator",
-    "Skeleton",
-    "Slider",
-    "Spinner",
-    "Switch",
-    "Table",
-    "Tabs",
-    "Toggle",
-    "Toggle Group",
-    "Typography",
+/// A sidebar section with a title and its page names.
+struct Section {
+    title: &'static str,
+    pages: &'static [&'static str],
+}
+
+/// Sidebar sections and their pages, in display order.
+const SECTIONS: &[Section] = &[
+    Section {
+        title: "Getting Started",
+        pages: &["Installation", "Your First App", "Custom Components"],
+    },
+    Section {
+        title: "Components",
+        pages: &[
+            "Accordion",
+            "Alert",
+            "Avatar",
+            "Badge",
+            "Breadcrumb",
+            "Button",
+            "Card",
+            "Code Block",
+            "Checkbox",
+            "Collapsible",
+            "Dropdown Menu",
+            "Empty State",
+            "Input",
+            "Kbd",
+            "Label",
+            "Pagination",
+            "Progress",
+            "Radio Group",
+            "Select",
+            "Separator",
+            "Skeleton",
+            "Slider",
+            "Spinner",
+            "Switch",
+            "Table",
+            "Tabs",
+            "Toggle",
+            "Toggle Group",
+            "Typography",
+        ],
+    },
+    Section {
+        title: "Tutorials",
+        pages: &["Counter", "Todo App", "Theme Switcher", "Form Builder", "Navigation"],
+    },
 ];
 
 fn main() {
@@ -47,6 +66,7 @@ fn main() {
 
     App::new()
         .title("Aurora Widget Gallery")
+        .icon(include_bytes!("../../../logo.png"))
         .size((1200, 800))
         .min_size((900, 600))
         .position(WindowPosition::Center)
@@ -126,21 +146,40 @@ fn sidebar_widget(
             profile_setter.set(move |s| s.profile = idx);
         });
 
-    // Scrollable component list
+    // Scrollable section list
     let mut items = col!()
         .padding(Edges::new(0.0, 12.0, 16.0, 12.0))
         .spacing(2.0);
 
-    for (i, name) in PAGES.iter().enumerate() {
-        let is_active = i == active_page;
-        let set = setter.clone();
-        items = items.child(sidebar_item(name, is_active, move || {
-            let set = set.clone();
-            set.set(move |s| s.page = i);
-        }));
+    let mut global_index = 0usize;
+    for (section_idx, section) in SECTIONS.iter().enumerate() {
+        // Section header (non-clickable)
+        let top_pad = if section_idx == 0 { 0.0 } else { 12.0 };
+        items = items.child(
+            Text::new(&section.title.to_uppercase())
+                .font_size(11.0)
+                .font_weight(FontWeight::SemiBold)
+                .color(theme::colors::sidebar_foreground().opacity(0.7))
+                .padding(Edges::new(top_pad, 8.0, 4.0, 8.0)),
+        );
+
+        // Page items within this section
+        for name in section.pages {
+            let i = global_index;
+            let is_active = i == active_page;
+            let set = setter.clone();
+            items = items.child(sidebar_item(name, is_active, move || {
+                let set = set.clone();
+                set.set(move |s| {
+                    s.page = i;
+                    s.content_scroll.set(0.0);
+                });
+            }));
+            global_index += 1;
+        }
     }
 
-    // Layout: fixed header (dropdown + title) above scrollable list
+    // Layout: fixed header (theme dropdown) above scrollable list
     BoxWidget::new()
         .width(220)
         .background_color(theme::colors::sidebar())
@@ -148,20 +187,11 @@ fn sidebar_widget(
             col!()
                 .width(220)
                 .spacing(0.0)
-                // Fixed header: dropdown + "Components" label
                 .child(
                     col!()
                         .width(220)
-                        .padding(Edges::new(12.0, 12.0, 0.0, 12.0))
-                        .spacing(12.0)
-                        .child(theme_select)
-                        .child(
-                            Text::new("Components")
-                                .font_size(13.0)
-                                .font_weight(FontWeight::SemiBold)
-                                .color(theme::colors::sidebar_foreground())
-                                .padding(Edges::new(0.0, 8.0, 4.0, 8.0)),
-                        ),
+                        .padding(Edges::new(12.0, 12.0, 8.0, 12.0))
+                        .child(theme_select),
                 )
                 // Scrollable item list
                 .child(
@@ -241,6 +271,11 @@ fn content_area(page_index: usize, scroll: ScrollState) -> impl Widget {
         .child(
             ContentSwitch::new()
                 .selected(page_index)
+                // Getting Started (indices 0-2)
+                .item(page_installation())
+                .item(page_first_app())
+                .item(page_custom_components())
+                // Components (indices 3-31)
                 .item(page_accordion())
                 .item(page_alert())
                 .item(page_avatar())
@@ -269,7 +304,13 @@ fn content_area(page_index: usize, scroll: ScrollState) -> impl Widget {
                 .item(page_tabs())
                 .item(page_toggle())
                 .item(page_toggle_group())
-                .item(page_typography()),
+                .item(page_typography())
+                // Tutorials (indices 32-36)
+                .item(page_counter())
+                .item(page_todo_app())
+                .item(page_theme_switcher())
+                .item(page_form_builder())
+                .item(page_navigation()),
         )
 }
 
