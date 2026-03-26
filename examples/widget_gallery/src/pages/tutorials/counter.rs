@@ -178,7 +178,6 @@ fn counter_demo() -> impl Widget {
         Box::new(
             row!()
                 .spacing(16.0)
-                .width(192)
                 .align(Align::Center)
                 .child(
                     button!("-")
