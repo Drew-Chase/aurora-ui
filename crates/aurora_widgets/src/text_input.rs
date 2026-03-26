@@ -632,7 +632,7 @@ impl Widget for TextInput {
 
                 // Ctrl+C — copy selection to clipboard
                 if modifiers.ctrl && *key == Key::Character('c') {
-                    #[cfg(feature = "syntax")]
+                    #[cfg(feature = "text")]
                     if let Some((lo, hi)) = self.selection_range() {
                         if let Ok(mut cb) = arboard::Clipboard::new() {
                             let _ = cb.set_text(&self.text[lo..hi]);
@@ -646,7 +646,7 @@ impl Widget for TextInput {
 
                 // Ctrl+X — cut selection to clipboard
                 if modifiers.ctrl && *key == Key::Character('x') {
-                    #[cfg(feature = "syntax")]
+                    #[cfg(feature = "text")]
                     if let Some((lo, hi)) = self.selection_range() {
                         if let Ok(mut cb) = arboard::Clipboard::new() {
                             let _ = cb.set_text(&self.text[lo..hi]);
@@ -665,7 +665,7 @@ impl Widget for TextInput {
 
                 // Ctrl+V — paste from clipboard
                 if modifiers.ctrl && *key == Key::Character('v') {
-                    #[cfg(feature = "syntax")]
+                    #[cfg(feature = "text")]
                     if let Ok(mut cb) = arboard::Clipboard::new() {
                         if let Ok(text) = cb.get_text() {
                             if self.has_selection() {

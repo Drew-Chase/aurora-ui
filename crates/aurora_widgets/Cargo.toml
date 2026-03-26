@@ -14,7 +14,7 @@ arboard = { version = "3", optional = true }
 
 
 [features]
-text = ["dep:aurora_text", "aurora_render/text"]
-syntax = ["dep:aurora_syntax", "dep:arboard", "text"]
+text = ["dep:aurora_text", "aurora_render/text", "dep:arboard"]
+syntax = ["dep:aurora_syntax", "text"]
 image = ["aurora_render/image"]
 svg = ["aurora_render/svg"]
