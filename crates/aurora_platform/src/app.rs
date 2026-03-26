@@ -470,9 +470,10 @@ impl AppWindow {
 
             // Restore focus on rebuilt widgets so TextInput focus survives
             // Composite rebuilds triggered by on_change state updates.
+            // select_all=false to preserve cursor position and avoid selecting all text.
             if let Some(focus_id) = self.focused_widget_id {
                 let rect = Rect::from_size(available);
-                widget.event(&WidgetEvent::Focus(focus_id), rect);
+                widget.event(&WidgetEvent::Focus(focus_id, false), rect);
             }
 
             // Restore hover state on rebuilt widgets so visual hover and cursor
@@ -556,14 +557,21 @@ impl AppWindow {
                 };
                 self.window_handle.set_cursor(winit_cursor);
             }
-            // Track focused widget for restoration after Composite rebuilds
-            if let Some(id) = response.request_focus {
-                self.focused_widget_id = Some(id);
-            } else if matches!(event, WidgetEvent::Mouse(MouseEvent::MouseClickEvent(_))) && response.handled {
-                // A click was handled but didn't request focus — clear focus
-                if response.request_focus.is_none() {
-                    self.focused_widget_id = None;
+            // Track focused widget for restoration after Composite rebuilds.
+            // Dispatch Blur to the old widget before switching focus.
+            if let Some(new_id) = response.request_focus {
+                if let Some(old_id) = self.focused_widget_id {
+                    if old_id != new_id {
+                        widget.event(&WidgetEvent::Blur(old_id), rect);
+                    }
                 }
+                self.focused_widget_id = Some(new_id);
+            } else if matches!(event, WidgetEvent::Mouse(MouseEvent::MouseClickEvent(_))) && response.handled {
+                // A click was handled but didn't request focus — blur old and clear
+                if let Some(old_id) = self.focused_widget_id {
+                    widget.event(&WidgetEvent::Blur(old_id), rect);
+                }
+                self.focused_widget_id = None;
             }
 
             // Handle tab focus cycling
@@ -591,7 +599,11 @@ impl AppWindow {
                     };
 
                     let (_, target_id) = tab_widgets[next];
-                    widget.event(&WidgetEvent::Focus(target_id), rect);
+                    // Blur old widget, then focus new with select_all=true
+                    if let Some(old_id) = self.focused_widget_id {
+                        widget.event(&WidgetEvent::Blur(old_id), rect);
+                    }
+                    widget.event(&WidgetEvent::Focus(target_id, true), rect);
                     self.focused_widget_id = Some(target_id);
                 }
             }

@@ -16,5 +16,9 @@ pub enum WidgetEvent {
     /// A keyboard input event.
     Keyboard(KeyboardEvent),
     /// Request that the widget with this ID takes focus.
-    Focus(u64),
+    /// The bool controls whether to select all text (true for tab navigation,
+    /// false for focus restoration after Composite rebuilds).
+    Focus(u64, bool),
+    /// Request that the widget with this ID loses focus.
+    Blur(u64),
 }

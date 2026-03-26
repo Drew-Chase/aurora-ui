@@ -234,7 +234,7 @@ impl Widget for TextArea {
 
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         match event {
-            WidgetEvent::Focus(target_id) => {
+            WidgetEvent::Focus(target_id, _select_all) => {
                 if *target_id == self.id {
                     self.focused = true;
                     return EventResponse {

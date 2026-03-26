@@ -73,6 +73,7 @@ pub struct TextInput {
     on_submit: Option<Box<dyn FnMut()>>,
     on_key_down: Option<OnKeyCallback>,
     on_key_up: Option<OnKeyCallback>,
+    mouse_down: bool,
 }
 
 impl Default for TextInput {
@@ -101,6 +102,7 @@ impl Default for TextInput {
             placeholder_layout: None,
             cursor_pixel_x: 0.0,
             char_x_positions: Vec::new(),
+            mouse_down: false,
             on_change: None,
             on_submit: None,
             on_key_down: None,
@@ -489,11 +491,13 @@ impl Widget for TextInput {
 
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         match event {
-            WidgetEvent::Focus(target_id) => {
+            WidgetEvent::Focus(target_id, select_all) => {
                 if *target_id == self.id {
                     self.focused = true;
-                    self.cursor_pos = self.text.len();
-                    self.selection_anchor = Some(0);
+                    if *select_all && !self.text.is_empty() {
+                        self.cursor_pos = self.text.len();
+                        self.selection_anchor = Some(0);
+                    }
                     return EventResponse {
                         handled: true,
                         ..Default::default()
@@ -501,9 +505,18 @@ impl Widget for TextInput {
                 }
                 EventResponse::default()
             }
+            WidgetEvent::Blur(target_id) => {
+                if *target_id == self.id {
+                    self.focused = false;
+                    self.mouse_down = false;
+                    self.clear_selection();
+                }
+                EventResponse::default()
+            }
             WidgetEvent::Mouse(MouseEvent::MouseClickEvent(click)) => {
                 if click.state == MouseState::Pressed && rect.contains(&click.position) {
                     self.focused = true;
+                    self.mouse_down = true;
 
                     let click_x = click.position.x - rect.x1 - self.padding.left;
                     let new_pos = self.byte_pos_for_x(click_x);
@@ -518,13 +531,31 @@ impl Widget for TextInput {
                         ..Default::default()
                     };
                 }
+                if click.state == MouseState::Released {
+                    self.mouse_down = false;
+                }
                 if click.state == MouseState::Pressed && !rect.contains(&click.position) {
                     self.focused = false;
+                    self.mouse_down = false;
                     self.clear_selection();
                 }
                 EventResponse::default()
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
+                if self.mouse_down && self.focused {
+                    let drag_x = pos.x - rect.x1 - self.padding.left;
+                    let new_pos = self.byte_pos_for_x(drag_x);
+                    if self.selection_anchor.is_none() {
+                        self.selection_anchor = Some(self.cursor_pos);
+                    }
+                    self.cursor_pos = new_pos;
+                    self.cursor_pixel_x = self.pixel_x_for(new_pos);
+                    return EventResponse {
+                        handled: true,
+                        cursor: Some(CursorIcon::Text),
+                        ..Default::default()
+                    };
+                }
                 if rect.contains(pos) {
                     EventResponse {
                         cursor: Some(CursorIcon::Text),
