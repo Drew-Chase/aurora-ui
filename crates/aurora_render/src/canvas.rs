@@ -178,6 +178,10 @@ impl<'a> Canvas<'a> {
             y1 = y1.min(clip.y2.max(0.0) as u32);
         }
 
+        if x0 >= x1 || y0 >= y1 {
+            return;
+        }
+
         for y in y0..y1 {
             let row_start = (y * self.width + x0) as usize;
             let row_end = (y * self.width + x1) as usize;
@@ -266,6 +270,10 @@ impl<'a> Canvas<'a> {
             y0 = y0.max(clip.y1.max(0.0) as u32);
             x1 = x1.min(clip.x2.max(0.0) as u32);
             y1 = y1.min(clip.y2.max(0.0) as u32);
+        }
+
+        if x0 >= x1 || y0 >= y1 {
+            return;
         }
 
         // Corner circle centers
