@@ -17,6 +17,7 @@ const PAGES: &[&str] = &[
     "Breadcrumb",
     "Button",
     "Card",
+    "Code Block",
     "Checkbox",
     "Collapsible",
     "Dropdown Menu",
@@ -247,6 +248,7 @@ fn content_area(page_index: usize, scroll: ScrollState) -> impl Widget {
                 .item(page_breadcrumb())
                 .item(page_button())
                 .item(page_card())
+                .item(page_code_block())
                 .item(page_checkbox())
                 .item(page_collapsible())
                 .item(page_dropdown_menu())

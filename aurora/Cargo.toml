@@ -35,3 +35,4 @@ text = ["dep:aurora_text", "aurora_platform/text", "aurora_render/text", "aurora
 image = ["aurora_platform/image", "aurora_render/image", "aurora_widgets/image"]
 svg = ["aurora_platform/svg", "aurora_render/svg", "aurora_widgets/svg"]
 animate = ["dep:aurora_animate"]
+syntax = ["aurora_widgets/syntax", "text"]

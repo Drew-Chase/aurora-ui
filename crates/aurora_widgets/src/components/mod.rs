@@ -1,5 +1,9 @@
 pub mod colors;
 
+// Code rendering
+#[cfg(feature = "syntax")]
+pub mod code_block;
+
 // Display widgets
 pub mod label;
 pub mod badge;

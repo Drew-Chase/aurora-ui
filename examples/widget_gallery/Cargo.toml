@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-aurora_ui = { path = "../../aurora", features = ["software", "text", "animate", "svg"] }
+aurora_ui = { path = "../../aurora", features = ["software", "text", "animate", "svg", "syntax"] }
 aurora_theme = { path = "../../crates/aurora_theme" }
 aurora_iconify = { path = "../../crates/aurora_iconify" }

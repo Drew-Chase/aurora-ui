@@ -1,3 +1,4 @@
+mod code_block;
 mod accordion;
 mod alert;
 mod avatar;
@@ -27,6 +28,7 @@ mod toggle;
 mod toggle_group;
 mod typography;
 
+pub use code_block::page_code_block;
 pub use accordion::page_accordion;
 pub use alert::page_alert;
 pub use avatar::page_avatar;

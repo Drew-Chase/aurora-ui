@@ -9,9 +9,11 @@ aurora_macros = { path = "../aurora_macros" }
 aurora_render = { path = "../aurora_render" }
 aurora_theme = { path = "../aurora_theme" }
 aurora_text = { path = "../aurora_text", optional = true }
+aurora_syntax = { path = "../aurora_syntax", optional = true }
 
 
 [features]
 text = ["dep:aurora_text", "aurora_render/text"]
+syntax = ["dep:aurora_syntax", "text"]
 image = ["aurora_render/image"]
 svg = ["aurora_render/svg"]
