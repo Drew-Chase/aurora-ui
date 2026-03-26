@@ -41,37 +41,47 @@ Composite::new(0i32, |&count, setter| {
             code_block::CodeBlock::new()
                 .language("rust")
                 .code(
-r#"Composite::new(0i32, |&count, setter| {
-    let inc = setter.clone();
-    let dec = setter.clone();
+r#"    Composite::new(0i32, move |state, set_state| {
+        let decrement_setter = set_state.clone();
+        let increment_setter = set_state.clone();
 
-    Box::new(
-        row!()
-            .spacing(16.0)
-            .align(Align::Center)
-            .child(
-                button!("-")
-                    .width(40).height(36)
-                    .on_click(move |_| {
-                        dec.set(|c| *c -= 1);
-                    })
-            )
-            .child(
-                Text::new(&count.to_string())
-                    .font_size(32.0)
-                    .font_weight(FontWeight::Bold)
-                    .width(80.0)
-                    .align(Align::Center)
-            )
-            .child(
-                button!("+")
-                    .width(40).height(36)
-                    .on_click(move |_| {
-                        inc.set(|c| *c += 1);
-                    })
-            )
-    )
-})"#,
+        Box::new(
+            row!()
+                .height(40)
+                .width(150)
+                .spacing(10.0)
+                .justify(Justify::Center)
+                .align(Align::Center)
+                .child(
+                    button!("-")
+                        .background_color(colors::secondary())
+                        .hover_background_color(colors::secondary().opacity(0.8))
+                        .foreground_color(colors::secondary_foreground())
+                        .border_radius(theme::corners::button_radius())
+                        .width(40)
+                        .height(40)
+                        .on_click(move |_| decrement_setter.set(|prev| *prev -= 1)),
+                )
+                .child(
+                    Text::new(state.to_string())
+                        .font_size(32.0)
+                        .font_weight(FontWeight::Bold)
+                        .color(theme::colors::foreground())
+                        .align(Align::Center)
+                        .justify(Justify::Center),
+                )
+                .child(
+                    button!("+")
+                        .background_color(colors::secondary())
+                        .hover_background_color(colors::secondary().opacity(0.8))
+                        .foreground_color(colors::secondary_foreground())
+                        .border_radius(theme::corners::button_radius())
+                        .width(40)
+                        .height(40)
+                        .on_click(move |_| increment_setter.set(|prev| *prev += 1)),
+                ),
+        )
+    })"#,
                 )
                 .font_size(13.0),
         )
@@ -100,40 +110,45 @@ r#"fn main() {
 }
 
 fn counter_widget() -> impl Widget {
-    Composite::new(0i32, |&count, setter| {
-        let inc = setter.clone();
-        let dec = setter.clone();
+    Composite::new(0i32, move |state, set_state| {
+        let decrement_setter = set_state.clone();
+        let increment_setter = set_state.clone();
 
         Box::new(
-            col!()
-                .align(Align::Center)
+            row!()
+                .height(40)
+                .width(150)
+                .spacing(10.0)
                 .justify(Justify::Center)
+                .align(Align::Center)
                 .child(
-                    row!()
-                        .spacing(16.0)
-                        .align(Align::Center)
-                        .child(
-                            button!("-")
-                                .width(40).height(36)
-                                .on_click(move |_| {
-                                    dec.set(|c| *c -= 1);
-                                })
-                        )
-                        .child(
-                            Text::new(&count.to_string())
-                                .font_size(32.0)
-                                .font_weight(FontWeight::Bold)
-                                .width(80.0)
-                                .align(Align::Center)
-                        )
-                        .child(
-                            button!("+")
-                                .width(40).height(36)
-                                .on_click(move |_| {
-                                    inc.set(|c| *c += 1);
-                                })
-                        )
+                    button!("-")
+                        .background_color(colors::secondary())
+                        .hover_background_color(colors::secondary().opacity(0.8))
+                        .foreground_color(colors::secondary_foreground())
+                        .border_radius(theme::corners::button_radius())
+                        .width(40)
+                        .height(40)
+                        .on_click(move |_| decrement_setter.set(|prev| *prev -= 1)),
                 )
+                .child(
+                    Text::new(state.to_string())
+                        .font_size(32.0)
+                        .font_weight(FontWeight::Bold)
+                        .color(theme::colors::foreground())
+                        .align(Align::Center)
+                        .justify(Justify::Center),
+                )
+                .child(
+                    button!("+")
+                        .background_color(colors::secondary())
+                        .hover_background_color(colors::secondary().opacity(0.8))
+                        .foreground_color(colors::secondary_foreground())
+                        .border_radius(theme::corners::button_radius())
+                        .width(40)
+                        .height(40)
+                        .on_click(move |_| increment_setter.set(|prev| *prev += 1)),
+                ),
         )
     })
 }"#,
@@ -169,15 +184,17 @@ fn counter_widget() -> impl Widget {
                 ),
         ))
 }
-
-fn counter_demo() -> impl Widget {
-    Composite::new(0i32, |&count, setter| {
-        let inc = setter.clone();
-        let dec = setter.clone();
+pub fn counter_demo() -> impl Widget {
+    Composite::new(0i32, move |state, set_state| {
+        let decrement_setter = set_state.clone();
+        let increment_setter = set_state.clone();
 
         Box::new(
             row!()
-                .spacing(16.0)
+                .height(40)
+                .width(150)
+                .spacing(10.0)
+                .justify(Justify::Center)
                 .align(Align::Center)
                 .child(
                     button!("-")
@@ -186,18 +203,14 @@ fn counter_demo() -> impl Widget {
                         .foreground_color(colors::secondary_foreground())
                         .border_radius(theme::corners::button_radius())
                         .width(40)
-                        .height(36)
-                        .on_click(move |_| {
-                            dec.set(|c| *c -= 1);
-                        }),
+                        .height(40)
+                        .on_click(move |_| decrement_setter.set(|prev| *prev -= 1)),
                 )
                 .child(
-                    Text::new(count.to_string())
+                    Text::new(state.to_string())
                         .font_size(32.0)
                         .font_weight(FontWeight::Bold)
                         .color(theme::colors::foreground())
-                        .width(80.0)
-                        .height(36.0)
                         .align(Align::Center)
                         .justify(Justify::Center),
                 )
@@ -208,11 +221,10 @@ fn counter_demo() -> impl Widget {
                         .foreground_color(colors::secondary_foreground())
                         .border_radius(theme::corners::button_radius())
                         .width(40)
-                        .height(36)
-                        .on_click(move |_| {
-                            inc.set(|c| *c += 1);
-                        }),
+                        .height(40)
+                        .on_click(move |_| increment_setter.set(|prev| *prev += 1)),
                 ),
         )
     })
 }
+

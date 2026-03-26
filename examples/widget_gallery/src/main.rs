@@ -156,10 +156,10 @@ fn sidebar_widget(
         // Section header (non-clickable)
         let top_pad = if section_idx == 0 { 4.0 } else { 20.0 };
         items = items.child(
-            Text::new(&section.title.to_uppercase())
-                .font_size(10.0)
+            Text::new(section.title.to_uppercase())
+                .font_size(12.0)
                 .font_weight(FontWeight::Bold)
-                .color(theme::colors::sidebar_foreground().opacity(0.5))
+                .color(theme::colors::foreground())
                 .padding(Edges::new(top_pad, 8.0, 6.0, 8.0)),
         );
 
