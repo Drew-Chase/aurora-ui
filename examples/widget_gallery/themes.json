@@ -36,7 +36,7 @@
       "button_padding": { "top": 8, "right": 16, "bottom": 8, "left": 16 }
     },
     "corners": {
-      "button_radius": 6,
+      "button_radius": 100,
       "card_radius": 8
     },
     "values": {
