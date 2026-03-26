@@ -14,7 +14,8 @@ use std::time::Instant;
 
 use super::colors;
 
-const COPY_BTN_SIZE: f32 = 28.0;
+const COPY_BTN_WIDTH: f32 = 56.0;
+const COPY_BTN_HEIGHT: f32 = 24.0;
 const COPY_BTN_MARGIN: f32 = 8.0;
 const COPIED_DISPLAY_SECS: f32 = 1.5;
 
@@ -118,10 +119,10 @@ impl CodeBlock {
 
     fn copy_btn_rect(rect: &Rect) -> Rect {
         Rect::new(
-            rect.x2 - COPY_BTN_SIZE - COPY_BTN_MARGIN,
+            rect.x2 - COPY_BTN_WIDTH - COPY_BTN_MARGIN,
             rect.y1 + COPY_BTN_MARGIN,
             rect.x2 - COPY_BTN_MARGIN,
-            rect.y1 + COPY_BTN_MARGIN + COPY_BTN_SIZE,
+            rect.y1 + COPY_BTN_MARGIN + COPY_BTN_HEIGHT,
         )
     }
 
