@@ -9,4 +9,10 @@ pub fn page_breadcrumb() -> impl Widget {
         .child(crate::example_card(
             breadcrumb::Breadcrumb::new().item("Home").item("Components").item("Breadcrumb")
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Breadcrumb::new()
+    .item("Home")
+    .item("Components")
+    .item("Breadcrumb")"#
+        ).font_size(13.0))
 }

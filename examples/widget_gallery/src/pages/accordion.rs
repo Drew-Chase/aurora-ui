@@ -14,4 +14,12 @@ pub fn page_accordion() -> impl Widget {
                 .section("Is it animated?", typography::Typography::paragraph("Yes. It smoothly animates the content open and closed."))
                 .expanded(0)
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Accordion::new()
+    .width(500.0)
+    .section("Is it accessible?", Typography::paragraph("Yes. It adheres to the WAI-ARIA design pattern."))
+    .section("Is it styled?", Typography::paragraph("Yes. It comes with default styles."))
+    .section("Is it animated?", Typography::paragraph("Yes. It smoothly animates open and closed."))
+    .expanded(0)"#
+        ).font_size(13.0))
 }

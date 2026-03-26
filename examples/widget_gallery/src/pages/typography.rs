@@ -14,6 +14,12 @@ pub fn page_typography() -> impl Widget {
                 .child(typography::Typography::h3("Heading 3"))
                 .child(typography::Typography::h4("Heading 4"))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Typography::h1("Heading 1")
+Typography::h2("Heading 2")
+Typography::h3("Heading 3")
+Typography::h4("Heading 4")"#
+        ).font_size(13.0))
         .child(crate::example_section("Body text", "Paragraph, lead, small, and muted text."))
         .child(crate::example_card(
             col!()
@@ -23,4 +29,10 @@ pub fn page_typography() -> impl Widget {
                 .child(typography::Typography::small("This is small text."))
                 .child(typography::Typography::muted("This is muted text."))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Typography::paragraph("This is a paragraph of body text.")
+Typography::lead("This is lead text — slightly larger and lighter.")
+Typography::small("This is small text.")
+Typography::muted("This is muted text.")"#
+        ).font_size(13.0))
 }

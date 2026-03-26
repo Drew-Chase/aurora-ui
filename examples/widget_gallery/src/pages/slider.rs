@@ -9,4 +9,13 @@ pub fn page_slider() -> impl Widget {
         .child(crate::example_card(
             col!().spacing(16.0).child(slider::Slider::new().value(0.3).width(400.0)).child(slider::Slider::new().value(0.7).width(400.0))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Slider::new()
+    .value(0.3)
+    .width(400.0)
+
+Slider::new()
+    .value(0.7)
+    .width(400.0)"#
+        ).font_size(13.0))
 }

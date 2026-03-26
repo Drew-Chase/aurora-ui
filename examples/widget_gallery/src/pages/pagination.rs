@@ -7,4 +7,9 @@ pub fn page_pagination() -> impl Widget {
         .child(crate::page_header("Pagination", "Navigation between pages of content."))
         .child(crate::example_section("Default", "A basic pagination control."))
         .child(crate::example_card(pagination::Pagination::new().total_pages(10).current_page(3)))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Pagination::new()
+    .total_pages(10)
+    .current_page(3)"#
+        ).font_size(13.0))
 }

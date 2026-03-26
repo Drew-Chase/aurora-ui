@@ -12,4 +12,10 @@ pub fn page_card() -> impl Widget {
                 .child(typography::Typography::h4("Card Title"))
                 .child(typography::Typography::muted("This is a card component. Cards group related content and actions about a single subject."))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Card::new()
+    .width(400.0)
+    .child(Typography::h4("Card Title"))
+    .child(Typography::muted("Cards group related content and actions about a single subject."))"#
+        ).font_size(13.0))
 }

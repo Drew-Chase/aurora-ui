@@ -17,4 +17,12 @@ pub fn page_badge() -> impl Widget {
                 .child(badge::Badge::new("Destructive").variant(badge::BadgeVariant::Destructive))
                 .child(badge::Badge::new("Info").variant(badge::BadgeVariant::Info))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Badge::new("Default")
+Badge::new("Outline").variant(BadgeVariant::Outline)
+Badge::new("Success").variant(BadgeVariant::Success)
+Badge::new("Warning").variant(BadgeVariant::Warning)
+Badge::new("Destructive").variant(BadgeVariant::Destructive)
+Badge::new("Info").variant(BadgeVariant::Info)"#
+        ).font_size(13.0))
 }

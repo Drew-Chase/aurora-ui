@@ -15,4 +15,12 @@ pub fn page_table() -> impl Widget {
                 .row(vec!["Dave Jones", "dave@example.com", "User"])
                 .width(500.0)
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Table::new()
+    .headers(vec!["Name", "Email", "Role"])
+    .row(vec!["Alice Chen", "alice@example.com", "Admin"])
+    .row(vec!["Bob Smith", "bob@example.com", "User"])
+    .row(vec!["Carol White", "carol@example.com", "Editor"])
+    .width(500.0)"#
+        ).font_size(13.0))
 }

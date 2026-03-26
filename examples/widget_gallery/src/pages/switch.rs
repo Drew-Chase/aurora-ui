@@ -14,4 +14,14 @@ pub fn page_switch() -> impl Widget {
                 .child(col!().spacing(8.0).align(Align::Center).child(switch::Switch::new()).child(label::Label::new("Off").font_size(12.0)))
                 .child(col!().spacing(8.0).align(Align::Center).child(switch::Switch::new().disabled(true)).child(label::Label::new("Disabled").font_size(12.0)))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"// Checked switch
+Switch::new().checked(true)
+
+// Unchecked switch
+Switch::new()
+
+// Disabled switch
+Switch::new().disabled(true)"#
+        ).font_size(13.0))
 }

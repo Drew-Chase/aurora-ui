@@ -13,4 +13,13 @@ pub fn page_label() -> impl Widget {
                 .child(label::Label::new("Email address").font_size(12.0))
                 .child(label::Label::new("Bold label").font_weight(FontWeight::Bold))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Label::new("Username")
+
+Label::new("Email address")
+    .font_size(12.0)
+
+Label::new("Bold label")
+    .font_weight(FontWeight::Bold)"#
+        ).font_size(13.0))
 }

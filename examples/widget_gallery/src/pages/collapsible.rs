@@ -11,4 +11,9 @@ pub fn page_collapsible() -> impl Widget {
                 .width(400.0)
                 .child(typography::Typography::paragraph("This content is revealed when the collapsible is expanded. It smoothly animates open and closed."))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Collapsible::new("Click to expand")
+    .width(400.0)
+    .child(Typography::paragraph("This content is revealed when the collapsible is expanded."))"#
+        ).font_size(13.0))
 }

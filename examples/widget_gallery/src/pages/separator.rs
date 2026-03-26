@@ -13,4 +13,10 @@ pub fn page_separator() -> impl Widget {
                 .child(separator::Separator::new())
                 .child(typography::Typography::paragraph("Content below"))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"col!()
+    .child(Typography::paragraph("Content above"))
+    .child(Separator::new())
+    .child(Typography::paragraph("Content below"))"#
+        ).font_size(13.0))
 }

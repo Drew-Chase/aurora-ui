@@ -14,4 +14,15 @@ pub fn page_toggle() -> impl Widget {
                 .child(toggle::Toggle::new("Italic"))
                 .child(toggle::Toggle::new("Outline").variant(toggle::ToggleVariant::Outline))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"// Default toggle, pressed
+Toggle::new("Bold").pressed(true)
+
+// Default toggle, unpressed
+Toggle::new("Italic")
+
+// Outline variant
+Toggle::new("Outline")
+    .variant(ToggleVariant::Outline)"#
+        ).font_size(13.0))
 }

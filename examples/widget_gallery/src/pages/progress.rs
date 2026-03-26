@@ -14,4 +14,15 @@ pub fn page_progress() -> impl Widget {
                 .child(progress::Progress::new().value(0.75).width(400.0).color(colors::success()))
                 .child(progress::Progress::new().value(1.0).width(400.0).color(colors::destructive()))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Progress::new()
+    .value(0.50)
+    .width(400.0)
+    .color(colors::info())
+
+Progress::new()
+    .value(0.75)
+    .width(400.0)
+    .color(colors::success())"#
+        ).font_size(13.0))
 }

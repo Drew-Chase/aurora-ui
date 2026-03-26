@@ -9,4 +9,14 @@ pub fn page_select() -> impl Widget {
         .child(crate::example_card(
             select::Select::new().placeholder("Select a fruit...").option("Apple").option("Banana").option("Cherry").option("Date").option("Elderberry").width(250.0)
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Select::new()
+    .placeholder("Select a fruit...")
+    .option("Apple")
+    .option("Banana")
+    .option("Cherry")
+    .option("Date")
+    .option("Elderberry")
+    .width(250.0)"#
+        ).font_size(13.0))
 }

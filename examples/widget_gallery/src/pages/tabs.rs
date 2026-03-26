@@ -13,4 +13,11 @@ pub fn page_tabs() -> impl Widget {
                 .tab("Password", typography::Typography::paragraph("Change your password here."))
                 .tab("Settings", typography::Typography::paragraph("Manage your settings and preferences."))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Tabs::new()
+    .width(500.0)
+    .tab("Account", Typography::paragraph("Make changes to your account here."))
+    .tab("Password", Typography::paragraph("Change your password here."))
+    .tab("Settings", Typography::paragraph("Manage your settings."))"#
+        ).font_size(13.0))
 }

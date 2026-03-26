@@ -9,4 +9,10 @@ pub fn page_empty() -> impl Widget {
         .child(crate::example_card(
             empty::Empty::new().title("No results found").description("Try adjusting your search or filter criteria.").height(120.0)
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Empty::new()
+    .title("No results found")
+    .description("Try adjusting your search or filter criteria.")
+    .height(120.0)"#
+        ).font_size(13.0))
 }

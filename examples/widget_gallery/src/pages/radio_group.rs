@@ -7,4 +7,11 @@ pub fn page_radio_group() -> impl Widget {
         .child(crate::page_header("Radio Group", "A set of checkable buttons where only one can be checked at a time."))
         .child(crate::example_section("Default", "Select one option from the group."))
         .child(crate::example_card(radio_group::RadioGroup::new().item("Default").item("Comfortable").item("Compact").selected(0)))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"RadioGroup::new()
+    .item("Default")
+    .item("Comfortable")
+    .item("Compact")
+    .selected(0)"#
+        ).font_size(13.0))
 }

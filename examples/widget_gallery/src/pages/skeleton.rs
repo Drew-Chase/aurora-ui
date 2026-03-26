@@ -13,4 +13,12 @@ pub fn page_skeleton() -> impl Widget {
                 .child(skeleton::Skeleton::circle(40.0))
                 .child(col!().spacing(8.0).child(skeleton::Skeleton::new().width(200.0).height(16.0)).child(skeleton::Skeleton::new().width(150.0).height(16.0)))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"// Circle avatar skeleton
+Skeleton::circle(40.0)
+
+// Text line skeletons
+Skeleton::new().width(200.0).height(16.0)
+Skeleton::new().width(150.0).height(16.0)"#
+        ).font_size(13.0))
 }

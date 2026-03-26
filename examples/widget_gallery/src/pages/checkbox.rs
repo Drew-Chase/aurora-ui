@@ -13,4 +13,19 @@ pub fn page_checkbox() -> impl Widget {
                 .child(checkbox::Checkbox::new().label("Subscribe to newsletter"))
                 .child(checkbox::Checkbox::new().disabled(true).label("Disabled option"))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"// Checked checkbox
+Checkbox::new()
+    .checked(true)
+    .label("Accept terms and conditions")
+
+// Unchecked checkbox
+Checkbox::new()
+    .label("Subscribe to newsletter")
+
+// Disabled checkbox
+Checkbox::new()
+    .disabled(true)
+    .label("Disabled option")"#
+        ).font_size(13.0))
 }

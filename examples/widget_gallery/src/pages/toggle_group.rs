@@ -9,4 +9,11 @@ pub fn page_toggle_group() -> impl Widget {
         .child(crate::example_card(
             toggle_group::ToggleGroup::new().item("Left").item("Center").item("Right").selected(1)
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"ToggleGroup::new()
+    .item("Left")
+    .item("Center")
+    .item("Right")
+    .selected(1)"#
+        ).font_size(13.0))
 }

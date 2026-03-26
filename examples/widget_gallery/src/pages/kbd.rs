@@ -16,4 +16,9 @@ pub fn page_kbd() -> impl Widget {
                 .child(BoxWidget::new().width(24))
                 .child(kbd::Kbd::new("Ctrl+Shift+P"))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"Kbd::new("Ctrl")
+Kbd::new("S")
+Kbd::new("Ctrl+Shift+P")"#
+        ).font_size(13.0))
 }
