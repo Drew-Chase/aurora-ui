@@ -156,11 +156,7 @@ impl Widget for TouchArea {
                         ..Default::default()
                     }
                 } else {
-                    EventResponse {
-                        handled: true,
-                        cursor: Some(CursorIcon::Default),
-                        ..Default::default()
-                    }
+                    EventResponse::default()
                 }
             }
             MouseEvent::MouseClickEvent(click) => {

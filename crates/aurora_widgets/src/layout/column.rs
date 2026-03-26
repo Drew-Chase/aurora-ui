@@ -281,18 +281,25 @@ impl Widget for Column {
         };
 
         let is_move = matches!(mouse, MouseEvent::MouseMoveEvent(_));
+        let mut handled = false;
         let mut cursor: Option<CursorIcon> = None;
 
         for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
             let translated = child_rect.translate(&rect.origin());
             let response = child.event(event, translated);
             if is_move {
-                if response.handled {
+                // Overlay handling: a child handled a mouse move outside its
+                // layout rect (e.g. a dropdown). Stop propagation so widgets
+                // behind the overlay don't receive hover events.
+                if response.handled && !translated.contains(&pos) {
                     return EventResponse {
                         handled: true,
                         cursor: response.cursor,
                         ..Default::default()
                     };
+                }
+                if response.handled {
+                    handled = true;
                 }
                 if translated.contains(&pos) {
                     cursor = response.cursor;
@@ -306,6 +313,7 @@ impl Widget for Column {
             }
         }
         EventResponse {
+            handled,
             cursor,
             ..Default::default()
         }
