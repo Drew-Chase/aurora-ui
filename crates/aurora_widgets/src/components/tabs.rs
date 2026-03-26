@@ -208,9 +208,9 @@ impl Widget for Tabs {
             let iw = self.indicator_from_w + (self.indicator_to_w - self.indicator_from_w) * eased;
             canvas.fill_rect(
                 Rect::new(
-                    ix,
+                    rect.x1 + ix,
                     tab_bar_bottom - self.indicator_height,
-                    ix + iw,
+                    rect.x1 + ix + iw,
                     tab_bar_bottom,
                 ),
                 self.indicator_color,
@@ -247,11 +247,11 @@ impl Widget for Tabs {
                     for (i, tab_w) in self.tab_widths.iter().enumerate() {
                         let tab_rect = Rect::new(x, rect.y1, x + tab_w, tab_bar_bottom);
                         if tab_rect.contains(&e.position) {
-                            // Start indicator slide animation
+                            // Start indicator slide animation (0-based positions)
                             let (cur_x, cur_w) = self.current_indicator();
                             self.indicator_from_x = cur_x;
                             self.indicator_from_w = cur_w;
-                            let (to_x, to_w) = self.tab_x_and_width(i, rect.x1);
+                            let (to_x, to_w) = self.tab_x_and_width(i, 0.0);
                             self.indicator_to_x = to_x;
                             self.indicator_to_w = to_w;
                             self.indicator_anim_start = Instant::now();
