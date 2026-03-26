@@ -176,47 +176,43 @@ fn counter_demo() -> impl Widget {
         let dec = setter.clone();
 
         Box::new(
-            col!()
+            row!()
+                .spacing(16.0)
+                .width(192)
                 .align(Align::Center)
-                .justify(Justify::Center)
                 .child(
-                    row!()
-                        .spacing(16.0)
+                    button!("-")
+                        .background_color(colors::secondary())
+                        .hover_background_color(colors::secondary().opacity(0.8))
+                        .foreground_color(colors::secondary_foreground())
+                        .border_radius(theme::corners::button_radius())
+                        .width(40)
+                        .height(36)
+                        .on_click(move |_| {
+                            dec.set(|c| *c -= 1);
+                        }),
+                )
+                .child(
+                    Text::new(count.to_string())
+                        .font_size(32.0)
+                        .font_weight(FontWeight::Bold)
+                        .color(theme::colors::foreground())
+                        .width(80.0)
+                        .height(36.0)
                         .align(Align::Center)
-                        .child(
-                            button!("-")
-                                .background_color(colors::secondary())
-                                .hover_background_color(colors::secondary().opacity(0.8))
-                                .foreground_color(colors::secondary_foreground())
-                                .border_radius(theme::corners::button_radius())
-                                .width(40)
-                                .height(36)
-                                .on_click(move |_| {
-                                    dec.set(|c| *c -= 1);
-                                }),
-                        )
-                        .child(
-                            Text::new(count.to_string())
-                                .font_size(32.0)
-                                .font_weight(FontWeight::Bold)
-                                .color(theme::colors::foreground())
-                                .width(80.0)
-                                .height(36.0)
-                                .align(Align::Center)
-                                .justify(Justify::Center),
-                        )
-                        .child(
-                            button!("+")
-                                .background_color(colors::secondary())
-                                .hover_background_color(colors::secondary().opacity(0.8))
-                                .foreground_color(colors::secondary_foreground())
-                                .border_radius(theme::corners::button_radius())
-                                .width(40)
-                                .height(36)
-                                .on_click(move |_| {
-                                    inc.set(|c| *c += 1);
-                                }),
-                        ),
+                        .justify(Justify::Center),
+                )
+                .child(
+                    button!("+")
+                        .background_color(colors::secondary())
+                        .hover_background_color(colors::secondary().opacity(0.8))
+                        .foreground_color(colors::secondary_foreground())
+                        .border_radius(theme::corners::button_radius())
+                        .width(40)
+                        .height(36)
+                        .on_click(move |_| {
+                            inc.set(|c| *c += 1);
+                        }),
                 ),
         )
     })
