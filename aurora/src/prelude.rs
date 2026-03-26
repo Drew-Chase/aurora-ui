@@ -27,7 +27,7 @@ pub use aurora_widgets::interactables::touch_area::TouchArea;
 pub use aurora_widgets::layout::column::Column;
 pub use aurora_widgets::layout::position::{Position, Positioned};
 pub use aurora_widgets::layout::row::Row;
-pub use aurora_widgets::layout::scrollview::ScrollView;
+pub use aurora_widgets::layout::scrollview::{ScrollState, ScrollView};
 pub use aurora_widgets::layout::stack::Stack;
 pub use aurora_widgets::layout::content_switch::ContentSwitch;
 pub use aurora_widgets::layout::{Align, Justify};

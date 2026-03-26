@@ -8,7 +8,56 @@ use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
+use std::cell::Cell;
+use std::rc::Rc;
+
 use crate::widgets::{EventResponse, LayoutCtx, Widget};
+
+/// Shared scroll offset that persists across widget tree rebuilds.
+///
+/// Create a `ScrollState` once and pass it to each rebuilt [`ScrollView`] via
+/// [`.state()`](ScrollView::state). The scroll offset is stored in an
+/// `Rc<Cell<f32>>`, so cloning is cheap and both the old and new ScrollView
+/// instances share the same value.
+///
+/// # Example
+///
+/// ```ignore
+/// let scroll = ScrollState::new();
+/// // In a Composite build fn:
+/// ScrollView::new()
+///     .state(scroll.clone())
+///     .child(my_content)
+/// ```
+#[derive(Clone)]
+pub struct ScrollState {
+    offset: Rc<Cell<f32>>,
+}
+
+impl ScrollState {
+    /// Creates a new scroll state starting at offset 0.
+    pub fn new() -> Self {
+        Self {
+            offset: Rc::new(Cell::new(0.0)),
+        }
+    }
+
+    /// Returns the current scroll offset.
+    pub fn get(&self) -> f32 {
+        self.offset.get()
+    }
+
+    /// Sets the scroll offset.
+    pub fn set(&self, value: f32) {
+        self.offset.set(value);
+    }
+}
+
+impl Default for ScrollState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 /// A scrollable container that clips its child to a viewport.
 ///
@@ -62,6 +111,9 @@ pub struct ScrollView {
 
     // Layout-computed
     content_width: f32,
+
+    // Shared persistent state (survives widget rebuilds)
+    state: Option<ScrollState>,
 }
 
 const SCROLL_SPEED: f32 = 40.0;
@@ -92,6 +144,8 @@ impl Default for ScrollView {
             scrollbar_drag_anchor: 0.0,
 
             content_width: 0.0,
+
+            state: None,
         }
     }
 }
@@ -164,9 +218,27 @@ impl ScrollView {
         self
     }
 
+    /// Attaches a shared [`ScrollState`] so the scroll offset persists across
+    /// widget tree rebuilds (e.g. inside a [`Composite`](crate::composite::Composite)).
+    pub fn state(mut self, state: ScrollState) -> Self {
+        self.scroll_offset = state.get();
+        self.state = Some(state);
+        self
+    }
+
     /// Whether content overflows the viewport (scrollbar should be visible).
     fn has_overflow(&self) -> bool {
         self.max_scroll > 0.0
+    }
+
+    /// Returns scroll_offset clamped to the current valid range.
+    ///
+    /// The raw `scroll_offset` is intentionally NOT clamped during layout
+    /// because the Column flex algorithm may call layout multiple times with
+    /// different available sizes. Clamping during an intermediate pass with a
+    /// temporarily smaller `max_scroll` would permanently lose the real offset.
+    fn clamped_offset(&self) -> f32 {
+        self.scroll_offset.clamp(0.0, self.max_scroll)
     }
 
     /// Effective scrollbar width — zero when content fits.
@@ -187,7 +259,7 @@ impl ScrollView {
         let thumb_height = (ratio * self.viewport_height).max(self.min_thumb_height);
         let scrollable_track = self.viewport_height - thumb_height;
         let thumb_y = if self.max_scroll > 0.0 {
-            (self.scroll_offset / self.max_scroll) * scrollable_track
+            (self.clamped_offset() / self.max_scroll) * scrollable_track
         } else {
             0.0
         };
@@ -254,13 +326,13 @@ impl Widget for ScrollView {
             );
         }
 
-        self.scroll_offset = self.scroll_offset.clamp(0.0, self.max_scroll);
-
         Size::new(width, height)
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
         if let Some(child) = &self.child {
+            let offset = self.clamped_offset();
+
             // Clip to content area (excludes scrollbar)
             let viewport = Rect::new(
                 rect.x1 + self.padding.left,
@@ -273,9 +345,9 @@ impl Widget for ScrollView {
 
             let scrolled_rect = Rect::new(
                 rect.x1 + self.padding.left,
-                rect.y1 + self.padding.top - self.scroll_offset,
+                rect.y1 + self.padding.top - offset,
                 rect.x1 + self.padding.left + self.child_size.width,
-                rect.y1 + self.padding.top - self.scroll_offset + self.child_size.height,
+                rect.y1 + self.padding.top - offset + self.child_size.height,
             );
 
             child.paint(canvas, scrolled_rect);
@@ -296,11 +368,12 @@ impl Widget for ScrollView {
 
     fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
         if let Some(child) = &self.child {
+            let offset = self.clamped_offset();
             let scrolled_rect = Rect::new(
                 rect.x1 + self.padding.left,
-                rect.y1 + self.padding.top - self.scroll_offset,
+                rect.y1 + self.padding.top - offset,
                 rect.x1 + self.padding.left + self.child_size.width,
-                rect.y1 + self.padding.top - self.scroll_offset + self.child_size.height,
+                rect.y1 + self.padding.top - offset + self.child_size.height,
             );
             child.paint_overlay(canvas, scrolled_rect);
         }
@@ -314,15 +387,16 @@ impl Widget for ScrollView {
     }
 
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        let offset = self.clamped_offset();
         let mouse = match event {
             WidgetEvent::Mouse(e) => e,
             _ => {
                 if let Some(child) = &mut self.child {
                     let scrolled_rect = Rect::new(
                         rect.x1 + self.padding.left,
-                        rect.y1 + self.padding.top - self.scroll_offset,
+                        rect.y1 + self.padding.top - offset,
                         rect.x1 + self.padding.left + self.child_size.width,
-                        rect.y1 + self.padding.top - self.scroll_offset + self.child_size.height,
+                        rect.y1 + self.padding.top - offset + self.child_size.height,
                     );
                     return child.event(event, scrolled_rect);
                 }
@@ -351,6 +425,9 @@ impl Widget for ScrollView {
                         let ratio = new_thumb_top / scrollable_track;
                         self.scroll_offset =
                             (ratio * self.max_scroll).clamp(0.0, self.max_scroll);
+                        if let Some(ref state) = self.state {
+                            state.set(self.scroll_offset);
+                        }
                     }
                     return EventResponse {
                         handled: true,
@@ -362,9 +439,9 @@ impl Widget for ScrollView {
                 if let Some(child) = &mut self.child {
                     let scrolled_rect = Rect::new(
                         rect.x1 + self.padding.left,
-                        rect.y1 + self.padding.top - self.scroll_offset,
+                        rect.y1 + self.padding.top - offset,
                         rect.x1 + self.padding.left + self.child_size.width,
-                        rect.y1 + self.padding.top - self.scroll_offset + self.child_size.height,
+                        rect.y1 + self.padding.top - offset + self.child_size.height,
                     );
                     return child.event(&WidgetEvent::Mouse(*mouse), scrolled_rect);
                 }
@@ -401,6 +478,9 @@ impl Widget for ScrollView {
                             let ratio = click_center / scrollable_track;
                             self.scroll_offset =
                                 (ratio * self.max_scroll).clamp(0.0, self.max_scroll);
+                            if let Some(ref state) = self.state {
+                                state.set(self.scroll_offset);
+                            }
                         }
                         return EventResponse {
                             handled: true,
@@ -409,13 +489,15 @@ impl Widget for ScrollView {
                     }
                 }
 
-                // Forward to child
-                if let Some(child) = &mut self.child {
+                // Forward to child — only if click is within viewport
+                if viewport.contains(&click.position)
+                    && let Some(child) = &mut self.child
+                {
                     let scrolled_rect = Rect::new(
                         rect.x1 + self.padding.left,
-                        rect.y1 + self.padding.top - self.scroll_offset,
+                        rect.y1 + self.padding.top - offset,
                         rect.x1 + self.padding.left + self.child_size.width,
-                        rect.y1 + self.padding.top - self.scroll_offset + self.child_size.height,
+                        rect.y1 + self.padding.top - offset + self.child_size.height,
                     );
                     return child.event(&WidgetEvent::Mouse(*mouse), scrolled_rect);
                 }
@@ -425,6 +507,9 @@ impl Widget for ScrollView {
                 if viewport.contains(&self.last_mouse_pos) {
                     self.scroll_offset =
                         (self.scroll_offset - delta * SCROLL_SPEED).clamp(0.0, self.max_scroll);
+                    if let Some(ref state) = self.state {
+                        state.set(self.scroll_offset);
+                    }
                     return EventResponse {
                         handled: true,
                         ..Default::default()

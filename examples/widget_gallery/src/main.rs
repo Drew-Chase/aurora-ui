@@ -63,15 +63,22 @@ fn main() {
 }
 
 /// App state: selected page + selected theme profile.
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 struct GalleryState {
     page: usize,
     profile: usize,
+    sidebar_scroll: ScrollState,
+    content_scroll: ScrollState,
 }
 
 fn gallery() -> impl Widget {
     Composite::new(
-        GalleryState { page: 0, profile: 0 },
+        GalleryState {
+            page: 0,
+            profile: 0,
+            sidebar_scroll: ScrollState::new(),
+            content_scroll: ScrollState::new(),
+        },
         move |state, set_state| {
             // Apply the selected theme profile
             let profiles = [theme::ProfileId::Default, theme::ProfileId::Candy, theme::ProfileId::Light];
@@ -80,8 +87,13 @@ fn gallery() -> impl Widget {
             Box::new(
                 row!()
                     .align(Align::Stretch)
-                    .child(sidebar_widget(state.page, state.profile, set_state.clone()))
-                    .child(content_area(state.page)),
+                    .child(sidebar_widget(
+                        state.page,
+                        state.profile,
+                        state.sidebar_scroll.clone(),
+                        set_state.clone(),
+                    ))
+                    .child(content_area(state.page, state.content_scroll.clone())),
             )
         },
     )
@@ -94,6 +106,7 @@ fn gallery() -> impl Widget {
 fn sidebar_widget(
     active_page: usize,
     active_profile: usize,
+    scroll: ScrollState,
     setter: StateSetter<GalleryState>,
 ) -> impl Widget {
     // Theme profile dropdown
@@ -114,7 +127,6 @@ fn sidebar_widget(
 
     // Scrollable component list
     let mut items = col!()
-        .width(220)
         .padding(Edges::new(0.0, 12.0, 16.0, 12.0))
         .spacing(2.0);
 
@@ -154,7 +166,8 @@ fn sidebar_widget(
                 .child(
                     ScrollView::new()
                         .scrollbar_width(4.0)
-                        .scrollbar_thumb_color(Color::WHITE.opacity(0.5))
+                        .scrollbar_thumb_color(theme::colors::foreground().opacity(0.5))
+                        .state(scroll)
                         .child(items),
                 ),
         )
@@ -198,11 +211,12 @@ fn sidebar_item(name: &str, active: bool, on_click: impl FnMut() + 'static) -> i
 // Main content area
 // ---------------------------------------------------------------------------
 
-fn content_area(page_index: usize) -> impl Widget {
+fn content_area(page_index: usize, scroll: ScrollState) -> impl Widget {
     use pages::*;
     ScrollView::new()
-        .scrollbar_thumb_color(Color::WHITE.opacity(0.5))
+        .scrollbar_thumb_color(theme::colors::foreground().opacity(0.5))
         .padding(Edges::new(48.0, 48.0, 48.0, 48.0))
+        .state(scroll)
         .child(
             ContentSwitch::new()
                 .selected(page_index)
