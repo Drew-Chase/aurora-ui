@@ -157,6 +157,7 @@ impl CompositeBuilder for Button {
                     use crate::text_widget::Text;
                     let text_widget = Text::new(label.clone())
                         .color(self.foreground_color)
+                        .height(self.height as f32)
                         .align(Align::Center)
                         .justify(Justify::Center);
                     Some(Rc::new(RefCell::new(Box::new(text_widget) as Box<dyn Widget>)))
