@@ -48,7 +48,7 @@ impl Table {
             header_bg: colors::muted(),
             _header_fg: colors::muted_foreground(),
             row_bg: colors::background(),
-            alt_row_bg: Color::new(250, 250, 250, 255),
+            alt_row_bg: colors::muted(),
             striped: true,
             width: None,
             on_row_click: None,

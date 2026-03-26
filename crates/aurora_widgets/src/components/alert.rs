@@ -98,10 +98,10 @@ impl Alert {
     fn bg_color(&self) -> aurora_core::color::Color {
         match self.variant {
             AlertVariant::Default => colors::background(),
-            AlertVariant::Destructive => aurora_core::color::Color::new(254, 242, 242, 255),
-            AlertVariant::Success => aurora_core::color::Color::new(240, 253, 244, 255),
-            AlertVariant::Warning => aurora_core::color::Color::new(254, 252, 232, 255),
-            AlertVariant::Info => aurora_core::color::Color::new(239, 246, 255, 255),
+            AlertVariant::Destructive => colors::destructive().opacity(0.15),
+            AlertVariant::Success => colors::success().opacity(0.15),
+            AlertVariant::Warning => colors::warning().opacity(0.15),
+            AlertVariant::Info => colors::info().opacity(0.15),
         }
     }
 
@@ -109,9 +109,9 @@ impl Alert {
         match self.variant {
             AlertVariant::Default => colors::foreground(),
             AlertVariant::Destructive => colors::destructive(),
-            AlertVariant::Success => aurora_core::color::Color::new(22, 163, 74, 255),
-            AlertVariant::Warning => aurora_core::color::Color::new(161, 98, 7, 255),
-            AlertVariant::Info => aurora_core::color::Color::new(37, 99, 235, 255),
+            AlertVariant::Success => colors::success(),
+            AlertVariant::Warning => colors::warning(),
+            AlertVariant::Info => colors::info(),
         }
     }
 }

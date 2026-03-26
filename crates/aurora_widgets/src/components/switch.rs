@@ -48,7 +48,7 @@ impl Switch {
             track_height: 24.0,
             on_color: colors::primary(),
             off_color: colors::input_border(),
-            thumb_color: Color::WHITE,
+            thumb_color: colors::background(),
             on_change: None,
             anim_progress: 0.0,
             anim_start: Instant::now(),

@@ -10,8 +10,8 @@ pub fn page_avatar() -> impl Widget {
             row!()
                 .spacing(16.0)
                 .align(Align::Center)
-                .child(avatar::Avatar::new().initials("SM").size(avatar::AvatarSize::Small).background_color(Color::new(59, 130, 246, 255)).foreground_color(Color::WHITE))
-                .child(avatar::Avatar::new().initials("MD").background_color(Color::new(234, 67, 53, 255)).foreground_color(Color::WHITE))
-                .child(avatar::Avatar::new().initials("LG").size(avatar::AvatarSize::Large).background_color(Color::new(76, 175, 80, 255)).foreground_color(Color::WHITE))
+                .child(avatar::Avatar::new().initials("SM").size(avatar::AvatarSize::Small).background_color(colors::info()).foreground_color(colors::info_foreground()))
+                .child(avatar::Avatar::new().initials("MD").background_color(colors::destructive()).foreground_color(colors::destructive_foreground()))
+                .child(avatar::Avatar::new().initials("LG").size(avatar::AvatarSize::Large).background_color(colors::success()).foreground_color(colors::success_foreground()))
         ))
 }

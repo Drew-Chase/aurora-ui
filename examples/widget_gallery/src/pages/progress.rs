@@ -10,8 +10,8 @@ pub fn page_progress() -> impl Widget {
             col!()
                 .spacing(16.0)
                 .child(progress::Progress::new().value(0.25).width(400.0))
-                .child(progress::Progress::new().value(0.50).width(400.0).color(Color::new(59, 130, 246, 255)))
-                .child(progress::Progress::new().value(0.75).width(400.0).color(Color::new(76, 175, 80, 255)))
-                .child(progress::Progress::new().value(1.0).width(400.0).color(Color::new(234, 67, 53, 255)))
+                .child(progress::Progress::new().value(0.50).width(400.0).color(colors::info()))
+                .child(progress::Progress::new().value(0.75).width(400.0).color(colors::success()))
+                .child(progress::Progress::new().value(1.0).width(400.0).color(colors::destructive()))
         ))
 }
