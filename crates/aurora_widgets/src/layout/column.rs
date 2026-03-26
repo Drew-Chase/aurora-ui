@@ -281,7 +281,6 @@ impl Widget for Column {
         };
 
         let is_move = matches!(mouse, MouseEvent::MouseMoveEvent(_));
-        let mut handled = false;
         let mut cursor: Option<CursorIcon> = None;
 
         for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
@@ -289,7 +288,11 @@ impl Widget for Column {
             let response = child.event(event, translated);
             if is_move {
                 if response.handled {
-                    handled = true;
+                    return EventResponse {
+                        handled: true,
+                        cursor: response.cursor,
+                        ..Default::default()
+                    };
                 }
                 if translated.contains(&pos) {
                     cursor = response.cursor;
@@ -303,7 +306,6 @@ impl Widget for Column {
             }
         }
         EventResponse {
-            handled,
             cursor,
             ..Default::default()
         }

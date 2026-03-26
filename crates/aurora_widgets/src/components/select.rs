@@ -332,11 +332,20 @@ impl Widget for Select {
                         let idx = (relative_y / self.item_height) as usize;
                         self.hover_index = if idx < self.options.len() { Some(idx) } else { None };
                         return EventResponse {
+                            handled: true,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };
                     } else {
                         self.hover_index = None;
+                    }
+                    // While open, consume hover over trigger area too
+                    if rect.contains(pos) {
+                        return EventResponse {
+                            handled: true,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
                 }
                 if rect.contains(pos) {
