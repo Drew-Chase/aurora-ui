@@ -193,12 +193,14 @@ fn counter_demo() -> impl Widget {
                         }),
                 )
                 .child(
-                    Text::new(&count.to_string())
+                    Text::new(count.to_string())
                         .font_size(32.0)
                         .font_weight(FontWeight::Bold)
                         .color(theme::colors::foreground())
                         .width(80.0)
-                        .align(Align::Center),
+                        .height(36.0)
+                        .align(Align::Center)
+                        .justify(Justify::Center),
                 )
                 .child(
                     button!("+")
