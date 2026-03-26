@@ -23,6 +23,22 @@ pub fn page_button() -> impl Widget {
                 .child(button!("Secondary").background_color(colors::secondary()).hover_background_color(colors::secondary().opacity(0.8)).foreground_color(colors::secondary_foreground()).border_radius(theme::corners::button_radius()).width(110).height(36))
                 .child(button!("Destructive").background_color(colors::destructive()).hover_background_color(colors::destructive().opacity(0.8)).foreground_color(colors::destructive_foreground()).border_radius(theme::corners::button_radius()).width(120).height(36))
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"// Primary
+button!("Primary")
+    .background_color(colors::primary())
+    .foreground_color(colors::primary_foreground())
+
+// Secondary
+button!("Secondary")
+    .background_color(colors::secondary())
+    .foreground_color(colors::secondary_foreground())
+
+// Destructive
+button!("Destructive")
+    .background_color(colors::destructive())
+    .foreground_color(colors::destructive_foreground())"#
+        ).font_size(13.0))
         .child(crate::example_section("With Icons", "Buttons with start and end icon slots."))
         .child(crate::example_card(
             row!()
@@ -60,4 +76,20 @@ pub fn page_button() -> impl Widget {
                         .height(36),
                 )
         ))
+        .child(code_block::CodeBlock::new().language("rust").code(
+r#"// Start icon
+button!("Send")
+    .start(icon_widget)
+    .background_color(colors::primary())
+    .foreground_color(colors::primary_foreground())
+
+// End icon
+button!("Next")
+    .end(arrow_icon)
+
+// Both start and end icons
+button!("Save")
+    .start(save_icon)
+    .end(check_icon)"#
+        ).font_size(13.0))
 }
