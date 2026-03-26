@@ -56,7 +56,7 @@ pub fn page_button() -> impl Widget {
                         .hover_background_color(colors::primary().opacity(0.8))
                         .foreground_color(colors::primary_foreground())
                         .border_radius(Corners::all(6.0))
-                        .width(120)
+                        .width(140)
                         .height(36),
                 )
         ))

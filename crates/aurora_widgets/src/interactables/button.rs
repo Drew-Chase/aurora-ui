@@ -166,6 +166,7 @@ impl CompositeBuilder for Button {
         let background = self.background_color;
         let hover_background = self.hover_background_color;
         let border_radius = self.border_radius;
+        let _has_slots = self.start.is_some() || self.end.is_some();
         // Build a Text child from the label if no explicit child was set
         let child = if self.child.is_some() {
             self.child.clone()
@@ -174,10 +175,15 @@ impl CompositeBuilder for Button {
                 #[cfg(feature = "text")]
                 {
                     use crate::text_widget::Text;
-                    let text_widget = Text::new(label.clone())
+                    let mut text_widget = Text::new(label.clone())
                         .color(self.foreground_color)
-                        .height(self.height as f32)
                         .justify(crate::layout::Justify::Center);
+                    if !_has_slots {
+                        // Single-child mode: fill button and center horizontally
+                        text_widget = text_widget
+                            .height(self.height as f32)
+                            .align(crate::layout::Align::Center);
+                    }
                     Some(Rc::new(RefCell::new(Box::new(text_widget) as Box<dyn Widget>)))
                 }
                 #[cfg(not(feature = "text"))]
@@ -218,33 +224,23 @@ impl CompositeBuilder for Button {
                     .height(height);
 
                 if has_slots {
-                    // Use a Row to arrange start, content, end
                     use crate::layout::{Align, Justify};
                     use crate::layout::row::Row;
+                    use aurora_core::geometry::edges::Edges;
+                    box_widget = box_widget.padding(Edges::new(0.0, 8.0, 0.0, 8.0));
                     let mut content_row = Row::new()
-                        .spacing(8.0)
+                        .spacing(6.0)
+                        .height(height)
                         .align(Align::Center)
                         .justify(Justify::Center);
                     if let Some(s) = start {
-                        content_row = content_row.child(ChildProxy {
-                            inner: s,
-                            width: height as f32,
-                            height: height as f32,
-                        });
+                        content_row = content_row.child(FlexProxy { inner: s });
                     }
                     if let Some(c) = child {
-                        content_row = content_row.child(ChildProxy {
-                            inner: c,
-                            width: width as f32,
-                            height: height as f32,
-                        });
+                        content_row = content_row.child(FlexProxy { inner: c });
                     }
                     if let Some(e) = end {
-                        content_row = content_row.child(ChildProxy {
-                            inner: e,
-                            width: height as f32,
-                            height: height as f32,
-                        });
+                        content_row = content_row.child(FlexProxy { inner: e });
                     }
                     box_widget = box_widget.child(content_row);
                 } else if let Some(child) = child {
@@ -337,6 +333,29 @@ impl Widget for ChildProxy {
         let size = Size::new(self.width, self.height);
         self.inner.borrow_mut().layout(size, ctx);
         size
+    }
+
+    fn paint(&self, canvas: &mut Canvas, rect: Rect) {
+        self.inner.borrow().paint(canvas, rect);
+    }
+
+    fn children(&self) -> &[Box<dyn Widget>] {
+        &[]
+    }
+
+    fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        self.inner.borrow_mut().event(event, rect)
+    }
+}
+
+/// Proxy that delegates to a shared child widget, letting it size naturally.
+struct FlexProxy {
+    inner: Rc<RefCell<Box<dyn Widget>>>,
+}
+
+impl Widget for FlexProxy {
+    fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
+        self.inner.borrow_mut().layout(available, ctx)
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
