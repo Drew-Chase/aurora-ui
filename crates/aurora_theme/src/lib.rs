@@ -39,7 +39,7 @@ pub fn current_profile() -> usize {
 
 /// The built-in default colors (light theme, shadcn/ui zinc).
 /// These are used when no user theme is loaded, or as fallback.
-pub static DEFAULT_COLORS: [Color; 26] = [
+pub static DEFAULT_COLORS: [Color; 38] = [
     Color::new(255, 255, 255, 255),   //  0 BACKGROUND
     Color::new(9, 9, 11, 255),        //  1 FOREGROUND
     Color::new(244, 244, 245, 255),   //  2 MUTED
@@ -66,6 +66,19 @@ pub static DEFAULT_COLORS: [Color; 26] = [
     Color::new(255, 255, 255, 255),   // 23 POPOVER
     Color::new(9, 9, 11, 255),        // 24 POPOVER_FOREGROUND
     Color::new(0, 0, 0, 128),         // 25 OVERLAY
+    // Syntax highlighting (One Dark defaults)
+    Color::new(198, 120, 221, 255),   // 26 SYNTAX_KEYWORD     (#c678dd)
+    Color::new(152, 195, 121, 255),   // 27 SYNTAX_STRING      (#98c379)
+    Color::new(92, 99, 112, 255),     // 28 SYNTAX_COMMENT     (#5c6370)
+    Color::new(209, 154, 102, 255),   // 29 SYNTAX_NUMBER      (#d19a66)
+    Color::new(97, 175, 239, 255),    // 30 SYNTAX_FUNCTION    (#61afef)
+    Color::new(229, 192, 123, 255),   // 31 SYNTAX_TYPE        (#e5c07b)
+    Color::new(86, 182, 194, 255),    // 32 SYNTAX_OPERATOR    (#56b6c2)
+    Color::new(171, 178, 191, 255),   // 33 SYNTAX_PUNCTUATION (#abb2bf)
+    Color::new(209, 154, 102, 255),   // 34 SYNTAX_ATTRIBUTE   (#d19a66)
+    Color::new(224, 108, 117, 255),   // 35 SYNTAX_TAG         (#e06c75)
+    Color::new(209, 154, 102, 255),   // 36 SYNTAX_CONSTANT    (#d19a66)
+    Color::new(171, 178, 191, 255),   // 37 SYNTAX_PLAIN       (#abb2bf)
 ];
 
 /// Slot indices for the well-known colors.
@@ -96,6 +109,19 @@ pub mod slots {
     pub const POPOVER: usize = 23;
     pub const POPOVER_FOREGROUND: usize = 24;
     pub const OVERLAY: usize = 25;
+    // Syntax highlighting
+    pub const SYNTAX_KEYWORD: usize = 26;
+    pub const SYNTAX_STRING: usize = 27;
+    pub const SYNTAX_COMMENT: usize = 28;
+    pub const SYNTAX_NUMBER: usize = 29;
+    pub const SYNTAX_FUNCTION: usize = 30;
+    pub const SYNTAX_TYPE: usize = 31;
+    pub const SYNTAX_OPERATOR: usize = 32;
+    pub const SYNTAX_PUNCTUATION: usize = 33;
+    pub const SYNTAX_ATTRIBUTE: usize = 34;
+    pub const SYNTAX_TAG: usize = 35;
+    pub const SYNTAX_CONSTANT: usize = 36;
+    pub const SYNTAX_PLAIN: usize = 37;
 }
 
 // ---------------------------------------------------------------------------

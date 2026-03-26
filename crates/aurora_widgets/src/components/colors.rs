@@ -31,3 +31,17 @@ pub fn card_foreground() -> Color { aurora_theme::color(slots::CARD_FOREGROUND) 
 pub fn popover() -> Color { aurora_theme::color(slots::POPOVER) }
 pub fn popover_foreground() -> Color { aurora_theme::color(slots::POPOVER_FOREGROUND) }
 pub fn overlay() -> Color { aurora_theme::color(slots::OVERLAY) }
+
+// Syntax highlighting
+pub fn syntax_keyword() -> Color { aurora_theme::color(slots::SYNTAX_KEYWORD) }
+pub fn syntax_string() -> Color { aurora_theme::color(slots::SYNTAX_STRING) }
+pub fn syntax_comment() -> Color { aurora_theme::color(slots::SYNTAX_COMMENT) }
+pub fn syntax_number() -> Color { aurora_theme::color(slots::SYNTAX_NUMBER) }
+pub fn syntax_function() -> Color { aurora_theme::color(slots::SYNTAX_FUNCTION) }
+pub fn syntax_type() -> Color { aurora_theme::color(slots::SYNTAX_TYPE) }
+pub fn syntax_operator() -> Color { aurora_theme::color(slots::SYNTAX_OPERATOR) }
+pub fn syntax_punctuation() -> Color { aurora_theme::color(slots::SYNTAX_PUNCTUATION) }
+pub fn syntax_attribute() -> Color { aurora_theme::color(slots::SYNTAX_ATTRIBUTE) }
+pub fn syntax_tag() -> Color { aurora_theme::color(slots::SYNTAX_TAG) }
+pub fn syntax_constant() -> Color { aurora_theme::color(slots::SYNTAX_CONSTANT) }
+pub fn syntax_plain() -> Color { aurora_theme::color(slots::SYNTAX_PLAIN) }

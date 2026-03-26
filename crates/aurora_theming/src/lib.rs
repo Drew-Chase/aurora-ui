@@ -202,19 +202,27 @@ pub fn config(input: TokenStream) -> TokenStream {
         ("warning", 17), ("warning_foreground", 18), ("info", 19),
         ("info_foreground", 20), ("card", 21), ("card_foreground", 22),
         ("popover", 23), ("popover_foreground", 24), ("overlay", 25),
+        // Syntax highlighting
+        ("syntax_keyword", 26), ("syntax_string", 27), ("syntax_comment", 28),
+        ("syntax_number", 29), ("syntax_function", 30), ("syntax_type", 31),
+        ("syntax_operator", 32), ("syntax_punctuation", 33), ("syntax_attribute", 34),
+        ("syntax_tag", 35), ("syntax_constant", 36), ("syntax_plain", 37),
     ];
+    let num_well_known = well_known.len();
 
     let mut slot_colors_per_profile: Vec<Vec<proc_macro2::TokenStream>> = Vec::new();
     for pname in &profile_names {
         let profile = root_obj.get(pname.as_str()).cloned().unwrap_or_default();
         let mut slots: Vec<proc_macro2::TokenStream> = Vec::new();
         for &(name, slot_idx) in well_known {
+            // Check "colors" first, then "syntax" for syntax_* keys
             let val = get_val(&profile, "colors", name)
-                .or_else(|| get_val(&default_profile, "colors", name));
+                .or_else(|| get_val(&profile, "syntax", name.strip_prefix("syntax_").unwrap_or("")))
+                .or_else(|| get_val(&default_profile, "colors", name))
+                .or_else(|| get_val(&default_profile, "syntax", name.strip_prefix("syntax_").unwrap_or("")));
             if let Some(v) = val {
                 slots.push(parse_color_token(Some(&v)));
             } else {
-                // Use the built-in default from aurora_theme
                 slots.push(quote! { aurora_theme::DEFAULT_COLORS[#slot_idx] });
             }
         }
@@ -223,7 +231,7 @@ pub fn config(input: TokenStream) -> TokenStream {
 
     let slot_arrays: Vec<_> = slot_colors_per_profile.iter().enumerate().map(|(i, slots)| {
         let name = format_ident!("SLOT_COLORS_{}", i);
-        quote! { static #name: [aurora_theme::Color; 26] = [#(#slots),*]; }
+        quote! { static #name: [aurora_theme::Color; #num_well_known] = [#(#slots),*]; }
     }).collect();
     let slot_names: Vec<_> = (0..num_profiles).map(|i| format_ident!("SLOT_COLORS_{}", i)).collect();
 

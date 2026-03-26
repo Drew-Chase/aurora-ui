@@ -32,6 +32,20 @@
       "sidebar_accent": "#27272a",
       "sidebar_accent_foreground": "#fafafa"
     },
+    "syntax": {
+      "keyword": "#c678dd",
+      "string": "#98c379",
+      "comment": "#5c6370",
+      "number": "#d19a66",
+      "function": "#61afef",
+      "type": "#e5c07b",
+      "operator": "#56b6c2",
+      "punctuation": "#7a818e",
+      "attribute": "#d19a66",
+      "tag": "#e06c75",
+      "constant": "#d19a66",
+      "plain": "#abb2bf"
+    },
     "edges": {
       "button_padding": { "top": 8, "right": 16, "bottom": 8, "left": 16 }
     },
@@ -69,6 +83,20 @@
       "sidebar_foreground": "#71717a",
       "sidebar_accent": "#e4e4e7",
       "sidebar_accent_foreground": "#09090b"
+    },
+    "syntax": {
+      "keyword": "#7c3aed",
+      "string": "#16a34a",
+      "comment": "#9ca3af",
+      "number": "#c2410c",
+      "function": "#2563eb",
+      "type": "#b45309",
+      "operator": "#0891b2",
+      "punctuation": "#6b7280",
+      "attribute": "#c2410c",
+      "tag": "#dc2626",
+      "constant": "#c2410c",
+      "plain": "#374151"
     }
   },
   "candy": {
@@ -102,6 +130,20 @@
       "sidebar_foreground": "#c084fc",
       "sidebar_accent": "#3b1f6e",
       "sidebar_accent_foreground": "#f0abfc"
+    },
+    "syntax": {
+      "keyword": "#e879f9",
+      "string": "#4ade80",
+      "comment": "#7c6f9b",
+      "number": "#fbbf24",
+      "function": "#67e8f9",
+      "type": "#f0abfc",
+      "operator": "#22d3ee",
+      "punctuation": "#9b8cc4",
+      "attribute": "#fbbf24",
+      "tag": "#fb7185",
+      "constant": "#fbbf24",
+      "plain": "#d8c8f0"
     }
   }
 }
