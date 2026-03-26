@@ -1,9 +1,9 @@
 [package]
-name = "widget_gallery"
+name = "widget_gallery_example"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-aurora_ui = { path = "../../aurora", features = ["opengl", "text", "animate", "svg"] }
+aurora_ui = { path = "../../aurora", features = ["software", "text", "animate", "svg"] }
 aurora_theme = { path = "../../crates/aurora_theme" }
 aurora_iconify = { path = "../../crates/aurora_iconify" }
