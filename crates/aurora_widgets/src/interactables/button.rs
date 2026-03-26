@@ -155,9 +155,7 @@ impl AnimData {
 }
 
 #[derive(Default, Copy, Clone)]
-struct ButtonState {
-    is_hovering: bool,
-}
+struct ButtonState;
 
 impl CompositeBuilder for Button {
     fn build(&self) -> Box<dyn Widget> {
@@ -207,8 +205,7 @@ impl CompositeBuilder for Button {
 
         Box::new(Composite::new(
             ButtonState::default(),
-            move |_state, set_state| {
-                let setter = set_state.clone();
+            move |_state, _set_state| {
                 let click_handler = on_click.clone();
                 let on_hover = on_hover.clone();
                 let child = child.clone();
@@ -270,9 +267,6 @@ impl CompositeBuilder for Button {
                             };
                             anim.set(new_data);
 
-                            setter.set(|prev| {
-                                prev.is_hovering = hovering;
-                            });
                             if let Some(ref on_hover) = on_hover {
                                 on_hover.borrow_mut()(hovering);
                             }

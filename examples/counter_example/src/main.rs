@@ -2,6 +2,8 @@
 use aurora_ui::prelude::*;
 
 fn main() {
+    let mut initialized = false;
+
     App::new()
         .title("Counter Example")
         .size((300, 150))
@@ -9,21 +11,24 @@ fn main() {
         .position(WindowPosition::Center)
         .use_system_fonts()
         .font_options(FontOptions::new().family("Roboto"))
-        .run(|window, _frame_info| {
-            window.root(
-                col!()
-                    .spacing(10.0)
-                    .align(Align::Center)
-                    .justify(Justify::Center)
-                    .child(
-                        Text::new("Counter: ")
-                            .font_weight(FontWeight::Black)
-                            .height(24.0)
-                            .font_size(24.0)
-                            .align(Align::Center),
-                    )
-                    .child(counter()),
-            );
+        .run(move |window, _frame_info| {
+            if !initialized {
+                window.root(
+                    col!()
+                        .spacing(10.0)
+                        .align(Align::Center)
+                        .justify(Justify::Center)
+                        .child(
+                            Text::new("Counter: ")
+                                .font_weight(FontWeight::Black)
+                                .height(24.0)
+                                .font_size(24.0)
+                                .align(Align::Center),
+                        )
+                        .child(counter()),
+                );
+                initialized = true;
+            }
         })
         .expect("Failed to run app");
 }
