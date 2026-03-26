@@ -10,8 +10,8 @@ pub fn page_button() -> impl Widget {
             row!()
                 .spacing(12.0)
                 .align(Align::Center)
-                .child(button!("Primary").background_color(colors::primary()).hover_background_color(colors::primary().opacity(0.8)).border_radius(Corners::all(6.0)).width(100).height(36))
-                .child(button!("Secondary").background_color(colors::secondary()).hover_background_color(colors::secondary().opacity(0.8)).border_radius(Corners::all(6.0)).width(110).height(36))
-                .child(button!("Destructive").background_color(colors::destructive()).hover_background_color(colors::destructive().opacity(0.8)).border_radius(Corners::all(6.0)).width(120).height(36))
+                .child(button!("Primary").background_color(colors::primary()).hover_background_color(colors::primary().opacity(0.8)).foreground_color(colors::primary_foreground()).border_radius(Corners::all(6.0)).width(100).height(36))
+                .child(button!("Secondary").background_color(colors::secondary()).hover_background_color(colors::secondary().opacity(0.8)).foreground_color(colors::secondary_foreground()).border_radius(Corners::all(6.0)).width(110).height(36))
+                .child(button!("Destructive").background_color(colors::destructive()).hover_background_color(colors::destructive().opacity(0.8)).foreground_color(colors::destructive_foreground()).border_radius(Corners::all(6.0)).width(120).height(36))
         ))
 }

@@ -8,7 +8,7 @@ pub fn page_dropdown_menu() -> impl Widget {
         .child(crate::example_section("Default", "Click the button to open the menu."))
         .child(crate::example_card(
             dropdown_menu::DropdownMenu::new()
-                .trigger(button!("Open Menu").background_color(colors::secondary()).hover_background_color(colors::secondary().opacity(0.8)).border_radius(Corners::all(6.0)).width(120).height(36))
+                .trigger(button!("Open Menu").background_color(colors::secondary()).hover_background_color(colors::secondary().opacity(0.8)).foreground_color(colors::secondary_foreground()).border_radius(Corners::all(6.0)).width(120).height(36))
                 .item("Edit").item("Duplicate").separator().item("Archive").item("Delete")
         ))
 }

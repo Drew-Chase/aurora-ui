@@ -46,6 +46,8 @@ pub struct Button {
     pub background_color: Color,
     /// Background color when hovered.
     pub hover_background_color: Color,
+    /// Text/foreground color used by the `.text()` convenience method.
+    pub foreground_color: Color,
     /// Corner radii for the button rectangle.
     pub border_radius: Corners,
     /// Cursor icon shown when hovering.
@@ -71,6 +73,7 @@ impl Default for Button {
             height: 50,
             background_color: aurora_theme::color(aurora_theme::slots::PRIMARY),
             hover_background_color: aurora_theme::color(aurora_theme::slots::PRIMARY).opacity(0.8),
+            foreground_color: aurora_theme::color(aurora_theme::slots::PRIMARY_FOREGROUND),
             border_radius: Corners::all(4.0),
             hover_cursor: CursorIcon::Pointer,
             __composite_inner: None,
@@ -92,9 +95,10 @@ impl Button {
     pub fn text(self, text: impl Into<String>) -> Self {
         use crate::layout::{Align, Justify};
         use crate::text_widget::Text;
+        let color = self.foreground_color;
         self.child(
             Text::new(text.into())
-                .color(aurora_theme::color(aurora_theme::slots::PRIMARY_FOREGROUND))
+                .color(color)
                 .align(Align::Center)
                 .justify(Justify::Center),
         )
