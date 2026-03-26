@@ -502,6 +502,11 @@ impl Widget for TextInput {
                         handled: true,
                         ..Default::default()
                     };
+                } else if self.focused {
+                    // A different widget is being focused — clear our focus
+                    self.focused = false;
+                    self.mouse_down = false;
+                    self.clear_selection();
                 }
                 EventResponse::default()
             }
