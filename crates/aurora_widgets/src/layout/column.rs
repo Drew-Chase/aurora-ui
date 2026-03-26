@@ -308,6 +308,7 @@ impl Widget for Column {
                 return EventResponse {
                     handled: true,
                     cursor: response.cursor,
+                    request_focus: response.request_focus,
                     ..Default::default()
                 };
             }
