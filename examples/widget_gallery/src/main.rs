@@ -154,13 +154,13 @@ fn sidebar_widget(
     let mut global_index = 0usize;
     for (section_idx, section) in SECTIONS.iter().enumerate() {
         // Section header (non-clickable)
-        let top_pad = if section_idx == 0 { 0.0 } else { 12.0 };
+        let top_pad = if section_idx == 0 { 4.0 } else { 20.0 };
         items = items.child(
             Text::new(&section.title.to_uppercase())
-                .font_size(11.0)
-                .font_weight(FontWeight::SemiBold)
-                .color(theme::colors::sidebar_foreground().opacity(0.7))
-                .padding(Edges::new(top_pad, 8.0, 4.0, 8.0)),
+                .font_size(10.0)
+                .font_weight(FontWeight::Bold)
+                .color(theme::colors::sidebar_foreground().opacity(0.5))
+                .padding(Edges::new(top_pad, 8.0, 6.0, 8.0)),
         );
 
         // Page items within this section
