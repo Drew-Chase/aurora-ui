@@ -174,37 +174,57 @@ fn sidebar_widget(
 }
 
 fn sidebar_item(name: &str, active: bool, on_click: impl FnMut() + 'static) -> impl Widget {
-    let bg = if active {
-        theme::colors::sidebar_accent()
-    } else {
-        Color::TRANSPARENT
-    };
-    let text_color = if active {
-        theme::colors::sidebar_accent_foreground()
-    } else {
-        theme::colors::sidebar_foreground()
-    };
-    let mut on_click = on_click;
+    use std::cell::RefCell;
+    use std::rc::Rc;
 
-    TouchArea::new()
-        .hover_cursor(CursorIcon::Pointer)
-        .on_click(move |_| {
-            on_click();
-        })
-        .child(
-            BoxWidget::new()
-                .background_color(bg)
-                .corners(Corners::all(6.0))
-                .height(32)
-                .padding(Edges::new(0.0, 8.0, 0.0, 8.0))
+    let name = name.to_string();
+    let on_click = Rc::new(RefCell::new(on_click));
+
+    Composite::new(false, move |&hovered, set_hover| {
+        let bg = if active {
+            theme::colors::sidebar_accent()
+        } else if hovered {
+            theme::colors::sidebar_accent().opacity(0.5)
+        } else {
+            Color::TRANSPARENT
+        };
+        let text_color = if active {
+            theme::colors::sidebar_accent_foreground()
+        } else {
+            theme::colors::sidebar_foreground()
+        };
+
+        let prev = hovered;
+        let set_hover = set_hover.clone();
+        let on_click = on_click.clone();
+
+        Box::new(
+            TouchArea::new()
+                .hover_cursor(CursorIcon::Pointer)
+                .on_hover(move |_rect, is_hovered| {
+                    if is_hovered != prev {
+                        set_hover.set(move |h| *h = is_hovered);
+                    }
+                })
+                .on_click(move |_| {
+                    (on_click.borrow_mut())();
+                })
                 .child(
-                    Text::new(name)
-                        .font_size(13.0)
-                        .color(text_color)
-                        .height(32.0)
-                        .justify(Justify::Center),
+                    BoxWidget::new()
+                        .background_color(bg)
+                        .corners(Corners::all(6.0))
+                        .height(32)
+                        .padding(Edges::new(0.0, 8.0, 0.0, 8.0))
+                        .child(
+                            Text::new(&name)
+                                .font_size(13.0)
+                                .color(text_color)
+                                .height(32.0)
+                                .justify(Justify::Center),
+                        ),
                 ),
         )
+    })
 }
 
 // ---------------------------------------------------------------------------
