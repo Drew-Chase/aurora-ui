@@ -51,6 +51,7 @@ impl<T: Animatable> Tween<T> {
 
     /// Sets the animation duration in seconds.
     pub fn duration(mut self, seconds: f32) -> Self {
+        debug_assert!(seconds.is_finite(), "animation duration must be finite");
         self.duration = seconds.max(0.0);
         self
     }

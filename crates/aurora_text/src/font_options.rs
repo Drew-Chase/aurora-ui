@@ -43,6 +43,7 @@ impl FontOptions {
 
     /// Sets the font size in pixels.
     pub fn size(mut self, size: f32) -> Self {
+        debug_assert!(size.is_finite() && size > 0.0, "font size must be finite and positive");
         self.size = Some(size);
         self
     }
