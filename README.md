@@ -119,6 +119,7 @@ When multiple backends are enabled, priority is: wgpu > opengl > software.
 | `image`    | PNG/JPEG decoding and Image widget           | No      |
 | `svg`      | SVG parsing, rasterization, and Svg widget   | No      |
 | `animate`  | Tweens, easing, keyframes, timelines         | No      |
+| `a11y`     | Screen reader support via AccessKit          | No      |
 
 ## Performance
 
@@ -159,7 +160,7 @@ aurora/
 ├── aurora_iconify    # Compile-time icon embedding from iconify.design
 ├── aurora_theme      # Theming system (planned)
 ├── aurora_animate    # Animation: tweens, easing, keyframes, timelines, presets
-├── aurora_a11y       # Accessibility via AccessKit (planned)
+├── aurora_a11y       # Accessibility via AccessKit
 └── aurora (facade)   # Public API — re-exports everything
 ```
 
@@ -266,6 +267,31 @@ let svg = Icon::from_set("mage").and_then(|s| s.by_name("calendar-2-fill"));
 
 Icon data is cached locally for 7 days. All SVGs are embedded directly in
 the binary as `&'static str`.
+
+## Accessibility
+
+Aurora UI integrates with [AccessKit](https://github.com/AccessKit/accesskit) to
+expose the widget tree to platform accessibility APIs (Windows Narrator/NVDA,
+macOS VoiceOver, Linux Orca). Enable the `a11y` feature flag:
+
+```toml
+aurora_ui = { version = "0.1", features = ["software", "text", "a11y"] }
+```
+
+All 52 built-in widgets declare semantic roles, labels, values, and states
+automatically. Custom widgets can participate by overriding `access_info()` on
+the `Widget` trait:
+
+```rust
+#[cfg(feature = "a11y")]
+fn access_info(&self) -> aurora_a11y::NodeInfo {
+    aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Button)
+        .with_label("Submit")
+}
+```
+
+See the [Accessibility wiki page](https://github.com/Drew-Chase/aurora-ui/wiki/Accessibility)
+for the full guide.
 
 ## Platform Support
 
