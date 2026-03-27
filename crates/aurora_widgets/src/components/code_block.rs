@@ -223,7 +223,9 @@ impl Widget for CodeBlock {
         }
 
         // Build copy button label
-        let is_copied = self.copied_at.is_some_and(|t| t.elapsed().as_secs_f32() < COPIED_DISPLAY_SECS);
+        let is_copied = self
+            .copied_at
+            .is_some_and(|t| t.elapsed().as_secs_f32() < COPIED_DISPLAY_SECS);
         let copy_text = if is_copied { "Copied!" } else { "Copy" };
         let mut copy_opts = ctx.font_options.clone();
         copy_opts.size = Some(11.0);
@@ -236,8 +238,7 @@ impl Widget for CodeBlock {
         ));
 
         let num_lines = lines.len();
-        let content_height =
-            num_lines as f32 * self.line_height + self.padding.vertical();
+        let content_height = num_lines as f32 * self.line_height + self.padding.vertical();
 
         Size::new(w, content_height)
     }
@@ -259,10 +260,10 @@ impl Widget for CodeBlock {
             let y = y_start + i as f32 * self.line_height;
 
             // Draw line number
-            if self.show_line_numbers {
-                if let Some(Some(nl)) = self.line_number_layouts.get(i) {
-                    canvas.draw_text(nl, line_num_x as i32, y as i32);
-                }
+            if self.show_line_numbers
+                && let Some(Some(nl)) = self.line_number_layouts.get(i)
+            {
+                canvas.draw_text(nl, line_num_x as i32, y as i32);
             }
 
             // Draw code line with syntax colors
@@ -325,7 +326,10 @@ impl Widget for CodeBlock {
                     let _ = clipboard.set_text(&self.code);
                 }
                 self.copied_at = Some(Instant::now());
-                return EventResponse { handled: true, ..Default::default() };
+                return EventResponse {
+                    handled: true,
+                    ..Default::default()
+                };
             }
             _ => {}
         }
@@ -333,6 +337,7 @@ impl Widget for CodeBlock {
     }
 
     fn needs_animation(&self) -> bool {
-        self.copied_at.is_some_and(|t| t.elapsed().as_secs_f32() < COPIED_DISPLAY_SECS)
+        self.copied_at
+            .is_some_and(|t| t.elapsed().as_secs_f32() < COPIED_DISPLAY_SECS)
     }
 }
