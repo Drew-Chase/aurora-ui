@@ -192,13 +192,13 @@ impl Widget for Toast {
         canvas.draw_line(
             Point::new(close_x - 4.0, close_y),
             Point::new(close_x + 4.0, close_y + 8.0),
-            1,
+            1.0,
             colors::muted_foreground(),
         );
         canvas.draw_line(
             Point::new(close_x + 4.0, close_y),
             Point::new(close_x - 4.0, close_y + 8.0),
-            1,
+            1.0,
             colors::muted_foreground(),
         );
     }

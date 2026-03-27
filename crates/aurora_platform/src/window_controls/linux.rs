@@ -18,7 +18,7 @@ const ICON_ON_CLOSE_HOVER: Color = Color::new(255, 255, 255, 255);
 const ICON_DISABLED: Color = Color::new(48, 48, 48, 76);
 
 const ICON_SIZE: f32 = 8.0;
-const ICON_THICKNESS: u32 = 1;
+const ICON_THICKNESS: f32 = 1.0;
 
 #[allow(clippy::too_many_arguments)]
 pub(super) fn paint_button(
@@ -85,7 +85,7 @@ pub(super) fn paint_button(
                         cx - half + offset + small,
                         cy - half + small,
                     ),
-                    ICON_THICKNESS,
+                    ICON_THICKNESS as u32,
                     icon_color,
                 );
                 // Fill behind front rect
@@ -106,14 +106,14 @@ pub(super) fn paint_button(
                         cx - half + small,
                         cy - half + offset + small,
                     ),
-                    ICON_THICKNESS,
+                    ICON_THICKNESS as u32,
                     icon_color,
                 );
             } else {
                 // Maximize: rectangle outline
                 canvas.stroke_rect(
                     Rect::new(cx - half, cy - half, cx + half, cy + half),
-                    ICON_THICKNESS,
+                    ICON_THICKNESS as u32,
                     icon_color,
                 );
             }

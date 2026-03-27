@@ -195,13 +195,13 @@ impl Widget for Combobox {
         canvas.draw_line(
             Point::new(chevron_x - 4.0, chevron_y - 2.0),
             Point::new(chevron_x, chevron_y + 2.0),
-            1,
+            1.0,
             colors::muted_foreground(),
         );
         canvas.draw_line(
             Point::new(chevron_x, chevron_y + 2.0),
             Point::new(chevron_x + 4.0, chevron_y - 2.0),
-            1,
+            1.0,
             colors::muted_foreground(),
         );
 

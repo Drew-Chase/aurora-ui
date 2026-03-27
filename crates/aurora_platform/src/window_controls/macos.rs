@@ -16,7 +16,7 @@ const PRESSED_DARKEN: Color = Color::new(0, 0, 0, 40); // overlay
 const ICON_COLOR: Color = Color::new(76, 0, 0, 180); // dark, slightly transparent
 
 const ICON_SIZE: f32 = 6.0;
-const ICON_THICKNESS: u32 = 1;
+const ICON_THICKNESS: f32 = 1.0;
 
 fn button_color(button: ControlButton, is_enabled: bool) -> Color {
     if !is_enabled {

@@ -156,8 +156,8 @@ impl Widget for Checkbox {
                 colors::primary_foreground().blue,
                 check_alpha,
             );
-            canvas.draw_line(p1, p2, 2, check_color);
-            canvas.draw_line(p2, p3, 2, check_color);
+            canvas.draw_line(p1, p2, 2.0, check_color);
+            canvas.draw_line(p2, p3, 2.0, check_color);
         }
 
         if t < 1.0 {

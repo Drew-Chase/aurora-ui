@@ -93,7 +93,7 @@ impl Widget for Spinner {
         let arc_sweep = std::f32::consts::TAU * 0.3; // 108-degree arc
 
         let segments = 24;
-        let stroke = self.thickness as u32;
+        let stroke = self.thickness;
         for i in 0..segments {
             let t0 = i as f32 / segments as f32;
             let t1 = (i + 1) as f32 / segments as f32;

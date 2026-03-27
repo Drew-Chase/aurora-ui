@@ -879,108 +879,105 @@ impl<'a> Canvas<'a> {
         }
     }
 
-    /// Draws a line between two points with the given thickness and color.
+    /// Draws an anti-aliased line between two points with the given thickness and color.
     ///
-    /// Uses Bresenham's algorithm for pixel-accurate line drawing.
-    /// Thickness is applied as a square brush centered on each pixel.
+    /// Uses a signed distance field capsule approach: each pixel's distance to the
+    /// line segment determines its coverage, producing smooth edges and rounded endpoints.
     /// Respects the active clip rect.
     pub fn draw_line(
         &mut self,
         from: impl Into<Point>,
         to: impl Into<Point>,
-        thickness: u32,
+        thickness: f32,
         color: impl Into<Color>,
     ) {
         let from = from.into();
         let to = to.into();
         let color = color.into();
-        if color.alpha == 0 || thickness == 0 {
+        if color.alpha == 0 || thickness <= 0.0 {
             return;
         }
         let pixel = color.to_rgb_u32();
-        let alpha = color.alpha;
+        let base_alpha = color.alpha;
+        let half_t = thickness * 0.5;
 
-        let x0 = from.x as i32;
-        let y0 = from.y as i32;
-        let x1 = to.x as i32;
-        let y1 = to.y as i32;
+        let dx = to.x - from.x;
+        let dy = to.y - from.y;
+        let len_sq = dx * dx + dy * dy;
 
-        let dx = x1.saturating_sub(x0).abs();
-        let dy = y1.saturating_sub(y0).abs().saturating_neg();
-        let sx = if x0 < x1 { 1 } else { -1 };
-        let sy = if y0 < y1 { 1 } else { -1 };
-        let mut err = dx.saturating_add(dy);
+        // Pre-compute distance thresholds for early-out
+        let outer = half_t + 0.5;
+        let outer_sq = outer * outer;
+        let inner = half_t - 0.5;
+        let inner_sq = if inner > 0.0 { inner * inner } else { -1.0 };
 
-        let mut x = x0;
-        let mut y = y0;
+        // Bounding box of the capsule, expanded by 1px for AA fringe
+        let min_x = from.x.min(to.x) - half_t - 1.0;
+        let min_y = from.y.min(to.y) - half_t - 1.0;
+        let max_x = from.x.max(to.x) + half_t + 1.0;
+        let max_y = from.y.max(to.y) + half_t + 1.0;
 
-        let half = (thickness as i32 - 1) / 2;
-        let extra = thickness as i32 - half - 1;
+        // Clamp to canvas and clip rect
+        let mut x0 = (min_x.floor().max(0.0) as u32).min(self.width);
+        let mut y0 = (min_y.floor().max(0.0) as u32).min(self.height);
+        let mut x1 = (max_x.ceil().max(0.0) as u32).min(self.width);
+        let mut y1 = (max_y.ceil().max(0.0) as u32).min(self.height);
 
-        // Compute clip bounds
-        let (clip_x0, clip_y0, clip_x1, clip_y1) = if let Some(clip) = self.current_clip() {
-            (
-                clip.x1.max(0.0) as i32,
-                clip.y1.max(0.0) as i32,
-                clip.x2.max(0.0) as i32,
-                clip.y2.max(0.0) as i32,
-            )
-        } else {
-            (0, 0, self.width as i32, self.height as i32)
-        };
+        if let Some(clip) = self.current_clip() {
+            x0 = x0.max(clip.x1.max(0.0) as u32);
+            y0 = y0.max(clip.y1.max(0.0) as u32);
+            x1 = x1.min(clip.x2.max(0.0) as u32);
+            y1 = y1.min(clip.y2.max(0.0) as u32);
+        }
 
-        loop {
-            // Draw thickness square centered on (x, y)
-            for py in (y.saturating_sub(half))..=(y.saturating_add(extra)) {
-                if py < clip_y0 || py >= clip_y1 || py < 0 {
+        // Reciprocal of len_sq for projection (avoid division in inner loop)
+        let inv_len_sq = if len_sq > 0.0 { 1.0 / len_sq } else { 0.0 };
+
+        for py in y0..y1 {
+            let sy = py as f32 + 0.5;
+            let vy = sy - from.y;
+            let row_start = (py * self.width) as usize;
+
+            for px in x0..x1 {
+                let sx = px as f32 + 0.5;
+                let vx = sx - from.x;
+
+                // Project sample point onto line segment, clamped to [0, 1]
+                let t = if len_sq > 0.0 {
+                    ((vx * dx + vy * dy) * inv_len_sq).clamp(0.0, 1.0)
+                } else {
+                    0.0 // degenerate: point at `from`
+                };
+
+                // Nearest point on segment
+                let nx = from.x + t * dx;
+                let ny = from.y + t * dy;
+
+                // Squared distance from sample to nearest point
+                let dist_dx = sx - nx;
+                let dist_dy = sy - ny;
+                let dist_sq = dist_dx * dist_dx + dist_dy * dist_dy;
+
+                // Early-out: fully outside the capsule
+                if dist_sq >= outer_sq {
                     continue;
                 }
-                let row_start = (py as u32 * self.width) as usize;
-                for px in (x.saturating_sub(half))..=(x.saturating_add(extra)) {
-                    if px < clip_x0 || px >= clip_x1 {
-                        continue;
-                    }
-                    let idx = row_start + px as usize;
-                    if idx < self.buffer.len() {
-                        if alpha == 255 {
-                            self.buffer[idx] = pixel;
-                        } else {
-                            let bg = self.buffer[idx];
-                            let a = alpha as u32;
-                            let inv_a = 255 - a;
-                            let bg_r = (bg >> 16) & 0xFF;
-                            let bg_g = (bg >> 8) & 0xFF;
-                            let bg_b = bg & 0xFF;
-                            let fg_r = (pixel >> 16) & 0xFF;
-                            let fg_g = (pixel >> 8) & 0xFF;
-                            let fg_b = pixel & 0xFF;
-                            let r = (fg_r * a + bg_r * inv_a) / 255;
-                            let g = (fg_g * a + bg_g * inv_a) / 255;
-                            let b = (fg_b * a + bg_b * inv_a) / 255;
-                            self.buffer[idx] = (r << 16) | (g << 8) | b;
-                        }
-                    }
-                }
-            }
 
-            if x == x1 && y == y1 {
-                break;
-            }
+                let idx = row_start + px as usize;
 
-            let e2 = err.saturating_mul(2);
-            if e2 >= dy {
-                if x == x1 {
-                    break;
+                // Fully inside the capsule (no sqrt needed)
+                if dist_sq <= inner_sq {
+                    Self::blend_pixel(self.buffer, idx, pixel, base_alpha);
+                    continue;
                 }
-                err = err.saturating_add(dy);
-                x = x.saturating_add(sx);
-            }
-            if e2 <= dx {
-                if y == y1 {
-                    break;
+
+                // AA fringe: compute actual distance for coverage
+                let dist = dist_sq.sqrt();
+                let coverage = (half_t + 0.5 - dist).clamp(0.0, 1.0);
+                let eff_alpha = (coverage * base_alpha as f32) as u8;
+                if eff_alpha > 0 {
+                    Self::blend_pixel(self.buffer, idx, pixel, eff_alpha);
                 }
-                err = err.saturating_add(dx);
-                y = y.saturating_add(sy);
             }
         }
     }

@@ -148,12 +148,12 @@ impl Widget for Collapsible {
         canvas.draw_line(
             Point::new(chevron_x + dx1, chevron_cy + dy1),
             Point::new(chevron_x + dx2, chevron_cy + dy2),
-            1, colors::muted_foreground(),
+            1.0, colors::muted_foreground(),
         );
         canvas.draw_line(
             Point::new(chevron_x + dx2, chevron_cy + dy2),
             Point::new(chevron_x + dx3, chevron_cy + dy3),
-            1, colors::muted_foreground(),
+            1.0, colors::muted_foreground(),
         );
 
         // Title text
