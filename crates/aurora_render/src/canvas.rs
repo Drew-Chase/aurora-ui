@@ -586,6 +586,15 @@ impl<'a> Canvas<'a> {
         let top_band = tl_cy.max(tr_cy);
         let bot_band = bl_cy.min(br_cy);
 
+        // Safe interior bounds: the rectangle past all inner corner curves where
+        // pixels are guaranteed to be inside the inner rounded rect. Using corner
+        // centers instead of rect edges avoids incorrectly skipping pixels in the
+        // curved corner regions (which would create square cutouts in circles).
+        let safe_x1 = in_tl_cx.max(in_bl_cx);
+        let safe_x2 = in_tr_cx.min(in_br_cx);
+        let safe_y1 = in_tl_cy.max(in_tr_cy);
+        let safe_y2 = in_bl_cy.min(in_br_cy);
+
         // Edge region width for middle-band optimization
         let left_end = ((in_x1 + 1.5).ceil().max(0.0) as u32).min(x1);
         let right_start = ((in_x2 - 1.5).floor().max(0.0) as u32).max(x0);
@@ -608,11 +617,13 @@ impl<'a> Canvas<'a> {
                 for x in rx0..rx1 {
                     let fx = x as f32 + 0.5;
 
-                    // Quick reject: definitely inside interior (no stroke here)
-                    if fx > in_x1 + 0.5
-                        && fx < in_x2 - 0.5
-                        && fy > in_y1 + 0.5
-                        && fy < in_y2 - 0.5
+                    // Quick reject: definitely inside interior (no stroke here).
+                    // Uses the safe bounds (past all inner corner curves) to avoid
+                    // incorrectly rejecting pixels in rounded corner regions.
+                    if fx > safe_x1 + 0.5
+                        && fx < safe_x2 - 0.5
+                        && fy > safe_y1 + 0.5
+                        && fy < safe_y2 - 0.5
                     {
                         continue;
                     }
