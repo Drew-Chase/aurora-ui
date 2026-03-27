@@ -253,7 +253,8 @@ impl GpuContext for GlowBackend {
         }
 
         unsafe {
-            self.gl.viewport(0, 0, width as i32, height as i32);
+            self.gl
+                .viewport(0, 0, width.min(i32::MAX as u32) as i32, height.min(i32::MAX as u32) as i32);
         }
     }
 
