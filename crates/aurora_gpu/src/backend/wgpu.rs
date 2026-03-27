@@ -197,7 +197,9 @@ impl WgpuBackend {
             cache: None,
         });
 
-        let pixel_count = (width * height) as usize;
+        let pixel_count = (width as usize)
+            .checked_mul(height as usize)
+            .expect("pixel dimensions overflow");
 
         Ok(Self {
             device,
@@ -278,7 +280,9 @@ impl GpuContext for WgpuBackend {
         }
         self.width = width;
         self.height = height;
-        let pixel_count = (width * height) as usize;
+        let pixel_count = (width as usize)
+            .checked_mul(height as usize)
+            .expect("pixel dimensions overflow");
         self.buffer.resize(pixel_count, 0);
         self.rgba_buffer.resize(pixel_count * 4, 0);
 
