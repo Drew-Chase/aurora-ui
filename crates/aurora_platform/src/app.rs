@@ -919,16 +919,15 @@ where
                 window.request_next_frame();
             }
             WindowEvent::MouseInput { state, button, .. } => {
-                if let Some(current_cursor_position) = self.current_cursor_position {
-                    window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseClickEvent(
-                        MouseClickEvent {
-                            button: translate_mouse_button(button),
-                            state: translate_mouse_state(state),
-                            position: current_cursor_position,
-                        },
-                    )));
-                    window.request_next_frame();
-                }
+                let position = self.current_cursor_position.unwrap_or_default();
+                window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseClickEvent(
+                    MouseClickEvent {
+                        button: translate_mouse_button(button),
+                        state: translate_mouse_state(state),
+                        position,
+                    },
+                )));
+                window.request_next_frame();
             }
             WindowEvent::MouseWheel { delta, .. } => {
                 let scroll_delta = match delta {
