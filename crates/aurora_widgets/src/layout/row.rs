@@ -289,6 +289,9 @@ impl Widget for Row {
                     return EventResponse {
                         handled: true,
                         cursor: response.cursor,
+                        request_focus: response.request_focus,
+                        focus_next: response.focus_next,
+                        focus_prev: response.focus_prev,
                         ..Default::default()
                     };
                 }
@@ -303,6 +306,8 @@ impl Widget for Row {
                     handled: true,
                     cursor: response.cursor,
                     request_focus: response.request_focus,
+                    focus_next: response.focus_next,
+                    focus_prev: response.focus_prev,
                     ..Default::default()
                 };
             }
