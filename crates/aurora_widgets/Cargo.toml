@@ -11,6 +11,7 @@ aurora_theme = { path = "../aurora_theme" }
 aurora_text = { path = "../aurora_text", optional = true }
 aurora_syntax = { path = "../aurora_syntax", optional = true }
 arboard = { version = "3", optional = true }
+aurora_a11y = { path = "../aurora_a11y", optional = true }
 
 
 [features]
@@ -18,3 +19,4 @@ text = ["dep:aurora_text", "aurora_render/text", "dep:arboard"]
 syntax = ["dep:aurora_syntax", "text"]
 image = ["aurora_render/image"]
 svg = ["aurora_render/svg"]
+a11y = ["dep:aurora_a11y"]

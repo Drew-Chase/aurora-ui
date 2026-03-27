@@ -54,6 +54,19 @@ pub trait Widget {
     fn needs_animation(&self) -> bool {
         self.children().iter().any(|c| c.needs_animation())
     }
+
+    /// Returns accessibility information for this widget.
+    ///
+    /// The default returns a transparent node, meaning the widget has no
+    /// semantic role and its children are promoted into the parent's child
+    /// list in the accessibility tree. Override this to declare a semantic
+    /// role (button, checkbox, text input, etc.).
+    ///
+    /// Requires the `a11y` feature.
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::transparent()
+    }
 }
 
 /// Context passed to [`Widget::layout`] during the layout phase.

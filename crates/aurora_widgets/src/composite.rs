@@ -114,6 +114,14 @@ impl<S: 'static> Widget for Composite<S> {
 	fn needs_animation(&self) -> bool {
 		self.inner.as_ref().is_some_and(|w| w.needs_animation())
 	}
+
+	#[cfg(feature = "a11y")]
+	fn access_info(&self) -> aurora_a11y::NodeInfo {
+		match &self.inner {
+			Some(inner) => inner.access_info(),
+			None => aurora_a11y::NodeInfo::transparent(),
+		}
+	}
 }
 
 /// Implement this trait on a config struct to define a composite widget.
@@ -206,5 +214,13 @@ impl<T: CompositeBuilder> Widget for CompositeWrapper<T> {
 
 	fn needs_animation(&self) -> bool {
 		self.inner.as_ref().is_some_and(|w| w.needs_animation())
+	}
+
+	#[cfg(feature = "a11y")]
+	fn access_info(&self) -> aurora_a11y::NodeInfo {
+		match &self.inner {
+			Some(inner) => inner.access_info(),
+			None => aurora_a11y::NodeInfo::transparent(),
+		}
 	}
 }
