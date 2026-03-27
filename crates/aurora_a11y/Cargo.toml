@@ -2,5 +2,7 @@
 name = "aurora_a11y"
 version = "0.1.0"
 edition = "2024"
+description = "Accessibility support for Aurora UI via AccessKit"
 
 [dependencies]
+accesskit = "0.24"
