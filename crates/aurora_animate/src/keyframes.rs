@@ -73,7 +73,11 @@ impl<T: Animatable> KeyframeAnimation<T> {
             keyframes.len() >= 2,
             "KeyframeAnimation requires at least 2 keyframes"
         );
-        keyframes.sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap());
+        keyframes.sort_by(|a, b| {
+            a.time
+                .partial_cmp(&b.time)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         Self {
             keyframes,
             duration: 1.0,

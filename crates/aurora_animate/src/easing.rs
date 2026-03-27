@@ -96,6 +96,9 @@ impl Easing {
     /// `t` is clamped to 0.0..=1.0 before evaluation.
     /// The return value may exceed that range for `Elastic` and `Back` easings.
     pub fn apply(&self, t: f32) -> f32 {
+        if !t.is_finite() {
+            return 0.0;
+        }
         let t = t.clamp(0.0, 1.0);
         match self {
             Self::Linear => t,
