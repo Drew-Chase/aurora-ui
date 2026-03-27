@@ -19,6 +19,7 @@ pub fn page_kbd() -> impl Widget {
         ))
         .child(code_block::CodeBlock::new().language("rust").code(
 r#"Kbd::new("Ctrl")
+label::Label::new("+")
 Kbd::new("S")
 Kbd::new("Ctrl+Shift+P")"#
         ).font_size(13.0))
