@@ -34,12 +34,10 @@ members = [
 ]
 default-members = [
     "aurora",
-    "crates/aurora_a11y",
     "crates/aurora_animate",
     "crates/aurora_core",
     "crates/aurora_macros",
     "crates/aurora_gpu",
-    "crates/aurora_layout",
     "crates/aurora_platform",
     "crates/aurora_render",
     "crates/aurora_text",
