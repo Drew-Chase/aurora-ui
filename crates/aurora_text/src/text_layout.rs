@@ -165,9 +165,9 @@ impl TextLayout {
                                     let fg_b = pixel & 0xFF;
                                     let a = alpha as u32;
                                     let inv_a = 255 - a;
-                                    let r = (fg_r * a + bg_r * inv_a) / 255;
-                                    let g = (fg_g * a + bg_g * inv_a) / 255;
-                                    let b = (fg_b * a + bg_b * inv_a) / 255;
+                                    let r = (fg_r * a + bg_r * inv_a + 127) / 255;
+                                    let g = (fg_g * a + bg_g * inv_a + 127) / 255;
+                                    let b = (fg_b * a + bg_b * inv_a + 127) / 255;
                                     buffer[idx] = (r << 16) | (g << 8) | b;
                                 }
                             }
@@ -272,9 +272,9 @@ impl TextLayout {
                                     let fg_b = pixel & 0xFF;
                                     let a = alpha as u32;
                                     let inv_a = 255 - a;
-                                    let r = (fg_r * a + bg_r * inv_a) / 255;
-                                    let g = (fg_g * a + bg_g * inv_a) / 255;
-                                    let b = (fg_b * a + bg_b * inv_a) / 255;
+                                    let r = (fg_r * a + bg_r * inv_a + 127) / 255;
+                                    let g = (fg_g * a + bg_g * inv_a + 127) / 255;
+                                    let b = (fg_b * a + bg_b * inv_a + 127) / 255;
                                     buffer[idx] = (r << 16) | (g << 8) | b;
                                 }
                             }
