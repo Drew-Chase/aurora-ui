@@ -127,21 +127,25 @@ impl Widget for HoverCard {
             trigger.paint(canvas, rect);
         }
 
-        // Paint hover card when hovered
-        if self.hovered {
-            let cr = self.card_rect(&rect);
-            canvas.fill_rounded_rect(cr, self.corners, self.background);
-            canvas.stroke_rounded_rect(cr, self.corners, 1, self.border_color);
+    }
 
-            if let Some(ref content) = self.content {
-                let content_rect = Rect::new(
-                    cr.x1 + self.padding.left,
-                    cr.y1 + self.padding.top,
-                    cr.x1 + self.padding.left + self.content_size.width,
-                    cr.y1 + self.padding.top + self.content_size.height,
-                );
-                content.paint(canvas, content_rect);
-            }
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+        if !self.hovered {
+            return;
+        }
+
+        let cr = self.card_rect(&rect);
+        canvas.fill_rounded_rect(cr, self.corners, self.background);
+        canvas.stroke_rounded_rect(cr, self.corners, 1, self.border_color);
+
+        if let Some(ref content) = self.content {
+            let content_rect = Rect::new(
+                cr.x1 + self.padding.left,
+                cr.y1 + self.padding.top,
+                cr.x1 + self.padding.left + self.content_size.width,
+                cr.y1 + self.padding.top + self.content_size.height,
+            );
+            content.paint(canvas, content_rect);
         }
     }
 

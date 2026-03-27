@@ -88,7 +88,7 @@ impl Text {
         self
     }
 
-    /// Sets the text color. Defaults to [`Color::BLACK`].
+    /// Sets the text color. Defaults to the theme's foreground color.
     pub fn color(mut self, color: Color) -> Self {
         self.color = color;
         self
@@ -130,7 +130,7 @@ impl Default for Text {
         Self {
             text: String::new(),
             font: FontOptions::default(),
-            color: Color::BLACK,
+            color: aurora_theme::color(aurora_theme::slots::FOREGROUND),
             padding: Edges::zero(),
             align: Align::Start,
             justify: Justify::Start,

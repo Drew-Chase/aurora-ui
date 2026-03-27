@@ -97,10 +97,10 @@ impl Toast {
     fn bg_color(&self) -> Color {
         match self.variant {
             ToastVariant::Default => colors::background(),
-            ToastVariant::Success => Color::new(240, 253, 244, 255),
-            ToastVariant::Error => Color::new(254, 242, 242, 255),
-            ToastVariant::Warning => Color::new(254, 252, 232, 255),
-            ToastVariant::Info => Color::new(239, 246, 255, 255),
+            ToastVariant::Success => colors::success().opacity(0.15),
+            ToastVariant::Error => colors::destructive().opacity(0.15),
+            ToastVariant::Warning => colors::warning().opacity(0.15),
+            ToastVariant::Info => colors::info().opacity(0.15),
         }
     }
 
@@ -118,10 +118,10 @@ impl Toast {
     fn fg_color(&self) -> Color {
         match self.variant {
             ToastVariant::Default => colors::foreground(),
-            ToastVariant::Success => Color::new(22, 163, 74, 255),
-            ToastVariant::Error => colors::destructive(),
-            ToastVariant::Warning => Color::new(161, 98, 7, 255),
-            ToastVariant::Info => Color::new(37, 99, 235, 255),
+            ToastVariant::Success => colors::success_foreground(),
+            ToastVariant::Error => colors::destructive_foreground(),
+            ToastVariant::Warning => colors::warning_foreground(),
+            ToastVariant::Info => colors::info_foreground(),
         }
     }
 }

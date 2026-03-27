@@ -8,12 +8,14 @@ pub fn page_command() -> impl Widget {
         .child(crate::page_header("Command", "A command palette for keyboard-driven navigation."))
         .child(crate::example_section("Default", "A searchable command list, typically opened with Ctrl+K."))
         .child(crate::example_card(
-            command::Command::new()
-                .open(true)
-                .command("New File", || {})
-                .command("Open File", || {})
-                .command("Save", || {})
-                .command("Settings", || {})
+            BoxWidget::new().height(400).child(
+                command::Command::new()
+                    .open(true)
+                    .command("New File", || {})
+                    .command("Open File", || {})
+                    .command("Save", || {})
+                    .command("Settings", || {})
+            )
         ))
         .child(code_block::CodeBlock::new().language("rust").code(
 r#"Command::new()

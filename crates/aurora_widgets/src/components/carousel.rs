@@ -1,5 +1,4 @@
 use crate::widgets::{EventResponse, LayoutCtx, Widget};
-use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
@@ -183,7 +182,7 @@ impl Widget for Carousel {
         // Arrows
         if self.show_arrows && self.slides.len() > 1 {
             let arrow_corners = Corners::all(self.arrow_size / 2.0);
-            let arrow_bg = Color::new(255, 255, 255, 200);
+            let arrow_bg = colors::background().opacity(0.8);
 
             // Previous
             let pr = self.prev_rect(&rect);
@@ -227,7 +226,7 @@ impl Widget for Carousel {
                 let color = if i == self.current {
                     colors::primary()
                 } else {
-                    Color::new(255, 255, 255, 180)
+                    colors::muted_foreground()
                 };
                 canvas.fill_rounded_rect(dot_rect, dot_corners, color);
             }

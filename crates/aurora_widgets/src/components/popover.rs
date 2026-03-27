@@ -177,21 +177,25 @@ impl Widget for Popover {
             trigger.paint(canvas, rect);
         }
 
-        // Paint popover when open
-        if self.open {
-            let pr = self.popover_rect(&rect);
-            canvas.fill_rounded_rect(pr, self.corners, self.background);
-            canvas.stroke_rounded_rect(pr, self.corners, 1, self.border_color);
+    }
 
-            if let Some(ref content) = self.content {
-                let content_rect = Rect::new(
-                    pr.x1 + self.padding.left,
-                    pr.y1 + self.padding.top,
-                    pr.x1 + self.padding.left + self.content_size.width,
-                    pr.y1 + self.padding.top + self.content_size.height,
-                );
-                content.paint(canvas, content_rect);
-            }
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+        if !self.open {
+            return;
+        }
+
+        let pr = self.popover_rect(&rect);
+        canvas.fill_rounded_rect(pr, self.corners, self.background);
+        canvas.stroke_rounded_rect(pr, self.corners, 1, self.border_color);
+
+        if let Some(ref content) = self.content {
+            let content_rect = Rect::new(
+                pr.x1 + self.padding.left,
+                pr.y1 + self.padding.top,
+                pr.x1 + self.padding.left + self.content_size.width,
+                pr.y1 + self.padding.top + self.content_size.height,
+            );
+            content.paint(canvas, content_rect);
         }
     }
 

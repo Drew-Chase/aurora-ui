@@ -225,7 +225,7 @@ impl Widget for DataTable {
             let row_y = rect.y1 + self.header_height + self.row_height * display_idx as f32;
 
             let bg = if self.striped && display_idx % 2 == 1 {
-                Color::new(250, 250, 250, 255)
+                colors::muted()
             } else {
                 colors::background()
             };

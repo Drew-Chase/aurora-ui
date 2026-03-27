@@ -505,15 +505,33 @@ impl Widget for ScrollView {
             }
             MouseEvent::MouseScrollEvent(delta) => {
                 if viewport.contains(&self.last_mouse_pos) {
+                    // Forward to child first so nested ScrollViews get priority
+                    if let Some(child) = &mut self.child {
+                        let scrolled_rect = Rect::new(
+                            rect.x1 + self.padding.left,
+                            rect.y1 + self.padding.top - offset,
+                            rect.x1 + self.padding.left + self.child_size.width,
+                            rect.y1 + self.padding.top - offset + self.child_size.height,
+                        );
+                        let resp = child.event(&WidgetEvent::Mouse(*mouse), scrolled_rect);
+                        if resp.handled {
+                            return resp;
+                        }
+                    }
+                    // Child didn't handle it — scroll ourselves
+                    let old_offset = self.scroll_offset;
                     self.scroll_offset =
                         (self.scroll_offset - delta * SCROLL_SPEED).clamp(0.0, self.max_scroll);
                     if let Some(ref state) = self.state {
                         state.set(self.scroll_offset);
                     }
-                    return EventResponse {
-                        handled: true,
-                        ..Default::default()
-                    };
+                    // Only consume if we actually moved
+                    if (self.scroll_offset - old_offset).abs() > 0.001 {
+                        return EventResponse {
+                            handled: true,
+                            ..Default::default()
+                        };
+                    }
                 }
                 EventResponse::default()
             }

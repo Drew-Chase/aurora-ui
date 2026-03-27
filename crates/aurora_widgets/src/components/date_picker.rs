@@ -178,6 +178,9 @@ impl Widget for DatePicker {
             colors::muted_foreground(),
         );
 
+    }
+
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
         if !self.open {
             return;
         }

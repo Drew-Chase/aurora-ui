@@ -8,17 +8,19 @@ pub fn page_dialog() -> impl Widget {
         .child(crate::page_header("Dialog", "A modal dialog with backdrop overlay."))
         .child(crate::example_section("Default", "A centered dialog with title, content, and footer actions."))
         .child(crate::example_card(
-            dialog::Dialog::new()
-                .open(true)
-                .title("Are you sure?")
-                .content(Text::new("This action cannot be undone. This will permanently delete your account."))
-                .footer(
-                    row!()
-                        .spacing(8.0)
-                        .justify(Justify::End)
-                        .child(button!("Cancel"))
-                        .child(button!("Continue"))
-                )
+            BoxWidget::new().height(300).child(
+                dialog::Dialog::new()
+                    .open(true)
+                    .title("Are you sure?")
+                    .content(Text::new("This action cannot be undone. This will permanently delete your account."))
+                    .footer(
+                        row!()
+                            .spacing(8.0)
+                            .justify(Justify::End)
+                            .child(button!("Cancel"))
+                            .child(button!("Continue"))
+                    )
+            )
         ))
         .child(code_block::CodeBlock::new().language("rust").code(
 r#"Dialog::new()

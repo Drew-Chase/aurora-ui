@@ -164,32 +164,36 @@ impl Widget for Menubar {
             x += menu_w;
         }
 
-        // Active dropdown
-        if let Some(menu_idx) = self.active_menu {
-            let dr = self.dropdown_rect(menu_idx, &rect);
-            let drop_corners = Corners::all(6.0);
-            canvas.fill_rounded_rect(dr, drop_corners, colors::popover());
-            canvas.stroke_rounded_rect(dr, drop_corners, 1, self.border_color);
+    }
 
-            let mut iy = dr.y1 + 4.0;
-            if let Some(item_layouts) = self.item_layouts.get(menu_idx) {
-                for (j, layout) in item_layouts.iter().enumerate() {
-                    let item_rect = Rect::new(dr.x1 + 4.0, iy, dr.x2 - 4.0, iy + self.item_height);
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+        let Some(menu_idx) = self.active_menu else {
+            return;
+        };
 
-                    if self.hover_item == Some(j) {
-                        let item_corners = Corners::all(4.0);
-                        canvas.fill_rounded_rect(item_rect, item_corners, self.hover_bg);
-                    }
+        let dr = self.dropdown_rect(menu_idx, &rect);
+        let drop_corners = Corners::all(6.0);
+        canvas.fill_rounded_rect(dr, drop_corners, colors::popover());
+        canvas.stroke_rounded_rect(dr, drop_corners, 1, self.border_color);
 
-                    if let Some(tl) = layout {
-                        let th = tl.size().height;
-                        let tx = item_rect.x1 + 8.0;
-                        let ty = iy + (self.item_height - th) / 2.0;
-                        canvas.draw_text(tl, tx as i32, ty as i32);
-                    }
+        let mut iy = dr.y1 + 4.0;
+        if let Some(item_layouts) = self.item_layouts.get(menu_idx) {
+            for (j, layout) in item_layouts.iter().enumerate() {
+                let item_rect = Rect::new(dr.x1 + 4.0, iy, dr.x2 - 4.0, iy + self.item_height);
 
-                    iy += self.item_height;
+                if self.hover_item == Some(j) {
+                    let item_corners = Corners::all(4.0);
+                    canvas.fill_rounded_rect(item_rect, item_corners, self.hover_bg);
                 }
+
+                if let Some(tl) = layout {
+                    let th = tl.size().height;
+                    let tx = item_rect.x1 + 8.0;
+                    let ty = iy + (self.item_height - th) / 2.0;
+                    canvas.draw_text(tl, tx as i32, ty as i32);
+                }
+
+                iy += self.item_height;
             }
         }
     }

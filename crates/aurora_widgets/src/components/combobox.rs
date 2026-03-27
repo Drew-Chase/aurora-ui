@@ -205,6 +205,9 @@ impl Widget for Combobox {
             colors::muted_foreground(),
         );
 
+    }
+
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
         if !self.open || self.filtered_indices.is_empty() {
             return;
         }
