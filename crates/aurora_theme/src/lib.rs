@@ -137,7 +137,9 @@ static USER_THEME: OnceLock<ThemeOverride> = OnceLock::new();
 
 /// Register user theme color overrides. Called by generated config!() code.
 pub fn register_colors(profiles: Vec<Vec<Color>>) {
-    let _ = USER_THEME.set(ThemeOverride { colors: profiles });
+    if USER_THEME.set(ThemeOverride { colors: profiles }).is_err() {
+        log::warn!("Theme colors already registered; ignoring duplicate registration");
+    }
 }
 
 /// Look up a color by slot, using user theme if available, else default.

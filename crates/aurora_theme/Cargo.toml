@@ -6,3 +6,4 @@ description = "Runtime theme profile management for Aurora UI."
 
 [dependencies]
 aurora_core = { path = "../aurora_core" }
+log = "0.4"
