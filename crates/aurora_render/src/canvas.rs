@@ -329,8 +329,8 @@ impl<'a> Canvas<'a> {
         let bl = corners.bottom_left * scale;
         let br = corners.bottom_right * scale;
 
-        let mut x0 = (rect.x1.max(0.0) as u32).min(self.width);
-        let mut y0 = (rect.y1.max(0.0) as u32).min(self.height);
+        let mut x0 = (rect.x1.floor().max(0.0) as u32).min(self.width);
+        let mut y0 = (rect.y1.floor().max(0.0) as u32).min(self.height);
         let mut x1 = (rect.x2.ceil().max(0.0) as u32).min(self.width);
         let mut y1 = (rect.y2.ceil().max(0.0) as u32).min(self.height);
 
@@ -540,8 +540,8 @@ impl<'a> Canvas<'a> {
         let bl_in = (bl - t).max(0.0);
         let br_in = (br - t).max(0.0);
 
-        let mut x0 = (rect.x1.max(0.0) as u32).min(self.width);
-        let mut y0 = (rect.y1.max(0.0) as u32).min(self.height);
+        let mut x0 = (rect.x1.floor().max(0.0) as u32).min(self.width);
+        let mut y0 = (rect.y1.floor().max(0.0) as u32).min(self.height);
         let mut x1 = (rect.x2.ceil().max(0.0) as u32).min(self.width);
         let mut y1 = (rect.y2.ceil().max(0.0) as u32).min(self.height);
 
