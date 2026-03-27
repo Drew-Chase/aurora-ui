@@ -43,12 +43,14 @@ fn get_hwnd(window: &winit::window::Window) -> Option<HWND> {
 fn apply_rounded_corners(hwnd: HWND) {
     let preference = DWMWCP_ROUND;
     unsafe {
-        let _ = DwmSetWindowAttribute(
+        if let Err(e) = DwmSetWindowAttribute(
             hwnd,
             DWMWA_WINDOW_CORNER_PREFERENCE,
             &preference as *const DWM_WINDOW_CORNER_PREFERENCE as *const c_void,
             size_of::<DWM_WINDOW_CORNER_PREFERENCE>() as u32,
-        );
+        ) {
+            log::warn!("DwmSetWindowAttribute (rounded corners) failed: {e}");
+        }
     }
 }
 
@@ -60,16 +62,23 @@ fn apply_drop_shadow(hwnd: HWND) {
         cyBottomHeight: 1,
     };
     unsafe {
-        let _ = DwmExtendFrameIntoClientArea(hwnd, &margins);
+        if let Err(e) = DwmExtendFrameIntoClientArea(hwnd, &margins) {
+            log::warn!("DwmExtendFrameIntoClientArea (drop shadow) failed: {e}");
+        }
     }
 }
 
 fn install_custom_frame(hwnd: HWND) {
     unsafe {
-        let _ = SetWindowSubclass(hwnd, Some(custom_frame_proc), SUBCLASS_ID, 0);
+        if !SetWindowSubclass(hwnd, Some(custom_frame_proc), SUBCLASS_ID, 0).as_bool() {
+            log::warn!("SetWindowSubclass (custom frame) failed");
+        }
     }
 }
 
+// SAFETY: This callback is registered via SetWindowSubclass and invoked by the
+// Windows message loop with a valid hwnd. lparam encodes screen coordinates as
+// (x | (y << 16)) per the WM_NCHITTEST convention.
 unsafe extern "system" fn custom_frame_proc(
     hwnd: HWND,
     msg: u32,
