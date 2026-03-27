@@ -301,6 +301,10 @@ impl Widget for AnimatedBg {
         self.inner.paint(canvas, rect);
     }
 
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+        self.inner.paint_overlay(canvas, rect);
+    }
+
     fn children(&self) -> &[Box<dyn Widget>] {
         self.inner.children()
     }
@@ -333,6 +337,10 @@ impl Widget for ChildProxy {
         self.inner.borrow().paint(canvas, rect);
     }
 
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+        self.inner.borrow().paint_overlay(canvas, rect);
+    }
+
     fn children(&self) -> &[Box<dyn Widget>] {
         &[]
     }
@@ -354,6 +362,10 @@ impl Widget for FlexProxy {
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
         self.inner.borrow().paint(canvas, rect);
+    }
+
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+        self.inner.borrow().paint_overlay(canvas, rect);
     }
 
     fn children(&self) -> &[Box<dyn Widget>] {
