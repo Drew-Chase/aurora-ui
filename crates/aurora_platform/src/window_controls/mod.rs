@@ -289,6 +289,9 @@ fn close_window(window: &winit::window::Window) {
 
     if let Ok(handle) = window.window_handle() {
         if let RawWindowHandle::AppKit(h) = handle.as_raw() {
+            // SAFETY: h.ns_window is a valid, non-null pointer to an NSWindow
+            // provided by winit's HasWindowHandle implementation. The pointer
+            // remains valid for the duration of this scope.
             unsafe {
                 let ns_window: &objc2_app_kit::NSWindow =
                     &*(h.ns_window.as_ptr() as *const objc2_app_kit::NSWindow);
