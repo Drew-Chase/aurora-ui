@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 aurora_core = { path = "../aurora_core" }
 cosmic-text = {version =  "0.18.2" }
+log = "0.4"

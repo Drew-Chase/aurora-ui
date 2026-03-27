@@ -36,12 +36,18 @@ impl FontManager {
     ///
     /// This is the preferred method when embedding fonts with `include_bytes!`.
     pub fn load_from_bytes(&mut self, bytes: &[u8]) -> Option<String> {
+        let byte_len = bytes.len();
         let db = self.font_system.db_mut();
         let bytes = Arc::new(bytes.to_vec());
         let font_source = Source::Binary(bytes);
         let id = db.load_font_source(font_source);
-        id.first()
-            .and_then(|face_id| db.face(*face_id).map(|face| face.families[0].0.clone()))
+        let result = id
+            .first()
+            .and_then(|face_id| db.face(*face_id).map(|face| face.families[0].0.clone()));
+        if result.is_none() {
+            log::warn!("Failed to load font from {byte_len} bytes");
+        }
+        result
     }
 
     /// Returns a mutable reference to the underlying [`cosmic_text::FontSystem`].
