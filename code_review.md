@@ -1,415 +1,455 @@
-# AuroraUI Code Review
+# Aurora UI Framework — Code Review
 
 **Date:** 2026-03-26
-**Scope:** Full codebase audit — bugs, performance, API design, production readiness
-**Codebase:** 15 crates, 14 examples, ~20k lines of Rust
+**Scope:** Full codebase (10 crates, ~12,000 LOC, 100+ files)
+**Verdict:** Early-stage framework. Solid foundations in core types and rendering, but multiple correctness and safety issues block production use.
 
----
-
-## Executive Summary
-
-AuroraUI is a well-architected GPU-accelerated UI framework with clean crate separation, correct feature gating, and solid foundational types. The core geometry and color types are production-quality. However, several bugs in the widget/layout layer, missing error handling in GPU backends, and zero test coverage put it firmly in **alpha** status.
-
-| Severity  | Count  |
-|-----------|--------|
-| Critical  | 1      |
-| High      | 5      |
-| Medium    | 7      |
-| Low       | 6      |
-| **Total** | **19** |
+| Severity | Count |
+|----------|-------|
+| Critical | 4 |
+| High     | 5 |
+| Medium   | 7 |
+| Low      | 6 |
 
 ---
 
 ## Critical Issues
 
-### 1. Compilation failure without `text` feature
+### C1. Negative hue wraps to garbage color in `from_hsla`
 
-**File:** `crates/aurora_platform/src/app.rs:434-443`
-**Severity:** Critical
-
-The `AppWindow` struct declares `focused_widget_id: Option<u64>` unconditionally (line 138), but the `#[cfg(not(feature = "text"))]` constructor branch omits this field:
+**File:** `crates/aurora_core/src/color.rs:104`
 
 ```rust
-#[cfg(not(feature = "text"))]
-Ok(Self {
-window_handle,
-gpu,
-root_widget: None,
-_cursor: winit::window::CursorIcon::Default,
-last_mouse_position: None,
-next_frame_requested: false,
-background_color: config.background_color,
-// BUG: missing focused_widget_id: None,
-})
+let h = hue.into() as f32 % 360.0;
+// ...
+let (r1, g1, b1) = match h as u32 {
+    0..60 => (c, x, 0.0),
+    // ...
+};
 ```
 
-The `#[cfg(feature = "text")]` branch at line 420 correctly includes it. Any build without the `text` feature will fail to compile.
+Rust's `%` on floats preserves sign. A hue of `-10` produces `h = -10.0`. Casting `-10.0 as u32` saturates to `0` on current Rust (was previously undefined/implementation-defined). While saturation to 0 happens to land in the first match arm, this is accidental — the behavior is platform-dependent in older compiler versions and semantically wrong.
 
-**Fix:** Add `focused_widget_id: None,` to the non-text branch at line 441.
+**Fix:**
+```rust
+let h = ((hue.into() as f32 % 360.0) + 360.0) % 360.0;
+```
+
+---
+
+### C2. Panicking `.expect()` in `window_event`
+
+**File:** `crates/aurora_platform/src/app.rs:867-870`
+
+```rust
+let window = self
+    .window
+    .as_mut()
+    .expect("Window redraw request without a valid window");
+```
+
+If a `WindowEvent` arrives before `resumed()` creates the window (possible on some platforms or during rapid suspend/resume cycles), this panics with no recovery. The codebase already uses `if let Some(window)` elsewhere for similar checks.
+
+**Fix:** Replace with `let Some(window) = self.window.as_mut() else { return; };`
+
+---
+
+### C3. NaN panic in keyframe sort
+
+**File:** `crates/aurora_animate/src/keyframes.rs:76`
+
+```rust
+keyframes.sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap());
+```
+
+If any keyframe's `time` field is NaN (e.g., from a bad calculation upstream), `partial_cmp` returns `None` and `.unwrap()` panics. Animation input often comes from user-controlled values.
+
+**Fix:**
+```rust
+keyframes.sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap_or(std::cmp::Ordering::Equal));
+```
+
+---
+
+### C4. Image buffer index overflow in `draw_image`
+
+**File:** `crates/aurora_render/src/canvas.rs:697`
+
+```rust
+let src_idx = ((sy * img_width + sx) * 4) as usize;
+```
+
+`sy`, `img_width`, and `sx` are all `u32`. The multiplication `sy * img_width` can silently wrap on large images (e.g., 65536x65536 would overflow). The subsequent bounds check on line 698 catches some cases but operates on the already-wrapped value.
+
+**Fix:** Compute in `usize` to avoid u32 wrapping:
+```rust
+let src_idx = ((sy as usize) * (img_width as usize) + (sx as usize)) * 4;
+```
 
 ---
 
 ## High Severity Issues
 
-### 2. SpaceBetween layout doesn't fill container when spacing > 0
+### H1. Softbuffer resize failure silently creates buffer/surface mismatch
 
-**Files:** `crates/aurora_widgets/src/layout/column.rs:162-178`, `crates/aurora_widgets/src/layout/row.rs:162-176`
-**Severity:** High
-
-When `justify == SpaceBetween`, the layout calculates leftover space *after* subtracting the original `self.spacing`:
+**File:** `crates/aurora_gpu/src/backend/softbuffer.rs:40-49`
 
 ```rust
-let total_height = total_child_height + total_spacing; // includes self.spacing
-let leftover = (content_height - total_height).max(0.0);
-
-let actual_spacing = if self .justify == Justify::SpaceBetween & & self .children.len() > 1 {
-leftover / ( self.children.len() - 1) as f32  // leftover is too small by total_spacing
-} else {
-self.spacing
-};
-```
-
-SpaceBetween should distribute *all* remaining space (after children) as gaps. With `self.spacing > 0`, `total_spacing` worth of space is unaccounted for — items won't reach the container edges. The same bug exists in both Column and Row.
-
-**Fix:** When `justify == SpaceBetween`, use `self.spacing = 0` in the initial `total_spacing` calculation, or compute `actual_spacing` as `(content_height - total_child_height) / (n - 1)` directly.
-
----
-
-### 3. TextInput O(n^2) character position calculation
-
-**File:** `crates/aurora_widgets/src/text_input.rs:428-434`
-**Severity:** High — Performance
-
-During every layout pass, character x-positions are built by creating a *new* `TextLayout` for each character:
-
-```rust
-self .char_x_positions.clear();
-let mut running = String::new();
-for ch in display.chars() {
-running.push(ch);
-let cl = TextLayout::new(ctx.font_manager, & running, & resolved, self.color, None);
-self.char_x_positions.push(cl.size().width);
+self.width = width;
+self.height = height;
+self.buffer.resize((width * height) as usize, 0);
+// ...
+if let Err(e) = self.surface.resize(w, h) {
+    log::error!("Failed to resize softbuffer surface: {e}");
 }
 ```
 
-Each `TextLayout::new` involves cosmic_text font shaping. For N characters, this creates N layout instances shaping strings of length 1..N — O(n^2) total work. A 100-character input triggers 100 font shaping passes per layout.
+The internal buffer is resized unconditionally (line 42), but if the surface resize fails (line 47), the surface retains its old dimensions. On `present()`, the size mismatch is partially handled (line 78: `let len = surface_buffer.len().min(self.buffer.len())`) but results in a truncated or corrupted frame.
 
-**Fix:** Use a single `TextLayout` for the full display text and extract per-glyph x-advances from `layout_runs()` glyph data. This reduces the work to O(n).
-
----
-
-### 4. OpenGL shader leak on program link failure
-
-**File:** `crates/aurora_gpu/src/backend/glow.rs:206-209`
-**Severity:** High — Resource leak
-
-When shader program linking fails, the vertex and fragment shaders are not deleted:
-
+**Fix:** Only update internal state after surface resize succeeds:
 ```rust
-if ! gl.get_program_link_status(program) {
-let log = gl.get_program_info_log(program);
-gl.delete_program(program);
-return Err(format ! ("Program link error: {log}"));
-// BUG: vs and fs shaders are leaked
+fn resize(&mut self, width: u32, height: u32) {
+    if width == 0 || height == 0 { return; }
+    if let (Some(w), Some(h)) = (NonZeroU32::new(width), NonZeroU32::new(height)) {
+        if let Err(e) = self.surface.resize(w, h) {
+            log::error!("Failed to resize softbuffer surface: {e}");
+            return; // Don't update internal state
+        }
+    }
+    self.width = width;
+    self.height = height;
+    self.buffer.resize((width * height) as usize, 0);
 }
 ```
 
-Compare with the success path (lines 212-215) which correctly detaches and deletes both shaders.
-
-**Fix:** Add `gl.delete_shader(vs); gl.delete_shader(fs);` before the `return Err(...)` on line 209.
-
 ---
 
-### 5. Softbuffer surface resize error silently ignored
+### H2. Integer blend math has rounding bias (cumulative color darkening)
 
-**File:** `crates/aurora_gpu/src/backend/softbuffer.rs:47`
-**Severity:** High
+**File:** `crates/aurora_render/src/canvas.rs:100-102`
 
 ```rust
-let _ = self .surface.resize(w, h);
+let r = (fg_r * a + bg_r * inv_a) / 255;
+let g = (fg_g * a + bg_g * inv_a) / 255;
+let b = (fg_b * a + bg_b * inv_a) / 255;
 ```
 
-If `surface.resize()` fails, `self.buffer` has already been resized (line 42) but the OS surface hasn't. The next `present()` will `copy_from_slice` into a surface buffer of the wrong size — either truncating content or panicking.
+Integer division truncates toward zero. For semi-transparent layers, each blend operation loses up to 1 unit per channel. In complex UIs with many overlapping semi-transparent elements, this produces visibly darker-than-expected results.
 
-**Fix:** Propagate the error or log it and skip the buffer resize. At minimum, resize the internal buffer only after confirming the surface resize succeeded.
+**Fix:** Add half-divisor for rounding:
+```rust
+let r = (fg_r * a + bg_r * inv_a + 127) / 255;
+```
 
 ---
 
-### 6. ImageData::from_raw() accepts invalid dimensions
+### H3. Asymmetric rounding in SDF rounded rect bounds
 
-**File:** `crates/aurora_render/src/image_data.rs:37-43`
-**Severity:** High
+**File:** `crates/aurora_render/src/canvas.rs:332-335`
 
 ```rust
-pub fn from_raw(pixels: Vec<u8>, width: u32, height: u32) -> Self {
-	Self { pixels, width, height }
+let mut x0 = (rect.x1.max(0.0) as u32).min(self.width);
+let mut y0 = (rect.y1.max(0.0) as u32).min(self.height);
+let mut x1 = (rect.x2.ceil().max(0.0) as u32).min(self.width);
+let mut y1 = (rect.y2.ceil().max(0.0) as u32).min(self.height);
+```
+
+`x0`/`y0` use truncation (`as u32` truncates) while `x1`/`y1` use `.ceil()`. For fractional coordinates, this creates a 1px expansion on the right/bottom but not on the left/top. SDF anti-aliasing depends on pixel-center sampling; inconsistent bounds cause asymmetric coverage at edges.
+
+**Fix:** Use `.floor()` for the start coordinates:
+```rust
+let mut x0 = (rect.x1.floor().max(0.0) as u32).min(self.width);
+let mut y0 = (rect.y1.floor().max(0.0) as u32).min(self.height);
+```
+
+---
+
+### H4. `debug_assert` in `ImageData::from_raw` stripped in release builds
+
+**File:** `crates/aurora_render/src/image_data.rs:41-45`
+
+```rust
+debug_assert_eq!(
+    pixels.len(),
+    (width as usize) * (height as usize) * 4,
+    "pixel buffer length must match width * height * 4"
+);
+```
+
+In release builds, `debug_assert` is removed. A caller passing mismatched dimensions gets an `ImageData` that causes out-of-bounds reads in `draw_image()`. The bounds check in `draw_image` (canvas.rs:698) catches some cases but not all due to the u32 overflow issue (C4).
+
+**Fix:** Use a proper `assert!` or return `Result`:
+```rust
+pub fn from_raw(pixels: Vec<u8>, width: u32, height: u32) -> Option<Self> {
+    if pixels.len() != (width as usize) * (height as usize) * 4 {
+        return None;
+    }
+    Some(Self { pixels, width, height })
 }
 ```
 
-No validation that `pixels.len() == (width * height * 4) as usize`. Callers can create an `ImageData` with mismatched dimensions. When `Canvas::draw_image` later indexes into `pixels` using `width * y + x`, it will read out of bounds or produce garbled output.
+---
 
-**Fix:** Add a debug assertion or return `Result`:
+### H5. Windows titlebar API failures silently swallowed
+
+**File:** `crates/aurora_platform/src/windows_titlebar.rs:23-31`
 
 ```rust
-debug_assert_eq!(pixels.len(), (width as usize) * (height as usize) * 4,
-                 "pixel buffer length must match width * height * 4");
+pub fn apply(window: &winit::window::Window) {
+    let Some(hwnd) = get_hwnd(window) else {
+        log::warn!("Failed to extract HWND from winit window");
+        return;
+    };
+    apply_rounded_corners(hwnd);
+    apply_drop_shadow(hwnd);
+    install_custom_frame(hwnd);
+}
+```
+
+`apply_rounded_corners`, `apply_drop_shadow`, and `install_custom_frame` each call Windows APIs (`DwmSetWindowAttribute`, `DwmExtendFrameIntoClientArea`, `SetWindowSubclass`) that can fail. Errors are not logged or returned. On older Windows versions or remote desktop sessions, these fail silently and the window renders without expected decorations.
+
+**Fix:** Log per-call results at minimum, or return `Result` so the caller can decide:
+```rust
+pub fn apply(window: &winit::window::Window) -> Result<(), Vec<String>> {
+    // ... collect and return errors
+}
 ```
 
 ---
 
 ## Medium Severity Issues
 
-### 7. Flex detection heuristic misidentifies fixed-size widgets
+### M1. `winit` is an unconditional dependency in `aurora_gpu`
 
-**Files:** `crates/aurora_widgets/src/layout/column.rs:127`, `crates/aurora_widgets/src/layout/row.rs:125`
-**Severity:** Medium
+**File:** `crates/aurora_gpu/Cargo.toml:11`
 
-```rust
-if size.height > = content_area.height {
-child_sizes.push(None); // treated as flexible
-flex_count += 1;
-}
+```toml
+winit = "0.30"
 ```
 
-A widget that returns *exactly* the available height (because it fits perfectly, not because it wants to fill) is treated as flexible and re-laid-out in a second pass with a potentially different available size. This causes correct size-to-content widgets to be force-stretched.
+Per the project's architecture principles, `aurora_gpu` should receive window handles through its constructor, not depend on winit directly. This couples the GPU abstraction to a specific windowing library, preventing use with other windowing solutions.
 
-**Fix:** Use an explicit `fill` or `flex` property on widgets instead of inferring flex behavior from the returned size.
+**Fix:** Feature-gate winit behind each backend that needs it, or accept `impl HasRawWindowHandle` instead of `Arc<winit::window::Window>`.
 
 ---
 
-### 8. Tab order rebuilt on every Tab keypress
+### M2. Timeline resets and re-ticks all tracks every frame
 
-**File:** `crates/aurora_platform/src/app.rs:577-609`
-**Severity:** Medium — Performance
+**File:** `crates/aurora_animate/src/timeline.rs:64-71`
 
 ```rust
-if response.focus_next | | response.focus_prev {
-let mut tab_widgets: Vec < (u32, u64) > = Vec::new();
-collect_tab_widgets(widget.as_ref(), & mut tab_widgets); // O(n) tree walk
-tab_widgets.sort_by_key( | (idx, _) | * idx);               // O(n log n) sort
-// ...
+for track in &mut self.tracks {
+    let track_time = self.elapsed - track.offset;
+    if track_time > 0.0 {
+        track.tween.reset();
+        track.tween.tick(track_time);
+    }
 }
 ```
 
-The entire widget tree is traversed and sorted on every Tab keypress. For small UIs this is fine, but it scales poorly.
+Every `tick()` call resets every active track to zero and replays from the start. For N tracks, this is O(N) work per frame regardless of whether tracks have changed. With many overlapping animations (e.g., staggered list item transitions), this adds unnecessary CPU work.
 
-**Fix:** Cache the sorted tab order. Invalidate only when widgets are added or removed (via a dirty flag on the widget tree).
+**Fix:** Track delta time per-track instead of replaying from zero:
+```rust
+for track in &mut self.tracks {
+    let track_time = self.elapsed - track.offset;
+    if track_time > 0.0 && !track.tween.finished() {
+        track.tween.tick(dt); // Just advance by delta
+    }
+}
+```
 
 ---
 
-### 9. OpenGL per-frame RGBA buffer conversion
+### M3. Column/Row width defaults to full available width instead of shrink-wrapping
 
-**File:** `crates/aurora_gpu/src/backend/glow.rs:221-230, 273`
-**Severity:** Medium — Performance
+**File:** `crates/aurora_widgets/src/layout/column.rs:213-216`
+
+```rust
+let final_width = match self.width {
+    Some(w) => w as f32,
+    None => available.width,
+};
+```
+
+Same pattern in `crates/aurora_widgets/src/layout/row.rs:211-214`.
+
+When no explicit width is set, Column and Row report `available.width` as their width. Height correctly computes from children. This asymmetry means auto-width containers unexpectedly stretch to fill their parent, forcing users to set explicit widths for basic alignment.
+
+**Fix:** Compute width from widest child when no explicit width is set.
+
+---
+
+### M4. Inconsistent `inner_size`/`outer_size` documentation
+
+**File:** `crates/aurora_platform/src/app.rs:639-649`
+
+```rust
+/// Returns the inner (client-area) size in logical pixels.
+pub fn inner_size(&self) -> Size { ... }
+
+/// Returns the outer (including decorations) size in physical pixels.
+pub fn outer_size(&self) -> Size { ... }
+```
+
+`inner_size` claims logical pixels, `outer_size` claims physical pixels. Both call winit methods that return `PhysicalSize<u32>`. The documentation is inconsistent — both actually return physical pixels. Additionally, `outer_size()` uses a local variable named `inner_size` (line 647) which adds confusion.
+
+**Fix:** Correct the docs to both say "physical pixels" and rename the variable in `outer_size`.
+
+---
+
+### M5. `icon_rgba` has no validation
+
+**File:** `crates/aurora_platform/src/app.rs:292-298`
+
+```rust
+pub fn icon_rgba(mut self, rgba: Vec<u8>, width: u32, height: u32) -> Self {
+    self.icon = Some(IconData { rgba, width, height });
+    self
+}
+```
+
+No check that `rgba.len() == width * height * 4`. Mismatched dimensions are only caught later when winit tries to create the icon, at which point the error is logged but not returned to the caller.
+
+**Fix:** Validate at the builder call site and panic or return `Result`.
+
+---
+
+### M6. Glow backend does redundant per-frame RGBA conversion
+
+**File:** `crates/aurora_gpu/src/backend/glow.rs:223-232`
 
 ```rust
 fn convert_to_rgba(&mut self) {
-	for (i, &pixel) in self.buffer.iter().enumerate() {
-		let offset = i * 4;
-		rgba[offset] = ((pixel >> 16) & 0xFF) as u8;
-		rgba[offset + 1] = ((pixel >> 8) & 0xFF) as u8;
-		rgba[offset + 2] = (pixel & 0xFF) as u8;
-		rgba[offset + 3] = 255;
-	}
+    let rgba = &mut self.rgba_buffer;
+    for (i, &pixel) in self.buffer.iter().enumerate() {
+        let offset = i * 4;
+        rgba[offset] = ((pixel >> 16) & 0xFF) as u8;
+        // ...
+    }
 }
 ```
 
-Called every frame in `present()`. For a 1920x1080 window, this iterates ~2 million pixels to repack from `u32` to `[u8; 4]`. This is architecturally necessary given the shared `u32` buffer format, but could be optimized.
+Every frame converts the entire `0x00RRGGBB` buffer to RGBA byte format before uploading to the GPU. For 1080p, this is ~8MB of conversion work per frame. The same pattern exists in the wgpu backend.
 
-**Fix:** Consider using `bytemuck::cast_slice` if the buffer format can be made RGBA-native, or use SIMD intrinsics for the conversion. Alternatively, store pixels in RGBA format in the buffer from the start and convert only for the softbuffer backend.
+**Fix:** Use OpenGL texture swizzle masks to handle the channel reorder on the GPU, or store the buffer in RGBA format natively.
 
 ---
 
-### 10. Softbuffer present() silently truncates on buffer size mismatch
+### M7. Button animation state lost on rebuild
 
-**File:** `crates/aurora_gpu/src/backend/softbuffer.rs:70`
-**Severity:** Medium
+**File:** `crates/aurora_widgets/src/interactables/button.rs:197-202`
 
 ```rust
-let len = surface_buffer.len().min( self .buffer.len());
-surface_buffer[..len].copy_from_slice( & self .buffer[..len]);
+let anim = Rc::new(Cell::new(AnimData { ... }));
 ```
 
-If the surface buffer and internal buffer differ in size (e.g., after a failed resize), the content is silently truncated. The user sees a partially rendered frame with no error.
+`build()` creates fresh animation state each time. When a `Composite` parent rebuilds (e.g., on state change), all child buttons lose their hover/press transition progress, causing visual pops.
 
-**Fix:** Log a warning if sizes differ, or treat it as an error and skip the present.
-
----
-
-### 11. First mouse click silently dropped
-
-**File:** `crates/aurora_platform/src/app.rs:920-930`
-**Severity:** Medium
-
-```rust
-WindowEvent::MouseInput { state, button, ..} => {
-if let Some(current_cursor_position) = self.current_cursor_position {
-// dispatch click...
-}
-// else: click is silently ignored
-}
-```
-
-If a `MouseInput` event fires before any `CursorMoved` event (e.g., touch input, or rapid click on window focus), `current_cursor_position` is `None` and the click is dropped without any indication.
-
-**Fix:** Initialize `current_cursor_position` to `Point::ZERO` or to the window center on creation, or queue the click and dispatch when the cursor position becomes known.
-
----
-
-### 12. Rich text color lookup is O(glyphs * ranges)
-
-**File:** `crates/aurora_text/src/text_layout.rs:200-204`
-**Severity:** Medium — Performance
-
-```rust
-let pixel = ranges
-.iter()
-.find( | (r, _) | r.contains( & byte_offset))
-.map( | (_, c) | c.to_rgb_u32())
-.unwrap_or(default_pixel);
-```
-
-For every glyph, the entire `ranges` slice is scanned linearly. For syntax-highlighted text with many ranges, this is O(glyphs * ranges).
-
-**Fix:** Since ranges are typically sorted, use binary search (`partition_point`) or pre-build a flat color-per-byte array before the glyph loop.
-
----
-
-### 13. Zero test coverage
-
-**Severity:** Medium — Quality
-
-There are no `#[test]` functions, no `tests/` directories, no benchmarks, and no CI/CD configuration across the entire workspace. The only test file (`tests/basic.rs`) is empty. This means every change risks undetected regressions.
-
-**Recommended test priorities:**
-
-1. `aurora_core` geometry operations (Rect intersection, inset clamping, Point arithmetic)
-2. `aurora_core` Color conversions (hex, HSL, lerp, u32 formats)
-3. Layout algorithm correctness (Column/Row sizing, spacing, justify modes)
-4. TextInput cursor positioning and selection logic
-5. Event propagation through widget tree
+**Fix:** Accept an external `Rc<Cell<AnimData>>` or use widget-ID-based state persistence.
 
 ---
 
 ## Low Severity Issues
 
-### 14. Icon loading silently degrades
+### L1. Placeholder crates in default-members
 
-**File:** `crates/aurora_platform/src/app.rs:305-321`
-**Severity:** Low
+**File:** `Cargo.toml:35-48`
 
-Icon decoding failure is logged but the builder continues without an icon. Users won't know why their window icon is missing unless they check logs.
+`aurora_layout` and `aurora_a11y` contain only placeholder `add()` functions but are listed in `default-members`. This adds unnecessary build time for crates that provide no functionality.
 
-**Fix:** Consider returning `Result` from the `icon()` builder method, or at minimum `warn!` instead of `error!` to indicate non-fatal degradation.
+**Fix:** Remove from `default-members` until they have real implementations.
 
 ---
 
-### 15. Theme registration silently fails on second call
+### L2. `lerp_many` panics on empty input
 
-**File:** `crates/aurora_theme/src/lib.rs:140`
-**Severity:** Low
+**File:** `crates/aurora_core/src/color.rs:228`
 
 ```rust
-let _ = USER_THEME.set(ThemeOverride { colors: profiles });
+assert!(!colors.is_empty(), "lerp_many requires at least one color");
 ```
 
-`OnceLock::set()` returns `Err` if already initialized. The error is discarded. If a user calls `config!()` twice (e.g., in tests), the second theme is silently ignored.
-
-**Fix:** Log a warning on the `Err` path, or use `std::sync::RwLock` if theme hot-swapping is desired.
+Utility functions that panic on edge-case inputs create fragile call sites. A default return (e.g., `Color::TRANSPARENT`) would be more robust.
 
 ---
 
-### 16. Softbuffer backend has mixed indentation
+### L3. Easing functions propagate NaN silently
 
-**File:** `crates/aurora_gpu/src/backend/softbuffer.rs:51-74`
-**Severity:** Low — Code quality
-
-Several lines use tab indentation instead of 4-space indentation, inconsistent with the rest of the codebase. The `if let` brace on line 68 is also placed on its own line, breaking standard Rust formatting.
-
-**Fix:** Run `cargo fmt` on the file.
-
----
-
-### 17. Debug println left in animation example
-
-**File:** `examples/animation_example/src/main.rs:77`
-**Severity:** Low
+**File:** `crates/aurora_animate/src/easing.rs:98-99`
 
 ```rust
-println!("Position: {}, Color: {:?}, Opacity: {}, Bounce: {}, Cycle: {}", ...);
+let t = t.clamp(0.0, 1.0);
 ```
 
-Runs every frame — fills stdout with noise in a demo app.
+`f32::clamp` returns NaN when the input is NaN. All downstream easing math then produces NaN, which propagates to rendered positions/colors as invisible or glitched elements.
 
-**Fix:** Remove or gate behind a `--verbose` flag.
+**Fix:** Guard against non-finite input: `if !t.is_finite() { return 0.0; }`
 
 ---
 
-### 18. No CI/CD configuration
+### L4. Missing SAFETY comments on unsafe Windows callbacks
 
-**Severity:** Low — Process
+**File:** `crates/aurora_platform/src/windows_titlebar.rs:73-80`
 
-No GitHub Actions, GitLab CI, or other CI pipeline exists. Multi-platform builds, feature-flag matrix testing, and clippy/fmt checks are not automated.
-
-**Fix:** Add a basic CI workflow that runs `cargo check --all-features`, `cargo test`, `cargo clippy`, and `cargo fmt --check` across platforms.
+The `custom_frame_proc` unsafe extern function has no `// SAFETY:` comment documenting why the invariants are upheld. This makes auditing harder.
 
 ---
 
-### 19. Hardcoded macOS linker path
+### L5. Profile settings in example `Cargo.toml` are ignored
 
-**File:** `.cargo/config.toml:12`
-**Severity:** Low
+**File:** `examples/widget_gallery/Cargo.toml:16-21`
 
-```toml
-linker = "/opt/homebrew/bin/zld"
+`[profile.release]` in a non-root workspace member is silently ignored by Cargo. These settings only take effect when defined in the workspace root.
+
+**Fix:** Remove the profile section or move it to the workspace root `Cargo.toml`.
+
+---
+
+### L6. `AtomicU64` ID counter in TextInput could theoretically overflow
+
+**File:** `crates/aurora_widgets/src/text_input.rs:15-17`
+
+```rust
+static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 ```
 
-Only works on Apple Silicon macOS with Homebrew. Intel Macs use `/usr/local/bin`, and CI environments may not have `zld` at all.
-
-**Fix:** Use `lld` (ships with LLVM) as a more portable fast linker, or detect the architecture at build time.
+At one ID per nanosecond, overflow takes ~584 years. Practically impossible, but worth documenting the assumption.
 
 ---
 
 ## Production Readiness by Crate
 
-| Crate             | Status      | Rating               | Notes                                                                                                                                                                          |
-|-------------------|-------------|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `aurora_core`     | Complete    | **Production Ready** | Zero deps, solid types, well-tested geometry. Only improvement: add `#[test]` coverage.                                                                                        |
-| `aurora_platform` | Working     | **Beta**             | App builder, event loop, windowing work. Critical: fix non-text compilation. Tab focus needs caching. Mouse edge case.                                                         |
-| `aurora_gpu`      | Working     | **Alpha**            | Softbuffer and OpenGL backends functional. Softbuffer has silent error paths. OpenGL has shader leak and per-frame conversion cost. WGPU backend not started.                  |
-| `aurora_render`   | Working     | **Beta**             | Canvas drawing (rects, rounded rects, circles, images, text) works. ImageData needs validation. Clip stack is functional.                                                      |
-| `aurora_text`     | Working     | **Beta**             | Font loading, text shaping, layout via cosmic_text work. Rich text color lookup is O(n*m). Font error types incomplete.                                                        |
-| `aurora_widgets`  | Working     | **Alpha**            | TextInput, Button, Box, Column, Row, ScrollView, Stack, TouchArea, Composite all exist. Layout has SpaceBetween bug and flex heuristic issue. TextInput has O(n^2) perf issue. |
-| `aurora_theme`    | Working     | **Beta**             | Theme profiles, color slots, OnceLock registration work. Silent double-registration is minor.                                                                                  |
-| `aurora_animate`  | Working     | **Beta**             | Tweens, easing functions, keyframes, presets work. Debug println in example.                                                                                                   |
-| `aurora_layout`   | Minimal     | **Pre-alpha**        | Only re-exports Edges. Not a standalone layout engine yet.                                                                                                                     |
-| `aurora_a11y`     | Not started | **Not Ready**        | Planned AccessKit integration. No code exists.                                                                                                                                 |
-| `aurora_fonts`    | Working     | **Beta**             | Google Fonts proc macro with compile-time download. No network timeout.                                                                                                        |
-| `aurora_iconify`  | Working     | **Beta**             | SVG icon embedding proc macro. No network timeout.                                                                                                                             |
+| Crate | Status | Summary |
+|-------|--------|---------|
+| `aurora_core` | Ready | Solid types, good test coverage, zero deps. Minor edge case in HSL (C1). |
+| `aurora_platform` | Needs Work | Panic in event handler (C2), silent API failures (H5), inconsistent docs (M4). |
+| `aurora_gpu` | Needs Work | Resize error handling (H1), architecture violation (M1), redundant conversions (M6). |
+| `aurora_render` | Needs Work | Index overflow (C4), blend rounding (H2), SDF asymmetry (H3), ImageData validation (H4). |
+| `aurora_text` | Needs Work | Bounds check ordering could be cleaner, error handling gaps in font loading. |
+| `aurora_animate` | Needs Work | NaN panic (C3), timeline performance (M2), easing NaN propagation (L3). |
+| `aurora_widgets` | Fair | Event propagation works, layout width defaults are surprising (M3), animation state (M7). |
+| `aurora_theme` | Early Stage | Basic theme loading works, no critical issues found. |
+| `aurora_layout` | Not Started | Placeholder only. |
+| `aurora_a11y` | Not Started | Placeholder only. |
 
 ---
 
-## Overall Verdict
+## Strengths
 
-**Status: Alpha — Not production ready**
+- **Core types are well-designed.** `Rect`, `Point`, `Size`, `Edges`, `Corners` all have correct immutable/mutable pairs, proper clamping in `inset()`/`outset()`, and comprehensive tests.
+- **SDF-based anti-aliasing** is a good architectural choice — it produces smooth edges without per-scanline complexity.
+- **Clipping system is thorough.** Canvas operations consistently clip to both canvas bounds and the clip stack.
+- **Feature gating philosophy** is sound — keeping text rendering optional avoids bloating apps that don't need it.
+- **Crate separation** provides fast incremental compile times.
 
-AuroraUI has strong architectural foundations — clean crate separation, correct feature gating, and a thoughtful GPU abstraction. The core types (`Color`, `Rect`, `Point`, `Size`) are solid. The framework can render real UIs (the widget gallery example demonstrates buttons, text inputs, scroll views, animations, and theming).
+---
 
-**What's blocking production readiness:**
+## Recommended Fix Order
 
-1. **One critical compilation bug** that breaks non-text builds
-2. **Layout correctness issues** (SpaceBetween, flex detection) that will cause visual bugs in real apps
-3. **Zero test coverage** means any fix risks regressions
-4. **Silent error paths** in GPU backends hide real failures
-5. **Missing accessibility** (aurora_a11y not started) is a non-starter for production desktop apps
-6. **No WGPU backend** limits the framework to software rendering or OpenGL — no Vulkan/Metal/DX12
-
-**Recommended priority order:**
-
-1. Fix the critical compilation bug (#1)
-2. Add tests for core types and layout algorithms (#13)
-3. Fix SpaceBetween layout bug (#2) and flex heuristic (#7)
-4. Fix silent GPU error paths (#5, #10)
-5. Optimize TextInput char positioning (#3)
-6. Implement WGPU backend
-7. Begin accessibility work
+1. **C1-C4** — Fix all critical issues (crashes and memory safety)
+2. **H1, H4** — Fix silent data corruption paths (resize mismatch, release-mode validation)
+3. **H2-H3** — Fix visual correctness (blend rounding, SDF symmetry)
+4. **H5, M4-M5** — Fix error handling and documentation consistency
+5. **M1-M3, M6-M7** — Address architecture and performance issues
+6. **L1-L6** — Clean up minor issues as time permits

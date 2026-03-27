@@ -101,7 +101,7 @@ impl Color {
         T: Into<i32>,
         F: Into<f32>,
     {
-        let h = hue.into() as f32 % 360.0;
+        let h = ((hue.into() as f32) % 360.0 + 360.0) % 360.0;
         let s = saturation.into().clamp(0.0, 1.0);
         let l = lightness.into().clamp(0.0, 1.0);
         let alpha = (alpha.into().clamp(0.0, 1.0) * 255.0) as u8;
