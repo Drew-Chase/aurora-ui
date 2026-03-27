@@ -97,6 +97,9 @@ impl TextLayout {
         y_offset: i32,
         clip: Option<&Rect>,
     ) {
+        if width == 0 {
+            return;
+        }
         let pixel = self.color.to_rgb_u32();
         let height = buffer.len() as i32 / width as i32;
 
@@ -194,6 +197,9 @@ impl TextLayout {
         clip: Option<&Rect>,
         ranges: &[(Range<usize>, Color)],
     ) {
+        if width == 0 {
+            return;
+        }
         let default_pixel = self.color.to_rgb_u32();
         let height = buffer.len() as i32 / width as i32;
 
