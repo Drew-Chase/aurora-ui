@@ -25,32 +25,55 @@ const SECTIONS: &[Section] = &[
         pages: &[
             "Accordion",
             "Alert",
+            "Aspect Ratio",
             "Avatar",
             "Badge",
             "Breadcrumb",
             "Button",
+            "Button Group",
+            "Calendar",
             "Card",
-            "Code Block",
+            "Carousel",
             "Checkbox",
+            "Code Block",
             "Collapsible",
+            "Combobox",
+            "Command",
+            "Data Table",
+            "Date Picker",
+            "Dialog",
             "Dropdown Menu",
             "Empty State",
+            "Field",
+            "Hover Card",
             "Input",
+            "Input Group",
+            "Input OTP",
+            "Item",
             "Kbd",
             "Label",
+            "Menubar",
+            "Navigation Menu",
             "Pagination",
+            "Popover",
             "Progress",
             "Radio Group",
+            "Resizable",
+            "Scroll Area",
             "Select",
             "Separator",
+            "Sidebar",
             "Skeleton",
             "Slider",
             "Spinner",
             "Switch",
             "Table",
             "Tabs",
+            "Textarea",
+            "Toast",
             "Toggle",
             "Toggle Group",
+            "Tooltip",
             "Typography",
         ],
     },
@@ -275,37 +298,60 @@ fn content_area(page_index: usize, scroll: ScrollState) -> impl Widget {
                 .item(page_installation())
                 .item(page_first_app())
                 .item(page_custom_components())
-                // Components (indices 3-31)
+                // Components (indices 3-55)
                 .item(page_accordion())
                 .item(page_alert())
+                .item(page_aspect_ratio())
                 .item(page_avatar())
                 .item(page_badge())
                 .item(page_breadcrumb())
                 .item(page_button())
+                .item(page_button_group())
+                .item(page_calendar())
                 .item(page_card())
-                .item(page_code_block())
+                .item(page_carousel())
                 .item(page_checkbox())
+                .item(page_code_block())
                 .item(page_collapsible())
+                .item(page_combobox())
+                .item(page_command())
+                .item(page_data_table())
+                .item(page_date_picker())
+                .item(page_dialog())
                 .item(page_dropdown_menu())
                 .item(page_empty())
+                .item(page_field())
+                .item(page_hover_card())
                 .item(page_input())
+                .item(page_input_group())
+                .item(page_input_otp())
+                .item(page_item())
                 .item(page_kbd())
                 .item(page_label())
+                .item(page_menubar())
+                .item(page_navigation_menu())
                 .item(page_pagination())
+                .item(page_popover())
                 .item(page_progress())
                 .item(page_radio_group())
+                .item(page_resizable())
+                .item(page_scroll_area())
                 .item(page_select())
                 .item(page_separator())
+                .item(page_sidebar())
                 .item(page_skeleton())
                 .item(page_slider())
                 .item(page_spinner())
                 .item(page_switch())
                 .item(page_table())
                 .item(page_tabs())
+                .item(page_textarea())
+                .item(page_toast())
                 .item(page_toggle())
                 .item(page_toggle_group())
+                .item(page_tooltip())
                 .item(page_typography())
-                // Tutorials (indices 32-36)
+                // Tutorials
                 .item(page_counter())
                 .item(page_todo_app())
                 .item(page_theme_switcher())
