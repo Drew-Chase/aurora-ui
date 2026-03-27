@@ -44,12 +44,14 @@ impl GpuContext for SoftbufferBackend {
             std::num::NonZeroU32::new(width),
             std::num::NonZeroU32::new(height),
         ) {
-            let _ = self.surface.resize(w, h);
+            if let Err(e) = self.surface.resize(w, h) {
+                log::error!("Failed to resize softbuffer surface: {e}");
+            }
         }
     }
 
     fn size(&self) -> (u32, u32) {
-	    (self.width, self.height)
+        (self.width, self.height)
     }
 
     fn clear(&mut self, color: Color) {
@@ -62,14 +64,20 @@ impl GpuContext for SoftbufferBackend {
 
     fn present(&mut self) {
         if self.width == 0 || self.height == 0 {
-	        return;
+            return;
         }
 
-	    if let Ok(mut surface_buffer) = self.surface.buffer_mut()
-	    {
-		    let len = surface_buffer.len().min(self.buffer.len());
-		    surface_buffer[..len].copy_from_slice(&self.buffer[..len]);
-		    let _ = surface_buffer.present();
-	    }
+        if let Ok(mut surface_buffer) = self.surface.buffer_mut() {
+            if surface_buffer.len() != self.buffer.len() {
+                log::warn!(
+                    "Surface buffer size ({}) != internal buffer size ({})",
+                    surface_buffer.len(),
+                    self.buffer.len()
+                );
+            }
+            let len = surface_buffer.len().min(self.buffer.len());
+            surface_buffer[..len].copy_from_slice(&self.buffer[..len]);
+            let _ = surface_buffer.present();
+        }
     }
 }
