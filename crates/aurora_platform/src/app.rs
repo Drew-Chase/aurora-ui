@@ -944,7 +944,11 @@ where
             WindowEvent::MouseWheel { delta, .. } => {
                 let scroll_delta = match delta {
                     winit::event::MouseScrollDelta::LineDelta(_, y) => y,
-                    winit::event::MouseScrollDelta::PixelDelta(pos) => pos.y as f32 / 40.0,
+                    winit::event::MouseScrollDelta::PixelDelta(pos) => {
+                        /// Approximate pixels per scroll "line" on most platforms.
+                        const PIXELS_PER_SCROLL_LINE: f32 = 40.0;
+                        pos.y as f32 / PIXELS_PER_SCROLL_LINE
+                    }
                 };
                 window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseScrollEvent(
                     scroll_delta,
