@@ -60,14 +60,20 @@ impl<T: Animatable> Timeline<T> {
 
     /// Advances all tracks by `dt` seconds.
     pub fn tick(&mut self, dt: f32) {
+        let prev_elapsed = self.elapsed;
         self.elapsed += dt;
         for track in &mut self.tracks {
             let track_time = self.elapsed - track.offset;
             if track_time > 0.0 {
-                // Reset and re-tick to the correct position, since tracks
-                // only start accumulating time after their offset.
-                track.tween.reset();
-                track.tween.tick(track_time);
+                let prev_track_time = prev_elapsed - track.offset;
+                if prev_track_time <= 0.0 {
+                    // Track just became active — set to absolute position
+                    track.tween.reset();
+                    track.tween.tick(track_time);
+                } else {
+                    // Track already active — advance by delta only
+                    track.tween.tick(dt);
+                }
             }
         }
     }
