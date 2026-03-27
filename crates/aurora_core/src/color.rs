@@ -223,9 +223,11 @@ impl Color {
     /// For example, with 4 colors, `time` 0.0–0.33 blends between the first and second,
     /// 0.33–0.66 between the second and third, and 0.66–1.0 between the third and fourth.
     ///
-    /// Panics if `colors` is empty.
+    /// Returns `Color::TRANSPARENT` if `colors` is empty.
     pub fn lerp_many(colors: &[Color], time: f32) -> Self {
-        assert!(!colors.is_empty(), "lerp_many requires at least one color");
+        if colors.is_empty() {
+            return Color::TRANSPARENT;
+        }
         if colors.len() == 1 {
             return colors[0];
         }
