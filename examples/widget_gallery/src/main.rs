@@ -108,36 +108,71 @@ fn main() {
 
 /// App state: selected page + selected theme profile.
 #[derive(Clone)]
-struct GalleryState {
-    page: usize,
-    profile: usize,
-    sidebar_scroll: ScrollState,
-    content_scroll: ScrollState,
+pub struct GalleryState {
+    pub page: usize,
+    pub profile: usize,
+    pub sidebar_scroll: ScrollState,
+    pub content_scroll: ScrollState,
+    pub dialog_open: bool,
 }
 
 fn gallery() -> impl Widget {
+    use aurora_ui::aurora_widgets::components::dialog;
+
     Composite::new(
         GalleryState {
             page: 0,
             profile: 0,
             sidebar_scroll: ScrollState::new(),
             content_scroll: ScrollState::new(),
+            dialog_open: false,
         },
         move |state, set_state| {
             // Apply the selected theme profile
             let profiles = [theme::ProfileId::Default, theme::ProfileId::Candy, theme::ProfileId::Light];
             theme::set(profiles[state.profile.min(profiles.len() - 1)]);
 
+            let dialog_close = set_state.clone();
+            let cancel_setter = set_state.clone();
+            let continue_setter = set_state.clone();
+
             Box::new(
-                row!()
-                    .align(Align::Stretch)
-                    .child(sidebar_widget(
-                        state.page,
-                        state.profile,
-                        state.sidebar_scroll.clone(),
-                        set_state.clone(),
-                    ))
-                    .child(content_area(state.page, state.content_scroll.clone())),
+                Stack::new()
+                    .child(
+                        row!()
+                            .align(Align::Stretch)
+                            .child(sidebar_widget(
+                                state.page,
+                                state.profile,
+                                state.sidebar_scroll.clone(),
+                                set_state.clone(),
+                            ))
+                            .child(content_area(state.page, state.content_scroll.clone(), set_state.clone())),
+                    )
+                    .child(
+                        dialog::Dialog::new()
+                            .open(state.dialog_open)
+                            .title("Are you sure?")
+                            .content(Text::new(
+                                "This action cannot be undone. This will permanently delete your account.",
+                            ))
+                            .on_close(move || {
+                                dialog_close.set(|s| s.dialog_open = false);
+                            })
+                            .footer(
+                                row!()
+                                    .spacing(8.0)
+                                    .justify(Justify::End)
+                                    .child(
+                                        button!("Cancel")
+                                            .on_click(move |_| cancel_setter.set(|s| s.dialog_open = false)),
+                                    )
+                                    .child(
+                                        button!("Continue")
+                                            .on_click(move |_| continue_setter.set(|s| s.dialog_open = false)),
+                                    ),
+                            ),
+                    ),
             )
         },
     )
@@ -285,7 +320,7 @@ fn sidebar_item(name: &str, active: bool, on_click: impl FnMut() + 'static) -> i
 // Main content area
 // ---------------------------------------------------------------------------
 
-fn content_area(page_index: usize, scroll: ScrollState) -> impl Widget {
+fn content_area(page_index: usize, scroll: ScrollState, setter: StateSetter<GalleryState>) -> impl Widget {
     use pages::*;
     ScrollView::new()
         .scrollbar_thumb_color(theme::colors::foreground().opacity(0.5))
@@ -317,7 +352,7 @@ fn content_area(page_index: usize, scroll: ScrollState) -> impl Widget {
                 .item(page_command())
                 .item(page_data_table())
                 .item(page_date_picker())
-                .item(page_dialog())
+                .item(page_dialog(setter))
                 .item(page_dropdown_menu())
                 .item(page_empty())
                 .item(page_field())
