@@ -149,5 +149,10 @@ pub fn color(slot: usize) -> Color {
         .get()
         .and_then(|t| t.colors.get(profile))
         .and_then(|c| c.get(slot).copied())
-        .unwrap_or_else(|| DEFAULT_COLORS.get(slot).copied().unwrap_or(Color::BLACK))
+        .unwrap_or_else(|| {
+            DEFAULT_COLORS.get(slot).copied().unwrap_or_else(|| {
+                log::warn!("Theme color slot {slot} out of bounds, using black");
+                Color::BLACK
+            })
+        })
 }
