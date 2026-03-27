@@ -205,6 +205,8 @@ impl GlowBackend {
             gl.link_program(program);
             if !gl.get_program_link_status(program) {
                 let log = gl.get_program_info_log(program);
+                gl.delete_shader(vs);
+                gl.delete_shader(fs);
                 gl.delete_program(program);
                 return Err(format!("Program link error: {log}"));
             }
