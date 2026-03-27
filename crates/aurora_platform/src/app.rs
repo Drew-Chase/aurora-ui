@@ -291,11 +291,16 @@ impl App {
     /// This sets the taskbar icon and the titlebar icon on platforms that support it.
     ///
     /// # Panics
-    /// Panics if `rgba.len() != width * height * 4`.
+    /// Panics if `rgba.len() != width * height * 4`, or if dimensions are zero or overflow.
     pub fn icon_rgba(mut self, rgba: Vec<u8>, width: u32, height: u32) -> Self {
+        assert!(width > 0 && height > 0, "icon_rgba: dimensions must be non-zero");
+        let expected = (width as usize)
+            .checked_mul(height as usize)
+            .and_then(|n| n.checked_mul(4))
+            .expect("icon_rgba: dimensions overflow");
         assert_eq!(
             rgba.len(),
-            (width as usize) * (height as usize) * 4,
+            expected,
             "icon_rgba: buffer length must be width * height * 4"
         );
         self.icon = Some(IconData {
