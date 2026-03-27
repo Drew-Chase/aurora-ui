@@ -694,7 +694,7 @@ impl<'a> Canvas<'a> {
                     continue;
                 }
 
-                let src_idx = ((sy * img_width + sx) * 4) as usize;
+                let src_idx = ((sy as usize) * (img_width as usize) + (sx as usize)) * 4;
                 if src_idx + 3 >= pixels.len() {
                     continue;
                 }

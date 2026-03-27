@@ -35,10 +35,10 @@ impl ImageData {
 
     /// Creates an `ImageData` from pre-decoded RGBA pixels.
     ///
-    /// # Panics (debug only)
+    /// # Panics
     /// Panics if `pixels.len() != width * height * 4`.
     pub fn from_raw(pixels: Vec<u8>, width: u32, height: u32) -> Self {
-        debug_assert_eq!(
+        assert_eq!(
             pixels.len(),
             (width as usize) * (height as usize) * 4,
             "pixel buffer length must match width * height * 4"
