@@ -8,7 +8,7 @@ description = "GPU abstraction — thin wrapper"
 aurora_core = { path = "../aurora_core" }
 log = "0.4"
 
-winit = "0.30"
+winit = { version = "0.30", optional = true }
 softbuffer = { version = "0.4", optional = true }
 glow = { version = "0.16", optional = true }
 glutin = { version = "0.32", optional = true }
@@ -19,6 +19,6 @@ pollster = { version = "0.4", optional = true }
 
 [features]
 default = ["software"]
-software = ["dep:softbuffer"]
-opengl = ["dep:glow", "dep:glutin", "dep:glutin-winit", "dep:raw-window-handle"]
-wgpu_backend = ["dep:wgpu", "dep:pollster"]
+software = ["dep:softbuffer", "dep:winit"]
+opengl = ["dep:glow", "dep:glutin", "dep:glutin-winit", "dep:raw-window-handle", "dep:winit"]
+wgpu_backend = ["dep:wgpu", "dep:pollster", "dep:winit"]
