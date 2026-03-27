@@ -37,17 +37,18 @@ impl GpuContext for SoftbufferBackend {
         if width == 0 || height == 0 {
             return;
         }
-        self.width = width;
-        self.height = height;
-        self.buffer.resize((width * height) as usize, 0);
         if let (Some(w), Some(h)) = (
             std::num::NonZeroU32::new(width),
             std::num::NonZeroU32::new(height),
         ) {
             if let Err(e) = self.surface.resize(w, h) {
                 log::error!("Failed to resize softbuffer surface: {e}");
+                return;
             }
         }
+        self.width = width;
+        self.height = height;
+        self.buffer.resize((width * height) as usize, 0);
     }
 
     fn size(&self) -> (u32, u32) {
