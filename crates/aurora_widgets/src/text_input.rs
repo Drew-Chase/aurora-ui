@@ -424,14 +424,12 @@ impl Widget for TextInput {
             self.placeholder_layout = None;
         }
 
-        // Build character x positions from display text
-        self.char_x_positions.clear();
-        let mut running = String::new();
-        for ch in display.chars() {
-            running.push(ch);
-            let cl = TextLayout::new(ctx.font_manager, &running, &resolved, self.color, None);
-            self.char_x_positions.push(cl.size().width);
-        }
+        // Build character x positions from glyph advances (O(n) vs prior O(n²))
+        self.char_x_positions = if let Some(ref tl) = self.text_layout {
+            tl.char_x_positions()
+        } else {
+            Vec::new()
+        };
 
         self.cursor_pixel_x = self.pixel_x_for(self.cursor_pos);
 

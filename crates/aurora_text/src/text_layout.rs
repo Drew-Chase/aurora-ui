@@ -67,6 +67,20 @@ impl TextLayout {
         Size::new(width, height)
     }
 
+    /// Returns the right-edge x position of each glyph in layout order.
+    ///
+    /// Index `i` gives the x-coordinate of the right edge of glyph `i`,
+    /// suitable for cursor positioning in single-line text inputs.
+    pub fn char_x_positions(&self) -> Vec<f32> {
+        let mut positions = Vec::new();
+        for run in self.buffer.layout_runs() {
+            for glyph in run.glyphs.iter() {
+                positions.push(glyph.x + glyph.w);
+            }
+        }
+        positions
+    }
+
     /// Rasterises every glyph into a raw `0x00RRGGBB` pixel buffer.
     ///
     /// Sub-pixel coverage is alpha-blended against the existing buffer contents.
