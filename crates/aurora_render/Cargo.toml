@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 aurora_core = { path = "../aurora_core" }
 aurora_text = { path = "../aurora_text", optional = true }
+log = "0.4"
 image = { version = "0.25", optional = true, default-features = false, features = ["png", "jpeg"] }
 usvg = { version = "0.47", optional = true, default-features = false }
 tiny-skia = { version = "0.12", optional = true }

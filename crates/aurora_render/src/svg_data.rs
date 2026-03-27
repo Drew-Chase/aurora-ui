@@ -39,6 +39,7 @@ impl SvgData {
     /// suitable for passing to [`Canvas::draw_image`](crate::canvas::Canvas::draw_image).
     pub fn render(&self, width: u32, height: u32) -> Vec<u8> {
         let Some(mut pixmap) = tiny_skia::Pixmap::new(width, height) else {
+            log::warn!("Failed to allocate {width}x{height} pixmap for SVG render");
             return Vec::new();
         };
 
