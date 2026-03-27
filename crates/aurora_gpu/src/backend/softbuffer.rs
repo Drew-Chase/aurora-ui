@@ -78,7 +78,9 @@ impl GpuContext for SoftbufferBackend {
             }
             let len = surface_buffer.len().min(self.buffer.len());
             surface_buffer[..len].copy_from_slice(&self.buffer[..len]);
-            let _ = surface_buffer.present();
+            if let Err(e) = surface_buffer.present() {
+                log::warn!("Failed to present softbuffer frame: {e}");
+            }
         }
     }
 }
