@@ -191,8 +191,8 @@ impl Widget for Row {
             let y = self.padding.top
                 + match self.align {
                     Align::Start => 0.0,
-                    Align::Center => (align_height - child_size.height) / 2.0,
-                    Align::End => align_height - child_size.height,
+                    Align::Center => (align_height - child_size.height).max(0.0) / 2.0,
+                    Align::End => (align_height - child_size.height).max(0.0),
                     Align::Stretch => 0.0,
                 };
 
