@@ -172,4 +172,5 @@ impl Widget for Switch {
         (self.anim_progress - self.anim_to).abs() > f32::EPSILON
             || self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
+#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Switch).with_checked(self.checked)    }
 }

@@ -831,6 +831,22 @@ impl Widget for TextInput {
             _ => EventResponse::default(),
         }
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::TextInput);
+        if !self.placeholder.is_empty() {
+            info = info.with_label(self.placeholder.clone());
+        }
+        if !self.text.is_empty() {
+            info = info.with_value(if self.password {
+                "\u{2022}".repeat(self.text.len())
+            } else {
+                self.text.clone()
+            });
+        }
+        info
+    }
 }
 
 fn prev_word_boundary(text: &str, pos: usize) -> usize {

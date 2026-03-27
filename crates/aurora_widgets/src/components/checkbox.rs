@@ -219,4 +219,17 @@ impl Widget for Checkbox {
     fn needs_animation(&self) -> bool {
         self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::CheckBox)
+            .with_checked(self.checked);
+        if let Some(ref label) = self.label {
+            info = info.with_label(label.clone());
+        }
+        if self.disabled {
+            info = info.with_disabled();
+        }
+        info
+    }
 }

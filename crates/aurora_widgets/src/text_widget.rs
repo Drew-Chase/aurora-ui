@@ -195,6 +195,12 @@ impl Widget for Text {
     fn children(&self) -> &[Box<dyn Widget>] {
         &[]
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Label)
+            .with_label(self.text.clone())
+    }
 }
 
 impl From<String> for Text {

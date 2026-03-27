@@ -277,4 +277,13 @@ impl Widget for Popover {
             }
         }
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Dialog);
+        if !self.open {
+            info = info.with_hidden();
+        }
+        info
+    }
 }

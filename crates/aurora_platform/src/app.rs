@@ -138,6 +138,8 @@ pub struct AppWindow {
     pub(crate) focused_widget_id: Option<u64>,
     next_frame_requested: bool,
     pub(crate) background_color: Color,
+    #[cfg(feature = "a11y")]
+    a11y: Option<crate::a11y::A11yState>,
 }
 
 struct AppHandler<F> {
@@ -442,6 +444,8 @@ impl AppWindow {
                 focused_widget_id: None,
                 next_frame_requested: false,
                 background_color: config.background_color,
+                #[cfg(feature = "a11y")]
+                a11y: None,
             })
         }
         #[cfg(not(feature = "text"))]
@@ -454,6 +458,8 @@ impl AppWindow {
             focused_widget_id: None,
             next_frame_requested: false,
             background_color: config.background_color,
+            #[cfg(feature = "a11y")]
+            a11y: None,
         })
     }
     /// Lays out and paints a root widget tree into the window.
@@ -542,6 +548,14 @@ impl AppWindow {
             // Auto-schedule next frame when any widget has active animations
             if widget.needs_animation() {
                 self.next_frame_requested = true;
+            }
+
+            // Update accessibility tree after layout so screen readers see
+            // the current widget state, roles, and labels.
+            #[cfg(feature = "a11y")]
+            if let Some(ref mut a11y) = self.a11y {
+                let rect = Rect::from_size(available);
+                a11y.update_tree(widget.as_ref(), self.focused_widget_id, rect);
             }
         }
     }
@@ -827,6 +841,17 @@ where
                 return;
             }
         };
+        // Initialize accessibility adapter after window creation.
+        #[cfg(feature = "a11y")]
+        if let Some(win) = self.window.as_mut() {
+            let a11y_state = crate::a11y::A11yState::new(
+                event_loop,
+                &win.window_handle,
+                &self.config.title,
+            );
+            win.a11y = Some(a11y_state);
+        }
+
         if let Some(win) = self.window.as_ref() {
             win.window_handle.set_visible(true);
         }
@@ -880,6 +905,23 @@ where
         let Some(window) = self.window.as_mut() else {
             return;
         };
+
+        // Forward event to AccessKit adapter.
+        #[cfg(feature = "a11y")]
+        if let Some(ref mut a11y) = window.a11y {
+            a11y.process_event(&window.window_handle, &event);
+        }
+
+        // Process any accessibility action requests (focus, click from AT).
+        #[cfg(feature = "a11y")]
+        if let Some(ref a11y) = window.a11y {
+            for request in a11y.drain_actions() {
+                if let Some(widget_event) = crate::a11y::action_to_widget_event(&request) {
+                    window.dispatch_event(&widget_event);
+                }
+            }
+        }
+
         match event {
             WindowEvent::CloseRequested => {
                 log::trace!("Window close requested");

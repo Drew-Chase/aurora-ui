@@ -244,4 +244,18 @@ impl Widget for Toast {
             _ => EventResponse::default(),
         }
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Alert)
+            .with_live(aurora_a11y::accesskit::Live::Polite)
+            .with_description(self.message.clone());
+        if let Some(ref title) = self.title {
+            info = info.with_label(title.clone());
+        }
+        if !self.visible {
+            info = info.with_hidden();
+        }
+        info
+    }
 }

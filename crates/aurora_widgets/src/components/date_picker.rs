@@ -269,4 +269,5 @@ impl Widget for DatePicker {
             _ => EventResponse::default(),
         }
     }
+#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group).with_label("Date picker".to_string()).with_expanded(self.open)    }
 }

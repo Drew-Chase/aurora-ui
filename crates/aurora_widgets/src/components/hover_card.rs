@@ -186,4 +186,13 @@ impl Widget for HoverCard {
             }
         }
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Tooltip);
+        if !self.hovered {
+            info = info.with_hidden();
+        }
+        info
+    }
 }

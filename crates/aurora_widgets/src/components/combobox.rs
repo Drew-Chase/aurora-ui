@@ -370,4 +370,16 @@ impl Widget for Combobox {
             _ => EventResponse::default(),
         }
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::ComboBox)
+            .with_expanded(self.open);
+        if let Some(idx) = self.selected {
+            if let Some(opt) = self.options.get(idx) {
+                info = info.with_value(opt.clone());
+            }
+        }
+        info
+    }
 }

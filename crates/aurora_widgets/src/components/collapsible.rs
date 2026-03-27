@@ -247,4 +247,5 @@ impl Widget for Collapsible {
     fn needs_animation(&self) -> bool {
         self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
+#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::DisclosureTriangle).with_label(self.title.clone()).with_expanded(self.expanded)    }
 }

@@ -25,6 +25,8 @@
 pub mod app;
 pub mod errors;
 pub mod window_controls;
+#[cfg(feature = "a11y")]
+pub(crate) mod a11y;
 #[cfg(target_os = "windows")]
 pub mod windows_titlebar;
 

@@ -351,4 +351,17 @@ impl Widget for TextArea {
             _ => EventResponse::default(),
         }
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::MultilineTextInput);
+        if !self.placeholder.is_empty() {
+            info = info.with_label(self.placeholder.clone());
+        }
+        if !self.text.is_empty() {
+            info = info.with_value(self.text.clone());
+        }
+        info.multiline = true;
+        info
+    }
 }

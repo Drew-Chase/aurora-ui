@@ -368,4 +368,5 @@ impl Widget for Accordion {
     fn needs_animation(&self) -> bool {
         self.sections.iter().any(|s| s.is_animating())
     }
+#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)    }
 }

@@ -254,4 +254,5 @@ impl Widget for Table {
             _ => EventResponse::default(),
         }
     }
+#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Table)    }
 }

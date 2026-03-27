@@ -346,4 +346,13 @@ impl Widget for DropdownMenu {
     fn needs_animation(&self) -> bool {
         self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Menu);
+        if !self.open {
+            info = info.with_hidden();
+        }
+        info
+    }
 }

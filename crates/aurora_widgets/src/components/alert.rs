@@ -180,4 +180,17 @@ impl Widget for Alert {
     fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
         EventResponse::default()
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Alert)
+            .with_live(aurora_a11y::accesskit::Live::Polite);
+        if let Some(ref title) = self.title {
+            info = info.with_label(title.clone());
+        }
+        if let Some(ref desc) = self.description {
+            info = info.with_description(desc.clone());
+        }
+        info
+    }
 }

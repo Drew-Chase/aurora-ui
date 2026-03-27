@@ -12,6 +12,8 @@ aurora_gpu = { path = "../aurora_gpu", default-features = false }
 aurora_render = { path = "../aurora_render" }
 aurora_widgets = {path = "../aurora_widgets"}
 aurora_text = {path = "../aurora_text", optional = true}
+aurora_a11y = { path = "../aurora_a11y", optional = true }
+accesskit_winit = { version = "0.32", optional = true }
 image = { version = "0.25", optional = true, default-features = false, features = ["png", "jpeg"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
@@ -40,3 +42,4 @@ wgpu_backend = ["aurora_gpu/wgpu_backend"]
 text = ["dep:aurora_text", "aurora_render/text", "aurora_widgets/text"]
 image = ["dep:image", "aurora_render/image", "aurora_widgets/image"]
 svg = ["aurora_render/svg", "aurora_widgets/svg"]
+a11y = ["dep:aurora_a11y", "dep:accesskit_winit", "aurora_widgets/a11y"]

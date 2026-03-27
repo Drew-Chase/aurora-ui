@@ -158,6 +158,15 @@ pub trait CompositeBuilder {
 	/// Called once on the first layout pass. The returned widget handles
 	/// all subsequent layout, paint, and event processing.
 	fn build(&self) -> Box<dyn Widget>;
+
+	/// Returns accessibility info for this composite widget.
+	///
+	/// Override this to declare a semantic role. The default returns a
+	/// transparent node (children promoted to parent).
+	#[cfg(feature = "a11y")]
+	fn access_info(&self) -> aurora_a11y::NodeInfo {
+		aurora_a11y::NodeInfo::transparent()
+	}
 }
 
 /// Wraps a [`CompositeBuilder`] config and lazily builds its widget tree.
@@ -218,9 +227,6 @@ impl<T: CompositeBuilder> Widget for CompositeWrapper<T> {
 
 	#[cfg(feature = "a11y")]
 	fn access_info(&self) -> aurora_a11y::NodeInfo {
-		match &self.inner {
-			Some(inner) => inner.access_info(),
-			None => aurora_a11y::NodeInfo::transparent(),
-		}
+		self.config.access_info()
 	}
 }

@@ -278,6 +278,15 @@ impl CompositeBuilder for Button {
             },
         ))
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Button);
+        if let Some(ref label) = self.label {
+            info = info.with_label(label.clone());
+        }
+        info
+    }
 }
 
 /// Wraps a BoxWidget and paints an animated background color behind it.

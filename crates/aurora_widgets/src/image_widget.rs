@@ -117,4 +117,5 @@ impl Widget for Image {
     fn children(&self) -> &[Box<dyn Widget>] {
         &[]
     }
+#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Image)    }
 }

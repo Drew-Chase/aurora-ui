@@ -251,4 +251,5 @@ impl Widget for RadioGroup {
     fn needs_animation(&self) -> bool {
         self.anims.iter().any(|a| a.is_animating())
     }
+#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::RadioGroup)    }
 }

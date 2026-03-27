@@ -340,4 +340,5 @@ impl Widget for CodeBlock {
         self.copied_at
             .is_some_and(|t| t.elapsed().as_secs_f32() < COPIED_DISPLAY_SECS)
     }
+#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Code)    }
 }

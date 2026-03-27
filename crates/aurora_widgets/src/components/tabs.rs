@@ -328,4 +328,5 @@ impl Widget for Tabs {
     fn needs_animation(&self) -> bool {
         self.indicator_anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
+#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::TabList)    }
 }

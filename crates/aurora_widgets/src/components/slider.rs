@@ -222,4 +222,15 @@ impl Widget for Slider {
             _ => EventResponse::default(),
         }
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Slider)
+            .with_numeric_value(self.value as f64)
+            .with_numeric_range(self.min as f64, self.max as f64);
+        if let Some(step) = self.step {
+            info = info.with_numeric_step(step as f64);
+        }
+        info
+    }
 }

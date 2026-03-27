@@ -123,4 +123,13 @@ impl Widget for Avatar {
     fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
         EventResponse::default()
     }
+
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Image);
+        if let Some(ref initials) = self.initials {
+            info = info.with_label(initials.clone());
+        }
+        info
+    }
 }
