@@ -864,10 +864,9 @@ where
         _window_id: WindowId,
         event: WindowEvent,
     ) {
-        let window = self
-            .window
-            .as_mut()
-            .expect("Window redraw request without a valid window");
+        let Some(window) = self.window.as_mut() else {
+            return;
+        };
         match event {
             WindowEvent::CloseRequested => {
                 log::trace!("Window close requested");
