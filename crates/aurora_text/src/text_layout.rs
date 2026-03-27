@@ -209,13 +209,16 @@ impl TextLayout {
 
         for run in self.buffer.layout_runs() {
             for glyph in run.glyphs.iter() {
-                // Look up per-glyph color from ranges
+                // Look up per-glyph color from ranges (binary search, assumes sorted by start)
                 let byte_offset = glyph.start;
-                let pixel = ranges
-                    .iter()
-                    .find(|(r, _)| r.contains(&byte_offset))
-                    .map(|(_, c)| c.to_rgb_u32())
-                    .unwrap_or(default_pixel);
+                let pixel = {
+                    let idx = ranges.partition_point(|(r, _)| r.start <= byte_offset);
+                    if idx > 0 && ranges[idx - 1].0.contains(&byte_offset) {
+                        ranges[idx - 1].1.to_rgb_u32()
+                    } else {
+                        default_pixel
+                    }
+                };
 
                 let physical_glyph =
                     glyph.physical((x_offset as f32, y_offset as f32 + run.line_y), 1.0);
