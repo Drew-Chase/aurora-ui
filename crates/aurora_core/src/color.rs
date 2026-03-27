@@ -284,14 +284,20 @@ impl Display for Color {
 
 impl IntoColor for String {
     fn color(&self, has_alpha: bool) -> Color {
-        let hex = u64::from_str_radix(self, 16).unwrap_or(0);
+        let hex = u64::from_str_radix(self, 16).unwrap_or_else(|_| {
+            debug_assert!(false, "Invalid hex color: {self}");
+            0
+        });
         Color::from_hex(hex, has_alpha)
     }
 }
 
 impl IntoColor for &str {
     fn color(&self, has_alpha: bool) -> Color {
-        let hex = u64::from_str_radix(self, 16).unwrap_or(0);
+        let hex = u64::from_str_radix(self, 16).unwrap_or_else(|_| {
+            debug_assert!(false, "Invalid hex color: {self}");
+            0
+        });
         Color::from_hex(hex, has_alpha)
     }
 }
