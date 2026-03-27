@@ -166,7 +166,9 @@ impl<'a> Canvas<'a> {
     /// Call [`pop_clip`](Self::pop_clip) to restore the previous clip.
     pub fn push_clip(&mut self, rect: Rect) {
         let clipped = match self.clip_stack.last() {
-            Some(existing) => existing.intersection(&rect).unwrap_or(rect),
+            Some(existing) => existing.intersection(&rect).unwrap_or(Rect::new(
+                existing.x1, existing.y1, existing.x1, existing.y1,
+            )),
             None => rect,
         };
         self.clip_stack.push(clipped);
