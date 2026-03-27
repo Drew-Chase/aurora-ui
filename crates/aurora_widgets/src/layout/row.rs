@@ -210,7 +210,7 @@ impl Widget for Row {
         // Return the row's total size
         let final_width = match self.width {
             Some(w) => w as f32,
-            None => available.width,
+            None => total_child_width + total_spacing + self.padding.horizontal(),
         };
         let max_child_height = final_sizes.iter().map(|s| s.height).fold(0.0f32, f32::max);
         let final_height = match self.height {

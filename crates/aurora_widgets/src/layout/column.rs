@@ -212,7 +212,7 @@ impl Widget for Column {
         // Return the column's total size
         let final_width = match self.width {
             Some(w) => w as f32,
-            None => available.width,
+            None => align_width + self.padding.horizontal(),
         };
         let final_height = match self.height {
             Some(h) => h as f32,
