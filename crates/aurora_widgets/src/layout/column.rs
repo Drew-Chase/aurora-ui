@@ -175,7 +175,7 @@ impl Widget for Column {
 
         // Spacing override for SpaceBetween
         let actual_spacing = if self.justify == Justify::SpaceBetween && self.children.len() > 1 {
-            leftover / (self.children.len() - 1) as f32
+            (content_height - total_child_height).max(0.0) / (self.children.len() - 1) as f32
         } else {
             self.spacing
         };
