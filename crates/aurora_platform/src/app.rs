@@ -438,6 +438,7 @@ impl AppWindow {
             root_widget: None,
             _cursor: winit::window::CursorIcon::Default,
             last_mouse_position: None,
+            focused_widget_id: None,
             next_frame_requested: false,
             background_color: config.background_color,
         })
