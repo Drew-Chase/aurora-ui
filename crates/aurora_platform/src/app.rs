@@ -289,7 +289,15 @@ impl App {
     ///
     /// The data must be `width * height * 4` bytes (one `[R, G, B, A]` per pixel).
     /// This sets the taskbar icon and the titlebar icon on platforms that support it.
+    ///
+    /// # Panics
+    /// Panics if `rgba.len() != width * height * 4`.
     pub fn icon_rgba(mut self, rgba: Vec<u8>, width: u32, height: u32) -> Self {
+        assert_eq!(
+            rgba.len(),
+            (width as usize) * (height as usize) * 4,
+            "icon_rgba: buffer length must be width * height * 4"
+        );
         self.icon = Some(IconData {
             rgba,
             width,
@@ -636,7 +644,7 @@ impl AppWindow {
         );
     }
 
-    /// Returns the inner (client-area) size in logical pixels.
+    /// Returns the inner (client-area) size in physical pixels.
     pub fn inner_size(&self) -> Size {
         let inner_size = self.window_handle.inner_size();
         Size::new(inner_size.width as f32, inner_size.height as f32)
@@ -644,8 +652,8 @@ impl AppWindow {
 
     /// Returns the outer (including decorations) size in physical pixels.
     pub fn outer_size(&self) -> Size {
-        let inner_size = self.window_handle.outer_size();
-        Size::new(inner_size.width as f32, inner_size.height as f32)
+        let outer_size = self.window_handle.outer_size();
+        Size::new(outer_size.width as f32, outer_size.height as f32)
     }
 
     /// Returns the display scale factor (e.g. `2.0` on Retina/HiDPI).
