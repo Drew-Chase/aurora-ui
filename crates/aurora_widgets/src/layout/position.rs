@@ -138,6 +138,25 @@ impl Widget for Positioned {
         }
     }
 
+    fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
+        let child_rect = match self.position {
+            Position::Relative => rect,
+            Position::Absolute(point) => Rect::new(
+                rect.x1 + point.x,
+                rect.y1 + point.y,
+                rect.x1 + point.x + self.child_size.width,
+                rect.y1 + point.y + self.child_size.height,
+            ),
+            Position::Fixed(point) => Rect::new(
+                point.x,
+                point.y,
+                point.x + self.child_size.width,
+                point.y + self.child_size.height,
+            ),
+        };
+        self.child.paint_overlay(canvas, child_rect);
+    }
+
     fn children(&self) -> &[Box<dyn Widget>] {
         std::slice::from_ref(&self.child)
     }
