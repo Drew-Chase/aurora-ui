@@ -6,3 +6,10 @@ description = "Animation library for AuroraUI — tweens, easing, keyframes, and
 
 [dependencies]
 aurora_core = { path = "../aurora_core" }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "animate_bench"
+harness = false

@@ -130,7 +130,7 @@ impl Widget for Stack {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "text")))]
 mod tests {
     use super::*;
 

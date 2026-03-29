@@ -35,6 +35,11 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
+      - name: Test (no-text feature gates)
+        run: |
+          cargo test -p aurora_render --no-default-features --lib
+          cargo test -p aurora_widgets --no-default-features --lib
+
       - name: Build (release)
         run: cargo build --release -p aurora
 

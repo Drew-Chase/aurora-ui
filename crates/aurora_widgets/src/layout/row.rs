@@ -335,7 +335,7 @@ macro_rules! row {
     }};
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "text")))]
 mod tests {
     use super::*;
     use crate::layout::{Align, Justify};

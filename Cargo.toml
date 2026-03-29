@@ -46,6 +46,9 @@ default-members = [
     "crates/aurora_widgets"
 ]
 
+[workspace.dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
 # ---------- SHARED PROFILES ----------
 # These apply to ALL workspace members automatically.
 

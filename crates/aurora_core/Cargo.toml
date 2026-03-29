@@ -10,3 +10,10 @@ serde = { version = "1", features = ["derive"], optional = true }
 [features]
 default = []
 serde = ["dep:serde"]
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "geometry_bench"
+harness = false

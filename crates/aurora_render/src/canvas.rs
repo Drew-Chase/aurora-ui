@@ -847,7 +847,7 @@ impl<'a> Canvas<'a> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "text")))]
 mod tests {
     use super::*;
 
