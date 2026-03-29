@@ -35,7 +35,9 @@ pub struct InputOtp {
     corners: Corners,
     focused: bool,
     tab_index: Option<u32>,
+    #[allow(clippy::type_complexity)]
     on_change: Option<Box<dyn FnMut(&str)>>,
+    #[allow(clippy::type_complexity)]
     on_complete: Option<Box<dyn FnMut(&str)>>,
     char_layouts: Vec<Option<aurora_text::text_layout::TextLayout>>,
 }

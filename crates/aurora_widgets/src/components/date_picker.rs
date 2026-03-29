@@ -34,6 +34,7 @@ pub struct DatePicker {
     corners: Corners,
     padding: Edges,
     width: Option<f32>,
+    #[allow(clippy::type_complexity)]
     on_select: Option<Box<dyn FnMut(u32, u32, u32)>>,
     display_layout: Option<aurora_text::text_layout::TextLayout>,
     calendar: Calendar,

@@ -42,6 +42,7 @@ pub struct TextArea {
     height: Option<f32>,
     focused: bool,
     tab_index: Option<u32>,
+    #[allow(clippy::type_complexity)]
     on_change: Option<Box<dyn FnMut(&str)>>,
     text_layout: Option<aurora_text::text_layout::TextLayout>,
     placeholder_layout: Option<aurora_text::text_layout::TextLayout>,

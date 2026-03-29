@@ -588,10 +588,10 @@ impl AppWindow {
             // Track focused widget for restoration after Composite rebuilds.
             // Dispatch Blur to the old widget before switching focus.
             if let Some(new_id) = response.request_focus {
-                if let Some(old_id) = self.focused_widget_id {
-                    if old_id != new_id {
-                        widget.event(&WidgetEvent::Blur(old_id), rect);
-                    }
+                if let Some(old_id) = self.focused_widget_id
+                    && old_id != new_id
+                {
+                    widget.event(&WidgetEvent::Blur(old_id), rect);
                 }
                 self.focused_widget_id = Some(new_id);
             } else if matches!(event, WidgetEvent::Mouse(MouseEvent::MouseClickEvent(_))) && response.handled {

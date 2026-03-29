@@ -169,24 +169,26 @@ impl CompositeBuilder for Button {
         let child = if self.child.is_some() {
             self.child.clone()
         } else {
-            self.label.as_ref().and_then(|label| {
+            {
                 #[cfg(feature = "text")]
                 {
-                    use crate::text_widget::Text;
-                    let mut text_widget = Text::new(label.clone())
-                        .color(self.foreground_color)
-                        .justify(crate::layout::Justify::Center);
-                    if !_has_slots {
-                        // Single-child mode: fill button and center horizontally
-                        text_widget = text_widget
-                            .height(self.height as f32)
-                            .align(crate::layout::Align::Center);
-                    }
-                    Some(Rc::new(RefCell::new(Box::new(text_widget) as Box<dyn Widget>)))
+                    self.label.as_ref().map(|label| {
+                        use crate::text_widget::Text;
+                        let mut text_widget = Text::new(label.clone())
+                            .color(self.foreground_color)
+                            .justify(crate::layout::Justify::Center);
+                        if !_has_slots {
+                            // Single-child mode: fill button and center horizontally
+                            text_widget = text_widget
+                                .height(self.height as f32)
+                                .align(crate::layout::Align::Center);
+                        }
+                        Rc::new(RefCell::new(Box::new(text_widget) as Box<dyn Widget>))
+                    })
                 }
                 #[cfg(not(feature = "text"))]
-                { let _ = label; None }
-            })
+                { None }
+            }
         };
         let start = self.start.clone();
         let end = self.end.clone();
@@ -204,7 +206,7 @@ impl CompositeBuilder for Button {
         let anim_for_closure = anim.clone();
 
         Box::new(Composite::new(
-            ButtonState::default(),
+            ButtonState,
             move |_state, _set_state| {
                 let click_handler = on_click.clone();
                 let on_hover = on_hover.clone();

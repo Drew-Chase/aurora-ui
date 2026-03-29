@@ -292,7 +292,6 @@ impl Widget for Row {
                         request_focus: response.request_focus,
                         focus_next: response.focus_next,
                         focus_prev: response.focus_prev,
-                        ..Default::default()
                     };
                 }
                 if response.handled {
@@ -308,7 +307,6 @@ impl Widget for Row {
                     request_focus: response.request_focus,
                     focus_next: response.focus_next,
                     focus_prev: response.focus_prev,
-                    ..Default::default()
                 };
             }
         }

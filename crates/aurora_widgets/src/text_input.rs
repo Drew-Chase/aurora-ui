@@ -655,10 +655,10 @@ impl Widget for TextInput {
                 // Ctrl+C — copy selection to clipboard
                 if modifiers.ctrl && *key == Key::Character('c') {
                     #[cfg(feature = "text")]
-                    if let Some((lo, hi)) = self.selection_range() {
-                        if let Ok(mut cb) = arboard::Clipboard::new() {
-                            let _ = cb.set_text(&self.text[lo..hi]);
-                        }
+                    if let Some((lo, hi)) = self.selection_range()
+                        && let Ok(mut cb) = arboard::Clipboard::new()
+                    {
+                        let _ = cb.set_text(&self.text[lo..hi]);
                     }
                     return EventResponse {
                         handled: true,
@@ -669,10 +669,10 @@ impl Widget for TextInput {
                 // Ctrl+X — cut selection to clipboard
                 if modifiers.ctrl && *key == Key::Character('x') {
                     #[cfg(feature = "text")]
-                    if let Some((lo, hi)) = self.selection_range() {
-                        if let Ok(mut cb) = arboard::Clipboard::new() {
-                            let _ = cb.set_text(&self.text[lo..hi]);
-                        }
+                    if let Some((lo, hi)) = self.selection_range()
+                        && let Ok(mut cb) = arboard::Clipboard::new()
+                    {
+                        let _ = cb.set_text(&self.text[lo..hi]);
                     }
                     if self.has_selection() {
                         self.delete_selection();
@@ -688,16 +688,16 @@ impl Widget for TextInput {
                 // Ctrl+V — paste from clipboard
                 if modifiers.ctrl && *key == Key::Character('v') {
                     #[cfg(feature = "text")]
-                    if let Ok(mut cb) = arboard::Clipboard::new() {
-                        if let Ok(text) = cb.get_text() {
-                            if self.has_selection() {
-                                self.delete_selection();
-                            }
-                            self.text.insert_str(self.cursor_pos, &text);
-                            self.cursor_pos += text.len();
-                            self.clear_selection();
-                            self.notify_change();
+                    if let Ok(mut cb) = arboard::Clipboard::new()
+                        && let Ok(text) = cb.get_text()
+                    {
+                        if self.has_selection() {
+                            self.delete_selection();
                         }
+                        self.text.insert_str(self.cursor_pos, &text);
+                        self.cursor_pos += text.len();
+                        self.clear_selection();
+                        self.notify_change();
                     }
                     return EventResponse {
                         handled: true,
