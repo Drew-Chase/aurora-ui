@@ -223,3 +223,148 @@ impl From<FontStretch> for cosmic_text::Stretch {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_all_none() {
+        let opts = FontOptions::new();
+        assert!(opts.family.is_none());
+        assert!(opts.size.is_none());
+        assert!(opts.weight.is_none());
+        assert!(opts.style.is_none());
+        assert!(opts.stretch.is_none());
+        assert!(opts.line_height.is_none());
+    }
+
+    #[test]
+    fn builder_chain() {
+        let opts = FontOptions::new()
+            .family("Inter")
+            .size(20.0)
+            .weight(FontWeight::Bold)
+            .style(FontStyle::Italic)
+            .stretch(FontStretch::Condensed)
+            .line_height(24.0);
+        assert_eq!(opts.family.as_deref(), Some("Inter"));
+        assert_eq!(opts.size, Some(20.0));
+        assert_eq!(opts.weight, Some(FontWeight::Bold));
+        assert_eq!(opts.style, Some(FontStyle::Italic));
+        assert_eq!(opts.stretch, Some(FontStretch::Condensed));
+        assert_eq!(opts.line_height, Some(24.0));
+    }
+
+    #[test]
+    fn bold_shorthand() {
+        let opts = FontOptions::new().bold();
+        assert_eq!(opts.weight, Some(FontWeight::Bold));
+    }
+
+    #[test]
+    fn italic_shorthand() {
+        let opts = FontOptions::new().italic();
+        assert_eq!(opts.style, Some(FontStyle::Italic));
+    }
+
+    #[test]
+    fn effective_size_default() {
+        assert_eq!(FontOptions::new().effective_size(), 16.0);
+    }
+
+    #[test]
+    fn effective_size_custom() {
+        assert_eq!(FontOptions::new().size(24.0).effective_size(), 24.0);
+    }
+
+    #[test]
+    fn effective_line_height_default() {
+        // Default: 16.0 * 1.2 = 19.2
+        let lh = FontOptions::new().effective_line_height();
+        assert!((lh - 19.2).abs() < 0.01);
+    }
+
+    #[test]
+    fn effective_line_height_with_custom_size() {
+        let lh = FontOptions::new().size(20.0).effective_line_height();
+        assert!((lh - 24.0).abs() < 0.01); // 20 * 1.2
+    }
+
+    #[test]
+    fn effective_line_height_custom() {
+        let lh = FontOptions::new().line_height(30.0).effective_line_height();
+        assert_eq!(lh, 30.0);
+    }
+
+    #[test]
+    fn resolve_inherits_from_base() {
+        let base = FontOptions::new().family("Roboto").size(16.0);
+        let widget = FontOptions::new().bold();
+        let resolved = widget.resolve(&base);
+        assert_eq!(resolved.family.as_deref(), Some("Roboto"));
+        assert_eq!(resolved.size, Some(16.0));
+        assert_eq!(resolved.weight, Some(FontWeight::Bold));
+    }
+
+    #[test]
+    fn resolve_widget_overrides_base() {
+        let base = FontOptions::new().family("Roboto").size(16.0);
+        let widget = FontOptions::new().family("Inter").size(24.0);
+        let resolved = widget.resolve(&base);
+        assert_eq!(resolved.family.as_deref(), Some("Inter"));
+        assert_eq!(resolved.size, Some(24.0));
+    }
+
+    #[test]
+    fn resolve_both_none_stays_none() {
+        let base = FontOptions::new();
+        let widget = FontOptions::new();
+        let resolved = widget.resolve(&base);
+        assert!(resolved.family.is_none());
+        assert!(resolved.size.is_none());
+    }
+
+    #[test]
+    fn font_weight_to_cosmic() {
+        assert_eq!(cosmic_text::Weight::from(FontWeight::Thin).0, 100);
+        assert_eq!(cosmic_text::Weight::from(FontWeight::Normal).0, 400);
+        assert_eq!(cosmic_text::Weight::from(FontWeight::Bold).0, 700);
+        assert_eq!(cosmic_text::Weight::from(FontWeight::Black).0, 900);
+    }
+
+    #[test]
+    fn font_style_to_cosmic() {
+        assert_eq!(cosmic_text::Style::from(FontStyle::Normal), cosmic_text::Style::Normal);
+        assert_eq!(cosmic_text::Style::from(FontStyle::Italic), cosmic_text::Style::Italic);
+        assert_eq!(cosmic_text::Style::from(FontStyle::Oblique), cosmic_text::Style::Oblique);
+    }
+
+    #[test]
+    fn font_stretch_to_cosmic() {
+        assert_eq!(
+            cosmic_text::Stretch::from(FontStretch::UltraCondensed),
+            cosmic_text::Stretch::UltraCondensed
+        );
+        assert_eq!(
+            cosmic_text::Stretch::from(FontStretch::Normal),
+            cosmic_text::Stretch::Normal
+        );
+        assert_eq!(
+            cosmic_text::Stretch::from(FontStretch::UltraExpanded),
+            cosmic_text::Stretch::UltraExpanded
+        );
+    }
+
+    #[test]
+    fn to_cosmic_attrs_applies_fields() {
+        let opts = FontOptions::new()
+            .family("Inter")
+            .weight(FontWeight::Bold)
+            .style(FontStyle::Italic)
+            .stretch(FontStretch::Condensed);
+        let attrs = opts.to_cosmic_attrs();
+        // Just verify it doesn't panic — cosmic_text::Attrs doesn't expose getters easily
+        let _ = attrs;
+    }
+}

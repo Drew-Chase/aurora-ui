@@ -167,3 +167,115 @@ impl SyntaxSet {
         Self::from_json(include_str!("languages.json"))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn builtin_loads_without_panic() {
+        let _ = SyntaxSet::builtin();
+    }
+
+    #[test]
+    fn default_loads_without_panic() {
+        let _ = SyntaxSet::default();
+    }
+
+    #[test]
+    fn languages_includes_rust() {
+        let set = SyntaxSet::default();
+        let langs = set.languages();
+        assert!(langs.contains(&"rust"), "expected 'rust' in {langs:?}");
+    }
+
+    #[test]
+    fn languages_includes_common() {
+        let set = SyntaxSet::default();
+        let langs = set.languages();
+        for expected in ["javascript", "python", "json", "html", "css"] {
+            assert!(langs.contains(&expected), "missing language: {expected}");
+        }
+    }
+
+    #[test]
+    fn highlight_rust_keyword() {
+        let set = SyntaxSet::default();
+        let tokens = set.highlight("let x = 42;", "rust");
+        let keywords: Vec<_> = tokens
+            .iter()
+            .filter(|(_, t)| *t == TokenType::Keyword)
+            .collect();
+        assert!(!keywords.is_empty(), "expected at least one keyword token");
+        let (range, _) = &keywords[0];
+        assert_eq!(&"let x = 42;"[range.clone()], "let");
+    }
+
+    #[test]
+    fn highlight_rust_number() {
+        let set = SyntaxSet::default();
+        let tokens = set.highlight("let x = 42;", "rust");
+        let numbers: Vec<_> = tokens
+            .iter()
+            .filter(|(_, t)| *t == TokenType::Number)
+            .collect();
+        assert!(!numbers.is_empty(), "expected at least one number token");
+        let (range, _) = &numbers[0];
+        assert_eq!(&"let x = 42;"[range.clone()], "42");
+    }
+
+    #[test]
+    fn highlight_unknown_language_empty() {
+        let set = SyntaxSet::default();
+        let tokens = set.highlight("let x = 42;", "nonexistent_lang_xyz");
+        assert!(tokens.is_empty());
+    }
+
+    #[test]
+    fn highlight_empty_string() {
+        let set = SyntaxSet::default();
+        let tokens = set.highlight("", "rust");
+        assert!(tokens.is_empty());
+    }
+
+    #[test]
+    fn tokens_non_overlapping_and_sorted() {
+        let set = SyntaxSet::default();
+        let tokens = set.highlight("fn main() { let x = 42; }", "rust");
+        for window in tokens.windows(2) {
+            let (r1, _) = &window[0];
+            let (r2, _) = &window[1];
+            assert!(r1.start <= r2.start, "tokens not sorted: {:?} before {:?}", r1, r2);
+            assert!(r1.end <= r2.start, "tokens overlap: {:?} and {:?}", r1, r2);
+        }
+    }
+
+    #[test]
+    fn highlight_rust_string() {
+        let set = SyntaxSet::default();
+        let tokens = set.highlight(r#"let s = "hello";"#, "rust");
+        let strings: Vec<_> = tokens
+            .iter()
+            .filter(|(_, t)| *t == TokenType::String)
+            .collect();
+        assert!(!strings.is_empty(), "expected a string token");
+    }
+
+    #[test]
+    fn highlight_rust_comment() {
+        let set = SyntaxSet::default();
+        let tokens = set.highlight("// this is a comment", "rust");
+        let comments: Vec<_> = tokens
+            .iter()
+            .filter(|(_, t)| *t == TokenType::Comment)
+            .collect();
+        assert!(!comments.is_empty(), "expected a comment token");
+    }
+
+    #[test]
+    fn from_json_empty_object() {
+        let set = SyntaxSet::from_json("{}");
+        assert!(set.languages().is_empty());
+        assert!(set.highlight("let x = 1;", "rust").is_empty());
+    }
+}
