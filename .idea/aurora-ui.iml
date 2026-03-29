@@ -38,6 +38,9 @@
       <sourceFolder url="file://$MODULE_DIR$/examples/widget_gallery/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/aurora_theming/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/aurora_syntax/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_animate/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_core/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_render/benches" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/examples/fonts_example/target" />
       <excludeFolder url="file://$MODULE_DIR$/examples/iconify_example/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
