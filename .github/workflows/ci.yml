@@ -41,7 +41,7 @@ jobs:
           cargo test -p aurora_widgets --no-default-features --lib
 
       - name: Build (release)
-        run: cargo build --release -p aurora
+        run: cargo build --release -p aurora_ui
 
       - name: Check formatting
         run: cargo fmt --all -- --check
