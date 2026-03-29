@@ -289,13 +289,15 @@ fn close_window(window: &winit::window::Window) {
 
     if let Ok(handle) = window.window_handle() {
         if let RawWindowHandle::AppKit(h) = handle.as_raw() {
-            // SAFETY: h.ns_window is a valid, non-null pointer to an NSWindow
+            // SAFETY: h.ns_view is a valid, non-null pointer to an NSView
             // provided by winit's HasWindowHandle implementation. The pointer
             // remains valid for the duration of this scope.
             unsafe {
-                let ns_window: &objc2_app_kit::NSWindow =
-                    &*(h.ns_window.as_ptr() as *const objc2_app_kit::NSWindow);
-                ns_window.performClose(None);
+                let ns_view: &objc2_app_kit::NSView =
+                    &*(h.ns_view.as_ptr() as *const objc2_app_kit::NSView);
+                if let Some(ns_window) = ns_view.window() {
+                    ns_window.performClose(None);
+                }
             }
         }
     }
@@ -393,6 +395,7 @@ impl Widget for WindowControls {
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
         let is_maximized = self.window.is_maximized();
 
         for (button, button_rect) in &self.button_rects {
