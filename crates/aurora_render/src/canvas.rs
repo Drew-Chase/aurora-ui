@@ -14,6 +14,7 @@ use aurora_text::text_layout::TextLayout;
 
 /// Signed distance from point (fx, fy) to the boundary of a rounded rect.
 /// Returns negative values inside, positive values outside.
+#[allow(clippy::too_many_arguments)]
 #[inline(always)]
 fn rounded_rect_sdf(
     fx: f32,
