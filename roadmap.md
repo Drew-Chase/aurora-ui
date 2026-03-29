@@ -12,7 +12,7 @@ This roadmap outlines everything needed to reach 100% production readiness.
 
 These are blockers. No production app should ship without them.
 
-### 1.1 Accessibility (a11y)
+### ~~1.1 Accessibility (a11y)~~ - _Complete_
 
 The `aurora_a11y` crate exists but is empty. Accessibility is a legal requirement in many markets and a moral imperative everywhere.
 
@@ -33,9 +33,9 @@ The `aurora_a11y` crate exists but is empty. Accessibility is a legal requiremen
 
 ---
 
-### 1.2 Test Suite & CI/CD
+### ~~1.2 Test Suite & CI/CD~~ - _Complete_
 
-Zero tests exist today. Regressions will ship silently without a test infrastructure.
+~~Zero tests exist today. Regressions will ship silently without a test infrastructure.~~
 
 **Required work:**
 
