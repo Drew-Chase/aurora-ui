@@ -33,3 +33,7 @@ benchmark:
         memory=$(echo "$output" | grep "MEMORY_KB=" | head -1 | cut -d= -f2)
         printf "%-30s %12s %14s %12s\n" "$name" "${size_kb:-N/A}" "${startup:-N/A}" "${memory:-N/A}"
     done
+
+
+cicd:
+    gh act -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-latest --env CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=gcc --env CC=gcc
