@@ -47,7 +47,8 @@ fn main() {
 
     // Load a PNG from an embedded file
     let github_png = Arc::new(
-        ImageData::from_bytes(include_bytes!("../github.png")).expect("Failed to decode github.png"),
+        ImageData::from_bytes(include_bytes!("../github.png"))
+            .expect("Failed to decode github.png"),
     );
 
     // Load an SVG from an embedded file
@@ -76,28 +77,19 @@ fn main() {
                                 BoxWidget::new()
                                     .background_color(Color::from_rgb(50, 50, 50))
                                     .corners(Corners::all(6.0))
-                                    .child(
-                                        Image::new(checker.clone())
-                                            .fit(ImageFit::Contain),
-                                    ),
+                                    .child(Image::new(checker.clone()).fit(ImageFit::Contain)),
                             )
                             .child(
                                 BoxWidget::new()
                                     .background_color(Color::from_rgb(50, 50, 50))
                                     .corners(Corners::all(6.0))
-                                    .child(
-                                        Image::new(checker.clone())
-                                            .fit(ImageFit::Cover),
-                                    ),
+                                    .child(Image::new(checker.clone()).fit(ImageFit::Cover)),
                             )
                             .child(
                                 BoxWidget::new()
                                     .background_color(Color::from_rgb(50, 50, 50))
                                     .corners(Corners::all(6.0))
-                                    .child(
-                                        Image::new(checker.clone())
-                                            .fit(ImageFit::Fill),
-                                    ),
+                                    .child(Image::new(checker.clone()).fit(ImageFit::Fill)),
                             ),
                     )
                     .child(
@@ -106,10 +98,7 @@ fn main() {
                             .height(150)
                             .background_color(Color::WHITE)
                             .corners(Corners::all(6.0))
-                            .child(
-                                Image::new(grad.clone())
-                                    .fit(ImageFit::Contain),
-                            ),
+                            .child(Image::new(grad.clone()).fit(ImageFit::Contain)),
                     )
                     .child(
                         // PNG loaded from file via include_bytes!
@@ -120,19 +109,13 @@ fn main() {
                                 BoxWidget::new()
                                     .background_color(Color::from_rgb(50, 50, 50))
                                     .corners(Corners::all(6.0))
-                                    .child(
-                                        Image::new(github_png.clone())
-                                            .fit(ImageFit::Contain),
-                                    ),
+                                    .child(Image::new(github_png.clone()).fit(ImageFit::Contain)),
                             )
                             .child(
                                 BoxWidget::new()
                                     .background_color(Color::WHITE)
                                     .corners(Corners::all(6.0))
-                                    .child(
-                                        Image::new(github_png.clone())
-                                            .fit(ImageFit::Contain),
-                                    ),
+                                    .child(Image::new(github_png.clone()).fit(ImageFit::Contain)),
                             ),
                     )
                     .child(
@@ -144,21 +127,13 @@ fn main() {
                                 BoxWidget::new()
                                     .background_color(Color::from_rgb(50, 50, 50))
                                     .corners(Corners::all(6.0))
-                                    .child(
-                                        Svg::new(github_svg.clone())
-                                            .width(300.0)
-                                            .height(300.0),
-                                    ),
+                                    .child(Svg::new(github_svg.clone()).width(300.0).height(300.0)),
                             )
                             .child(
                                 BoxWidget::new()
                                     .background_color(Color::WHITE)
                                     .corners(Corners::all(6.0))
-                                    .child(
-                                        Svg::new(github_svg.clone())
-                                            .width(300.0)
-                                            .height(300.0),
-                                    ),
+                                    .child(Svg::new(github_svg.clone()).width(300.0).height(300.0)),
                             ),
                     ),
             );

@@ -47,7 +47,11 @@ impl SvgData {
         let scale_x = width as f32 / size.width();
         let scale_y = height as f32 / size.height();
 
-        render_nodes(self.tree.root(), tiny_skia::Transform::from_scale(scale_x, scale_y), &mut pixmap);
+        render_nodes(
+            self.tree.root(),
+            tiny_skia::Transform::from_scale(scale_x, scale_y),
+            &mut pixmap,
+        );
 
         // Convert from premultiplied to straight alpha
         let data = pixmap.data();
@@ -71,7 +75,11 @@ impl SvgData {
 }
 
 /// Recursively renders usvg nodes into a tiny-skia pixmap.
-fn render_nodes(parent: &usvg::Group, transform: tiny_skia::Transform, pixmap: &mut tiny_skia::Pixmap) {
+fn render_nodes(
+    parent: &usvg::Group,
+    transform: tiny_skia::Transform,
+    pixmap: &mut tiny_skia::Pixmap,
+) {
     for node in parent.children() {
         match node {
             usvg::Node::Group(group) => {

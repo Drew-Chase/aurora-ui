@@ -1,6 +1,6 @@
+use crate::theme;
 use aurora_ui::aurora_widgets::components::*;
 use aurora_ui::prelude::*;
-use crate::theme;
 
 pub fn page_counter() -> impl Widget {
     col!()
@@ -227,4 +227,3 @@ pub fn counter_demo() -> impl Widget {
         )
     })
 }
-

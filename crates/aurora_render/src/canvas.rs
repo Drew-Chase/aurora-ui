@@ -168,7 +168,10 @@ impl<'a> Canvas<'a> {
     pub fn push_clip(&mut self, rect: Rect) {
         let clipped = match self.clip_stack.last() {
             Some(existing) => existing.intersection(&rect).unwrap_or(Rect::new(
-                existing.x1, existing.y1, existing.x1, existing.y1,
+                existing.x1,
+                existing.y1,
+                existing.x1,
+                existing.y1,
             )),
             None => rect,
         };
@@ -370,11 +373,7 @@ impl<'a> Canvas<'a> {
             if fy >= top_band && fy <= bot_band {
                 let end = row + x1 as usize;
                 if end <= self.buffer.len() {
-                    Self::blend_span(
-                        &mut self.buffer[row + x0 as usize..end],
-                        pixel,
-                        alpha,
-                    );
+                    Self::blend_span(&mut self.buffer[row + x0 as usize..end], pixel, alpha);
                 }
                 continue;
             }
@@ -386,8 +385,8 @@ impl<'a> Canvas<'a> {
                 let fx = x as f32 + 0.5;
 
                 let dist = rounded_rect_sdf(
-                    fx, fy, rect.x1, rect.y1, rect.x2, rect.y2, tl, tr, bl, br, tl_cx,
-                    tl_cy, tr_cx, tr_cy, bl_cx, bl_cy, br_cx, br_cy,
+                    fx, fy, rect.x1, rect.y1, rect.x2, rect.y2, tl, tr, bl, br, tl_cx, tl_cy,
+                    tr_cx, tr_cy, bl_cx, bl_cy, br_cx, br_cy,
                 );
                 let coverage = (0.5 - dist).clamp(0.0, 1.0);
 
@@ -633,8 +632,8 @@ impl<'a> Canvas<'a> {
 
                     // Outer coverage
                     let outer_dist = rounded_rect_sdf(
-                        fx, fy, rect.x1, rect.y1, rect.x2, rect.y2, tl, tr, bl, br, tl_cx,
-                        tl_cy, tr_cx, tr_cy, bl_cx, bl_cy, br_cx, br_cy,
+                        fx, fy, rect.x1, rect.y1, rect.x2, rect.y2, tl, tr, bl, br, tl_cx, tl_cy,
+                        tr_cx, tr_cy, bl_cx, bl_cy, br_cx, br_cy,
                     );
                     let outer_cov = (0.5 - outer_dist).clamp(0.0, 1.0);
                     if outer_cov <= 0.0 {
@@ -643,9 +642,8 @@ impl<'a> Canvas<'a> {
 
                     // Inner coverage
                     let inner_dist = rounded_rect_sdf(
-                        fx, fy, in_x1, in_y1, in_x2, in_y2, tl_in, tr_in, bl_in, br_in,
-                        in_tl_cx, in_tl_cy, in_tr_cx, in_tr_cy, in_bl_cx, in_bl_cy, in_br_cx,
-                        in_br_cy,
+                        fx, fy, in_x1, in_y1, in_x2, in_y2, tl_in, tr_in, bl_in, br_in, in_tl_cx,
+                        in_tl_cy, in_tr_cx, in_tr_cy, in_bl_cx, in_bl_cy, in_br_cx, in_br_cy,
                     );
                     let inner_cov = (0.5 - inner_dist).clamp(0.0, 1.0);
 
@@ -992,7 +990,11 @@ mod tests {
         );
         // Very tip of corner (0,0) should NOT be fully white (outside the rounded corner)
         let corner = pixel_at(&buf, 0, 0);
-        assert_ne!(corner, Color::WHITE.to_rgb_u32(), "corner should be excluded or partially filled");
+        assert_ne!(
+            corner,
+            Color::WHITE.to_rgb_u32(),
+            "corner should be excluded or partially filled"
+        );
         // Center should be filled
         assert_eq!(pixel_at(&buf, 5, 5), Color::WHITE.to_rgb_u32());
     }

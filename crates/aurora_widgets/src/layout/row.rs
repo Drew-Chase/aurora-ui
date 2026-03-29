@@ -3,9 +3,9 @@ use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::MouseEvent;
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 /// A horizontal layout container that arranges children left-to-right.
@@ -328,9 +328,7 @@ impl Widget for Row {
 /// ```
 #[macro_export]
 macro_rules! row {
-    () => {{
-        Row::new()
-    }};
+    () => {{ Row::new() }};
 }
 
 #[cfg(all(test, not(feature = "text")))]

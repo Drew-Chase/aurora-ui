@@ -5,22 +5,33 @@ pub fn page_label() -> impl Widget {
     col!()
         .spacing(24.0)
         .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
-        .child(crate::page_header("Label", "Renders an accessible label associated with controls."))
-        .child(crate::example_section("Default", "Labels for form controls."))
+        .child(crate::page_header(
+            "Label",
+            "Renders an accessible label associated with controls.",
+        ))
+        .child(crate::example_section(
+            "Default",
+            "Labels for form controls.",
+        ))
         .child(crate::example_card(
             col!()
                 .spacing(8.0)
                 .child(label::Label::new("Username"))
                 .child(label::Label::new("Email address").font_size(12.0))
-                .child(label::Label::new("Bold label").font_weight(FontWeight::Bold))
+                .child(label::Label::new("Bold label").font_weight(FontWeight::Bold)),
         ))
-        .child(code_block::CodeBlock::new().language("rust").code(
-r#"Label::new("Username")
+        .child(
+            code_block::CodeBlock::new()
+                .language("rust")
+                .code(
+                    r#"Label::new("Username")
 
 Label::new("Email address")
     .font_size(12.0)
 
 Label::new("Bold label")
-    .font_weight(FontWeight::Bold)"#
-        ).font_size(13.0))
+    .font_weight(FontWeight::Bold)"#,
+                )
+                .font_size(13.0),
+        )
 }

@@ -1,8 +1,8 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use aurora_core::color::Color;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 fn bench_rect_intersection(c: &mut Criterion) {
     let a = Rect::new(0.0, 0.0, 100.0, 100.0);

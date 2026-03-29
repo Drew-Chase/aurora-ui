@@ -2,9 +2,9 @@ use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 use aurora_text::font_options::FontWeight;
 use aurora_text::text_layout::TextLayout;
@@ -131,7 +131,8 @@ impl Widget for RadioGroup {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(FontWeight::Normal);
-            let mut tl = TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
+            let mut tl =
+                TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, available.width - self.radio_size - 8.0);
             let ts = tl.size();
             let item_h = ts.height.max(self.radio_size);
@@ -251,5 +252,8 @@ impl Widget for RadioGroup {
     fn needs_animation(&self) -> bool {
         self.anims.iter().any(|a| a.is_animating())
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::RadioGroup)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::RadioGroup)
+    }
 }

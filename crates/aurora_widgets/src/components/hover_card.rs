@@ -4,8 +4,8 @@ use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
-use aurora_core::kmi::mouse::MouseEvent;
 use aurora_core::kmi::WidgetEvent;
+use aurora_core::kmi::mouse::MouseEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -126,7 +126,6 @@ impl Widget for HoverCard {
         if let Some(ref trigger) = self.trigger {
             trigger.paint(canvas, rect);
         }
-
     }
 
     fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {

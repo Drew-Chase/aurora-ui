@@ -1,6 +1,6 @@
+use crate::theme;
 use aurora_ui::aurora_widgets::components::*;
 use aurora_ui::prelude::*;
-use crate::theme;
 
 pub fn page_todo_app() -> impl Widget {
     col!()
@@ -23,7 +23,7 @@ pub fn page_todo_app() -> impl Widget {
             code_block::CodeBlock::new()
                 .language("rust")
                 .code(
-r#"#[derive(Clone)]
+                    r#"#[derive(Clone)]
 struct TodoItem {
     text: String,
     done: bool,
@@ -45,7 +45,7 @@ struct TodoState {
             code_block::CodeBlock::new()
                 .language("rust")
                 .code(
-r#"let add = setter.clone();
+                    r#"let add = setter.clone();
 let input_text = state.input.clone();
 
 row!()
@@ -86,7 +86,7 @@ row!()
             code_block::CodeBlock::new()
                 .language("rust")
                 .code(
-r#"let mut list = col!().spacing(4.0);
+                    r#"let mut list = col!().spacing(4.0);
 
 for (i, item) in state.items.iter().enumerate() {
     let toggle = setter.clone();
@@ -163,9 +163,18 @@ fn todo_demo() -> impl Widget {
     Composite::new(
         TodoState {
             items: vec![
-                TodoItem { text: "Learn Aurora UI".into(), done: true },
-                TodoItem { text: "Build a todo app".into(), done: false },
-                TodoItem { text: "Ship it".into(), done: false },
+                TodoItem {
+                    text: "Learn Aurora UI".into(),
+                    done: true,
+                },
+                TodoItem {
+                    text: "Build a todo app".into(),
+                    done: false,
+                },
+                TodoItem {
+                    text: "Ship it".into(),
+                    done: false,
+                },
             ],
             input: String::new(),
         },

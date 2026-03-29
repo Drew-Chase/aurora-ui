@@ -3,9 +3,9 @@ use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 use aurora_text::font_options::FontWeight;
 use aurora_text::text_layout::TextLayout;
@@ -135,7 +135,8 @@ impl Widget for Toggle {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(FontWeight::Medium);
-            let mut tl = TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
+            let mut tl =
+                TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, f32::MAX);
             let ts = tl.size();
             content_w = ts.width;
@@ -188,7 +189,12 @@ impl Widget for Toggle {
         if let Some(ref child) = self.child {
             let cx = rect.x1 + (rect.width() - self.child_size.width) / 2.0;
             let cy = rect.y1 + (rect.height() - self.child_size.height) / 2.0;
-            let child_rect = Rect::new(cx, cy, cx + self.child_size.width, cy + self.child_size.height);
+            let child_rect = Rect::new(
+                cx,
+                cy,
+                cx + self.child_size.width,
+                cy + self.child_size.height,
+            );
             child.paint(canvas, child_rect);
         }
     }
@@ -234,5 +240,8 @@ impl Widget for Toggle {
     fn needs_animation(&self) -> bool {
         self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Button).with_checked(self.pressed)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Button).with_checked(self.pressed)
+    }
 }

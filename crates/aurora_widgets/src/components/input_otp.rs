@@ -3,10 +3,10 @@ use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::keyboard::{Key, KeyboardEvent};
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -107,8 +107,7 @@ impl InputOtp {
 
 impl Widget for InputOtp {
     fn layout(&mut self, _available: Size, ctx: &mut LayoutCtx) -> Size {
-        let total_w = self.cell_size * self.length as f32
-            + self.spacing * (self.length - 1) as f32;
+        let total_w = self.cell_size * self.length as f32 + self.spacing * (self.length - 1) as f32;
 
         // Character layouts
         self.char_layouts.clear();
@@ -118,7 +117,13 @@ impl Widget for InputOtp {
                 let mut opts = ctx.font_options.clone();
                 opts.size = Some(20.0);
                 opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-                let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &text, &opts, colors::foreground(), None);
+                let tl = aurora_text::text_layout::TextLayout::new(
+                    ctx.font_manager,
+                    &text,
+                    &opts,
+                    colors::foreground(),
+                    None,
+                );
                 self.char_layouts.push(Some(tl));
             } else {
                 self.char_layouts.push(None);
@@ -145,7 +150,9 @@ impl Widget for InputOtp {
 
             // Character
             if let Some(Some(tl)) = self.char_layouts.get(i) {
-                let _s = tl.size(); let tw = _s.width; let th = _s.height;
+                let _s = tl.size();
+                let tw = _s.width;
+                let th = _s.height;
                 let tx = cell_rect.x1 + (self.cell_size - tw) / 2.0;
                 let ty = cell_rect.y1 + (self.cell_size - th) / 2.0;
                 canvas.draw_text(tl, tx as i32, ty as i32);
@@ -285,5 +292,9 @@ impl Widget for InputOtp {
             _ => EventResponse::default(),
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group).with_label("One-time password".to_string())    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)
+            .with_label("One-time password".to_string())
+    }
 }

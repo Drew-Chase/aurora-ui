@@ -86,8 +86,7 @@ impl Language {
 impl SyntaxSet {
     /// Loads languages from a JSON string.
     pub fn from_json(json: &str) -> Self {
-        let defs: HashMap<String, LanguageDef> =
-            serde_json::from_str(json).unwrap_or_default();
+        let defs: HashMap<String, LanguageDef> = serde_json::from_str(json).unwrap_or_default();
         let mut languages = HashMap::new();
         for (name, def) in &defs {
             languages.insert(name.clone(), Language::from_def(def));
@@ -98,9 +97,7 @@ impl SyntaxSet {
     /// Returns the built-in language set (loaded once, cached).
     pub fn builtin() -> &'static Self {
         static INSTANCE: OnceLock<SyntaxSet> = OnceLock::new();
-        INSTANCE.get_or_init(|| {
-            Self::from_json(include_str!("languages.json"))
-        })
+        INSTANCE.get_or_init(|| Self::from_json(include_str!("languages.json")))
     }
 
     /// Highlights code, returning non-overlapping byte ranges with token types.
@@ -245,7 +242,12 @@ mod tests {
         for window in tokens.windows(2) {
             let (r1, _) = &window[0];
             let (r2, _) = &window[1];
-            assert!(r1.start <= r2.start, "tokens not sorted: {:?} before {:?}", r1, r2);
+            assert!(
+                r1.start <= r2.start,
+                "tokens not sorted: {:?} before {:?}",
+                r1,
+                r2
+            );
             assert!(r1.end <= r2.start, "tokens overlap: {:?} and {:?}", r1, r2);
         }
     }

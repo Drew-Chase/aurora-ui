@@ -43,7 +43,10 @@ impl FontOptions {
 
     /// Sets the font size in pixels.
     pub fn size(mut self, size: f32) -> Self {
-        debug_assert!(size.is_finite() && size > 0.0, "font size must be finite and positive");
+        debug_assert!(
+            size.is_finite() && size > 0.0,
+            "font size must be finite and positive"
+        );
         self.size = Some(size);
         self
     }
@@ -335,9 +338,18 @@ mod tests {
 
     #[test]
     fn font_style_to_cosmic() {
-        assert_eq!(cosmic_text::Style::from(FontStyle::Normal), cosmic_text::Style::Normal);
-        assert_eq!(cosmic_text::Style::from(FontStyle::Italic), cosmic_text::Style::Italic);
-        assert_eq!(cosmic_text::Style::from(FontStyle::Oblique), cosmic_text::Style::Oblique);
+        assert_eq!(
+            cosmic_text::Style::from(FontStyle::Normal),
+            cosmic_text::Style::Normal
+        );
+        assert_eq!(
+            cosmic_text::Style::from(FontStyle::Italic),
+            cosmic_text::Style::Italic
+        );
+        assert_eq!(
+            cosmic_text::Style::from(FontStyle::Oblique),
+            cosmic_text::Style::Oblique
+        );
     }
 
     #[test]

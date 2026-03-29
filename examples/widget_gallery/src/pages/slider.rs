@@ -5,18 +5,32 @@ pub fn page_slider() -> impl Widget {
     col!()
         .spacing(24.0)
         .padding(Edges::new(0.0, 24.0, 0.0, 0.0))
-        .child(crate::page_header("Slider", "An input where the user selects a value from within a given range."))
-        .child(crate::example_section("Default", "Drag the thumb to set a value."))
-        .child(crate::example_card(
-            col!().spacing(16.0).child(slider::Slider::new().value(0.3).width(400.0)).child(slider::Slider::new().value(0.7).width(400.0))
+        .child(crate::page_header(
+            "Slider",
+            "An input where the user selects a value from within a given range.",
         ))
-        .child(code_block::CodeBlock::new().language("rust").code(
-r#"Slider::new()
+        .child(crate::example_section(
+            "Default",
+            "Drag the thumb to set a value.",
+        ))
+        .child(crate::example_card(
+            col!()
+                .spacing(16.0)
+                .child(slider::Slider::new().value(0.3).width(400.0))
+                .child(slider::Slider::new().value(0.7).width(400.0)),
+        ))
+        .child(
+            code_block::CodeBlock::new()
+                .language("rust")
+                .code(
+                    r#"Slider::new()
     .value(0.3)
     .width(400.0)
 
 Slider::new()
     .value(0.7)
-    .width(400.0)"#
-        ).font_size(13.0))
+    .width(400.0)"#,
+                )
+                .font_size(13.0),
+        )
 }

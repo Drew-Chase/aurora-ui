@@ -132,7 +132,7 @@ impl Widget for BoxWidget {
     fn children(&self) -> &[Box<dyn Widget>] {
         match &self.child {
             Some(child) => std::slice::from_ref(child),
-            None => &[]
+            None => &[],
         }
     }
 

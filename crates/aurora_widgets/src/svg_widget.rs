@@ -106,7 +106,12 @@ impl Widget for Svg {
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
         if let Some(r) = &self.rasterized {
-            let dest = Rect::new(rect.x1, rect.y1, rect.x1 + r.width as f32, rect.y1 + r.height as f32);
+            let dest = Rect::new(
+                rect.x1,
+                rect.y1,
+                rect.x1 + r.width as f32,
+                rect.y1 + r.height as f32,
+            );
             canvas.draw_image(&r.pixels, r.width, r.height, dest);
         }
     }
@@ -114,5 +119,8 @@ impl Widget for Svg {
     fn children(&self) -> &[Box<dyn Widget>] {
         &[]
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Image)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Image)
+    }
 }

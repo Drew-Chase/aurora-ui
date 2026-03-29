@@ -22,7 +22,7 @@ fn main() {
                     .child(Text::new("Item 8").font_size(14.0))
                     .child(Text::new("Item 9").font_size(12.0))
                     .child(Text::new("Item 10").font_size(10.0))
-                    .child(Text::new("Item 11").font_size(10.0))
+                    .child(Text::new("Item 11").font_size(10.0)),
             );
         })
         .expect("Failed to run app");

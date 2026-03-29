@@ -230,11 +230,9 @@ mod tests {
 
     #[test]
     fn basic_keyframes() {
-        let mut anim = KeyframeAnimation::new(vec![
-            Keyframe::new(0.0, 0.0f32),
-            Keyframe::new(1.0, 100.0),
-        ])
-        .duration(1.0);
+        let mut anim =
+            KeyframeAnimation::new(vec![Keyframe::new(0.0, 0.0f32), Keyframe::new(1.0, 100.0)])
+                .duration(1.0);
 
         assert!((anim.value() - 0.0).abs() < 0.01);
 
@@ -276,11 +274,9 @@ mod tests {
 
     #[test]
     fn keyframes_finished() {
-        let mut anim = KeyframeAnimation::new(vec![
-            Keyframe::new(0.0, 0.0f32),
-            Keyframe::new(1.0, 100.0),
-        ])
-        .duration(1.0);
+        let mut anim =
+            KeyframeAnimation::new(vec![Keyframe::new(0.0, 0.0f32), Keyframe::new(1.0, 100.0)])
+                .duration(1.0);
 
         anim.tick(1.0);
         assert!(anim.is_finished());
@@ -288,12 +284,10 @@ mod tests {
 
     #[test]
     fn keyframes_loop() {
-        let mut anim = KeyframeAnimation::new(vec![
-            Keyframe::new(0.0, 0.0f32),
-            Keyframe::new(1.0, 100.0),
-        ])
-        .duration(1.0)
-        .loop_mode(LoopMode::Infinite);
+        let mut anim =
+            KeyframeAnimation::new(vec![Keyframe::new(0.0, 0.0f32), Keyframe::new(1.0, 100.0)])
+                .duration(1.0)
+                .loop_mode(LoopMode::Infinite);
 
         anim.tick(1.5);
         assert!(!anim.is_finished());
@@ -302,11 +296,9 @@ mod tests {
 
     #[test]
     fn keyframes_reset() {
-        let mut anim = KeyframeAnimation::new(vec![
-            Keyframe::new(0.0, 0.0f32),
-            Keyframe::new(1.0, 100.0),
-        ])
-        .duration(1.0);
+        let mut anim =
+            KeyframeAnimation::new(vec![Keyframe::new(0.0, 0.0f32), Keyframe::new(1.0, 100.0)])
+                .duration(1.0);
 
         anim.tick(0.5);
         anim.reset();

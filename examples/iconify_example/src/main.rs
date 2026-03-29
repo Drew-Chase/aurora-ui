@@ -11,8 +11,7 @@ fn main() {
     println!("\nchart-fill found: {}", svg2.is_some());
 
     // Dynamic set lookup
-    let svg3 = Icon::from_set("mage")
-        .and_then(|set| set.by_name("calendar-2-fill"));
+    let svg3 = Icon::from_set("mage").and_then(|set| set.by_name("calendar-2-fill"));
     println!("from_set lookup found: {}", svg3.is_some());
 
     // Non-existent icon

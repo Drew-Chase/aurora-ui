@@ -4,8 +4,8 @@ use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
-use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_core::kmi::WidgetEvent;
+use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -162,7 +162,13 @@ impl Widget for Dialog {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(18.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Bold);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, title, &opts, colors::foreground(), None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(
+                ctx.font_manager,
+                title,
+                &opts,
+                colors::foreground(),
+                None,
+            );
             tl.set_max_width(ctx.font_manager, inner_w);
             let th = tl.size().height;
             self.title_height = th;
@@ -268,7 +274,10 @@ impl Widget for Dialog {
 
                 if let Some(ref mut content) = self.content {
                     let content_rect = Rect::new(
-                        x, y, x + self.content_size.width, y + self.content_size.height,
+                        x,
+                        y,
+                        x + self.content_size.width,
+                        y + self.content_size.height,
                     );
                     let resp = content.event(event, content_rect);
                     if resp.handled {
@@ -279,7 +288,10 @@ impl Widget for Dialog {
 
                 if let Some(ref mut footer) = self.footer {
                     let footer_rect = Rect::new(
-                        x, y, x + self.footer_size.width, y + self.footer_size.height,
+                        x,
+                        y,
+                        x + self.footer_size.width,
+                        y + self.footer_size.height,
                     );
                     let resp = footer.event(event, footer_rect);
                     if resp.handled {
@@ -295,11 +307,19 @@ impl Widget for Dialog {
             _ => {
                 // Forward keyboard/other events to content
                 if let Some(ref mut content) = self.content {
-                    let y = dr.y1 + self.padding.top
-                        + if self.title.is_some() { self.title_height + 16.0 } else { 0.0 };
+                    let y = dr.y1
+                        + self.padding.top
+                        + if self.title.is_some() {
+                            self.title_height + 16.0
+                        } else {
+                            0.0
+                        };
                     let x = dr.x1 + self.padding.left;
                     let content_rect = Rect::new(
-                        x, y, x + self.content_size.width, y + self.content_size.height,
+                        x,
+                        y,
+                        x + self.content_size.width,
+                        y + self.content_size.height,
                     );
                     let resp = content.event(event, content_rect);
                     if resp.handled {
@@ -317,8 +337,8 @@ impl Widget for Dialog {
 
     #[cfg(feature = "a11y")]
     fn access_info(&self) -> aurora_a11y::NodeInfo {
-        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Dialog)
-            .with_modal();
+        let mut info =
+            aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Dialog).with_modal();
         if !self.open {
             info = info.with_hidden();
         }

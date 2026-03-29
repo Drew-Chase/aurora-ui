@@ -231,8 +231,7 @@ impl Easing {
                 } else if t < 0.5 {
                     -((2.0f32).powf(20.0 * t - 10.0) * ((20.0 * t - 11.125) * C5).sin()) / 2.0
                 } else {
-                    ((2.0f32).powf(-20.0 * t + 10.0) * ((20.0 * t - 11.125) * C5).sin()) / 2.0
-                        + 1.0
+                    ((2.0f32).powf(-20.0 * t + 10.0) * ((20.0 * t - 11.125) * C5).sin()) / 2.0 + 1.0
                 }
             }
 
@@ -257,26 +256,43 @@ mod tests {
     const EPSILON: f32 = 1e-5;
 
     fn assert_near(a: f32, b: f32, msg: &str) {
-        assert!(
-            (a - b).abs() < EPSILON,
-            "{msg}: expected {b}, got {a}"
-        );
+        assert!((a - b).abs() < EPSILON, "{msg}: expected {b}, got {a}");
     }
 
     #[test]
     fn all_easings_start_at_zero_and_end_at_one() {
         let easings = [
             Easing::Linear,
-            Easing::QuadIn, Easing::QuadOut, Easing::QuadInOut,
-            Easing::CubicIn, Easing::CubicOut, Easing::CubicInOut,
-            Easing::QuartIn, Easing::QuartOut, Easing::QuartInOut,
-            Easing::QuintIn, Easing::QuintOut, Easing::QuintInOut,
-            Easing::SineIn, Easing::SineOut, Easing::SineInOut,
-            Easing::ExpoIn, Easing::ExpoOut, Easing::ExpoInOut,
-            Easing::CircIn, Easing::CircOut, Easing::CircInOut,
-            Easing::BackIn, Easing::BackOut, Easing::BackInOut,
-            Easing::ElasticIn, Easing::ElasticOut, Easing::ElasticInOut,
-            Easing::BounceIn, Easing::BounceOut, Easing::BounceInOut,
+            Easing::QuadIn,
+            Easing::QuadOut,
+            Easing::QuadInOut,
+            Easing::CubicIn,
+            Easing::CubicOut,
+            Easing::CubicInOut,
+            Easing::QuartIn,
+            Easing::QuartOut,
+            Easing::QuartInOut,
+            Easing::QuintIn,
+            Easing::QuintOut,
+            Easing::QuintInOut,
+            Easing::SineIn,
+            Easing::SineOut,
+            Easing::SineInOut,
+            Easing::ExpoIn,
+            Easing::ExpoOut,
+            Easing::ExpoInOut,
+            Easing::CircIn,
+            Easing::CircOut,
+            Easing::CircInOut,
+            Easing::BackIn,
+            Easing::BackOut,
+            Easing::BackInOut,
+            Easing::ElasticIn,
+            Easing::ElasticOut,
+            Easing::ElasticInOut,
+            Easing::BounceIn,
+            Easing::BounceOut,
+            Easing::BounceInOut,
         ];
         for easing in &easings {
             assert_near(easing.apply(0.0), 0.0, &format!("{easing:?} at t=0"));
@@ -307,7 +323,10 @@ mod tests {
         for i in 0..=100 {
             let t = i as f32 / 100.0;
             let v = Easing::BounceOut.apply(t);
-            assert!((0.0..=1.0).contains(&v), "bounce_out({t}) = {v} out of range");
+            assert!(
+                (0.0..=1.0).contains(&v),
+                "bounce_out({t}) = {v} out of range"
+            );
         }
     }
 

@@ -68,10 +68,7 @@ pub(super) fn paint_button(
     match button {
         ControlButton::Minimize => {
             // Horizontal line
-            canvas.fill_rect(
-                Rect::new(cx - half, cy, cx + half, cy + 1.0),
-                icon_color,
-            );
+            canvas.fill_rect(Rect::new(cx - half, cy, cx + half, cy + 1.0), icon_color);
         }
         ControlButton::Maximize => {
             if is_maximized {

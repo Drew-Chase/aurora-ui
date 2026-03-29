@@ -14,7 +14,7 @@ pub fn page_code_block() -> impl Widget {
             code_block::CodeBlock::new()
                 .language("rust")
                 .code(
-r#"use std::collections::HashMap;
+                    r#"use std::collections::HashMap;
 
 /// A simple key-value store.
 pub struct Store {
@@ -37,12 +37,15 @@ impl Store {
                 )
                 .font_size(13.0),
         ))
-        .child(crate::example_section("JavaScript", "A JavaScript code example."))
+        .child(crate::example_section(
+            "JavaScript",
+            "A JavaScript code example.",
+        ))
         .child(crate::example_card(
             code_block::CodeBlock::new()
                 .language("javascript")
                 .code(
-r#"import * as React from "react"
+                    r#"import * as React from "react"
 
 export function Counter() {
   const [count, setCount] = React.useState(0)
@@ -61,7 +64,7 @@ export function Counter() {
             code_block::CodeBlock::new()
                 .language("json")
                 .code(
-r#"{
+                    r#"{
   "name": "aurora-ui",
   "version": "0.1.0",
   "features": ["syntax", "themes"],

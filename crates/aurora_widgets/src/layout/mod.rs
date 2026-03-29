@@ -11,13 +11,13 @@
 /// Column and Row share [`Justify`] and [`Align`] enums for controlling
 /// distribution along the main and cross axes respectively.
 pub mod column;
-pub mod row;
-pub mod position;
-pub mod stack;
-/// Scrollable viewport container.
-pub mod scrollview;
 /// Displays one of N children based on a selected index.
 pub mod content_switch;
+pub mod position;
+pub mod row;
+/// Scrollable viewport container.
+pub mod scrollview;
+pub mod stack;
 
 /// Controls distribution of children along the main axis.
 ///

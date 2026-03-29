@@ -98,10 +98,18 @@ impl<T: Animatable> Tween<T> {
         // Determine which iteration we're on and the local progress within it
         let (progress, done) = self.resolve_progress(total_progress);
 
-        if done && !self.loop_mode.is_reversed(self.compute_iteration(total_progress)) {
+        if done
+            && !self
+                .loop_mode
+                .is_reversed(self.compute_iteration(total_progress))
+        {
             return self.to;
         }
-        if done && self.loop_mode.is_reversed(self.compute_iteration(total_progress)) {
+        if done
+            && self
+                .loop_mode
+                .is_reversed(self.compute_iteration(total_progress))
+        {
             return self.from;
         }
 

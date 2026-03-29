@@ -4,10 +4,10 @@ use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::keyboard::{Key, KeyboardEvent, Modifiers};
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 use aurora_text::font_options::FontOptions;
 use aurora_text::text_layout::TextLayout;
@@ -271,8 +271,7 @@ impl TextInput {
     }
 
     fn has_selection(&self) -> bool {
-        self.selection_range()
-            .is_some_and(|(lo, hi)| lo != hi)
+        self.selection_range().is_some_and(|(lo, hi)| lo != hi)
     }
 
     fn delete_selection(&mut self) {
@@ -348,7 +347,10 @@ impl TextInput {
             let dist = (x - px).abs();
             if dist < best_dist {
                 best_dist = dist;
-                best_display_pos = byte_indices.get(ci + 1).copied().unwrap_or(display_text.len());
+                best_display_pos = byte_indices
+                    .get(ci + 1)
+                    .copied()
+                    .unwrap_or(display_text.len());
             }
         }
 
@@ -402,8 +404,7 @@ impl Widget for TextInput {
 
         // Build text layout from display text — no max_width so text stays on one line
         if !display.is_empty() {
-            let tl =
-                TextLayout::new(ctx.font_manager, &display, &resolved, self.color, None);
+            let tl = TextLayout::new(ctx.font_manager, &display, &resolved, self.color, None);
             self.text_layout = Some(tl);
         } else {
             self.text_layout = None;
@@ -545,7 +546,8 @@ impl Widget for TextInput {
                     self.focused = true;
                     self.mouse_down = true;
 
-                    let click_x = click.position.x - rect.x1 - self.padding.left + self.scroll_offset;
+                    let click_x =
+                        click.position.x - rect.x1 - self.padding.left + self.scroll_offset;
                     let new_pos = self.byte_pos_for_x(click_x);
                     self.cursor_pos = new_pos;
                     self.clear_selection();

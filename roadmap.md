@@ -31,7 +31,7 @@ The `aurora_a11y` crate exists but is empty. Accessibility is a legal requiremen
 
 **Estimated scope:** Large - touches the entire widget trait and every component
 
----
+--- 
 
 ### ~~1.2 Test Suite & CI/CD~~ - _Complete_
 

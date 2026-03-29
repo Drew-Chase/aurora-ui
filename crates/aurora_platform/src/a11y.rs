@@ -106,9 +106,8 @@ impl A11yState {
         focused_id: Option<u64>,
         window_rect: Rect,
     ) {
-        self.adapter.update_if_active(|| {
-            build_tree_update(root_widget, focused_id, window_rect)
-        });
+        self.adapter
+            .update_if_active(|| build_tree_update(root_widget, focused_id, window_rect));
     }
 
     /// Drain buffered action requests from assistive technology.
@@ -206,16 +205,13 @@ fn walk_widget(
 }
 
 fn to_ak_rect(r: Rect) -> accesskit::Rect {
-    accesskit::Rect::new(
-        r.x1 as f64,
-        r.y1 as f64,
-        r.x2 as f64,
-        r.y2 as f64,
-    )
+    accesskit::Rect::new(r.x1 as f64, r.y1 as f64, r.x2 as f64, r.y2 as f64)
 }
 
 /// Convert an AccessKit action request into a WidgetEvent, if applicable.
-pub(crate) fn action_to_widget_event(request: &ActionRequest) -> Option<aurora_core::kmi::WidgetEvent> {
+pub(crate) fn action_to_widget_event(
+    request: &ActionRequest,
+) -> Option<aurora_core::kmi::WidgetEvent> {
     match request.action {
         Action::Focus => {
             let id = request.target_node.0;

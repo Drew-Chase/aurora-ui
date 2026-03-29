@@ -111,13 +111,16 @@ impl<T: Animatable> Timeline<T> {
     ///
     /// Tracks that haven't started yet return their `from` value.
     pub fn values(&self) -> Vec<T> {
-        self.tracks.iter().map(|track| {
-            if self.elapsed < track.offset {
-                track.tween.from_value()
-            } else {
-                track.tween.value()
-            }
-        }).collect()
+        self.tracks
+            .iter()
+            .map(|track| {
+                if self.elapsed < track.offset {
+                    track.tween.from_value()
+                } else {
+                    track.tween.value()
+                }
+            })
+            .collect()
     }
 
     /// Returns `true` when all tracks have finished.
@@ -157,8 +160,7 @@ mod tests {
 
     #[test]
     fn single_track() {
-        let mut tl = Timeline::new()
-            .add(0.0, Tween::new(0.0f32, 100.0).duration(1.0));
+        let mut tl = Timeline::new().add(0.0, Tween::new(0.0f32, 100.0).duration(1.0));
 
         tl.tick(0.5);
         assert!((tl.value() - 50.0).abs() < 0.01);
@@ -208,8 +210,7 @@ mod tests {
 
     #[test]
     fn reset_timeline() {
-        let mut tl = Timeline::new()
-            .add(0.0, Tween::new(0.0f32, 100.0).duration(1.0));
+        let mut tl = Timeline::new().add(0.0, Tween::new(0.0f32, 100.0).duration(1.0));
 
         tl.tick(0.5);
         tl.reset();
@@ -227,8 +228,7 @@ mod tests {
 
     #[test]
     fn before_any_track_starts() {
-        let mut tl = Timeline::new()
-            .add(1.0, Tween::new(50.0f32, 100.0).duration(1.0));
+        let mut tl = Timeline::new().add(1.0, Tween::new(50.0f32, 100.0).duration(1.0));
 
         tl.tick(0.5); // before the track starts
         assert!((tl.value() - 50.0).abs() < 0.01); // from value

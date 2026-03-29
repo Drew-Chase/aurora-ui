@@ -6,7 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use syn::parse::{Parse, ParseStream};
-use syn::{parse_macro_input, LitStr, Token};
+use syn::{LitStr, Token, parse_macro_input};
 
 const API_BASE: &str = "https://api.iconify.design";
 const CACHE_TTL: Duration = Duration::from_secs(7 * 24 * 60 * 60); // 7 days
@@ -281,8 +281,8 @@ fn fetch_icon_set(prefix: &str, cache_dir: &Path) -> Result<IconSetData, String>
             "height": default_height,
             "icons": all_data,
         });
-        let json_str = serde_json::to_string(&cache_obj)
-            .map_err(|e| format!("JSON serialize error: {e}"))?;
+        let json_str =
+            serde_json::to_string(&cache_obj).map_err(|e| format!("JSON serialize error: {e}"))?;
         let _ = fs::write(&cached, &json_str);
         json_str
     };
@@ -327,14 +327,8 @@ fn parse_icon_set_json(json_str: &str) -> Result<IconSetData, String> {
     let parsed: serde_json::Value =
         serde_json::from_str(json_str).map_err(|e| format!("JSON parse error: {e}"))?;
 
-    let default_width = parsed
-        .get("width")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(24);
-    let default_height = parsed
-        .get("height")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(24);
+    let default_width = parsed.get("width").and_then(|v| v.as_u64()).unwrap_or(24);
+    let default_height = parsed.get("height").and_then(|v| v.as_u64()).unwrap_or(24);
 
     let icons_obj = parsed
         .get("icons")
@@ -402,13 +396,57 @@ fn sanitize_ident(name: &str) -> String {
 fn is_rust_keyword(s: &str) -> bool {
     matches!(
         s,
-        "as" | "async" | "await" | "box" | "break" | "const" | "continue" | "crate" | "do"
-            | "dyn" | "else" | "enum" | "extern" | "false" | "fn" | "for" | "if" | "impl"
-            | "in" | "let" | "loop" | "macro" | "match" | "mod" | "move" | "mut" | "pub"
-            | "ref" | "return" | "self" | "Self" | "static" | "struct" | "super" | "trait"
-            | "true" | "try" | "type" | "union" | "unsafe" | "use" | "where" | "while"
-            | "yield" | "abstract" | "become" | "final" | "override" | "priv" | "typeof"
-            | "unsized" | "virtual"
+        "as" | "async"
+            | "await"
+            | "box"
+            | "break"
+            | "const"
+            | "continue"
+            | "crate"
+            | "do"
+            | "dyn"
+            | "else"
+            | "enum"
+            | "extern"
+            | "false"
+            | "fn"
+            | "for"
+            | "if"
+            | "impl"
+            | "in"
+            | "let"
+            | "loop"
+            | "macro"
+            | "match"
+            | "mod"
+            | "move"
+            | "mut"
+            | "pub"
+            | "ref"
+            | "return"
+            | "self"
+            | "Self"
+            | "static"
+            | "struct"
+            | "super"
+            | "trait"
+            | "true"
+            | "try"
+            | "type"
+            | "union"
+            | "unsafe"
+            | "use"
+            | "where"
+            | "while"
+            | "yield"
+            | "abstract"
+            | "become"
+            | "final"
+            | "override"
+            | "priv"
+            | "typeof"
+            | "unsized"
+            | "virtual"
     )
 }
 

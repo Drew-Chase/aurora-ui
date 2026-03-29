@@ -2,9 +2,9 @@ use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -107,9 +107,10 @@ impl Default for Table {
 impl Widget for Table {
     fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
         let w = self.width.unwrap_or(available.width);
-        let col_count = self.headers.len().max(
-            self.rows.iter().map(|r| r.len()).max().unwrap_or(0),
-        );
+        let col_count = self
+            .headers
+            .len()
+            .max(self.rows.iter().map(|r| r.len()).max().unwrap_or(0));
 
         if col_count == 0 {
             return Size::new(w, 0.0);
@@ -124,7 +125,13 @@ impl Widget for Table {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(12.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, header, &opts, colors::foreground(), None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(
+                ctx.font_manager,
+                header,
+                &opts,
+                colors::foreground(),
+                None,
+            );
             tl.set_max_width(ctx.font_manager, col_w - 24.0);
             self.header_layouts.push(Some(tl));
         }
@@ -137,7 +144,13 @@ impl Widget for Table {
                 let mut opts = ctx.font_options.clone();
                 opts.size = Some(14.0);
                 opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-                let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, cell, &opts, colors::foreground(), None);
+                let mut tl = aurora_text::text_layout::TextLayout::new(
+                    ctx.font_manager,
+                    cell,
+                    &opts,
+                    colors::foreground(),
+                    None,
+                );
                 tl.set_max_width(ctx.font_manager, col_w - 24.0);
                 row_layouts.push(Some(tl));
             }
@@ -170,7 +183,12 @@ impl Widget for Table {
             if col < col_count - 1 {
                 let sep_x = cell_x + col_w;
                 canvas.fill_rect(
-                    Rect::new(sep_x - 0.5, rect.y1, sep_x + 0.5, rect.y1 + self.header_height),
+                    Rect::new(
+                        sep_x - 0.5,
+                        rect.y1,
+                        sep_x + 0.5,
+                        rect.y1 + self.header_height,
+                    ),
                     self.border_color,
                 );
             }
@@ -254,5 +272,8 @@ impl Widget for Table {
             _ => EventResponse::default(),
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Table)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Table)
+    }
 }

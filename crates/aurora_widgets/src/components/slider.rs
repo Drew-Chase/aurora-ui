@@ -3,9 +3,9 @@ use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -151,7 +151,12 @@ impl Widget for Slider {
         let norm = self.normalized();
         let fill_w = track_rect.width() * norm;
         if fill_w > 0.0 {
-            let fill_rect = Rect::new(track_rect.x1, track_rect.y1, track_rect.x1 + fill_w, track_rect.y2);
+            let fill_rect = Rect::new(
+                track_rect.x1,
+                track_rect.y1,
+                track_rect.x1 + fill_w,
+                track_rect.y2,
+            );
             canvas.fill_rounded_rect(fill_rect, track_corners, self.fill_color);
         }
 

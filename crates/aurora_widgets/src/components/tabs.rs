@@ -2,9 +2,9 @@ use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 use std::time::Instant;
 
@@ -142,7 +142,13 @@ impl Widget for Tabs {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &tab.label, &opts, colors::foreground(), None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(
+                ctx.font_manager,
+                &tab.label,
+                &opts,
+                colors::foreground(),
+                None,
+            );
             tl.set_max_width(ctx.font_manager, f32::MAX);
             let tw = tl.size().width;
             self.tab_widths.push(tw + self.tab_padding * 2.0);
@@ -190,7 +196,9 @@ impl Widget for Tabs {
 
             // Tab label
             if let Some(Some(tl)) = self.tab_layouts.get(i) {
-                let _s = tl.size(); let tw = _s.width; let th = _s.height;
+                let _s = tl.size();
+                let tw = _s.width;
+                let th = _s.height;
                 let tx = tab_rect.x1 + (tab_rect.width() - tw) / 2.0;
                 let ty = tab_rect.y1 + (tab_rect.height() - th) / 2.0;
                 canvas.draw_text(tl, tx as i32, ty as i32);
@@ -219,7 +227,11 @@ impl Widget for Tabs {
 
         // Paint selected content
         if let Some(tab) = self.tabs.get(self.selected) {
-            let cs = self.content_sizes.get(self.selected).copied().unwrap_or_default();
+            let cs = self
+                .content_sizes
+                .get(self.selected)
+                .copied()
+                .unwrap_or_default();
             let content_rect = Rect::new(
                 rect.x1,
                 tab_bar_bottom,
@@ -271,7 +283,11 @@ impl Widget for Tabs {
                 }
                 // Forward to selected content
                 if let Some(tab) = self.tabs.get_mut(self.selected) {
-                    let cs = self.content_sizes.get(self.selected).copied().unwrap_or_default();
+                    let cs = self
+                        .content_sizes
+                        .get(self.selected)
+                        .copied()
+                        .unwrap_or_default();
                     let content_rect = Rect::new(
                         rect.x1,
                         tab_bar_bottom,
@@ -298,7 +314,11 @@ impl Widget for Tabs {
                 }
                 // Forward to content
                 if let Some(tab) = self.tabs.get_mut(self.selected) {
-                    let cs = self.content_sizes.get(self.selected).copied().unwrap_or_default();
+                    let cs = self
+                        .content_sizes
+                        .get(self.selected)
+                        .copied()
+                        .unwrap_or_default();
                     let content_rect = Rect::new(
                         rect.x1,
                         tab_bar_bottom,
@@ -311,7 +331,11 @@ impl Widget for Tabs {
             }
             _ => {
                 if let Some(tab) = self.tabs.get_mut(self.selected) {
-                    let cs = self.content_sizes.get(self.selected).copied().unwrap_or_default();
+                    let cs = self
+                        .content_sizes
+                        .get(self.selected)
+                        .copied()
+                        .unwrap_or_default();
                     let content_rect = Rect::new(
                         rect.x1,
                         tab_bar_bottom,
@@ -328,5 +352,8 @@ impl Widget for Tabs {
     fn needs_animation(&self) -> bool {
         self.indicator_anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::TabList)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::TabList)
+    }
 }

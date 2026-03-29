@@ -74,7 +74,10 @@ impl Image {
 impl Widget for Image {
     fn layout(&mut self, available: Size, _ctx: &mut LayoutCtx) -> Size {
         let w = self.width.unwrap_or(available.width).min(available.width);
-        let h = self.height.unwrap_or(available.height).min(available.height);
+        let h = self
+            .height
+            .unwrap_or(available.height)
+            .min(available.height);
         Size::new(w, h)
     }
 
@@ -90,9 +93,7 @@ impl Widget for Image {
 
         let dest = match self.fit {
             ImageFit::Fill => rect,
-            ImageFit::None => {
-                Rect::new(rect.x1, rect.y1, rect.x1 + img_w, rect.y1 + img_h)
-            }
+            ImageFit::None => Rect::new(rect.x1, rect.y1, rect.x1 + img_w, rect.y1 + img_h),
             ImageFit::Contain => {
                 let scale = (box_w / img_w).min(box_h / img_h);
                 let w = img_w * scale;
@@ -117,5 +118,8 @@ impl Widget for Image {
     fn children(&self) -> &[Box<dyn Widget>] {
         &[]
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Image)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Image)
+    }
 }

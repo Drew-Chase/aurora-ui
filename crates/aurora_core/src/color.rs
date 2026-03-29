@@ -42,7 +42,7 @@ impl Color {
     pub const BLUE: Color = Color::new(0, 0, 255, 255);
     /// Fully transparent black (`#00000000`).
     pub const TRANSPARENT: Color = Color::new(0, 0, 0, 0);
-    
+
     /// Creates a new color from individual RGBA channel values.
     pub const fn new(red: u8, green: u8, blue: u8, alpha: u8) -> Self {
         Color {
@@ -341,7 +341,6 @@ macro_rules! hexa {
         Color::from_hex($hex, true)
     };
 }
-
 
 /// Creates a [`Color`] from HSLA values.
 ///

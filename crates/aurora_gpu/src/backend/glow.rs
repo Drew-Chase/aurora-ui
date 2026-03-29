@@ -90,12 +90,8 @@ impl GlowBackend {
             NonZeroU32::new(physical.width.max(1)).unwrap(),
             NonZeroU32::new(physical.height.max(1)).unwrap(),
         );
-        let surface_attrs =
-            glutin::surface::SurfaceAttributesBuilder::<WindowSurface>::new().build(
-                raw_handle.into(),
-                w,
-                h,
-            );
+        let surface_attrs = glutin::surface::SurfaceAttributesBuilder::<WindowSurface>::new()
+            .build(raw_handle.into(), w, h);
 
         let gl_surface = unsafe {
             gl_display
@@ -107,10 +103,8 @@ impl GlowBackend {
             .make_current(&gl_surface)
             .map_err(|e| format!("Failed to make GL context current: {e}"))?;
 
-        let _ = gl_surface.set_swap_interval(
-            &gl_context,
-            SwapInterval::Wait(NonZeroU32::new(1).unwrap()),
-        );
+        let _ = gl_surface
+            .set_swap_interval(&gl_context, SwapInterval::Wait(NonZeroU32::new(1).unwrap()));
 
         let gl = unsafe {
             glow::Context::from_loader_function_cstr(|name| {
@@ -253,8 +247,12 @@ impl GpuContext for GlowBackend {
         }
 
         unsafe {
-            self.gl
-                .viewport(0, 0, width.min(i32::MAX as u32) as i32, height.min(i32::MAX as u32) as i32);
+            self.gl.viewport(
+                0,
+                0,
+                width.min(i32::MAX as u32) as i32,
+                height.min(i32::MAX as u32) as i32,
+            );
         }
     }
 
@@ -278,8 +276,7 @@ impl GpuContext for GlowBackend {
         self.convert_to_rgba();
 
         unsafe {
-            self.gl
-                .bind_texture(glow::TEXTURE_2D, Some(self.texture));
+            self.gl.bind_texture(glow::TEXTURE_2D, Some(self.texture));
             self.gl.tex_image_2d(
                 glow::TEXTURE_2D,
                 0,

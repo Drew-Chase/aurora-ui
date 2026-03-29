@@ -130,20 +130,35 @@ impl Widget for InputGroup {
         // Prefix
         if let Some(ref prefix) = self.prefix {
             let py = cy - self.prefix_size.height / 2.0;
-            let prefix_rect = Rect::new(x, py, x + self.prefix_size.width, py + self.prefix_size.height);
+            let prefix_rect = Rect::new(
+                x,
+                py,
+                x + self.prefix_size.width,
+                py + self.prefix_size.height,
+            );
             prefix.paint(canvas, prefix_rect);
             x += self.prefix_size.width + self.spacing;
 
             // Separator
             canvas.fill_rect(
-                Rect::new(x - self.spacing / 2.0 - 0.5, rect.y1 + 4.0, x - self.spacing / 2.0 + 0.5, rect.y2 - 4.0),
+                Rect::new(
+                    x - self.spacing / 2.0 - 0.5,
+                    rect.y1 + 4.0,
+                    x - self.spacing / 2.0 + 0.5,
+                    rect.y2 - 4.0,
+                ),
                 colors::border(),
             );
         }
 
         // Input
         let iy = cy - self.input_size.height / 2.0;
-        let input_rect = Rect::new(x, iy, x + self.input_size.width, iy + self.input_size.height);
+        let input_rect = Rect::new(
+            x,
+            iy,
+            x + self.input_size.width,
+            iy + self.input_size.height,
+        );
         self.input.paint(canvas, input_rect);
         x += self.input_size.width + self.spacing;
 
@@ -151,12 +166,22 @@ impl Widget for InputGroup {
         if let Some(ref suffix) = self.suffix {
             // Separator
             canvas.fill_rect(
-                Rect::new(x - self.spacing / 2.0 - 0.5, rect.y1 + 4.0, x - self.spacing / 2.0 + 0.5, rect.y2 - 4.0),
+                Rect::new(
+                    x - self.spacing / 2.0 - 0.5,
+                    rect.y1 + 4.0,
+                    x - self.spacing / 2.0 + 0.5,
+                    rect.y2 - 4.0,
+                ),
                 colors::border(),
             );
 
             let sy = cy - self.suffix_size.height / 2.0;
-            let suffix_rect = Rect::new(x, sy, x + self.suffix_size.width, sy + self.suffix_size.height);
+            let suffix_rect = Rect::new(
+                x,
+                sy,
+                x + self.suffix_size.width,
+                sy + self.suffix_size.height,
+            );
             suffix.paint(canvas, suffix_rect);
         }
     }
@@ -171,7 +196,12 @@ impl Widget for InputGroup {
 
         if let Some(ref mut prefix) = self.prefix {
             let py = cy - self.prefix_size.height / 2.0;
-            let prefix_rect = Rect::new(x, py, x + self.prefix_size.width, py + self.prefix_size.height);
+            let prefix_rect = Rect::new(
+                x,
+                py,
+                x + self.prefix_size.width,
+                py + self.prefix_size.height,
+            );
             let resp = prefix.event(event, prefix_rect);
             if resp.handled {
                 return resp;
@@ -180,7 +210,12 @@ impl Widget for InputGroup {
         }
 
         let iy = cy - self.input_size.height / 2.0;
-        let input_rect = Rect::new(x, iy, x + self.input_size.width, iy + self.input_size.height);
+        let input_rect = Rect::new(
+            x,
+            iy,
+            x + self.input_size.width,
+            iy + self.input_size.height,
+        );
         let resp = self.input.event(event, input_rect);
         if resp.handled {
             return resp;
@@ -189,7 +224,12 @@ impl Widget for InputGroup {
 
         if let Some(ref mut suffix) = self.suffix {
             let sy = cy - self.suffix_size.height / 2.0;
-            let suffix_rect = Rect::new(x, sy, x + self.suffix_size.width, sy + self.suffix_size.height);
+            let suffix_rect = Rect::new(
+                x,
+                sy,
+                x + self.suffix_size.width,
+                sy + self.suffix_size.height,
+            );
             let resp = suffix.event(event, suffix_rect);
             if resp.handled {
                 return resp;
@@ -198,5 +238,8 @@ impl Widget for InputGroup {
 
         EventResponse::default()
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)
+    }
 }

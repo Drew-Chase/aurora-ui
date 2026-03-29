@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, Data, DeriveInput, Fields, ItemStruct, Visibility};
+use syn::{Data, DeriveInput, Fields, ItemStruct, Visibility, parse_macro_input};
 
 /// Turns a config struct into a full composite widget.
 ///
@@ -111,14 +111,10 @@ pub fn composite_widget(_attr: TokenStream, item: TokenStream) -> TokenStream {
         };
 
         let setter = if let Some(ref custom_type) = comp_attrs.with_types {
-            let param_type: proc_macro2::TokenStream =
-                custom_type.parse().unwrap_or_else(|_| {
-                    syn::Error::new_spanned(
-                        field,
-                        format!("invalid type in with_types: {custom_type}"),
-                    )
+            let param_type: proc_macro2::TokenStream = custom_type.parse().unwrap_or_else(|_| {
+                syn::Error::new_spanned(field, format!("invalid type in with_types: {custom_type}"))
                     .to_compile_error()
-                });
+            });
             quote! {
                 pub fn #setter_name(mut self, #field_name: #param_type) -> Self {
                     self.#field_name = #field_name.into();

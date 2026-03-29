@@ -14,8 +14,7 @@ pub fn page_dialog(setter: StateSetter<crate::GalleryState>) -> impl Widget {
             "Click the button to open a centered dialog with title, content, and footer actions.",
         ))
         .child(crate::example_card(
-            button!("Open Dialog")
-                .on_click(move |_| setter.set(|s| s.dialog_open = true)),
+            button!("Open Dialog").on_click(move |_| setter.set(|s| s.dialog_open = true)),
         ))
         .child(
             code_block::CodeBlock::new()

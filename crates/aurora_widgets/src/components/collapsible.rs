@@ -4,9 +4,9 @@ use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 use std::time::Instant;
 
@@ -113,7 +113,13 @@ impl Widget for Collapsible {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-        let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.title, &opts, colors::foreground(), None);
+        let tl = aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            &self.title,
+            &opts,
+            colors::foreground(),
+            None,
+        );
         self.title_layout = Some(tl);
 
         // Always layout child for animation height
@@ -124,7 +130,8 @@ impl Widget for Collapsible {
         }
 
         let t = self.current_t();
-        let content_h = (self.content_padding.top + self.child_size.height + self.content_padding.bottom) * t;
+        let content_h =
+            (self.content_padding.top + self.child_size.height + self.content_padding.bottom) * t;
         let total_h = self.header_height + content_h;
 
         Size::new(w, total_h)
@@ -139,21 +146,22 @@ impl Widget for Collapsible {
         let angle = t * std::f32::consts::FRAC_PI_2;
         let cos_a = angle.cos();
         let sin_a = angle.sin();
-        let rotate = |dx: f32, dy: f32| -> (f32, f32) {
-            (dx * cos_a - dy * sin_a, dx * sin_a + dy * cos_a)
-        };
+        let rotate =
+            |dx: f32, dy: f32| -> (f32, f32) { (dx * cos_a - dy * sin_a, dx * sin_a + dy * cos_a) };
         let (dx1, dy1) = rotate(-2.0, -4.0);
         let (dx2, dy2) = rotate(2.0, 0.0);
         let (dx3, dy3) = rotate(-2.0, 4.0);
         canvas.draw_line(
             Point::new(chevron_x + dx1, chevron_cy + dy1),
             Point::new(chevron_x + dx2, chevron_cy + dy2),
-            1.0, colors::muted_foreground(),
+            1.0,
+            colors::muted_foreground(),
         );
         canvas.draw_line(
             Point::new(chevron_x + dx2, chevron_cy + dy2),
             Point::new(chevron_x + dx3, chevron_cy + dy3),
-            1.0, colors::muted_foreground(),
+            1.0,
+            colors::muted_foreground(),
         );
 
         // Title text
@@ -176,8 +184,15 @@ impl Widget for Collapsible {
             && let Some(ref child) = self.child
         {
             let content_area_top = rect.y1 + self.header_height;
-            let visible_h = (self.content_padding.top + self.child_size.height + self.content_padding.bottom) * t;
-            let clip = Rect::new(rect.x1, content_area_top, rect.x2, content_area_top + visible_h);
+            let visible_h =
+                (self.content_padding.top + self.child_size.height + self.content_padding.bottom)
+                    * t;
+            let clip = Rect::new(
+                rect.x1,
+                content_area_top,
+                rect.x2,
+                content_area_top + visible_h,
+            );
             canvas.push_clip(clip);
 
             let content_y = content_area_top + self.content_padding.top;
@@ -247,5 +262,10 @@ impl Widget for Collapsible {
     fn needs_animation(&self) -> bool {
         self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::DisclosureTriangle).with_label(self.title.clone()).with_expanded(self.expanded)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::DisclosureTriangle)
+            .with_label(self.title.clone())
+            .with_expanded(self.expanded)
+    }
 }

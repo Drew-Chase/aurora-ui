@@ -79,7 +79,13 @@ const SECTIONS: &[Section] = &[
     },
     Section {
         title: "Tutorials",
-        pages: &["Counter", "Todo App", "Theme Switcher", "Form Builder", "Navigation"],
+        pages: &[
+            "Counter",
+            "Todo App",
+            "Theme Switcher",
+            "Form Builder",
+            "Navigation",
+        ],
     },
 ];
 
@@ -129,7 +135,11 @@ fn gallery() -> impl Widget {
         },
         move |state, set_state| {
             // Apply the selected theme profile
-            let profiles = [theme::ProfileId::Default, theme::ProfileId::Candy, theme::ProfileId::Light];
+            let profiles = [
+                theme::ProfileId::Default,
+                theme::ProfileId::Candy,
+                theme::ProfileId::Light,
+            ];
             theme::set(profiles[state.profile.min(profiles.len() - 1)]);
 
             let dialog_close = set_state.clone();
@@ -320,7 +330,11 @@ fn sidebar_item(name: &str, active: bool, on_click: impl FnMut() + 'static) -> i
 // Main content area
 // ---------------------------------------------------------------------------
 
-fn content_area(page_index: usize, scroll: ScrollState, setter: StateSetter<GalleryState>) -> impl Widget {
+fn content_area(
+    page_index: usize,
+    scroll: ScrollState,
+    setter: StateSetter<GalleryState>,
+) -> impl Widget {
     use pages::*;
     ScrollView::new()
         .scrollbar_thumb_color(theme::colors::foreground().opacity(0.5))
@@ -408,7 +422,11 @@ pub fn page_header(title: &str, description: &str) -> Column {
                 .font_weight(FontWeight::Bold)
                 .color(theme::colors::foreground()),
         )
-        .child(Text::new(description).font_size(14.0).color(theme::colors::muted_foreground()))
+        .child(
+            Text::new(description)
+                .font_size(14.0)
+                .color(theme::colors::muted_foreground()),
+        )
         .child(BoxWidget::new().height(24))
         .child(separator::Separator::new())
 }
@@ -422,7 +440,11 @@ pub fn example_section(title: &str, description: &str) -> Column {
                 .font_weight(FontWeight::SemiBold)
                 .color(theme::colors::foreground()),
         )
-        .child(Text::new(description).font_size(14.0).color(theme::colors::muted_foreground()))
+        .child(
+            Text::new(description)
+                .font_size(14.0)
+                .color(theme::colors::muted_foreground()),
+        )
 }
 
 pub fn example_card(child: impl Widget + 'static) -> impl Widget {

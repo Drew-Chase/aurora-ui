@@ -6,7 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use syn::parse::{Parse, ParseStream};
-use syn::{parse_macro_input, LitStr, Token};
+use syn::{LitStr, Token, parse_macro_input};
 
 const METADATA_URL: &str = "https://fonts.google.com/metadata/fonts";
 const CSS_API: &str = "https://fonts.googleapis.com/css2";
@@ -74,10 +74,7 @@ pub fn font_families(input: TokenStream) -> TokenStream {
         let family_meta = match family_meta {
             Some(m) => m,
             None => {
-                let msg = format!(
-                    "Font family '{}' not found on Google Fonts",
-                    family_input
-                );
+                let msg = format!("Font family '{}' not found on Google Fonts", family_input);
                 return quote! { compile_error!(#msg); }.into();
             }
         };
@@ -524,10 +521,7 @@ fn http_get_with_ua(url: &str) -> Result<String, String> {
     // Google Fonts CSS API returns different formats based on User-Agent.
     // A generic UA gets .ttf files (which is what we want).
     ureq::get(url)
-        .header(
-            "User-Agent",
-            "Mozilla/5.0 (compatible; aurora_fonts/0.1.0)",
-        )
+        .header("User-Agent", "Mozilla/5.0 (compatible; aurora_fonts/0.1.0)")
         .call()
         .map_err(|e| format!("HTTP request failed for {url}: {e}"))?
         .body_mut()

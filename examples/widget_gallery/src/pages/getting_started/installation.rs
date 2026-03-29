@@ -17,7 +17,7 @@ pub fn page_installation() -> impl Widget {
             code_block::CodeBlock::new()
                 .language("toml")
                 .code(
-r#"[dependencies]
+                    r#"[dependencies]
 aurora_ui = { version = "0.1", features = ["opengl", "text"] }
 aurora_theme = "0.1"
 aurora_iconify = "0.1"  # optional, for icon support"#,
@@ -32,7 +32,7 @@ aurora_iconify = "0.1"  # optional, for icon support"#,
             code_block::CodeBlock::new()
                 .language("toml")
                 .code(
-r#"[dependencies.aurora_ui]
+                    r#"[dependencies.aurora_ui]
 version = "0.1"
 features = [
     "opengl",   # GPU-accelerated rendering via OpenGL
@@ -53,7 +53,7 @@ features = [
             code_block::CodeBlock::new()
                 .language("toml")
                 .code(
-r#"[profile.release]
+                    r#"[profile.release]
 opt-level = "z"       # optimize for size
 lto = "fat"           # link-time optimization
 codegen-units = 1     # single codegen unit
@@ -70,7 +70,7 @@ strip = "symbols"     # strip debug symbols"#,
             code_block::CodeBlock::new()
                 .language("rust")
                 .code(
-r#"use aurora_ui::prelude::*;
+                    r#"use aurora_ui::prelude::*;
 
 fn main() {
     App::new()

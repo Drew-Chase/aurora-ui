@@ -4,10 +4,10 @@ use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::keyboard::{Key, KeyboardEvent};
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -151,9 +151,9 @@ impl Widget for TextArea {
     fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
         let w = self.width.unwrap_or(available.width);
         let line_height = self.font_size * 1.4;
-        let h = self.height.unwrap_or(
-            self.padding.top + line_height * self.rows as f32 + self.padding.bottom,
-        );
+        let h = self
+            .height
+            .unwrap_or(self.padding.top + line_height * self.rows as f32 + self.padding.bottom);
         let inner_w = w - self.padding.left - self.padding.right;
 
         // Text layout
@@ -161,7 +161,13 @@ impl Widget for TextArea {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(self.font_size);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.text, &opts, colors::foreground(), None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(
+                ctx.font_manager,
+                &self.text,
+                &opts,
+                colors::foreground(),
+                None,
+            );
             tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
             self.text_layout = Some(tl);
         } else {
@@ -173,7 +179,13 @@ impl Widget for TextArea {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(self.font_size);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.placeholder, &opts, colors::foreground(), None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(
+                ctx.font_manager,
+                &self.placeholder,
+                &opts,
+                colors::foreground(),
+                None,
+            );
             tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
             self.placeholder_layout = Some(tl);
         } else {
@@ -188,7 +200,11 @@ impl Widget for TextArea {
         canvas.fill_rounded_rect(rect, self.corners, self.background);
 
         // Border
-        let border_color = if self.focused { colors::ring() } else { self.border_color };
+        let border_color = if self.focused {
+            colors::ring()
+        } else {
+            self.border_color
+        };
         canvas.stroke_rounded_rect(rect, self.corners, 1, border_color);
 
         // Clip text area

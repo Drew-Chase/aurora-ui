@@ -4,8 +4,8 @@ use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
-use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_core::kmi::WidgetEvent;
+use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_render::canvas::Canvas;
 
 use std::cell::Cell;
@@ -358,7 +358,8 @@ impl Widget for ScrollView {
         if self.has_overflow() && self.scrollbar_width > 0.0 {
             let track = self.track_rect(&rect);
             let thumb = self.thumb_rect(&rect);
-            let thumb_corners = self.scrollbar_thumb_corners
+            let thumb_corners = self
+                .scrollbar_thumb_corners
                 .unwrap_or_else(|| Corners::all(self.scrollbar_width / 2.0));
 
             canvas.fill_rect(track, self.scrollbar_track_color);
@@ -406,8 +407,7 @@ impl Widget for ScrollView {
         let viewport = Rect::new(
             rect.x1 + self.padding.left,
             rect.y1 + self.padding.top,
-            rect.x1 + self.padding.left + self.content_width
-                + self.effective_scrollbar_width(),
+            rect.x1 + self.padding.left + self.content_width + self.effective_scrollbar_width(),
             rect.y1 + self.padding.top + self.viewport_height,
         );
 
@@ -423,8 +423,7 @@ impl Widget for ScrollView {
                     if scrollable_track > 0.0 {
                         let new_thumb_top = pos.y - self.scrollbar_drag_anchor - track.y1;
                         let ratio = new_thumb_top / scrollable_track;
-                        self.scroll_offset =
-                            (ratio * self.max_scroll).clamp(0.0, self.max_scroll);
+                        self.scroll_offset = (ratio * self.max_scroll).clamp(0.0, self.max_scroll);
                         if let Some(ref state) = self.state {
                             state.set(self.scroll_offset);
                         }
@@ -537,5 +536,8 @@ impl Widget for ScrollView {
             }
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::ScrollView)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::ScrollView)
+    }
 }

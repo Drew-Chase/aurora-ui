@@ -2,9 +2,9 @@ use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -108,7 +108,13 @@ impl Widget for Pagination {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-        let prev_tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, "<", &opts, colors::foreground(), None);
+        let prev_tl = aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            "<",
+            &opts,
+            colors::foreground(),
+            None,
+        );
         self.prev_layout = Some(prev_tl);
 
         // Page number buttons
@@ -120,19 +126,31 @@ impl Widget for Pagination {
             } else {
                 aurora_text::font_options::FontWeight::Normal
             });
-            let fg = if page == self.current_page { colors::primary_foreground() } else { colors::foreground() };
+            let fg = if page == self.current_page {
+                colors::primary_foreground()
+            } else {
+                colors::foreground()
+            };
             let text = page.to_string();
-            let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &text, &opts, fg, None);
+            let tl =
+                aurora_text::text_layout::TextLayout::new(ctx.font_manager, &text, &opts, fg, None);
             self.page_layouts.push(Some(tl));
         }
 
         // Next button
-        let next_tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, ">", &opts, colors::foreground(), None);
+        let next_tl = aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            ">",
+            &opts,
+            colors::foreground(),
+            None,
+        );
         self.next_layout = Some(next_tl);
 
         // Total width: prev + pages + next + spacing
         let button_count = 2 + self.displayed_pages.len();
-        let total_w = self.button_size * button_count as f32 + self.spacing * (button_count - 1) as f32;
+        let total_w =
+            self.button_size * button_count as f32 + self.spacing * (button_count - 1) as f32;
 
         Size::new(total_w, self.button_size)
     }
@@ -144,7 +162,9 @@ impl Widget for Pagination {
         let prev_rect = Rect::new(x, rect.y1, x + self.button_size, rect.y2);
         canvas.stroke_rounded_rect(prev_rect, self.corners, 1, colors::border());
         if let Some(ref tl) = self.prev_layout {
-            let _s = tl.size(); let tw = _s.width; let th = _s.height;
+            let _s = tl.size();
+            let tw = _s.width;
+            let th = _s.height;
             let tx = prev_rect.x1 + (self.button_size - tw) / 2.0;
             let ty = prev_rect.y1 + (self.button_size - th) / 2.0;
             canvas.draw_text(tl, tx as i32, ty as i32);
@@ -163,7 +183,9 @@ impl Widget for Pagination {
             }
 
             if let Some(Some(tl)) = self.page_layouts.get(i) {
-                let _s = tl.size(); let tw = _s.width; let th = _s.height;
+                let _s = tl.size();
+                let tw = _s.width;
+                let th = _s.height;
                 let tx = btn_rect.x1 + (self.button_size - tw) / 2.0;
                 let ty = btn_rect.y1 + (self.button_size - th) / 2.0;
                 canvas.draw_text(tl, tx as i32, ty as i32);
@@ -176,7 +198,9 @@ impl Widget for Pagination {
         let next_rect = Rect::new(x, rect.y1, x + self.button_size, rect.y2);
         canvas.stroke_rounded_rect(next_rect, self.corners, 1, colors::border());
         if let Some(ref tl) = self.next_layout {
-            let _s = tl.size(); let tw = _s.width; let th = _s.height;
+            let _s = tl.size();
+            let tw = _s.width;
+            let th = _s.height;
             let tx = next_rect.x1 + (self.button_size - tw) / 2.0;
             let ty = next_rect.y1 + (self.button_size - th) / 2.0;
             canvas.draw_text(tl, tx as i32, ty as i32);
@@ -251,5 +275,9 @@ impl Widget for Pagination {
             _ => EventResponse::default(),
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Navigation).with_label("Pagination".to_string())    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Navigation)
+            .with_label("Pagination".to_string())
+    }
 }

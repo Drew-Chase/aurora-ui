@@ -1,6 +1,6 @@
+use crate::theme;
 use aurora_ui::aurora_widgets::components::*;
 use aurora_ui::prelude::*;
-use crate::theme;
 
 pub fn page_form_builder() -> impl Widget {
     col!()
@@ -23,7 +23,7 @@ pub fn page_form_builder() -> impl Widget {
             code_block::CodeBlock::new()
                 .language("rust")
                 .code(
-r#"#[derive(Clone, Default)]
+                    r#"#[derive(Clone, Default)]
 struct FormData {
     name: String,
     email: String,
@@ -42,7 +42,7 @@ struct FormData {
             code_block::CodeBlock::new()
                 .language("rust")
                 .code(
-r#"fn form_field(
+                    r#"fn form_field(
     label_text: &str,
     value: &str,
     placeholder: &str,
@@ -85,7 +85,7 @@ form_field(
             code_block::CodeBlock::new()
                 .language("rust")
                 .code(
-r#"let role_setter = setter.clone();
+                    r#"let role_setter = setter.clone();
 
 col!()
     .spacing(4.0)
@@ -114,7 +114,7 @@ col!()
             code_block::CodeBlock::new()
                 .language("rust")
                 .code(
-r#"let terms_setter = setter.clone();
+                    r#"let terms_setter = setter.clone();
 let news_setter = setter.clone();
 
 col!()

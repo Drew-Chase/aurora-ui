@@ -5,9 +5,9 @@ use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -139,7 +139,13 @@ impl Widget for Toast {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, title, &opts, colors::foreground(), None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(
+                ctx.font_manager,
+                title,
+                &opts,
+                colors::foreground(),
+                None,
+            );
             tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
             let th = tl.size().height;
             self.title_height = th;
@@ -150,7 +156,13 @@ impl Widget for Toast {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.message, &opts, colors::foreground(), None);
+        let mut tl = aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            &self.message,
+            &opts,
+            colors::foreground(),
+            None,
+        );
         tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
         let mh = tl.size().height;
         self.message_height = mh;
@@ -219,7 +231,8 @@ impl Widget for Toast {
                 // Check dismiss button area
                 let close_x = rect.x2 - self.padding.right - 8.0;
                 let close_y = rect.y1 + self.padding.top;
-                let close_rect = Rect::new(close_x - 8.0, close_y - 4.0, close_x + 12.0, close_y + 12.0);
+                let close_rect =
+                    Rect::new(close_x - 8.0, close_y - 4.0, close_x + 12.0, close_y + 12.0);
                 if close_rect.contains(&e.position) {
                     self.visible = false;
                     if let Some(ref mut cb) = self.on_dismiss {

@@ -4,10 +4,10 @@ use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::keyboard::{Key, KeyboardEvent};
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -108,7 +108,11 @@ impl Command {
     fn palette_rect(&self, viewport: &Rect) -> Rect {
         let input_h = 48.0;
         let items_h = self.item_height * self.filtered_indices.len().min(self.max_items) as f32;
-        let separator_h = if self.filtered_indices.is_empty() { 0.0 } else { 1.0 };
+        let separator_h = if self.filtered_indices.is_empty() {
+            0.0
+        } else {
+            1.0
+        };
         let total_h = self.padding.top + input_h + separator_h + items_h + self.padding.bottom;
 
         let cx = viewport.x1 + viewport.width() / 2.0;
@@ -153,7 +157,13 @@ impl Widget for Command {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(16.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &display, &opts, colors::foreground(), None);
+        let mut tl = aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            &display,
+            &opts,
+            colors::foreground(),
+            None,
+        );
         tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
         self.input_layout = Some(tl);
 
@@ -164,7 +174,13 @@ impl Widget for Command {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(
+                ctx.font_manager,
+                label,
+                &opts,
+                colors::foreground(),
+                None,
+            );
             tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
             self.item_layouts.push(Some(tl));
         }
@@ -198,10 +214,7 @@ impl Widget for Command {
 
         // Separator
         if !self.filtered_indices.is_empty() {
-            canvas.fill_rect(
-                Rect::new(pr.x1, y, pr.x2, y + 1.0),
-                colors::border(),
-            );
+            canvas.fill_rect(Rect::new(pr.x1, y, pr.x2, y + 1.0), colors::border());
             y += 1.0;
         }
 
@@ -278,7 +291,11 @@ impl Widget for Command {
                     if pos.y >= items_y {
                         let relative_y = pos.y - items_y;
                         let idx = (relative_y / self.item_height) as usize;
-                        self.hover_index = if idx < self.filtered_indices.len() { Some(idx) } else { None };
+                        self.hover_index = if idx < self.filtered_indices.len() {
+                            Some(idx)
+                        } else {
+                            None
+                        };
                     } else {
                         self.hover_index = None;
                     }
@@ -324,9 +341,8 @@ impl Widget for Command {
                     Key::Down => {
                         let max = self.filtered_indices.len();
                         if max > 0 {
-                            self.hover_index = Some(
-                                self.hover_index.map(|i| (i + 1).min(max - 1)).unwrap_or(0),
-                            );
+                            self.hover_index =
+                                Some(self.hover_index.map(|i| (i + 1).min(max - 1)).unwrap_or(0));
                         }
                     }
                     Key::Up => {
@@ -347,5 +363,8 @@ impl Widget for Command {
             },
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Menu)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Menu)
+    }
 }

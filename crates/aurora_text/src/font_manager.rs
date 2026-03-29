@@ -54,7 +54,6 @@ impl FontManager {
     pub fn font_system_mut(&mut self) -> &mut cosmic_text::FontSystem {
         &mut self.font_system
     }
-
 }
 
 impl Default for FontManager {

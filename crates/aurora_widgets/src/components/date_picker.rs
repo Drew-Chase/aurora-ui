@@ -4,13 +4,13 @@ use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
-use super::colors;
 use super::calendar::Calendar;
+use super::colors;
 
 /// A date picker input that opens a calendar dropdown.
 ///
@@ -137,16 +137,19 @@ impl Widget for DatePicker {
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
         let inner_w = w - self.padding.left - self.padding.right;
-        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &display_text, &opts, colors::foreground(), None);
+        let mut tl = aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            &display_text,
+            &opts,
+            colors::foreground(),
+            None,
+        );
         tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
         self.display_layout = Some(tl);
 
         // Layout calendar
         if self.open {
-            self.calendar_size = self.calendar.layout(
-                Size::new(40.0 * 7.0, f32::MAX),
-                ctx,
-            );
+            self.calendar_size = self.calendar.layout(Size::new(40.0 * 7.0, f32::MAX), ctx);
         }
 
         Size::new(w, self.height)
@@ -154,7 +157,11 @@ impl Widget for DatePicker {
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
         // Input box
-        let border_color = if self.open { colors::ring() } else { self.border_color };
+        let border_color = if self.open {
+            colors::ring()
+        } else {
+            self.border_color
+        };
         canvas.fill_rounded_rect(rect, self.corners, self.background);
         canvas.stroke_rounded_rect(rect, self.corners, 1, border_color);
 
@@ -178,7 +185,6 @@ impl Widget for DatePicker {
             Rect::new(icon_x, icon_y + 6.0, icon_x + 14.0, icon_y + 7.0),
             colors::muted_foreground(),
         );
-
     }
 
     fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
@@ -270,5 +276,10 @@ impl Widget for DatePicker {
             _ => EventResponse::default(),
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group).with_label("Date picker".to_string()).with_expanded(self.open)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)
+            .with_label("Date picker".to_string())
+            .with_expanded(self.open)
+    }
 }

@@ -1,9 +1,9 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_render::canvas::Canvas;
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 const W: u32 = 1920;
 const H: u32 = 1080;

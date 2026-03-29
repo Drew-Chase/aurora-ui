@@ -6,9 +6,9 @@ use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::MouseClickEvent;
-use aurora_core::kmi::WidgetEvent;
 use aurora_macros::composite_widget;
 use aurora_render::canvas::Canvas;
 use std::cell::{Cell, RefCell};
@@ -187,7 +187,9 @@ impl CompositeBuilder for Button {
                     })
                 }
                 #[cfg(not(feature = "text"))]
-                { None }
+                {
+                    None
+                }
             }
         };
         let start = self.start.clone();
@@ -205,80 +207,77 @@ impl CompositeBuilder for Button {
 
         let anim_for_closure = anim.clone();
 
-        Box::new(Composite::new(
-            ButtonState,
-            move |_state, _set_state| {
-                let click_handler = on_click.clone();
-                let on_hover = on_hover.clone();
-                let child = child.clone();
-                let start = start.clone();
-                let end = end.clone();
-                let anim = anim_for_closure.clone();
+        Box::new(Composite::new(ButtonState, move |_state, _set_state| {
+            let click_handler = on_click.clone();
+            let on_hover = on_hover.clone();
+            let child = child.clone();
+            let start = start.clone();
+            let end = end.clone();
+            let anim = anim_for_closure.clone();
 
-                let has_slots = start.is_some() || end.is_some();
-                let mut box_widget = BoxWidget::new()
-                    .corners(border_radius)
-                    .background_color(Color::TRANSPARENT)
-                    .width(width)
-                    .height(height);
+            let has_slots = start.is_some() || end.is_some();
+            let mut box_widget = BoxWidget::new()
+                .corners(border_radius)
+                .background_color(Color::TRANSPARENT)
+                .width(width)
+                .height(height);
 
-                if has_slots {
-                    use crate::layout::{Align, Justify};
-                    use crate::layout::row::Row;
-                    use aurora_core::geometry::edges::Edges;
-                    box_widget = box_widget.padding(Edges::new(0.0, 8.0, 0.0, 8.0));
-                    let mut content_row = Row::new()
-                        .spacing(6.0)
-                        .height(height)
-                        .align(Align::Center)
-                        .justify(Justify::Center);
-                    if let Some(s) = start {
-                        content_row = content_row.child(FlexProxy { inner: s });
-                    }
-                    if let Some(c) = child {
-                        content_row = content_row.child(FlexProxy { inner: c });
-                    }
-                    if let Some(e) = end {
-                        content_row = content_row.child(FlexProxy { inner: e });
-                    }
-                    box_widget = box_widget.child(content_row);
-                } else if let Some(child) = child {
-                    box_widget = box_widget.child(ChildProxy {
-                        inner: child,
-                        width: width as f32,
-                        height: height as f32,
-                    });
+            if has_slots {
+                use crate::layout::row::Row;
+                use crate::layout::{Align, Justify};
+                use aurora_core::geometry::edges::Edges;
+                box_widget = box_widget.padding(Edges::new(0.0, 8.0, 0.0, 8.0));
+                let mut content_row = Row::new()
+                    .spacing(6.0)
+                    .height(height)
+                    .align(Align::Center)
+                    .justify(Justify::Center);
+                if let Some(s) = start {
+                    content_row = content_row.child(FlexProxy { inner: s });
                 }
+                if let Some(c) = child {
+                    content_row = content_row.child(FlexProxy { inner: c });
+                }
+                if let Some(e) = end {
+                    content_row = content_row.child(FlexProxy { inner: e });
+                }
+                box_widget = box_widget.child(content_row);
+            } else if let Some(child) = child {
+                box_widget = box_widget.child(ChildProxy {
+                    inner: child,
+                    width: width as f32,
+                    height: height as f32,
+                });
+            }
 
-                Box::new(
-                    TouchArea::new()
-                        .hover_cursor(hover_cursor)
-                        .child(AnimatedBg {
-                            normal: background,
-                            hover: hover_background,
-                            corners: border_radius,
-                            anim: anim.clone(),
-                            inner: box_widget,
-                        })
-                        .on_hover(move |_position, hovering| {
-                            let data = anim.get();
-                            let new_data = AnimData {
-                                from: data.current_t(),
-                                to: if hovering { 1.0 } else { 0.0 },
-                                start: Instant::now(),
-                            };
-                            anim.set(new_data);
+            Box::new(
+                TouchArea::new()
+                    .hover_cursor(hover_cursor)
+                    .child(AnimatedBg {
+                        normal: background,
+                        hover: hover_background,
+                        corners: border_radius,
+                        anim: anim.clone(),
+                        inner: box_widget,
+                    })
+                    .on_hover(move |_position, hovering| {
+                        let data = anim.get();
+                        let new_data = AnimData {
+                            from: data.current_t(),
+                            to: if hovering { 1.0 } else { 0.0 },
+                            start: Instant::now(),
+                        };
+                        anim.set(new_data);
 
-                            if let Some(ref on_hover) = on_hover {
-                                on_hover.borrow_mut()(hovering);
-                            }
-                        })
-                        .on_click(move |event| {
-                            click_handler.borrow_mut()(event);
-                        }),
-                )
-            },
-        ))
+                        if let Some(ref on_hover) = on_hover {
+                            on_hover.borrow_mut()(hovering);
+                        }
+                    })
+                    .on_click(move |event| {
+                        click_handler.borrow_mut()(event);
+                    }),
+            )
+        }))
     }
 
     #[cfg(feature = "a11y")]

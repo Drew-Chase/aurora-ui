@@ -3,9 +3,9 @@ use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -114,7 +114,13 @@ impl Widget for Menubar {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &menu.label, &opts, colors::foreground(), None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(
+                ctx.font_manager,
+                &menu.label,
+                &opts,
+                colors::foreground(),
+                None,
+            );
             tl.set_max_width(ctx.font_manager, f32::MAX);
             let tw = tl.size().width;
             self.menu_widths.push(tw + self.padding * 2.0);
@@ -126,7 +132,13 @@ impl Widget for Menubar {
                 let mut opts = ctx.font_options.clone();
                 opts.size = Some(14.0);
                 opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-                let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, item, &opts, colors::foreground(), None);
+                let mut tl = aurora_text::text_layout::TextLayout::new(
+                    ctx.font_manager,
+                    item,
+                    &opts,
+                    colors::foreground(),
+                    None,
+                );
                 tl.set_max_width(ctx.font_manager, self.dropdown_width - 24.0);
                 layouts.push(Some(tl));
             }
@@ -155,7 +167,9 @@ impl Widget for Menubar {
             }
 
             if let Some(Some(tl)) = self.menu_layouts.get(i) {
-                let _s = tl.size(); let tw = _s.width; let th = _s.height;
+                let _s = tl.size();
+                let tw = _s.width;
+                let th = _s.height;
                 let tx = menu_rect.x1 + (menu_rect.width() - tw) / 2.0;
                 let ty = menu_rect.y1 + (menu_rect.height() - th) / 2.0;
                 canvas.draw_text(tl, tx as i32, ty as i32);
@@ -163,7 +177,6 @@ impl Widget for Menubar {
 
             x += menu_w;
         }
-
     }
 
     fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
@@ -278,7 +291,11 @@ impl Widget for Menubar {
                     if dr.contains(pos) {
                         let relative_y = pos.y - dr.y1 - 4.0;
                         let idx = (relative_y / self.item_height) as usize;
-                        self.hover_item = if idx < self.menus[menu_idx].items.len() { Some(idx) } else { None };
+                        self.hover_item = if idx < self.menus[menu_idx].items.len() {
+                            Some(idx)
+                        } else {
+                            None
+                        };
                         return EventResponse {
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
@@ -299,5 +316,8 @@ impl Widget for Menubar {
             _ => EventResponse::default(),
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::MenuBar)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::MenuBar)
+    }
 }

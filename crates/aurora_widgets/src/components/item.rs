@@ -3,9 +3,9 @@ use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -123,7 +123,13 @@ impl Widget for Item {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.label, &opts, colors::foreground(), None);
+        let mut tl = aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            &self.label,
+            &opts,
+            colors::foreground(),
+            None,
+        );
         tl.set_max_width(ctx.font_manager, text_w);
         let lh = tl.size().height;
         self.label_height = lh;
@@ -135,7 +141,13 @@ impl Widget for Item {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(12.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, desc, &opts, colors::foreground(), None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(
+                ctx.font_manager,
+                desc,
+                &opts,
+                colors::foreground(),
+                None,
+            );
             tl.set_max_width(ctx.font_manager, text_w);
             let dh = tl.size().height;
             self.desc_height = dh;
@@ -165,7 +177,12 @@ impl Widget for Item {
         }
 
         // Text block
-        let text_total_h = self.label_height + if self.description.is_some() { 2.0 + self.desc_height } else { 0.0 };
+        let text_total_h = self.label_height
+            + if self.description.is_some() {
+                2.0 + self.desc_height
+            } else {
+                0.0
+            };
         let text_y = cy - text_total_h / 2.0;
 
         if let Some(ref tl) = self.label_layout {
@@ -179,7 +196,12 @@ impl Widget for Item {
         if let Some(ref trailing) = self.trailing {
             let tx = rect.x2 - self.padding_x - self.trailing_size.width;
             let ty = cy - self.trailing_size.height / 2.0;
-            let trailing_rect = Rect::new(tx, ty, tx + self.trailing_size.width, ty + self.trailing_size.height);
+            let trailing_rect = Rect::new(
+                tx,
+                ty,
+                tx + self.trailing_size.width,
+                ty + self.trailing_size.height,
+            );
             trailing.paint(canvas, trailing_rect);
         }
     }
@@ -221,5 +243,8 @@ impl Widget for Item {
             _ => EventResponse::default(),
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::ListItem)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::ListItem)
+    }
 }

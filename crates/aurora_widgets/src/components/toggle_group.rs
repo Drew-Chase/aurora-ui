@@ -2,9 +2,9 @@ use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 use aurora_text::font_options::FontWeight;
 use aurora_text::text_layout::TextLayout;
@@ -81,7 +81,8 @@ impl Widget for ToggleGroup {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(FontWeight::Medium);
-            let mut tl = TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
+            let mut tl =
+                TextLayout::new(ctx.font_manager, label, &opts, colors::foreground(), None);
             tl.set_max_width(ctx.font_manager, f32::MAX);
             let ts = tl.size();
             let item_w = ts.width + pad * 2.0;
@@ -162,5 +163,8 @@ impl Widget for ToggleGroup {
             _ => EventResponse::default(),
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)
+    }
 }

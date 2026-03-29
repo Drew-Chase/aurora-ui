@@ -37,9 +37,21 @@ pub(super) fn paint_button(
     dark: bool,
 ) {
     let hover_bg = if dark { HOVER_BG_DARK } else { HOVER_BG_LIGHT };
-    let pressed_bg = if dark { PRESSED_BG_DARK } else { PRESSED_BG_LIGHT };
-    let icon_normal = if dark { ICON_COLOR_DARK } else { ICON_COLOR_LIGHT };
-    let icon_disabled = if dark { ICON_DISABLED_DARK } else { ICON_DISABLED_LIGHT };
+    let pressed_bg = if dark {
+        PRESSED_BG_DARK
+    } else {
+        PRESSED_BG_LIGHT
+    };
+    let icon_normal = if dark {
+        ICON_COLOR_DARK
+    } else {
+        ICON_COLOR_LIGHT
+    };
+    let icon_disabled = if dark {
+        ICON_DISABLED_DARK
+    } else {
+        ICON_DISABLED_LIGHT
+    };
 
     // Background
     if is_hovered || is_pressed {
@@ -79,10 +91,7 @@ pub(super) fn paint_button(
     match button {
         ControlButton::Minimize => {
             // Horizontal line
-            canvas.fill_rect(
-                Rect::new(cx - half, cy, cx + half, cy + 1.0),
-                icon_color,
-            );
+            canvas.fill_rect(Rect::new(cx - half, cy, cx + half, cy + 1.0), icon_color);
         }
         ControlButton::Maximize => {
             if is_maximized {

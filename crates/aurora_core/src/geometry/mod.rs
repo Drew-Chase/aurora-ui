@@ -1,3 +1,6 @@
+pub mod corners;
+pub mod edges;
+pub mod point;
 /// Geometry primitives for 2D layout and rendering.
 ///
 /// This module provides the core geometric types used throughout AuroraUI:
@@ -8,7 +11,4 @@
 /// - [`Edges`](edges::Edges) — Edge insets (padding, margins, borders).
 /// - [`Corners`](corners::Corners) — Corner radii for rounded rectangles.
 pub mod rect;
-pub mod point;
 pub mod size;
-pub mod edges;
-pub mod corners;

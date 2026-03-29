@@ -2,9 +2,9 @@ use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -152,16 +152,15 @@ impl Widget for Resizable {
         self.current_size = self.current_size.clamp(self.min_size, self.max_size);
 
         let (w, h) = match self.direction {
-            ResizeDirection::Right | ResizeDirection::Left => {
-                (self.current_size, available.height)
-            }
-            ResizeDirection::Bottom => {
-                (available.width, self.current_size)
-            }
+            ResizeDirection::Right | ResizeDirection::Left => (self.current_size, available.height),
+            ResizeDirection::Bottom => (available.width, self.current_size),
         };
 
         if let Some(ref mut child) = self.child {
-            let content_w = if matches!(self.direction, ResizeDirection::Right | ResizeDirection::Left) {
+            let content_w = if matches!(
+                self.direction,
+                ResizeDirection::Right | ResizeDirection::Left
+            ) {
                 (w - self.handle_width).max(0.0)
             } else {
                 w
@@ -183,7 +182,12 @@ impl Widget for Resizable {
         if let Some(ref child) = self.child {
             let cr = self.content_rect(&rect);
             canvas.push_clip(cr);
-            let child_rect = Rect::new(cr.x1, cr.y1, cr.x1 + self.child_size.width, cr.y1 + self.child_size.height);
+            let child_rect = Rect::new(
+                cr.x1,
+                cr.y1,
+                cr.x1 + self.child_size.width,
+                cr.y1 + self.child_size.height,
+            );
             child.paint(canvas, child_rect);
             canvas.pop_clip();
         }
@@ -248,7 +252,8 @@ impl Widget for Resizable {
                         ResizeDirection::Bottom => pos.y - self.drag_start,
                         ResizeDirection::Left => self.drag_start - pos.x,
                     };
-                    self.current_size = (self.drag_start_size + delta).clamp(self.min_size, self.max_size);
+                    self.current_size =
+                        (self.drag_start_size + delta).clamp(self.min_size, self.max_size);
                     return EventResponse {
                         handled: true,
                         cursor: Some(resize_cursor),
@@ -277,5 +282,8 @@ impl Widget for Resizable {
             }
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Splitter)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Splitter)
+    }
 }

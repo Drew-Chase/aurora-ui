@@ -3,9 +3,9 @@ use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -107,7 +107,8 @@ impl Calendar {
             1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
             4 | 6 | 9 | 11 => 30,
             2 => {
-                if (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400) {
+                if (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400)
+                {
                     29
                 } else {
                     28
@@ -192,15 +193,33 @@ impl Widget for Calendar {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-        let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &month_str, &opts, colors::foreground(), None);
+        let tl = aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            &month_str,
+            &opts,
+            colors::foreground(),
+            None,
+        );
         self.month_label_layout = Some(tl);
 
         // Prev/Next arrows
         let mut arrow_opts = ctx.font_options.clone();
         arrow_opts.size = Some(14.0);
         arrow_opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-        self.prev_layout = Some(aurora_text::text_layout::TextLayout::new(ctx.font_manager, "<", &arrow_opts, colors::foreground(), None));
-        self.next_layout = Some(aurora_text::text_layout::TextLayout::new(ctx.font_manager, ">", &arrow_opts, colors::foreground(), None));
+        self.prev_layout = Some(aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            "<",
+            &arrow_opts,
+            colors::foreground(),
+            None,
+        ));
+        self.next_layout = Some(aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            ">",
+            &arrow_opts,
+            colors::foreground(),
+            None,
+        ));
 
         // Weekday headers
         self.weekday_layouts.clear();
@@ -209,7 +228,13 @@ impl Widget for Calendar {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(12.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, wd, &opts, colors::foreground(), None);
+            let tl = aurora_text::text_layout::TextLayout::new(
+                ctx.font_manager,
+                wd,
+                &opts,
+                colors::foreground(),
+                None,
+            );
             self.weekday_layouts.push(Some(tl));
         }
 
@@ -220,9 +245,14 @@ impl Widget for Calendar {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let fg = if is_selected { self.selected_fg } else { colors::foreground() };
+            let fg = if is_selected {
+                self.selected_fg
+            } else {
+                colors::foreground()
+            };
             let text = day.to_string();
-            let tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &text, &opts, fg, None);
+            let tl =
+                aurora_text::text_layout::TextLayout::new(ctx.font_manager, &text, &opts, fg, None);
             self.day_layouts.push(Some(tl));
         }
 
@@ -235,11 +265,18 @@ impl Widget for Calendar {
         let grid_w = self.cell_size * 7.0;
 
         // Month header with prev/next
-        let header_rect = Rect::new(rect.x1, rect.y1, rect.x1 + grid_w, rect.y1 + self.header_height);
+        let header_rect = Rect::new(
+            rect.x1,
+            rect.y1,
+            rect.x1 + grid_w,
+            rect.y1 + self.header_height,
+        );
 
         // Prev button
         if let Some(ref tl) = self.prev_layout {
-            let _s = tl.size(); let _tw = _s.width; let th = _s.height;
+            let _s = tl.size();
+            let _tw = _s.width;
+            let th = _s.height;
             let tx = header_rect.x1 + 8.0;
             let ty = header_rect.y1 + (self.header_height - th) / 2.0;
             canvas.draw_text(tl, tx as i32, ty as i32);
@@ -247,7 +284,9 @@ impl Widget for Calendar {
 
         // Month label centered
         if let Some(ref tl) = self.month_label_layout {
-            let _s = tl.size(); let tw = _s.width; let th = _s.height;
+            let _s = tl.size();
+            let tw = _s.width;
+            let th = _s.height;
             let tx = header_rect.x1 + (grid_w - tw) / 2.0;
             let ty = header_rect.y1 + (self.header_height - th) / 2.0;
             canvas.draw_text(tl, tx as i32, ty as i32);
@@ -255,7 +294,9 @@ impl Widget for Calendar {
 
         // Next button
         if let Some(ref tl) = self.next_layout {
-            let _s = tl.size(); let tw = _s.width; let th = _s.height;
+            let _s = tl.size();
+            let tw = _s.width;
+            let th = _s.height;
             let tx = header_rect.x2 - tw - 8.0;
             let ty = header_rect.y1 + (self.header_height - th) / 2.0;
             canvas.draw_text(tl, tx as i32, ty as i32);
@@ -265,7 +306,9 @@ impl Widget for Calendar {
         let weekday_y = rect.y1 + self.header_height;
         for (col, layout) in self.weekday_layouts.iter().enumerate() {
             if let Some(tl) = layout {
-                let _s = tl.size(); let tw = _s.width; let th = _s.height;
+                let _s = tl.size();
+                let tw = _s.width;
+                let th = _s.height;
                 let cx = rect.x1 + col as f32 * self.cell_size + self.cell_size / 2.0;
                 let tx = cx - tw / 2.0;
                 let ty = weekday_y + (self.cell_size - th) / 2.0;
@@ -294,7 +337,9 @@ impl Widget for Calendar {
             }
 
             if let Some(Some(tl)) = self.day_layouts.get((day - 1) as usize) {
-                let _s = tl.size(); let tw = _s.width; let th = _s.height;
+                let _s = tl.size();
+                let tw = _s.width;
+                let th = _s.height;
                 let tx = cx + (self.cell_size - tw) / 2.0;
                 let ty = cy + (self.cell_size - th) / 2.0;
                 canvas.draw_text(tl, tx as i32, ty as i32);
@@ -311,7 +356,8 @@ impl Widget for Calendar {
             WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
                 if e.state == MouseState::Pressed && rect.contains(&e.position) =>
             {
-                let header_rect = Rect::new(rect.x1, rect.y1, rect.x2, rect.y1 + self.header_height);
+                let header_rect =
+                    Rect::new(rect.x1, rect.y1, rect.x2, rect.y1 + self.header_height);
 
                 // Prev/next navigation
                 if header_rect.contains(&e.position) {
@@ -368,5 +414,9 @@ impl Widget for Calendar {
             _ => EventResponse::default(),
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group).with_label("Calendar".to_string())    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)
+            .with_label("Calendar".to_string())
+    }
 }

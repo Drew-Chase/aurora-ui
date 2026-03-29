@@ -34,7 +34,6 @@ pub struct Rect {
     pub y2: f32,
 }
 
-
 impl Rect {
     /// Creates a rectangle from explicit corner coordinates.
     pub fn new(x1: f32, y1: f32, x2: f32, y2: f32) -> Self {

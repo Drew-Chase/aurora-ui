@@ -9,13 +9,10 @@ fn main() {
         .duration(2.0)
         .easing(Easing::QuadOut);
 
-    let mut color_tween = Tween::new(
-        Color::new(66, 133, 244, 255),
-        Color::new(234, 67, 53, 255),
-    )
-    .duration(3.0)
-    .easing(Easing::CubicInOut)
-    .loop_mode(LoopMode::PingPongInfinite);
+    let mut color_tween = Tween::new(Color::new(66, 133, 244, 255), Color::new(234, 67, 53, 255))
+        .duration(3.0)
+        .easing(Easing::CubicInOut)
+        .loop_mode(LoopMode::PingPongInfinite);
 
     let mut breathe = Preset::breathe(0.3f32, 1.0);
 
@@ -59,8 +56,10 @@ fn main() {
             color_cycle.tick(dt);
 
             // Request next frame while any animation is active
-            if !pos_tween.is_finished() || !color_tween.is_finished()
-                || !breathe.is_finished() || !bounce_tween.is_finished()
+            if !pos_tween.is_finished()
+                || !color_tween.is_finished()
+                || !breathe.is_finished()
+                || !bounce_tween.is_finished()
                 || !color_cycle.is_finished()
             {
                 window.request_next_frame();
@@ -86,21 +85,17 @@ fn main() {
                     .child(
                         col!()
                             .spacing(4.0)
+                            .child(Text::new("Tween<f32> — Position (QuadOut)").font_size(14.0))
                             .child(
-                                Text::new("Tween<f32> — Position (QuadOut)").font_size(14.0),
-                            )
-                            .child(
-                                Stack::new()
-                                    .height(50.0)
-                                    .child(
-                                        Positioned::absolute((pos_x, 0.0)).child(
-                                            BoxWidget::new()
-                                                .width(50)
-                                                .height(50)
-                                                .background_color(Color::new(66, 133, 244, 255))
-                                                .corners(Corners::all(8.0)),
-                                        ),
+                                Stack::new().height(50.0).child(
+                                    Positioned::absolute((pos_x, 0.0)).child(
+                                        BoxWidget::new()
+                                            .width(50)
+                                            .height(50)
+                                            .background_color(Color::new(66, 133, 244, 255))
+                                            .corners(Corners::all(8.0)),
                                     ),
+                                ),
                             ),
                     )
                     // Row 2: Color tween (ping-pong)
@@ -108,8 +103,7 @@ fn main() {
                         col!()
                             .spacing(4.0)
                             .child(
-                                Text::new("Tween<Color> — Ping-Pong (CubicInOut)")
-                                    .font_size(14.0),
+                                Text::new("Tween<Color> — Ping-Pong (CubicInOut)").font_size(14.0),
                             )
                             .child(
                                 BoxWidget::new()
@@ -122,15 +116,11 @@ fn main() {
                     .child(
                         col!()
                             .spacing(4.0)
-                            .child(
-                                Text::new("Preset::breathe — Opacity Pulse").font_size(14.0),
-                            )
+                            .child(Text::new("Preset::breathe — Opacity Pulse").font_size(14.0))
                             .child(
                                 BoxWidget::new()
                                     .height(50)
-                                    .background_color(
-                                        Color::new(76, 175, 80, 255).opacity(opacity),
-                                    )
+                                    .background_color(Color::new(76, 175, 80, 255).opacity(opacity))
                                     .corners(Corners::all(8.0)),
                             ),
                     )
@@ -139,21 +129,18 @@ fn main() {
                         col!()
                             .spacing(4.0)
                             .child(
-                                Text::new("Preset::bounce — Drop-In (BounceOut)")
-                                    .font_size(14.0),
+                                Text::new("Preset::bounce — Drop-In (BounceOut)").font_size(14.0),
                             )
                             .child(
-                                Stack::new()
-                                    .height(50.0)
-                                    .child(
-                                        Positioned::absolute((bounce_x, 0.0)).child(
-                                            BoxWidget::new()
-                                                .width(50)
-                                                .height(50)
-                                                .background_color(Color::new(255, 152, 0, 255))
-                                                .corners(Corners::all(25.0)),
-                                        ),
+                                Stack::new().height(50.0).child(
+                                    Positioned::absolute((bounce_x, 0.0)).child(
+                                        BoxWidget::new()
+                                            .width(50)
+                                            .height(50)
+                                            .background_color(Color::new(255, 152, 0, 255))
+                                            .corners(Corners::all(25.0)),
                                     ),
+                                ),
                             ),
                     )
                     // Row 5: Keyframe color cycle

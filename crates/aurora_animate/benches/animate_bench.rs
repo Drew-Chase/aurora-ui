@@ -1,7 +1,7 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use aurora_animate::easing::Easing;
 use aurora_animate::timeline::Timeline;
 use aurora_animate::tween::Tween;
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 fn bench_easing_all(c: &mut Criterion) {
     let easings = [
@@ -47,10 +47,7 @@ fn bench_timeline_tick(c: &mut Criterion) {
         bench.iter(|| {
             let mut timeline = Timeline::new();
             for i in 0..10 {
-                timeline = timeline.add(
-                    i as f32 * 0.1,
-                    Tween::new(0.0f32, 100.0).duration(0.5),
-                );
+                timeline = timeline.add(i as f32 * 0.1, Tween::new(0.0f32, 100.0).duration(0.5));
             }
             for _ in 0..60 {
                 timeline.tick(black_box(1.0 / 60.0));

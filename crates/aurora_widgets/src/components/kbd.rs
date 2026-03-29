@@ -63,7 +63,13 @@ impl Widget for Kbd {
         opts.size = Some(self.font_size);
         opts.weight = Some(FontWeight::Normal);
 
-        let mut tl = TextLayout::new(ctx.font_manager, &self.text, &opts, self.foreground_color, None);
+        let mut tl = TextLayout::new(
+            ctx.font_manager,
+            &self.text,
+            &opts,
+            self.foreground_color,
+            None,
+        );
         tl.set_max_width(ctx.font_manager, f32::MAX);
         let ts = tl.size();
         self.layout = Some(tl);
@@ -95,5 +101,9 @@ impl Widget for Kbd {
     fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
         EventResponse::default()
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Label).with_label(self.text.clone())    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Label)
+            .with_label(self.text.clone())
+    }
 }

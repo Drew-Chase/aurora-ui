@@ -89,35 +89,19 @@ impl Sidebar {
 
     fn sidebar_rect(&self, rect: &Rect) -> Rect {
         match self.side {
-            SidebarSide::Left => Rect::new(
-                rect.x1,
-                rect.y1,
-                rect.x1 + self.sidebar_width,
-                rect.y2,
-            ),
-            SidebarSide::Right => Rect::new(
-                rect.x2 - self.sidebar_width,
-                rect.y1,
-                rect.x2,
-                rect.y2,
-            ),
+            SidebarSide::Left => Rect::new(rect.x1, rect.y1, rect.x1 + self.sidebar_width, rect.y2),
+            SidebarSide::Right => {
+                Rect::new(rect.x2 - self.sidebar_width, rect.y1, rect.x2, rect.y2)
+            }
         }
     }
 
     fn main_rect(&self, rect: &Rect) -> Rect {
         match self.side {
-            SidebarSide::Left => Rect::new(
-                rect.x1 + self.sidebar_width,
-                rect.y1,
-                rect.x2,
-                rect.y2,
-            ),
-            SidebarSide::Right => Rect::new(
-                rect.x1,
-                rect.y1,
-                rect.x2 - self.sidebar_width,
-                rect.y2,
-            ),
+            SidebarSide::Left => Rect::new(rect.x1 + self.sidebar_width, rect.y1, rect.x2, rect.y2),
+            SidebarSide::Right => {
+                Rect::new(rect.x1, rect.y1, rect.x2 - self.sidebar_width, rect.y2)
+            }
         }
     }
 }
@@ -206,5 +190,8 @@ impl Widget for Sidebar {
 
         EventResponse::default()
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Complementary)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Complementary)
+    }
 }

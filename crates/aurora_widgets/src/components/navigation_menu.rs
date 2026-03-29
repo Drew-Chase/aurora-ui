@@ -3,9 +3,9 @@ use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -103,9 +103,17 @@ impl Widget for NavigationMenu {
             } else {
                 aurora_text::font_options::FontWeight::Normal
             });
-            let fg = if is_selected { colors::foreground() } else { colors::muted_foreground() };
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, fg, None);
-            tl.set_max_width(ctx.font_manager, w - self.padding_x * 2.0 - self.indicator_width - 8.0);
+            let fg = if is_selected {
+                colors::foreground()
+            } else {
+                colors::muted_foreground()
+            };
+            let mut tl =
+                aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, fg, None);
+            tl.set_max_width(
+                ctx.font_manager,
+                w - self.padding_x * 2.0 - self.indicator_width - 8.0,
+            );
             self.item_layouts.push(Some(tl));
         }
 
@@ -201,5 +209,8 @@ impl Widget for NavigationMenu {
             _ => EventResponse::default(),
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Navigation)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Navigation)
+    }
 }

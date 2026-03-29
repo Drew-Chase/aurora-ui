@@ -5,8 +5,8 @@ use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
-use aurora_core::kmi::mouse::MouseEvent;
 use aurora_core::kmi::WidgetEvent;
+use aurora_core::kmi::mouse::MouseEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -142,9 +142,17 @@ impl Widget for Tooltip {
         let mut opts = ctx.font_options.clone();
         opts.size = Some(12.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-        let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &self.text, &opts, colors::foreground(), None);
+        let mut tl = aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            &self.text,
+            &opts,
+            colors::foreground(),
+            None,
+        );
         tl.set_max_width(ctx.font_manager, f32::MAX);
-        let _s = tl.size(); let tw = _s.width; let th = _s.height;
+        let _s = tl.size();
+        let tw = _s.width;
+        let th = _s.height;
         self.tooltip_size = Size::new(
             tw + self.padding.left + self.padding.right,
             th + self.padding.top + self.padding.bottom,
@@ -197,5 +205,9 @@ impl Widget for Tooltip {
             }
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Tooltip).with_label(self.text.clone())    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Tooltip)
+            .with_label(self.text.clone())
+    }
 }

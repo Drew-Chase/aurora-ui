@@ -71,7 +71,10 @@ impl Widget for Label {
         let ts = tl.size();
         self.layout = Some(tl);
 
-        Size::new(self.width.unwrap_or(ts.width), self.height.unwrap_or(ts.height))
+        Size::new(
+            self.width.unwrap_or(ts.width),
+            self.height.unwrap_or(ts.height),
+        )
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
@@ -87,5 +90,9 @@ impl Widget for Label {
     fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
         EventResponse::default()
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Label).with_label(self.text.clone())    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Label)
+            .with_label(self.text.clone())
+    }
 }

@@ -73,10 +73,7 @@ pub(super) fn paint_button(
             }
             ControlButton::Minimize => {
                 // Horizontal line (minus)
-                canvas.fill_rect(
-                    Rect::new(cx - half, cy, cx + half, cy + 1.0),
-                    ICON_COLOR,
-                );
+                canvas.fill_rect(Rect::new(cx - half, cy, cx + half, cy + 1.0), ICON_COLOR);
             }
             ControlButton::Maximize => {
                 // Expand arrows: two diagonal arrows pointing to corners

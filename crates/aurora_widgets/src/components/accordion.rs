@@ -4,9 +4,9 @@ use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 use std::time::Instant;
 
@@ -155,7 +155,11 @@ impl Widget for Accordion {
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
             let tl = aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, &section.title, &opts, colors::foreground(), None,
+                ctx.font_manager,
+                &section.title,
+                &opts,
+                colors::foreground(),
+                None,
             );
             section.title_layout = Some(tl);
 
@@ -215,12 +219,14 @@ impl Widget for Accordion {
             canvas.draw_line(
                 Point::new(chevron_x + dx1, chevron_cy + dy1),
                 Point::new(chevron_x + dx2, chevron_cy + dy2),
-                1.0, colors::muted_foreground(),
+                1.0,
+                colors::muted_foreground(),
             );
             canvas.draw_line(
                 Point::new(chevron_x + dx2, chevron_cy + dy2),
                 Point::new(chevron_x + dx3, chevron_cy + dy3),
-                1.0, colors::muted_foreground(),
+                1.0,
+                colors::muted_foreground(),
             );
 
             // Bottom border
@@ -234,7 +240,12 @@ impl Widget for Accordion {
             if t > 0.0 {
                 let content_area_top = y + self.header_height;
                 let visible_h = section.visible_content_height(&self.content_padding);
-                let clip = Rect::new(rect.x1, content_area_top, rect.x2, content_area_top + visible_h);
+                let clip = Rect::new(
+                    rect.x1,
+                    content_area_top,
+                    rect.x2,
+                    content_area_top + visible_h,
+                );
                 canvas.push_clip(clip);
 
                 let content_y = content_area_top + self.content_padding.top;
@@ -332,7 +343,13 @@ impl Widget for Accordion {
                         }
                     }
                     let sec_h = self.header_height
-                        + if section.expanded { self.content_padding.top + section.content_size.height + self.content_padding.bottom } else { 0.0 };
+                        + if section.expanded {
+                            self.content_padding.top
+                                + section.content_size.height
+                                + self.content_padding.bottom
+                        } else {
+                            0.0
+                        };
                     y += sec_h;
                 }
                 EventResponse::default()
@@ -357,7 +374,13 @@ impl Widget for Accordion {
                         }
                     }
                     let sec_h = self.header_height
-                        + if section.expanded { self.content_padding.top + section.content_size.height + self.content_padding.bottom } else { 0.0 };
+                        + if section.expanded {
+                            self.content_padding.top
+                                + section.content_size.height
+                                + self.content_padding.bottom
+                        } else {
+                            0.0
+                        };
                     y += sec_h;
                 }
                 EventResponse::default()
@@ -368,5 +391,8 @@ impl Widget for Accordion {
     fn needs_animation(&self) -> bool {
         self.sections.iter().any(|s| s.is_animating())
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)
+    }
 }

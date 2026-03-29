@@ -33,9 +33,7 @@ impl Preset {
     ///
     /// Duration: 0.8s, Easing: BounceOut.
     pub fn bounce<T: Animatable>(from: T, to: T) -> Tween<T> {
-        Tween::new(from, to)
-            .duration(0.8)
-            .easing(Easing::BounceOut)
+        Tween::new(from, to).duration(0.8).easing(Easing::BounceOut)
     }
 
     /// Quick ease-in-out, good for general UI transitions.
@@ -51,27 +49,21 @@ impl Preset {
     ///
     /// Duration: 0.3s, Easing: Linear.
     pub fn fade<T: Animatable>(from: T, to: T) -> Tween<T> {
-        Tween::new(from, to)
-            .duration(0.3)
-            .easing(Easing::Linear)
+        Tween::new(from, to).duration(0.3).easing(Easing::Linear)
     }
 
     /// Slow entrance with a soft landing.
     ///
     /// Duration: 0.4s, Easing: QuadOut.
     pub fn slide<T: Animatable>(from: T, to: T) -> Tween<T> {
-        Tween::new(from, to)
-            .duration(0.4)
-            .easing(Easing::QuadOut)
+        Tween::new(from, to).duration(0.4).easing(Easing::QuadOut)
     }
 
     /// Overshoots slightly then settles — feels like anticipation.
     ///
     /// Duration: 0.4s, Easing: BackOut.
     pub fn pop<T: Animatable>(from: T, to: T) -> Tween<T> {
-        Tween::new(from, to)
-            .duration(0.4)
-            .easing(Easing::BackOut)
+        Tween::new(from, to).duration(0.4).easing(Easing::BackOut)
     }
 
     /// Quick elastic jiggle — good for attention-grabbing.
@@ -98,9 +90,7 @@ impl Preset {
     ///
     /// Duration: 0.5s, Easing: BackInOut.
     pub fn stretch<T: Animatable>(from: T, to: T) -> Tween<T> {
-        Tween::new(from, to)
-            .duration(0.5)
-            .easing(Easing::BackInOut)
+        Tween::new(from, to).duration(0.5).easing(Easing::BackInOut)
     }
 
     /// Pulse: goes to target and back once, good for highlights.

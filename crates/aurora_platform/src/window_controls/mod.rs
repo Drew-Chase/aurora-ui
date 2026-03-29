@@ -1,18 +1,18 @@
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 use aurora_widgets::widgets::{EventResponse, LayoutCtx, Widget};
 use std::sync::Arc;
 
-#[cfg(target_os = "windows")]
-mod windows;
-#[cfg(target_os = "macos")]
-mod macos;
 #[cfg(target_os = "linux")]
 mod linux;
+#[cfg(target_os = "macos")]
+mod macos;
+#[cfg(target_os = "windows")]
+mod windows;
 
 /// Which button in the window controls.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -268,10 +268,10 @@ impl WindowControls {
 /// Platform-specific window close.
 #[cfg(target_os = "windows")]
 fn close_window(window: &winit::window::Window) {
-    use std::ffi::c_void;
-    use winit::raw_window_handle::{HasWindowHandle, RawWindowHandle};
     use ::windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
     use ::windows::Win32::UI::WindowsAndMessaging::{PostMessageW, WM_CLOSE};
+    use std::ffi::c_void;
+    use winit::raw_window_handle::{HasWindowHandle, RawWindowHandle};
 
     if let Ok(handle) = window.window_handle()
         && let RawWindowHandle::Win32(h) = handle.as_raw()
@@ -351,9 +351,9 @@ impl Widget for WindowControls {
 
         #[cfg(target_os = "macos")]
         {
-            let total_width =
-                STOPLIGHT_PADDING * 2.0 + buttons.len() as f32 * BUTTON_DIAMETER
-                    + (buttons.len().saturating_sub(1)) as f32 * BUTTON_SPACING;
+            let total_width = STOPLIGHT_PADDING * 2.0
+                + buttons.len() as f32 * BUTTON_DIAMETER
+                + (buttons.len().saturating_sub(1)) as f32 * BUTTON_SPACING;
             let height = available.height;
             let center_y = height / 2.0;
             let mut x = STOPLIGHT_PADDING;
@@ -418,12 +418,7 @@ impl Widget for WindowControls {
 
             #[cfg(target_os = "macos")]
             macos::paint_button(
-                canvas,
-                translated,
-                *button,
-                is_hovered,
-                is_pressed,
-                is_enabled,
+                canvas, translated, *button, is_hovered, is_pressed, is_enabled,
             );
 
             #[cfg(target_os = "linux")]

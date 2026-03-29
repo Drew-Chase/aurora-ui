@@ -146,7 +146,13 @@ impl Widget for Alert {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(FontWeight::Normal);
-            let mut tl = TextLayout::new(ctx.font_manager, desc, &opts, colors::muted_foreground(), None);
+            let mut tl = TextLayout::new(
+                ctx.font_manager,
+                desc,
+                &opts,
+                colors::muted_foreground(),
+                None,
+            );
             tl.set_max_width(ctx.font_manager, inner_w);
             let ts = tl.size();
             total_h += ts.height;

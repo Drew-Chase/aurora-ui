@@ -100,7 +100,8 @@ impl Default for Card {
 
 impl Widget for Card {
     fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
-        let inner_w = self.width.unwrap_or(available.width) - self.padding.left - self.padding.right;
+        let inner_w =
+            self.width.unwrap_or(available.width) - self.padding.left - self.padding.right;
         let child_available = Size::new(inner_w.max(0.0), f32::MAX);
 
         self.child_sizes.clear();
@@ -115,7 +116,9 @@ impl Widget for Card {
         }
 
         let w = self.width.unwrap_or(available.width);
-        let h = self.height.unwrap_or(total_h + self.padding.top + self.padding.bottom);
+        let h = self
+            .height
+            .unwrap_or(total_h + self.padding.top + self.padding.bottom);
         Size::new(w, h)
     }
 
@@ -124,7 +127,12 @@ impl Widget for Card {
         canvas.fill_rounded_rect(rect, self.corners, self.background_color);
         // Border
         if self.border_width > 0.0 {
-            canvas.stroke_rounded_rect(rect, self.corners, self.border_width as u32, self.border_color);
+            canvas.stroke_rounded_rect(
+                rect,
+                self.corners,
+                self.border_width as u32,
+                self.border_color,
+            );
         }
         // Children
         let mut y = rect.y1 + self.padding.top;
@@ -163,5 +171,8 @@ impl Widget for Card {
         }
         EventResponse::default()
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)
+    }
 }

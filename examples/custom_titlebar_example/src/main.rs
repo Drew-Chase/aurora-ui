@@ -41,19 +41,22 @@ fn titlebar(window: std::sync::Arc<winit::window::Window>) -> impl Widget {
                 )
                 .child(
                     Positioned::fixed((0.0, 0.0)).height(TITLEBAR_HEIGHT).child(
-                        row!()
-                            .height(TITLEBAR_HEIGHT as u32)
-                            .child(
-                                TouchArea::new()
-                                    .child(Text::new(window.title()).color(Color::WHITE).justify(Justify::Center).padding(Edges::symmetric(13.0, 0.0)).height(TITLEBAR_HEIGHT).font_size(13.0))
-                                    .on_mouse_down(move |button| {
-                                        if button == MouseButton::Left {
-                                            drag_handle
-                                                .drag_window()
-                                                .expect("Failed to drag window");
-                                        }
-                                    }),
-                            )
+                        row!().height(TITLEBAR_HEIGHT as u32).child(
+                            TouchArea::new()
+                                .child(
+                                    Text::new(window.title())
+                                        .color(Color::WHITE)
+                                        .justify(Justify::Center)
+                                        .padding(Edges::symmetric(13.0, 0.0))
+                                        .height(TITLEBAR_HEIGHT)
+                                        .font_size(13.0),
+                                )
+                                .on_mouse_down(move |button| {
+                                    if button == MouseButton::Left {
+                                        drag_handle.drag_window().expect("Failed to drag window");
+                                    }
+                                }),
+                        ),
                     ),
                 ),
         )

@@ -6,5 +6,5 @@
 //! - `opengl` — OpenGL 3.3 via glow + glutin
 //! - `wgpu_backend` — Vulkan/Metal/DX12 via wgpu
 
-pub mod gpu_context;
 pub mod backend;
+pub mod gpu_context;

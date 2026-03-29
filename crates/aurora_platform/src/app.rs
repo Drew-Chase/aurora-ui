@@ -5,10 +5,10 @@ use aurora_core::color::Color;
 use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::keyboard::{Key, KeyboardEvent, Modifiers};
 use aurora_core::kmi::mouse::{MouseButton, MouseClickEvent, MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_gpu::gpu_context::GpuContext;
 use aurora_render::canvas::Canvas;
 #[cfg(feature = "text")]
@@ -295,7 +295,10 @@ impl App {
     /// # Panics
     /// Panics if `rgba.len() != width * height * 4`, or if dimensions are zero or overflow.
     pub fn icon_rgba(mut self, rgba: Vec<u8>, width: u32, height: u32) -> Self {
-        assert!(width > 0 && height > 0, "icon_rgba: dimensions must be non-zero");
+        assert!(
+            width > 0 && height > 0,
+            "icon_rgba: dimensions must be non-zero"
+        );
         let expected = (width as usize)
             .checked_mul(height as usize)
             .and_then(|n| n.checked_mul(4))
@@ -397,9 +400,8 @@ impl AppWindow {
             #[cfg(feature = "wgpu_backend")]
             {
                 let _ = event_loop;
-                let backend =
-                    aurora_gpu::backend::wgpu::WgpuBackend::new(window_handle.clone())
-                        .map_err(|err| AppError::GpuInitializationError(err))?;
+                let backend = aurora_gpu::backend::wgpu::WgpuBackend::new(window_handle.clone())
+                    .map_err(|err| AppError::GpuInitializationError(err))?;
                 Box::new(backend)
             }
             #[cfg(all(feature = "opengl", not(feature = "wgpu_backend")))]
@@ -409,7 +411,11 @@ impl AppWindow {
                         .map_err(AppError::GpuInitializationError)?;
                 Box::new(backend)
             }
-            #[cfg(all(feature = "software", not(feature = "opengl"), not(feature = "wgpu_backend")))]
+            #[cfg(all(
+                feature = "software",
+                not(feature = "opengl"),
+                not(feature = "wgpu_backend")
+            ))]
             {
                 let _ = event_loop;
                 let backend =
@@ -500,7 +506,8 @@ impl AppWindow {
             // survive composite rebuilds triggered by clicks or state changes.
             if let Some(pos) = self.last_mouse_position {
                 let rect = Rect::from_size(available);
-                let response = widget.event(&WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)), rect);
+                let response =
+                    widget.event(&WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)), rect);
                 if let Some(cursor) = response.cursor {
                     let winit_cursor = match cursor {
                         CursorIcon::Default => winit::window::CursorIcon::Default,
@@ -594,7 +601,9 @@ impl AppWindow {
                     widget.event(&WidgetEvent::Blur(old_id), rect);
                 }
                 self.focused_widget_id = Some(new_id);
-            } else if matches!(event, WidgetEvent::Mouse(MouseEvent::MouseClickEvent(_))) && response.handled {
+            } else if matches!(event, WidgetEvent::Mouse(MouseEvent::MouseClickEvent(_)))
+                && response.handled
+            {
                 // A click was handled but didn't request focus — blur old and clear
                 if let Some(old_id) = self.focused_widget_id {
                     widget.event(&WidgetEvent::Blur(old_id), rect);
@@ -844,18 +853,14 @@ where
         // Initialize accessibility adapter after window creation.
         #[cfg(feature = "a11y")]
         if let Some(win) = self.window.as_mut() {
-            let a11y_state = crate::a11y::A11yState::new(
-                event_loop,
-                &win.window_handle,
-                &self.config.title,
-            );
+            let a11y_state =
+                crate::a11y::A11yState::new(event_loop, &win.window_handle, &self.config.title);
             win.a11y = Some(a11y_state);
         }
 
         if let Some(win) = self.window.as_ref() {
             win.window_handle.set_visible(true);
         }
-
     }
 
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
@@ -1008,12 +1013,10 @@ where
 
                 match event.state {
                     winit::event::ElementState::Pressed => {
-                        window.dispatch_event(&WidgetEvent::Keyboard(
-                            KeyboardEvent::KeyPressed {
-                                key,
-                                modifiers,
-                            },
-                        ));
+                        window.dispatch_event(&WidgetEvent::Keyboard(KeyboardEvent::KeyPressed {
+                            key,
+                            modifiers,
+                        }));
 
                         if !modifiers.ctrl && !modifiers.alt {
                             match &event.logical_key {
@@ -1024,9 +1027,7 @@ where
                                         ));
                                     }
                                 }
-                                winit::keyboard::Key::Named(
-                                    winit::keyboard::NamedKey::Space,
-                                ) => {
+                                winit::keyboard::Key::Named(winit::keyboard::NamedKey::Space) => {
                                     window.dispatch_event(&WidgetEvent::Keyboard(
                                         KeyboardEvent::CharTyped(' '),
                                     ));
@@ -1036,12 +1037,10 @@ where
                         }
                     }
                     winit::event::ElementState::Released => {
-                        window.dispatch_event(&WidgetEvent::Keyboard(
-                            KeyboardEvent::KeyReleased {
-                                key,
-                                modifiers,
-                            },
-                        ));
+                        window.dispatch_event(&WidgetEvent::Keyboard(KeyboardEvent::KeyReleased {
+                            key,
+                            modifiers,
+                        }));
                     }
                 }
                 window.request_next_frame();

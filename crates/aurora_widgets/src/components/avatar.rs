@@ -97,7 +97,13 @@ impl Widget for Avatar {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(font_size);
             opts.weight = Some(FontWeight::Medium);
-            let mut tl = TextLayout::new(ctx.font_manager, initials, &opts, self.foreground_color, None);
+            let mut tl = TextLayout::new(
+                ctx.font_manager,
+                initials,
+                &opts,
+                self.foreground_color,
+                None,
+            );
             tl.set_max_width(ctx.font_manager, s);
             self.layout = Some(tl);
         }

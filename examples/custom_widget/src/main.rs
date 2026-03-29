@@ -29,10 +29,7 @@ fn main() -> Result<(), AppError> {
                                     .height(28.0)
                                     .justify(Justify::Center),
                             )
-                            .child(
-                                composite_widget::ToggleSwitch::new()
-                                    .on_color(hex!(0x2196F3)),
-                            ),
+                            .child(composite_widget::ToggleSwitch::new().on_color(hex!(0x2196F3))),
                     )
                     // Full widget toggle
                     .child(

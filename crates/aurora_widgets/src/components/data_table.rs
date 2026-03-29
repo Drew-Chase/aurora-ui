@@ -2,9 +2,9 @@ use crate::widgets::{EventResponse, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
+use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
-use aurora_core::kmi::WidgetEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -170,7 +170,13 @@ impl Widget for DataTable {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(12.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, &text, &opts, colors::foreground(), None);
+            let mut tl = aurora_text::text_layout::TextLayout::new(
+                ctx.font_manager,
+                &text,
+                &opts,
+                colors::foreground(),
+                None,
+            );
             tl.set_max_width(ctx.font_manager, col_w - 24.0);
             self.header_layouts.push(Some(tl));
         }
@@ -185,7 +191,13 @@ impl Widget for DataTable {
                 let mut opts = ctx.font_options.clone();
                 opts.size = Some(14.0);
                 opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-                let mut tl = aurora_text::text_layout::TextLayout::new(ctx.font_manager, cell, &opts, colors::foreground(), None);
+                let mut tl = aurora_text::text_layout::TextLayout::new(
+                    ctx.font_manager,
+                    cell,
+                    &opts,
+                    colors::foreground(),
+                    None,
+                );
                 tl.set_max_width(ctx.font_manager, cw - 24.0);
                 row_layouts.push(Some(tl));
             }
@@ -245,7 +257,12 @@ impl Widget for DataTable {
             }
 
             canvas.fill_rect(
-                Rect::new(rect.x1, row_y + self.row_height - 1.0, rect.x2, row_y + self.row_height),
+                Rect::new(
+                    rect.x1,
+                    row_y + self.row_height - 1.0,
+                    rect.x2,
+                    row_y + self.row_height,
+                ),
                 self.border_color,
             );
         }
@@ -314,5 +331,8 @@ impl Widget for DataTable {
             _ => EventResponse::default(),
         }
     }
-#[cfg(feature = "a11y")]    fn access_info(&self) -> aurora_a11y::NodeInfo {        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Table)    }
+    #[cfg(feature = "a11y")]
+    fn access_info(&self) -> aurora_a11y::NodeInfo {
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Table)
+    }
 }

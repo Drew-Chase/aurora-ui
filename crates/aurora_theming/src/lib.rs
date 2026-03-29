@@ -32,9 +32,7 @@ pub fn config(input: TokenStream) -> TokenStream {
         Ok(s) => s,
         Err(e) => {
             let msg = format!("Failed to read theme file `{}`: {}", full_path.display(), e);
-            return syn::Error::new(lit.span(), msg)
-                .to_compile_error()
-                .into();
+            return syn::Error::new(lit.span(), msg).to_compile_error().into();
         }
     };
 
@@ -42,9 +40,7 @@ pub fn config(input: TokenStream) -> TokenStream {
         Ok(v) => v,
         Err(e) => {
             let msg = format!("Invalid theme JSON: {}", e);
-            return syn::Error::new(lit.span(), msg)
-                .to_compile_error()
-                .into();
+            return syn::Error::new(lit.span(), msg).to_compile_error().into();
         }
     };
 
@@ -68,9 +64,12 @@ pub fn config(input: TokenStream) -> TokenStream {
         }
     }
     if profile_names.is_empty() {
-        return syn::Error::new(lit.span(), "Theme JSON must have at least a \"_\" default profile")
-            .to_compile_error()
-            .into();
+        return syn::Error::new(
+            lit.span(),
+            "Theme JSON must have at least a \"_\" default profile",
+        )
+        .to_compile_error()
+        .into();
     }
 
     // Collect all unique keys per category across all profiles.
@@ -81,7 +80,10 @@ pub fn config(input: TokenStream) -> TokenStream {
     let value_keys = collect_sorted_keys(root_obj, &profile_names, "values");
 
     // Parse default profile
-    let default_profile = root_obj.get("_").cloned().unwrap_or(serde_json::Value::Object(Default::default()));
+    let default_profile = root_obj
+        .get("_")
+        .cloned()
+        .unwrap_or(serde_json::Value::Object(Default::default()));
 
     // Build per-profile data arrays
     let mut profile_color_data: Vec<Vec<proc_macro2::TokenStream>> = Vec::new();
@@ -92,25 +94,41 @@ pub fn config(input: TokenStream) -> TokenStream {
     for pname in &profile_names {
         let profile = root_obj.get(pname.as_str()).cloned().unwrap_or_default();
 
-        let colors: Vec<_> = color_keys.iter().map(|key| {
-            let val = get_val(&profile, "colors", key).or_else(|| get_val(&default_profile, "colors", key));
-            parse_color_token(val.as_ref())
-        }).collect();
+        let colors: Vec<_> = color_keys
+            .iter()
+            .map(|key| {
+                let val = get_val(&profile, "colors", key)
+                    .or_else(|| get_val(&default_profile, "colors", key));
+                parse_color_token(val.as_ref())
+            })
+            .collect();
 
-        let edges: Vec<_> = edge_keys.iter().map(|key| {
-            let val = get_val(&profile, "edges", key).or_else(|| get_val(&default_profile, "edges", key));
-            parse_edges_token(val.as_ref())
-        }).collect();
+        let edges: Vec<_> = edge_keys
+            .iter()
+            .map(|key| {
+                let val = get_val(&profile, "edges", key)
+                    .or_else(|| get_val(&default_profile, "edges", key));
+                parse_edges_token(val.as_ref())
+            })
+            .collect();
 
-        let corners: Vec<_> = corner_keys.iter().map(|key| {
-            let val = get_val(&profile, "corners", key).or_else(|| get_val(&default_profile, "corners", key));
-            parse_corners_token(val.as_ref())
-        }).collect();
+        let corners: Vec<_> = corner_keys
+            .iter()
+            .map(|key| {
+                let val = get_val(&profile, "corners", key)
+                    .or_else(|| get_val(&default_profile, "corners", key));
+                parse_corners_token(val.as_ref())
+            })
+            .collect();
 
-        let values: Vec<_> = value_keys.iter().map(|key| {
-            let val = get_val(&profile, "values", key).or_else(|| get_val(&default_profile, "values", key));
-            parse_f32_token(val.as_ref())
-        }).collect();
+        let values: Vec<_> = value_keys
+            .iter()
+            .map(|key| {
+                let val = get_val(&profile, "values", key)
+                    .or_else(|| get_val(&default_profile, "values", key));
+                parse_f32_token(val.as_ref())
+            })
+            .collect();
 
         profile_color_data.push(colors);
         profile_edge_data.push(edges);
@@ -119,23 +137,46 @@ pub fn config(input: TokenStream) -> TokenStream {
     }
 
     // Generate ProfileId enum variants
-    let enum_variants: Vec<_> = profile_names.iter().enumerate().map(|(i, name)| {
-        let variant = if name == "_" { format_ident!("Default") } else { format_ident!("{}", to_pascal_case(name)) };
-        let idx = i;
-        quote! { #variant = #idx }
-    }).collect();
+    let enum_variants: Vec<_> = profile_names
+        .iter()
+        .enumerate()
+        .map(|(i, name)| {
+            let variant = if name == "_" {
+                format_ident!("Default")
+            } else {
+                format_ident!("{}", to_pascal_case(name))
+            };
+            let idx = i;
+            quote! { #variant = #idx }
+        })
+        .collect();
 
-    let name_strs: Vec<_> = profile_names.iter().map(|n| {
-        let s = if n == "_" { "default" } else { n.as_str() };
-        quote! { #s }
-    }).collect();
+    let name_strs: Vec<_> = profile_names
+        .iter()
+        .map(|n| {
+            let s = if n == "_" { "default" } else { n.as_str() };
+            quote! { #s }
+        })
+        .collect();
 
     // Generate match arms for current() -> ProfileId (avoids unsafe transmute)
-    let current_match_arms: Vec<_> = profile_names.iter().enumerate().map(|(i, name)| {
-        let variant = if name == "_" { format_ident!("Default") } else { format_ident!("{}", to_pascal_case(name)) };
-        quote! { #i => ProfileId::#variant }
-    }).collect();
-    let first_variant = if profile_names[0] == "_" { format_ident!("Default") } else { format_ident!("{}", to_pascal_case(&profile_names[0])) };
+    let current_match_arms: Vec<_> = profile_names
+        .iter()
+        .enumerate()
+        .map(|(i, name)| {
+            let variant = if name == "_" {
+                format_ident!("Default")
+            } else {
+                format_ident!("{}", to_pascal_case(name))
+            };
+            quote! { #i => ProfileId::#variant }
+        })
+        .collect();
+    let first_variant = if profile_names[0] == "_" {
+        format_ident!("Default")
+    } else {
+        format_ident!("{}", to_pascal_case(&profile_names[0]))
+    };
 
     let num_profiles = profile_names.len();
     let num_colors = color_keys.len();
@@ -144,31 +185,67 @@ pub fn config(input: TokenStream) -> TokenStream {
     let num_values = value_keys.len();
 
     // Generate static arrays per profile
-    let color_arrays: Vec<_> = profile_color_data.iter().enumerate().map(|(i, colors)| {
-        let name = format_ident!("COLORS_{}", i);
-        quote! { static #name: [aurora_theme::Color; #num_colors] = [#(#colors),*]; }
-    }).collect();
+    let color_arrays: Vec<_> = profile_color_data
+        .iter()
+        .enumerate()
+        .map(|(i, colors)| {
+            let name = format_ident!("COLORS_{}", i);
+            quote! { static #name: [aurora_theme::Color; #num_colors] = [#(#colors),*]; }
+        })
+        .collect();
 
-    let edge_arrays: Vec<_> = profile_edge_data.iter().enumerate().map(|(i, edges)| {
-        let name = format_ident!("EDGES_{}", i);
-        quote! { static #name: [aurora_theme::Edges; #num_edges] = [#(#edges),*]; }
-    }).collect();
+    let edge_arrays: Vec<_> = profile_edge_data
+        .iter()
+        .enumerate()
+        .map(|(i, edges)| {
+            let name = format_ident!("EDGES_{}", i);
+            quote! { static #name: [aurora_theme::Edges; #num_edges] = [#(#edges),*]; }
+        })
+        .collect();
 
-    let corner_arrays: Vec<_> = profile_corner_data.iter().enumerate().map(|(i, corners)| {
-        let name = format_ident!("CORNERS_{}", i);
-        quote! { static #name: [aurora_theme::Corners; #num_corners] = [#(#corners),*]; }
-    }).collect();
+    let corner_arrays: Vec<_> = profile_corner_data
+        .iter()
+        .enumerate()
+        .map(|(i, corners)| {
+            let name = format_ident!("CORNERS_{}", i);
+            quote! { static #name: [aurora_theme::Corners; #num_corners] = [#(#corners),*]; }
+        })
+        .collect();
 
-    let value_arrays: Vec<_> = profile_value_data.iter().enumerate().map(|(i, vals)| {
-        let name = format_ident!("VALUES_{}", i);
-        quote! { static #name: [f32; #num_values] = [#(#vals),*]; }
-    }).collect();
+    let value_arrays: Vec<_> = profile_value_data
+        .iter()
+        .enumerate()
+        .map(|(i, vals)| {
+            let name = format_ident!("VALUES_{}", i);
+            quote! { static #name: [f32; #num_values] = [#(#vals),*]; }
+        })
+        .collect();
 
     // Refs for the profile tables
-    let color_refs: Vec<_> = (0..num_profiles).map(|i| { let n = format_ident!("COLORS_{}", i); quote! { &#n } }).collect();
-    let edge_refs: Vec<_> = (0..num_profiles).map(|i| { let n = format_ident!("EDGES_{}", i); quote! { &#n } }).collect();
-    let corner_refs: Vec<_> = (0..num_profiles).map(|i| { let n = format_ident!("CORNERS_{}", i); quote! { &#n } }).collect();
-    let value_refs: Vec<_> = (0..num_profiles).map(|i| { let n = format_ident!("VALUES_{}", i); quote! { &#n } }).collect();
+    let color_refs: Vec<_> = (0..num_profiles)
+        .map(|i| {
+            let n = format_ident!("COLORS_{}", i);
+            quote! { &#n }
+        })
+        .collect();
+    let edge_refs: Vec<_> = (0..num_profiles)
+        .map(|i| {
+            let n = format_ident!("EDGES_{}", i);
+            quote! { &#n }
+        })
+        .collect();
+    let corner_refs: Vec<_> = (0..num_profiles)
+        .map(|i| {
+            let n = format_ident!("CORNERS_{}", i);
+            quote! { &#n }
+        })
+        .collect();
+    let value_refs: Vec<_> = (0..num_profiles)
+        .map(|i| {
+            let n = format_ident!("VALUES_{}", i);
+            quote! { &#n }
+        })
+        .collect();
 
     // Accessor functions per key
     let color_fns: Vec<_> = color_keys.iter().enumerate().map(|(i, key)| {
@@ -194,19 +271,45 @@ pub fn config(input: TokenStream) -> TokenStream {
     // Build well-known slot registration: for each profile, build a 26-color array
     // mapping well-known names to their aurora_theme::slots indices.
     let well_known: &[(&str, usize)] = &[
-        ("background", 0), ("foreground", 1), ("muted", 2), ("muted_foreground", 3),
-        ("border", 4), ("input_border", 5), ("ring", 6), ("primary", 7),
-        ("primary_foreground", 8), ("secondary", 9), ("secondary_foreground", 10),
-        ("accent", 11), ("accent_foreground", 12), ("destructive", 13),
-        ("destructive_foreground", 14), ("success", 15), ("success_foreground", 16),
-        ("warning", 17), ("warning_foreground", 18), ("info", 19),
-        ("info_foreground", 20), ("card", 21), ("card_foreground", 22),
-        ("popover", 23), ("popover_foreground", 24), ("overlay", 25),
+        ("background", 0),
+        ("foreground", 1),
+        ("muted", 2),
+        ("muted_foreground", 3),
+        ("border", 4),
+        ("input_border", 5),
+        ("ring", 6),
+        ("primary", 7),
+        ("primary_foreground", 8),
+        ("secondary", 9),
+        ("secondary_foreground", 10),
+        ("accent", 11),
+        ("accent_foreground", 12),
+        ("destructive", 13),
+        ("destructive_foreground", 14),
+        ("success", 15),
+        ("success_foreground", 16),
+        ("warning", 17),
+        ("warning_foreground", 18),
+        ("info", 19),
+        ("info_foreground", 20),
+        ("card", 21),
+        ("card_foreground", 22),
+        ("popover", 23),
+        ("popover_foreground", 24),
+        ("overlay", 25),
         // Syntax highlighting
-        ("syntax_keyword", 26), ("syntax_string", 27), ("syntax_comment", 28),
-        ("syntax_number", 29), ("syntax_function", 30), ("syntax_type", 31),
-        ("syntax_operator", 32), ("syntax_punctuation", 33), ("syntax_attribute", 34),
-        ("syntax_tag", 35), ("syntax_constant", 36), ("syntax_plain", 37),
+        ("syntax_keyword", 26),
+        ("syntax_string", 27),
+        ("syntax_comment", 28),
+        ("syntax_number", 29),
+        ("syntax_function", 30),
+        ("syntax_type", 31),
+        ("syntax_operator", 32),
+        ("syntax_punctuation", 33),
+        ("syntax_attribute", 34),
+        ("syntax_tag", 35),
+        ("syntax_constant", 36),
+        ("syntax_plain", 37),
     ];
     let num_well_known = well_known.len();
 
@@ -217,9 +320,21 @@ pub fn config(input: TokenStream) -> TokenStream {
         for &(name, slot_idx) in well_known {
             // Check "colors" first, then "syntax" for syntax_* keys
             let val = get_val(&profile, "colors", name)
-                .or_else(|| get_val(&profile, "syntax", name.strip_prefix("syntax_").unwrap_or("")))
+                .or_else(|| {
+                    get_val(
+                        &profile,
+                        "syntax",
+                        name.strip_prefix("syntax_").unwrap_or(""),
+                    )
+                })
                 .or_else(|| get_val(&default_profile, "colors", name))
-                .or_else(|| get_val(&default_profile, "syntax", name.strip_prefix("syntax_").unwrap_or("")));
+                .or_else(|| {
+                    get_val(
+                        &default_profile,
+                        "syntax",
+                        name.strip_prefix("syntax_").unwrap_or(""),
+                    )
+                });
             if let Some(v) = val {
                 slots.push(parse_color_token(Some(&v)));
             } else {
@@ -229,11 +344,17 @@ pub fn config(input: TokenStream) -> TokenStream {
         slot_colors_per_profile.push(slots);
     }
 
-    let slot_arrays: Vec<_> = slot_colors_per_profile.iter().enumerate().map(|(i, slots)| {
-        let name = format_ident!("SLOT_COLORS_{}", i);
-        quote! { static #name: [aurora_theme::Color; #num_well_known] = [#(#slots),*]; }
-    }).collect();
-    let slot_names: Vec<_> = (0..num_profiles).map(|i| format_ident!("SLOT_COLORS_{}", i)).collect();
+    let slot_arrays: Vec<_> = slot_colors_per_profile
+        .iter()
+        .enumerate()
+        .map(|(i, slots)| {
+            let name = format_ident!("SLOT_COLORS_{}", i);
+            quote! { static #name: [aurora_theme::Color; #num_well_known] = [#(#slots),*]; }
+        })
+        .collect();
+    let slot_names: Vec<_> = (0..num_profiles)
+        .map(|i| format_ident!("SLOT_COLORS_{}", i))
+        .collect();
 
     let output = quote! {
         #[allow(dead_code)]
@@ -344,21 +465,47 @@ fn parse_color_token(val: Option<&serde_json::Value>) -> proc_macro2::TokenStrea
             let (r, g, b, a) = match hex.len() {
                 6 => {
                     let n = u32::from_str_radix(hex, 16).unwrap_or(0);
-                    (((n >> 16) & 0xFF) as u8, ((n >> 8) & 0xFF) as u8, (n & 0xFF) as u8, 255u8)
+                    (
+                        ((n >> 16) & 0xFF) as u8,
+                        ((n >> 8) & 0xFF) as u8,
+                        (n & 0xFF) as u8,
+                        255u8,
+                    )
                 }
                 8 => {
                     let n = u32::from_str_radix(hex, 16).unwrap_or(0);
-                    (((n >> 24) & 0xFF) as u8, ((n >> 16) & 0xFF) as u8, ((n >> 8) & 0xFF) as u8, (n & 0xFF) as u8)
+                    (
+                        ((n >> 24) & 0xFF) as u8,
+                        ((n >> 16) & 0xFF) as u8,
+                        ((n >> 8) & 0xFF) as u8,
+                        (n & 0xFF) as u8,
+                    )
                 }
                 _ => (0, 0, 0, 255),
             };
             quote! { aurora_theme::Color::new(#r, #g, #b, #a) }
         }
         Some(serde_json::Value::Object(obj)) => {
-            let r = obj.get("r").or(obj.get("red")).and_then(|v| v.as_u64()).unwrap_or(0) as u8;
-            let g = obj.get("g").or(obj.get("green")).and_then(|v| v.as_u64()).unwrap_or(0) as u8;
-            let b = obj.get("b").or(obj.get("blue")).and_then(|v| v.as_u64()).unwrap_or(0) as u8;
-            let a = obj.get("a").or(obj.get("alpha")).and_then(|v| v.as_u64()).unwrap_or(255) as u8;
+            let r = obj
+                .get("r")
+                .or(obj.get("red"))
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u8;
+            let g = obj
+                .get("g")
+                .or(obj.get("green"))
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u8;
+            let b = obj
+                .get("b")
+                .or(obj.get("blue"))
+                .and_then(|v| v.as_u64())
+                .unwrap_or(0) as u8;
+            let a = obj
+                .get("a")
+                .or(obj.get("alpha"))
+                .and_then(|v| v.as_u64())
+                .unwrap_or(255) as u8;
             quote! { aurora_theme::Color::new(#r, #g, #b, #a) }
         }
         _ => quote! { aurora_theme::Color::new(0, 0, 0, 255) },
@@ -387,8 +534,14 @@ fn parse_corners_token(val: Option<&serde_json::Value>) -> proc_macro2::TokenStr
         Some(serde_json::Value::Object(obj)) => {
             let tl = obj.get("top_left").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
             let tr = obj.get("top_right").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
-            let br = obj.get("bottom_right").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
-            let bl = obj.get("bottom_left").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
+            let br = obj
+                .get("bottom_right")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0) as f32;
+            let bl = obj
+                .get("bottom_left")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.0) as f32;
             quote! { aurora_theme::Corners::new(#tl, #tr, #br, #bl) }
         }
         Some(serde_json::Value::Number(n)) => {
