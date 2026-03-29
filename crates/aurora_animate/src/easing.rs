@@ -307,7 +307,7 @@ mod tests {
         for i in 0..=100 {
             let t = i as f32 / 100.0;
             let v = Easing::BounceOut.apply(t);
-            assert!(v >= 0.0 && v <= 1.0, "bounce_out({t}) = {v} out of range");
+            assert!((0.0..=1.0).contains(&v), "bounce_out({t}) = {v} out of range");
         }
     }
 
