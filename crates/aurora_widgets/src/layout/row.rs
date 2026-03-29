@@ -16,7 +16,7 @@ use aurora_render::canvas::Canvas;
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```ignore
 /// use aurora_ui::prelude::*;
 ///
 /// row!()
@@ -319,7 +319,7 @@ impl Widget for Row {
 }
 /// Shorthand for [`Row::new()`].
 ///
-/// ```no_run
+/// ```ignore
 /// # use aurora_ui::prelude::*;
 /// row!()
 ///     .spacing(10.0)

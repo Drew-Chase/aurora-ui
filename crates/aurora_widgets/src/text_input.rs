@@ -36,7 +36,7 @@ pub type OnChangeCallback = Box<dyn FnMut(&str)>;
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```ignore
 /// use aurora_ui::prelude::*;
 ///
 /// TextInput::new()

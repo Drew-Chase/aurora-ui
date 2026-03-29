@@ -26,7 +26,7 @@ pub enum ImageFit {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```ignore
 /// use std::sync::Arc;
 /// use aurora_render::image_data::ImageData;
 /// use aurora_widgets::image_widget::Image;

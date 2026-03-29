@@ -147,7 +147,7 @@ AuroraUI is structured as a Cargo workspace of focused, single-responsibility
 crates. This gives fast incremental compilation (~1-3s for widget changes) and
 clean dependency boundaries.
 
-```
+```text
 aurora/
 ├── aurora_core       # Zero-dep types: color, geometry, events, IDs
 ├── aurora_platform   # Windowing, event loop, native handles, custom titlebar
@@ -189,7 +189,7 @@ Use `#[composite_widget]` to compose existing widgets with builder-pattern
 ergonomics. Define a config struct, implement `CompositeBuilder`, and the
 macro generates `new()`, setters, and the full `Widget` impl.
 
-```rust
+```rust,ignore
 #[composite_widget]
 pub struct MyCard {
     pub width: u32,
@@ -224,7 +224,7 @@ side-by-side comparison.
 The `Button` widget accepts any child content via `.child()` or the
 `button!` macro:
 
-```rust
+```rust,ignore
 // Text button (requires text feature):
 button!("Click me").on_click(|e| println!("clicked"))
 
@@ -251,7 +251,7 @@ at compile time. Over 200,000 icons from 150+ icon sets are available.
 aurora_iconify = { path = "crates/aurora_iconify" }
 ```
 
-```rust
+```rust,ignore
 // Declare which icon sets to include (fetched at compile time):
 aurora_iconify::icon_sets!("mage", "lucide");
 

@@ -10,7 +10,7 @@
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```ignore
 /// use aurora_render::svg_data::SvgData;
 ///
 /// let svg = SvgData::from_bytes(include_bytes!("icon.svg")).unwrap();

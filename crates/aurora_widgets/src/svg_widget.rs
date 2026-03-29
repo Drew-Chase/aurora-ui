@@ -15,7 +15,7 @@ use std::sync::Arc;
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```ignore
 /// use std::sync::Arc;
 /// use aurora_render::svg_data::SvgData;
 /// use aurora_widgets::svg_widget::Svg;

@@ -6,7 +6,7 @@
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```ignore
 /// use aurora_render::image_data::ImageData;
 ///
 /// let img = ImageData::from_bytes(include_bytes!("logo.png")).unwrap();

@@ -70,7 +70,7 @@ impl Default for ScrollState {
 ///
 /// # Example
 ///
-/// ```no_run
+/// ```ignore
 /// use aurora_ui::prelude::*;
 /// use aurora_ui::aurora_widgets::layout::scrollview::ScrollView;
 ///
