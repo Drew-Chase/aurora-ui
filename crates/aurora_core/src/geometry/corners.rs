@@ -193,3 +193,155 @@ impl From<f32> for Corners {
         Self::all(radius)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_sets_fields() {
+        let c = Corners::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(c.top_left, 1.0);
+        assert_eq!(c.top_right, 2.0);
+        assert_eq!(c.bottom_right, 3.0);
+        assert_eq!(c.bottom_left, 4.0);
+    }
+
+    #[test]
+    fn default_is_zero() {
+        assert_eq!(Corners::default(), Corners::zero());
+        assert!(Corners::default().is_zero());
+    }
+
+    #[test]
+    fn all_uniform() {
+        let c = Corners::all(8.0);
+        assert_eq!(c.top_left, 8.0);
+        assert_eq!(c.top_right, 8.0);
+        assert_eq!(c.bottom_right, 8.0);
+        assert_eq!(c.bottom_left, 8.0);
+        assert!(c.is_uniform());
+    }
+
+    #[test]
+    fn square_is_zero() {
+        assert_eq!(Corners::square(), Corners::zero());
+        assert!(Corners::square().is_square());
+    }
+
+    #[test]
+    fn top_sets_both_top() {
+        let c = Corners::zero().top(12.0);
+        assert_eq!(c.top_left, 12.0);
+        assert_eq!(c.top_right, 12.0);
+        assert_eq!(c.bottom_left, 0.0);
+        assert_eq!(c.bottom_right, 0.0);
+    }
+
+    #[test]
+    fn bottom_sets_both_bottom() {
+        let c = Corners::zero().bottom(12.0);
+        assert_eq!(c.bottom_left, 12.0);
+        assert_eq!(c.bottom_right, 12.0);
+        assert_eq!(c.top_left, 0.0);
+        assert_eq!(c.top_right, 0.0);
+    }
+
+    #[test]
+    fn left_sets_both_left() {
+        let c = Corners::zero().left(12.0);
+        assert_eq!(c.top_left, 12.0);
+        assert_eq!(c.bottom_left, 12.0);
+        assert_eq!(c.top_right, 0.0);
+        assert_eq!(c.bottom_right, 0.0);
+    }
+
+    #[test]
+    fn right_sets_both_right() {
+        let c = Corners::zero().right(12.0);
+        assert_eq!(c.top_right, 12.0);
+        assert_eq!(c.bottom_right, 12.0);
+        assert_eq!(c.top_left, 0.0);
+        assert_eq!(c.bottom_left, 0.0);
+    }
+
+    #[test]
+    fn top_mut_chains() {
+        let mut c = Corners::zero();
+        c.top_mut(8.0).left_mut(4.0);
+        assert_eq!(c.top_left, 4.0); // left_mut overwrites top_mut for top_left
+        assert_eq!(c.top_right, 8.0);
+        assert_eq!(c.bottom_left, 4.0);
+        assert_eq!(c.bottom_right, 0.0);
+    }
+
+    #[test]
+    fn bottom_mut() {
+        let mut c = Corners::all(10.0);
+        c.bottom_mut(5.0);
+        assert_eq!(c.bottom_left, 5.0);
+        assert_eq!(c.bottom_right, 5.0);
+        assert_eq!(c.top_left, 10.0);
+        assert_eq!(c.top_right, 10.0);
+    }
+
+    #[test]
+    fn right_mut() {
+        let mut c = Corners::zero();
+        c.right_mut(7.0);
+        assert_eq!(c.top_right, 7.0);
+        assert_eq!(c.bottom_right, 7.0);
+    }
+
+    #[test]
+    fn set_and_set_mut() {
+        let c = Corners::new(1.0, 2.0, 3.0, 4.0).set(10.0);
+        assert_eq!(c, Corners::all(10.0));
+
+        let mut c2 = Corners::new(1.0, 2.0, 3.0, 4.0);
+        c2.set_mut(10.0);
+        assert_eq!(c2, Corners::all(10.0));
+    }
+
+    #[test]
+    fn is_uniform_all_equal() {
+        assert!(Corners::all(5.0).is_uniform());
+        assert!(!Corners::new(1.0, 2.0, 3.0, 4.0).is_uniform());
+        assert!(Corners::zero().is_uniform());
+    }
+
+    #[test]
+    fn is_zero_checks_all() {
+        assert!(Corners::zero().is_zero());
+        assert!(!Corners::new(0.0, 0.0, 0.0, 1.0).is_zero());
+    }
+
+    #[test]
+    fn is_square_checks_all_zero() {
+        assert!(Corners::zero().is_square());
+        assert!(!Corners::all(1.0).is_square());
+    }
+
+    #[test]
+    fn array_roundtrip() {
+        let c = Corners::new(1.0, 2.0, 3.0, 4.0);
+        let arr = c.to_array();
+        assert_eq!(arr, [1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(Corners::from_array(&arr), c);
+    }
+
+    #[test]
+    fn from_f32() {
+        let c: Corners = 8.0.into();
+        assert_eq!(c, Corners::all(8.0));
+    }
+
+    #[test]
+    fn immutable_chaining() {
+        let c = Corners::zero().top(8.0).right(4.0);
+        assert_eq!(c.top_left, 8.0);
+        assert_eq!(c.top_right, 4.0); // right() overwrites top()'s top_right
+        assert_eq!(c.bottom_right, 4.0);
+        assert_eq!(c.bottom_left, 0.0);
+    }
+}

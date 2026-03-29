@@ -262,3 +262,298 @@ impl From<(f32, f32, f32, f32)> for Rect {
         Self::new(x1, y1, x2, y2)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // --- Constructors ---
+
+    #[test]
+    fn new_sets_coordinates() {
+        let r = Rect::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(r.x1, 1.0);
+        assert_eq!(r.y1, 2.0);
+        assert_eq!(r.x2, 3.0);
+        assert_eq!(r.y2, 4.0);
+    }
+
+    #[test]
+    fn from_origin_size() {
+        let r = Rect::from_origin_size(Point::new(10.0, 20.0), Size::new(100.0, 50.0));
+        assert_eq!(r, Rect::new(10.0, 20.0, 110.0, 70.0));
+    }
+
+    #[test]
+    fn from_size_at_origin() {
+        let r = Rect::from_size(Size::new(100.0, 50.0));
+        assert_eq!(r, Rect::new(0.0, 0.0, 100.0, 50.0));
+    }
+
+    #[test]
+    fn zero_rect() {
+        let r = Rect::zero();
+        assert_eq!(r, Rect::new(0.0, 0.0, 0.0, 0.0));
+        assert!(r.is_zero());
+    }
+
+    #[test]
+    fn default_is_zero() {
+        assert_eq!(Rect::default(), Rect::zero());
+    }
+
+    #[test]
+    fn from_tuple() {
+        let r: Rect = (1.0, 2.0, 3.0, 4.0).into();
+        assert_eq!(r, Rect::new(1.0, 2.0, 3.0, 4.0));
+    }
+
+    // --- Dimensions ---
+
+    #[test]
+    fn width_and_height() {
+        let r = Rect::new(10.0, 20.0, 110.0, 70.0);
+        assert_eq!(r.width(), 100.0);
+        assert_eq!(r.height(), 50.0);
+    }
+
+    #[test]
+    fn size_returns_dimensions() {
+        let r = Rect::new(10.0, 20.0, 110.0, 70.0);
+        assert_eq!(r.size(), Size::new(100.0, 50.0));
+    }
+
+    #[test]
+    fn origin_returns_top_left() {
+        let r = Rect::new(10.0, 20.0, 110.0, 70.0);
+        assert_eq!(r.origin(), Point::new(10.0, 20.0));
+    }
+
+    #[test]
+    fn center_point() {
+        let r = Rect::new(0.0, 0.0, 100.0, 50.0);
+        assert_eq!(r.center(), Point::new(50.0, 25.0));
+    }
+
+    // --- Predicates ---
+
+    #[test]
+    fn is_valid_normal_rect() {
+        assert!(Rect::new(0.0, 0.0, 10.0, 10.0).is_valid());
+        assert!(Rect::new(5.0, 5.0, 5.0, 5.0).is_valid()); // zero-area but valid
+        assert!(!Rect::new(10.0, 0.0, 0.0, 10.0).is_valid()); // inverted x
+        assert!(!Rect::new(0.0, 10.0, 10.0, 0.0).is_valid()); // inverted y
+    }
+
+    #[test]
+    fn is_zero_only_when_all_zero() {
+        assert!(Rect::zero().is_zero());
+        assert!(!Rect::new(0.0, 0.0, 1.0, 0.0).is_zero());
+    }
+
+    #[test]
+    fn is_square_equal_dimensions() {
+        assert!(Rect::new(0.0, 0.0, 50.0, 50.0).is_square());
+        assert!(!Rect::new(0.0, 0.0, 50.0, 60.0).is_square());
+    }
+
+    #[test]
+    fn is_uniform_all_coords_equal() {
+        assert!(Rect::new(5.0, 5.0, 5.0, 5.0).is_uniform());
+        assert!(!Rect::new(0.0, 0.0, 10.0, 10.0).is_uniform());
+    }
+
+    // --- Hit testing ---
+
+    #[test]
+    fn contains_point_inside() {
+        let r = Rect::new(0.0, 0.0, 100.0, 100.0);
+        assert!(r.contains(&Point::new(50.0, 50.0)));
+    }
+
+    #[test]
+    fn contains_point_on_boundary() {
+        let r = Rect::new(0.0, 0.0, 100.0, 100.0);
+        assert!(r.contains(&Point::new(0.0, 0.0))); // top-left
+        assert!(r.contains(&Point::new(100.0, 100.0))); // bottom-right
+        assert!(r.contains(&Point::new(50.0, 0.0))); // top edge
+    }
+
+    #[test]
+    fn contains_point_outside() {
+        let r = Rect::new(0.0, 0.0, 100.0, 100.0);
+        assert!(!r.contains(&Point::new(-1.0, 50.0)));
+        assert!(!r.contains(&Point::new(101.0, 50.0)));
+        assert!(!r.contains(&Point::new(50.0, -1.0)));
+        assert!(!r.contains(&Point::new(50.0, 101.0)));
+    }
+
+    // --- Set operations ---
+
+    #[test]
+    fn intersects_overlapping() {
+        let a = Rect::new(0.0, 0.0, 10.0, 10.0);
+        let b = Rect::new(5.0, 5.0, 15.0, 15.0);
+        assert!(a.intersects(&b));
+        assert!(b.intersects(&a));
+    }
+
+    #[test]
+    fn intersects_non_overlapping() {
+        let a = Rect::new(0.0, 0.0, 10.0, 10.0);
+        let b = Rect::new(20.0, 20.0, 30.0, 30.0);
+        assert!(!a.intersects(&b));
+    }
+
+    #[test]
+    fn intersects_touching_edges_not_overlapping() {
+        let a = Rect::new(0.0, 0.0, 10.0, 10.0);
+        let b = Rect::new(10.0, 0.0, 20.0, 10.0);
+        assert!(!a.intersects(&b)); // touching at edge is not overlapping
+    }
+
+    #[test]
+    fn intersection_returns_overlap() {
+        let a = Rect::new(0.0, 0.0, 10.0, 10.0);
+        let b = Rect::new(5.0, 5.0, 15.0, 15.0);
+        assert_eq!(a.intersection(&b), Some(Rect::new(5.0, 5.0, 10.0, 10.0)));
+    }
+
+    #[test]
+    fn intersection_none_when_no_overlap() {
+        let a = Rect::new(0.0, 0.0, 10.0, 10.0);
+        let b = Rect::new(20.0, 20.0, 30.0, 30.0);
+        assert_eq!(a.intersection(&b), None);
+    }
+
+    #[test]
+    fn intersection_contained_rect() {
+        let outer = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let inner = Rect::new(10.0, 10.0, 50.0, 50.0);
+        assert_eq!(outer.intersection(&inner), Some(inner));
+    }
+
+    #[test]
+    fn union_bounding_box() {
+        let a = Rect::new(0.0, 0.0, 10.0, 10.0);
+        let b = Rect::new(5.0, 5.0, 15.0, 15.0);
+        assert_eq!(a.union(&b), Rect::new(0.0, 0.0, 15.0, 15.0));
+    }
+
+    // --- Transforms ---
+
+    #[test]
+    fn translate_offsets() {
+        let r = Rect::new(0.0, 0.0, 10.0, 10.0);
+        let moved = r.translate(&Point::new(5.0, 3.0));
+        assert_eq!(moved, Rect::new(5.0, 3.0, 15.0, 13.0));
+    }
+
+    #[test]
+    fn translate_mut_modifies_in_place() {
+        let mut r = Rect::new(0.0, 0.0, 10.0, 10.0);
+        r.translate_mut(&Point::new(5.0, 3.0));
+        assert_eq!(r, Rect::new(5.0, 3.0, 15.0, 13.0));
+    }
+
+    #[test]
+    fn set_origin_preserves_size() {
+        let r = Rect::new(10.0, 20.0, 110.0, 70.0);
+        let moved = r.set_origin(&Point::new(0.0, 0.0));
+        assert_eq!(moved, Rect::new(0.0, 0.0, 100.0, 50.0));
+        assert_eq!(moved.size(), r.size());
+    }
+
+    #[test]
+    fn set_origin_mut_preserves_size() {
+        let mut r = Rect::new(10.0, 20.0, 110.0, 70.0);
+        let original_size = r.size();
+        r.set_origin_mut(&Point::new(0.0, 0.0));
+        assert_eq!(r.size(), original_size);
+    }
+
+    // --- Inset / Outset ---
+
+    #[test]
+    fn inset_shrinks() {
+        let r = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let inset = r.inset(&Edges::all(10.0));
+        assert_eq!(inset, Rect::new(10.0, 10.0, 90.0, 90.0));
+    }
+
+    #[test]
+    fn inset_clamps_prevents_inversion() {
+        let r = Rect::new(0.0, 0.0, 20.0, 20.0);
+        let inset = r.inset(&Edges::all(50.0)); // larger than rect
+        assert!(inset.x2 >= inset.x1);
+        assert!(inset.y2 >= inset.y1);
+    }
+
+    #[test]
+    fn inset_mut_matches_inset() {
+        let r = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let edges = Edges::new(5.0, 10.0, 15.0, 20.0);
+        let immutable = r.inset(&edges);
+        let mut mutable = r;
+        mutable.inset_mut(&edges);
+        assert_eq!(immutable, mutable);
+    }
+
+    #[test]
+    fn outset_expands() {
+        let r = Rect::new(10.0, 10.0, 90.0, 90.0);
+        let outset = r.outset(&Edges::all(10.0));
+        assert_eq!(outset, Rect::new(0.0, 0.0, 100.0, 100.0));
+    }
+
+    #[test]
+    fn outset_mut_matches_outset() {
+        let r = Rect::new(10.0, 10.0, 90.0, 90.0);
+        let edges = Edges::new(5.0, 10.0, 15.0, 20.0);
+        let immutable = r.outset(&edges);
+        let mut mutable = r;
+        mutable.outset_mut(&edges);
+        assert_eq!(immutable, mutable);
+    }
+
+    #[test]
+    fn inset_asymmetric_edges() {
+        let r = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let inset = r.inset(&Edges::new(5.0, 10.0, 15.0, 20.0));
+        assert_eq!(inset, Rect::new(20.0, 5.0, 90.0, 85.0));
+    }
+
+    #[test]
+    fn outset_allows_negative_coordinates() {
+        let r = Rect::new(0.0, 0.0, 10.0, 10.0);
+        let outset = r.outset(&Edges::all(5.0));
+        assert_eq!(outset, Rect::new(-5.0, -5.0, 15.0, 15.0));
+    }
+
+    // --- Operators ---
+
+    #[test]
+    fn add_size_extends_bottom_right() {
+        let r = Rect::new(0.0, 0.0, 10.0, 10.0);
+        let extended = r + Size::new(5.0, 3.0);
+        assert_eq!(extended, Rect::new(0.0, 0.0, 15.0, 13.0));
+    }
+
+    #[test]
+    fn add_assign_size() {
+        let mut r = Rect::new(0.0, 0.0, 10.0, 10.0);
+        r += Size::new(5.0, 3.0);
+        assert_eq!(r, Rect::new(0.0, 0.0, 15.0, 13.0));
+    }
+
+    // --- Negative coordinates ---
+
+    #[test]
+    fn negative_origin_rect() {
+        let r = Rect::new(-10.0, -20.0, 10.0, 20.0);
+        assert_eq!(r.width(), 20.0);
+        assert_eq!(r.height(), 40.0);
+        assert_eq!(r.center(), Point::new(0.0, 0.0));
+        assert!(r.is_valid());
+    }
+}

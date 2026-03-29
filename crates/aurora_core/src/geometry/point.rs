@@ -123,3 +123,98 @@ impl From<(f32, f32)> for Point {
         Self { x, y }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_sets_coordinates() {
+        let p = Point::new(3.0, 7.0);
+        assert_eq!(p.x, 3.0);
+        assert_eq!(p.y, 7.0);
+    }
+
+    #[test]
+    fn default_is_origin() {
+        let p = Point::default();
+        assert_eq!(p, Point::new(0.0, 0.0));
+    }
+
+    #[test]
+    fn add_points() {
+        let a = Point::new(1.0, 2.0);
+        let b = Point::new(3.0, 4.0);
+        assert_eq!(a + b, Point::new(4.0, 6.0));
+    }
+
+    #[test]
+    fn add_scalar() {
+        let p = Point::new(1.0, 2.0);
+        assert_eq!(p + 5.0, Point::new(6.0, 7.0));
+    }
+
+    #[test]
+    fn add_assign_scalar() {
+        let mut p = Point::new(1.0, 2.0);
+        p += 3.0;
+        assert_eq!(p, Point::new(4.0, 5.0));
+    }
+
+    #[test]
+    fn add_tuple() {
+        let p = Point::new(1.0, 2.0);
+        assert_eq!(p + (10.0, 20.0), Point::new(11.0, 22.0));
+    }
+
+    #[test]
+    fn add_assign_tuple() {
+        let mut p = Point::new(1.0, 2.0);
+        p += (10.0, 20.0);
+        assert_eq!(p, Point::new(11.0, 22.0));
+    }
+
+    #[test]
+    fn sub_points() {
+        let a = Point::new(5.0, 8.0);
+        let b = Point::new(2.0, 3.0);
+        assert_eq!(a - b, Point::new(3.0, 5.0));
+    }
+
+    #[test]
+    fn sub_scalar() {
+        let p = Point::new(10.0, 20.0);
+        assert_eq!(p - 3.0, Point::new(7.0, 17.0));
+    }
+
+    #[test]
+    fn sub_assign_scalar() {
+        let mut p = Point::new(10.0, 20.0);
+        p -= 5.0;
+        assert_eq!(p, Point::new(5.0, 15.0));
+    }
+
+    #[test]
+    fn sub_tuple() {
+        let p = Point::new(10.0, 20.0);
+        assert_eq!(p - (3.0, 7.0), Point::new(7.0, 13.0));
+    }
+
+    #[test]
+    fn from_tuple() {
+        let p: Point = (4.0, 5.0).into();
+        assert_eq!(p, Point::new(4.0, 5.0));
+    }
+
+    #[test]
+    fn add_identity() {
+        let p = Point::new(42.0, 99.0);
+        assert_eq!(p + Point::default(), p);
+    }
+
+    #[test]
+    fn negative_coordinates() {
+        let p = Point::new(-5.0, -10.0);
+        assert_eq!(p + Point::new(5.0, 10.0), Point::new(0.0, 0.0));
+    }
+}
