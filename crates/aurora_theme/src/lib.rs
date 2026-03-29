@@ -156,3 +156,55 @@ pub fn color(slot: usize) -> Color {
             })
         })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_profile_is_zero() {
+        assert_eq!(current_profile(), 0);
+    }
+
+    #[test]
+    fn set_profile_roundtrips() {
+        set_profile(3);
+        assert_eq!(current_profile(), 3);
+        set_profile(0); // reset
+    }
+
+    #[test]
+    fn default_colors_length() {
+        assert_eq!(DEFAULT_COLORS.len(), 38);
+    }
+
+    #[test]
+    fn color_returns_default_background() {
+        // Reset to profile 0 so we get default colors
+        set_profile(0);
+        let bg = color(slots::BACKGROUND);
+        assert_eq!(bg, Color::new(255, 255, 255, 255)); // white
+    }
+
+    #[test]
+    fn default_colors_has_expected_values() {
+        // Verify specific defaults directly from the static array
+        assert_eq!(DEFAULT_COLORS[slots::BACKGROUND], Color::new(255, 255, 255, 255));
+        assert_eq!(DEFAULT_COLORS[slots::FOREGROUND], Color::new(9, 9, 11, 255));
+        assert_eq!(DEFAULT_COLORS[slots::PRIMARY], Color::new(9, 9, 11, 255));
+        assert_eq!(DEFAULT_COLORS[slots::DESTRUCTIVE], Color::new(239, 68, 68, 255));
+    }
+
+    #[test]
+    fn color_out_of_bounds_returns_black() {
+        set_profile(0);
+        let c = color(9999);
+        assert_eq!(c, Color::BLACK);
+    }
+
+    #[test]
+    fn slot_constants_in_range() {
+        let max_slot = slots::SYNTAX_PLAIN;
+        assert!(max_slot < DEFAULT_COLORS.len());
+    }
+}

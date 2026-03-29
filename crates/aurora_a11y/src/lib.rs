@@ -232,3 +232,133 @@ impl NodeInfo {
         node
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use accesskit::Role;
+
+    #[test]
+    fn new_sets_role_and_defaults() {
+        let info = NodeInfo::new(Role::Button);
+        assert_eq!(info.role, Role::Button);
+        assert!(info.label.is_none());
+        assert!(info.value.is_none());
+        assert!(info.description.is_none());
+        assert!(info.toggled.is_none());
+        assert!(info.numeric_value.is_none());
+        assert!(info.expanded.is_none());
+        assert!(!info.modal);
+        assert!(!info.hidden);
+        assert!(!info.disabled);
+        assert!(!info.read_only);
+        assert!(!info.multiline);
+        assert!(!info.selected);
+        assert!(!info.transparent);
+    }
+
+    #[test]
+    fn transparent_node() {
+        let info = NodeInfo::transparent();
+        assert!(info.transparent);
+        assert_eq!(info.role, Role::GenericContainer);
+    }
+
+    #[test]
+    fn with_label() {
+        let info = NodeInfo::new(Role::Button).with_label("Submit");
+        assert_eq!(info.label.as_deref(), Some("Submit"));
+    }
+
+    #[test]
+    fn with_value() {
+        let info = NodeInfo::new(Role::TextInput).with_value("hello");
+        assert_eq!(info.value.as_deref(), Some("hello"));
+    }
+
+    #[test]
+    fn with_description() {
+        let info = NodeInfo::new(Role::Image).with_description("A photo");
+        assert_eq!(info.description.as_deref(), Some("A photo"));
+    }
+
+    #[test]
+    fn with_checked() {
+        let checked = NodeInfo::new(Role::CheckBox).with_checked(true);
+        assert_eq!(checked.toggled, Some(accesskit::Toggled::True));
+
+        let unchecked = NodeInfo::new(Role::CheckBox).with_checked(false);
+        assert_eq!(unchecked.toggled, Some(accesskit::Toggled::False));
+    }
+
+    #[test]
+    fn with_numeric_value_and_range() {
+        let info = NodeInfo::new(Role::Slider)
+            .with_numeric_value(50.0)
+            .with_numeric_range(0.0, 100.0)
+            .with_numeric_step(1.0);
+        assert_eq!(info.numeric_value, Some(50.0));
+        assert_eq!(info.min_numeric_value, Some(0.0));
+        assert_eq!(info.max_numeric_value, Some(100.0));
+        assert_eq!(info.numeric_value_step, Some(1.0));
+    }
+
+    #[test]
+    fn boolean_flags() {
+        let info = NodeInfo::new(Role::Dialog)
+            .with_modal()
+            .with_hidden()
+            .with_disabled()
+            .with_read_only()
+            .with_multiline()
+            .with_selected();
+        assert!(info.modal);
+        assert!(info.hidden);
+        assert!(info.disabled);
+        assert!(info.read_only);
+        assert!(info.multiline);
+        assert!(info.selected);
+    }
+
+    #[test]
+    fn with_expanded() {
+        let info = NodeInfo::new(Role::TreeItem).with_expanded(true);
+        assert_eq!(info.expanded, Some(true));
+    }
+
+    #[test]
+    fn with_live() {
+        let info = NodeInfo::new(Role::Alert).with_live(accesskit::Live::Assertive);
+        assert_eq!(info.live, Some(accesskit::Live::Assertive));
+    }
+
+    #[test]
+    fn build_node_basic() {
+        let info = NodeInfo::new(Role::Button).with_label("OK");
+        let bounds = accesskit::Rect::new(0.0, 0.0, 100.0, 40.0);
+        let node = info.build_node(vec![], bounds);
+        assert_eq!(node.role(), Role::Button);
+    }
+
+    #[test]
+    fn build_node_with_children() {
+        let info = NodeInfo::new(Role::List);
+        let child1 = accesskit::NodeId(1);
+        let child2 = accesskit::NodeId(2);
+        let bounds = accesskit::Rect::new(0.0, 0.0, 200.0, 300.0);
+        let node = info.build_node(vec![child1, child2], bounds);
+        assert_eq!(node.role(), Role::List);
+        assert_eq!(node.children().len(), 2);
+    }
+
+    #[test]
+    fn builder_chain() {
+        let info = NodeInfo::new(Role::Button)
+            .with_label("Submit")
+            .with_description("Submit the form")
+            .with_disabled();
+        assert_eq!(info.label.as_deref(), Some("Submit"));
+        assert_eq!(info.description.as_deref(), Some("Submit the form"));
+        assert!(info.disabled);
+    }
+}
