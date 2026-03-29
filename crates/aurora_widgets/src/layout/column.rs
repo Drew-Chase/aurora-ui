@@ -340,3 +340,176 @@ macro_rules! col {
         Column::new()
     }};
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::layout::{Align, Justify};
+
+    struct FixedWidget {
+        size: Size,
+    }
+
+    impl FixedWidget {
+        fn new(w: f32, h: f32) -> Self {
+            Self {
+                size: Size::new(w, h),
+            }
+        }
+    }
+
+    impl Widget for FixedWidget {
+        fn layout(&mut self, _available: Size, _ctx: &mut LayoutCtx) -> Size {
+            self.size
+        }
+        fn paint(&self, _canvas: &mut Canvas, _rect: Rect) {}
+        fn children(&self) -> &[Box<dyn Widget>] {
+            &[]
+        }
+    }
+
+    fn available() -> Size {
+        Size::new(400.0, 300.0)
+    }
+
+    #[test]
+    fn empty_column() {
+        let mut col = Column::new();
+        let size = col.layout(available(), &mut LayoutCtx);
+        assert_eq!(size.width, 0.0);
+        assert_eq!(size.height, 0.0);
+    }
+
+    #[test]
+    fn single_fixed_child() {
+        let mut col = Column::new().child(FixedWidget::new(50.0, 30.0));
+        let size = col.layout(available(), &mut LayoutCtx);
+        assert_eq!(size.width, 50.0);
+        assert_eq!(size.height, 30.0);
+    }
+
+    #[test]
+    fn two_children_no_spacing() {
+        let mut col = Column::new()
+            .child(FixedWidget::new(50.0, 30.0))
+            .child(FixedWidget::new(70.0, 40.0));
+        let size = col.layout(available(), &mut LayoutCtx);
+        assert_eq!(size.width, 70.0); // max width
+        assert_eq!(size.height, 70.0); // 30 + 40
+    }
+
+    #[test]
+    fn children_with_spacing() {
+        let mut col = Column::new()
+            .spacing(10.0)
+            .child(FixedWidget::new(50.0, 30.0))
+            .child(FixedWidget::new(50.0, 40.0));
+        let size = col.layout(available(), &mut LayoutCtx);
+        assert_eq!(size.height, 80.0); // 30 + 10 + 40
+    }
+
+    #[test]
+    fn padding_adds_to_size() {
+        let mut col = Column::new()
+            .padding(Edges::all(10.0))
+            .child(FixedWidget::new(50.0, 30.0));
+        let size = col.layout(available(), &mut LayoutCtx);
+        assert_eq!(size.width, 70.0);
+        assert_eq!(size.height, 50.0);
+    }
+
+    #[test]
+    fn justify_start() {
+        let mut col = Column::new()
+            .height(200)
+            .justify(Justify::Start)
+            .child(FixedWidget::new(50.0, 30.0));
+        col.layout(available(), &mut LayoutCtx);
+        assert_eq!(col.child_rects[0].y1, 0.0);
+    }
+
+    #[test]
+    fn justify_center() {
+        let mut col = Column::new()
+            .height(200)
+            .justify(Justify::Center)
+            .child(FixedWidget::new(50.0, 30.0));
+        col.layout(available(), &mut LayoutCtx);
+        // leftover = 200 - 30 = 170, offset = 85
+        assert_eq!(col.child_rects[0].y1, 85.0);
+    }
+
+    #[test]
+    fn justify_end() {
+        let mut col = Column::new()
+            .height(200)
+            .justify(Justify::End)
+            .child(FixedWidget::new(50.0, 30.0));
+        col.layout(available(), &mut LayoutCtx);
+        assert_eq!(col.child_rects[0].y1, 170.0);
+    }
+
+    #[test]
+    fn justify_space_between() {
+        let mut col = Column::new()
+            .height(200)
+            .justify(Justify::SpaceBetween)
+            .child(FixedWidget::new(50.0, 30.0))
+            .child(FixedWidget::new(50.0, 30.0));
+        col.layout(available(), &mut LayoutCtx);
+        assert_eq!(col.child_rects[0].y1, 0.0);
+        // spacing = (200 - 60) / 1 = 140, so y = 30 + 140 = 170
+        assert_eq!(col.child_rects[1].y1, 170.0);
+    }
+
+    #[test]
+    fn align_center() {
+        let mut col = Column::new()
+            .width(200)
+            .align(Align::Center)
+            .child(FixedWidget::new(50.0, 30.0));
+        col.layout(available(), &mut LayoutCtx);
+        // (200 - 50) / 2 = 75
+        assert_eq!(col.child_rects[0].x1, 75.0);
+    }
+
+    #[test]
+    fn align_end() {
+        let mut col = Column::new()
+            .width(200)
+            .align(Align::End)
+            .child(FixedWidget::new(50.0, 30.0));
+        col.layout(available(), &mut LayoutCtx);
+        assert_eq!(col.child_rects[0].x1, 150.0);
+    }
+
+    #[test]
+    fn align_stretch() {
+        let mut col = Column::new()
+            .width(200)
+            .align(Align::Stretch)
+            .child(FixedWidget::new(50.0, 30.0));
+        col.layout(available(), &mut LayoutCtx);
+        let r = &col.child_rects[0];
+        assert_eq!(r.x2 - r.x1, 200.0); // stretched to full width
+    }
+
+    #[test]
+    fn explicit_width_height() {
+        let mut col = Column::new()
+            .width(300)
+            .height(200)
+            .child(FixedWidget::new(50.0, 30.0));
+        let size = col.layout(available(), &mut LayoutCtx);
+        assert_eq!(size.width, 300.0);
+        assert_eq!(size.height, 200.0);
+    }
+
+    #[test]
+    fn children_returns_slice() {
+        let col = Column::new()
+            .child(FixedWidget::new(10.0, 10.0))
+            .child(FixedWidget::new(20.0, 20.0));
+        assert_eq!(col.children().len(), 2);
+    }
+}

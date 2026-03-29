@@ -129,3 +129,91 @@ impl Widget for Stack {
         EventResponse::default()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct FixedWidget {
+        size: Size,
+    }
+
+    impl FixedWidget {
+        fn new(w: f32, h: f32) -> Self {
+            Self {
+                size: Size::new(w, h),
+            }
+        }
+    }
+
+    impl Widget for FixedWidget {
+        fn layout(&mut self, _available: Size, _ctx: &mut LayoutCtx) -> Size {
+            self.size
+        }
+        fn paint(&self, _canvas: &mut Canvas, _rect: Rect) {}
+        fn children(&self) -> &[Box<dyn Widget>] {
+            &[]
+        }
+    }
+
+    fn available() -> Size {
+        Size::new(400.0, 300.0)
+    }
+
+    #[test]
+    fn empty_stack_zero_size() {
+        let mut stack = Stack::new();
+        let size = stack.layout(available(), &mut LayoutCtx);
+        assert_eq!(size, Size::zero());
+    }
+
+    #[test]
+    fn stack_uses_available_size() {
+        let mut stack = Stack::new().child(FixedWidget::new(50.0, 30.0));
+        let size = stack.layout(available(), &mut LayoutCtx);
+        assert_eq!(size.width, 400.0);
+        assert_eq!(size.height, 300.0);
+    }
+
+    #[test]
+    fn children_share_same_origin() {
+        let mut stack = Stack::new()
+            .child(FixedWidget::new(50.0, 30.0))
+            .child(FixedWidget::new(70.0, 40.0));
+        stack.layout(available(), &mut LayoutCtx);
+        // Both children start at (0, 0) (no padding)
+        assert_eq!(stack.child_rects[0].x1, 0.0);
+        assert_eq!(stack.child_rects[0].y1, 0.0);
+        assert_eq!(stack.child_rects[1].x1, 0.0);
+        assert_eq!(stack.child_rects[1].y1, 0.0);
+    }
+
+    #[test]
+    fn padding_offsets_children() {
+        let mut stack = Stack::new()
+            .padding(Edges::new(5.0, 10.0, 15.0, 20.0))
+            .child(FixedWidget::new(50.0, 30.0));
+        stack.layout(available(), &mut LayoutCtx);
+        assert_eq!(stack.child_rects[0].x1, 20.0); // left padding
+        assert_eq!(stack.child_rects[0].y1, 5.0); // top padding
+    }
+
+    #[test]
+    fn explicit_width_height() {
+        let mut stack = Stack::new()
+            .width(200.0)
+            .height(100.0)
+            .child(FixedWidget::new(50.0, 30.0));
+        let size = stack.layout(available(), &mut LayoutCtx);
+        assert_eq!(size.width, 200.0);
+        assert_eq!(size.height, 100.0);
+    }
+
+    #[test]
+    fn children_returns_slice() {
+        let stack = Stack::new()
+            .child(FixedWidget::new(10.0, 10.0))
+            .child(FixedWidget::new(20.0, 20.0));
+        assert_eq!(stack.children().len(), 2);
+    }
+}
