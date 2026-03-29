@@ -65,8 +65,14 @@ pub fn icon_sets(input: TokenStream) -> TokenStream {
         for (icon_name, svg_string) in &data.icons {
             let fn_name = format_ident!("{}", sanitize_ident(icon_name));
             let name_str = icon_name.as_str();
+            let preview_url = format!(
+                "https://api.iconify.design/{}/{}.svg?width=48&height=48&color=white",
+                set_name, icon_name
+            );
+            let doc_line = format!("![{icon_name}]({preview_url})");
 
             icon_methods.push(quote! {
+                #[doc = #doc_line]
                 pub fn #fn_name(&self) -> &'static str { #svg_string }
             });
 
