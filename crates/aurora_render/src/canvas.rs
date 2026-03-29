@@ -733,6 +733,16 @@ impl<'a> Canvas<'a> {
         }
     }
 
+    /// Returns the canvas width in pixels.
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    /// Returns the canvas height in pixels.
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+
     /// Draws an anti-aliased line between two points with the given thickness and color.
     ///
     /// Uses a signed distance field capsule approach: each pixel's distance to the
@@ -834,5 +844,371 @@ impl<'a> Canvas<'a> {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const W: u32 = 20;
+    const H: u32 = 20;
+    const BG: u32 = 0x00000000;
+
+    fn new_canvas(buffer: &mut [u32]) -> Canvas<'_> {
+        Canvas::new(W, H, buffer)
+    }
+
+    fn pixel_at(buffer: &[u32], x: u32, y: u32) -> u32 {
+        buffer[(y * W + x) as usize]
+    }
+
+    // --- blend_pixel ---
+
+    #[test]
+    fn blend_pixel_opaque_replaces() {
+        let mut buf = vec![0x00FF0000; 4]; // red background
+        Canvas::blend_pixel(&mut buf, 0, 0x0000FF00, 255);
+        assert_eq!(buf[0], 0x0000FF00); // replaced with green
+    }
+
+    #[test]
+    fn blend_pixel_transparent_no_change() {
+        let mut buf = vec![0x00FF0000; 4];
+        Canvas::blend_pixel(&mut buf, 0, 0x0000FF00, 0);
+        assert_eq!(buf[0], 0x00FF0000); // unchanged
+    }
+
+    #[test]
+    fn blend_pixel_semi_transparent() {
+        let mut buf = vec![0x00000000; 4]; // black bg
+        Canvas::blend_pixel(&mut buf, 0, 0x00FF0000, 128); // red at ~50%
+        let r = (buf[0] >> 16) & 0xFF;
+        assert!(r > 100 && r < 140, "expected ~128 red, got {r}");
+    }
+
+    #[test]
+    fn blend_pixel_out_of_bounds_safe() {
+        let mut buf = vec![0u32; 4];
+        Canvas::blend_pixel(&mut buf, 100, 0x00FF0000, 255); // no panic
+    }
+
+    // --- blend_span ---
+
+    #[test]
+    fn blend_span_opaque_fills() {
+        let mut buf = vec![0x00000000; 4];
+        Canvas::blend_span(&mut buf, 0x00FF0000, 255);
+        assert!(buf.iter().all(|&p| p == 0x00FF0000));
+    }
+
+    #[test]
+    fn blend_span_semi_transparent() {
+        let mut buf = vec![0x00000000; 4]; // black bg
+        Canvas::blend_span(&mut buf, 0x00FF0000, 128); // red ~50%
+        for &px in &buf {
+            let r = (px >> 16) & 0xFF;
+            assert!(r > 100 && r < 140, "expected ~128 red, got {r}");
+        }
+    }
+
+    // --- fill_rect ---
+
+    #[test]
+    fn fill_rect_sets_correct_pixels() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        let red = Color::from_rgb(255, 0, 0);
+        canvas.fill_rect(Rect::new(5.0, 5.0, 10.0, 10.0), red);
+
+        // Inside the rect
+        assert_eq!(pixel_at(&buf, 5, 5), red.to_rgb_u32());
+        assert_eq!(pixel_at(&buf, 9, 9), red.to_rgb_u32());
+        // Outside the rect
+        assert_eq!(pixel_at(&buf, 4, 5), BG);
+        assert_eq!(pixel_at(&buf, 10, 5), BG);
+        assert_eq!(pixel_at(&buf, 5, 4), BG);
+        assert_eq!(pixel_at(&buf, 5, 10), BG);
+    }
+
+    #[test]
+    fn fill_rect_transparent_no_op() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        canvas.fill_rect(Rect::new(0.0, 0.0, 10.0, 10.0), Color::TRANSPARENT);
+        assert!(buf.iter().all(|&p| p == BG));
+    }
+
+    #[test]
+    fn fill_rect_clamps_to_canvas() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        // Rect extends beyond canvas — should not panic
+        canvas.fill_rect(Rect::new(-5.0, -5.0, 25.0, 25.0), Color::WHITE);
+        // Top-left corner should be filled
+        assert_eq!(pixel_at(&buf, 0, 0), Color::WHITE.to_rgb_u32());
+        // Bottom-right corner should be filled
+        assert_eq!(pixel_at(&buf, W - 1, H - 1), Color::WHITE.to_rgb_u32());
+    }
+
+    #[test]
+    fn fill_rect_semi_transparent_blends() {
+        let white = Color::WHITE.to_rgb_u32();
+        let mut buf = vec![white; (W * H) as usize]; // white bg
+        let mut canvas = new_canvas(&mut buf);
+        let semi_black = Color::new(0, 0, 0, 128);
+        canvas.fill_rect(Rect::new(0.0, 0.0, 5.0, 5.0), semi_black);
+        let px = pixel_at(&buf, 2, 2);
+        let r = (px >> 16) & 0xFF;
+        // Should be ~128 (halfway between 0 and 255)
+        assert!(r > 100 && r < 160, "expected ~128, got {r}");
+    }
+
+    // --- fill_rounded_rect ---
+
+    #[test]
+    fn fill_rounded_rect_zero_corners_matches_fill_rect() {
+        let mut buf1 = vec![BG; (W * H) as usize];
+        let mut buf2 = vec![BG; (W * H) as usize];
+        let rect = Rect::new(2.0, 2.0, 18.0, 18.0);
+        let color = Color::from_rgb(100, 150, 200);
+
+        Canvas::new(W, H, &mut buf1).fill_rect(rect, color);
+        Canvas::new(W, H, &mut buf2).fill_rounded_rect(rect, Corners::zero(), color);
+
+        assert_eq!(buf1, buf2);
+    }
+
+    #[test]
+    fn fill_rounded_rect_corners_excluded() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        // Large radius relative to rect: 10x10 rect with 5px radius
+        canvas.fill_rounded_rect(
+            Rect::new(0.0, 0.0, 10.0, 10.0),
+            Corners::all(5.0),
+            Color::WHITE,
+        );
+        // Very tip of corner (0,0) should NOT be fully white (outside the rounded corner)
+        let corner = pixel_at(&buf, 0, 0);
+        assert_ne!(corner, Color::WHITE.to_rgb_u32(), "corner should be excluded or partially filled");
+        // Center should be filled
+        assert_eq!(pixel_at(&buf, 5, 5), Color::WHITE.to_rgb_u32());
+    }
+
+    #[test]
+    fn fill_rounded_rect_transparent_no_op() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        canvas.fill_rounded_rect(
+            Rect::new(0.0, 0.0, 10.0, 10.0),
+            Corners::all(3.0),
+            Color::TRANSPARENT,
+        );
+        assert!(buf.iter().all(|&p| p == BG));
+    }
+
+    // --- stroke_rect ---
+
+    #[test]
+    fn stroke_rect_border_only() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        let color = Color::from_rgb(255, 0, 0);
+        canvas.stroke_rect(Rect::new(2.0, 2.0, 18.0, 18.0), 1u32, color);
+
+        // Border pixels should be filled
+        assert_eq!(pixel_at(&buf, 2, 2), color.to_rgb_u32());
+        assert_eq!(pixel_at(&buf, 17, 2), color.to_rgb_u32());
+        assert_eq!(pixel_at(&buf, 2, 17), color.to_rgb_u32());
+        // Interior should be empty
+        assert_eq!(pixel_at(&buf, 10, 10), BG);
+    }
+
+    #[test]
+    fn stroke_rect_thick_fills_entirely() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        let color = Color::WHITE;
+        // 4x4 rect with thickness 2 — interior is only 0x0, all pixels are border
+        canvas.stroke_rect(Rect::new(0.0, 0.0, 4.0, 4.0), 2u32, color);
+        for y in 0..4u32 {
+            for x in 0..4u32 {
+                assert_eq!(pixel_at(&buf, x, y), color.to_rgb_u32());
+            }
+        }
+    }
+
+    #[test]
+    fn stroke_rect_transparent_no_op() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        canvas.stroke_rect(Rect::new(0.0, 0.0, 10.0, 10.0), 1u32, Color::TRANSPARENT);
+        assert!(buf.iter().all(|&p| p == BG));
+    }
+
+    // --- stroke_rounded_rect ---
+
+    #[test]
+    fn stroke_rounded_rect_zero_corners_matches_stroke_rect() {
+        let mut buf1 = vec![BG; (W * H) as usize];
+        let mut buf2 = vec![BG; (W * H) as usize];
+        let rect = Rect::new(2.0, 2.0, 18.0, 18.0);
+        let color = Color::from_rgb(100, 150, 200);
+
+        Canvas::new(W, H, &mut buf1).stroke_rect(rect, 2u32, color);
+        Canvas::new(W, H, &mut buf2).stroke_rounded_rect(rect, Corners::zero(), 2, color);
+
+        assert_eq!(buf1, buf2);
+    }
+
+    // --- clip_stack ---
+
+    #[test]
+    fn clip_stack_push_pop() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+
+        assert!(canvas.current_clip().is_none());
+        canvas.push_clip(Rect::new(0.0, 0.0, 10.0, 10.0));
+        assert!(canvas.current_clip().is_some());
+        canvas.pop_clip();
+        assert!(canvas.current_clip().is_none());
+    }
+
+    #[test]
+    fn clip_nested_intersection() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+
+        canvas.push_clip(Rect::new(0.0, 0.0, 15.0, 15.0));
+        canvas.push_clip(Rect::new(5.0, 5.0, 20.0, 20.0));
+
+        let clip = canvas.current_clip().unwrap();
+        assert_eq!(*clip, Rect::new(5.0, 5.0, 15.0, 15.0));
+
+        canvas.pop_clip();
+        let clip = canvas.current_clip().unwrap();
+        assert_eq!(*clip, Rect::new(0.0, 0.0, 15.0, 15.0));
+    }
+
+    #[test]
+    fn clip_restricts_fill_rect() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+
+        canvas.push_clip(Rect::new(5.0, 5.0, 10.0, 10.0));
+        canvas.fill_rect(Rect::new(0.0, 0.0, 20.0, 20.0), Color::WHITE);
+        canvas.pop_clip();
+
+        // Inside clip: filled
+        assert_eq!(pixel_at(&buf, 5, 5), Color::WHITE.to_rgb_u32());
+        assert_eq!(pixel_at(&buf, 9, 9), Color::WHITE.to_rgb_u32());
+        // Outside clip: not filled
+        assert_eq!(pixel_at(&buf, 4, 5), BG);
+        assert_eq!(pixel_at(&buf, 10, 5), BG);
+        assert_eq!(pixel_at(&buf, 5, 4), BG);
+        assert_eq!(pixel_at(&buf, 5, 10), BG);
+    }
+
+    // --- draw_image ---
+
+    #[test]
+    fn draw_image_2x2_at_scale() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        // 2x2 RGBA image: red, green, blue, white
+        let pixels: Vec<u8> = vec![
+            255, 0, 0, 255, 0, 255, 0, 255, // row 0
+            0, 0, 255, 255, 255, 255, 255, 255, // row 1
+        ];
+        canvas.draw_image(&pixels, 2, 2, Rect::new(0.0, 0.0, 2.0, 2.0));
+
+        assert_eq!(pixel_at(&buf, 0, 0), 0x00FF0000); // red
+        assert_eq!(pixel_at(&buf, 1, 0), 0x0000FF00); // green
+        assert_eq!(pixel_at(&buf, 0, 1), 0x000000FF); // blue
+        assert_eq!(pixel_at(&buf, 1, 1), 0x00FFFFFF); // white
+    }
+
+    #[test]
+    fn draw_image_transparent_pixels_preserved() {
+        let white = Color::WHITE.to_rgb_u32();
+        let mut buf = vec![white; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        // 1x1 fully transparent pixel
+        let pixels: Vec<u8> = vec![255, 0, 0, 0]; // red but alpha=0
+        canvas.draw_image(&pixels, 1, 1, Rect::new(0.0, 0.0, 1.0, 1.0));
+        assert_eq!(pixel_at(&buf, 0, 0), white); // background preserved
+    }
+
+    #[test]
+    fn draw_image_respects_clip() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        // 2x1 image: red, green
+        let pixels: Vec<u8> = vec![255, 0, 0, 255, 0, 255, 0, 255];
+        canvas.push_clip(Rect::new(1.0, 0.0, 2.0, 1.0));
+        canvas.draw_image(&pixels, 2, 1, Rect::new(0.0, 0.0, 2.0, 1.0));
+        canvas.pop_clip();
+
+        assert_eq!(pixel_at(&buf, 0, 0), BG); // clipped
+        assert_eq!(pixel_at(&buf, 1, 0), 0x0000FF00); // green visible
+    }
+
+    // --- draw_line ---
+
+    #[test]
+    fn draw_line_horizontal() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        canvas.draw_line(
+            Point::new(2.0, 10.0),
+            Point::new(18.0, 10.0),
+            2.0,
+            Color::WHITE,
+        );
+        // Center of line should be filled
+        let px = pixel_at(&buf, 10, 10);
+        assert_eq!(px, Color::WHITE.to_rgb_u32());
+    }
+
+    #[test]
+    fn draw_line_vertical() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        canvas.draw_line(
+            Point::new(10.0, 2.0),
+            Point::new(10.0, 18.0),
+            2.0,
+            Color::WHITE,
+        );
+        let px = pixel_at(&buf, 10, 10);
+        assert_eq!(px, Color::WHITE.to_rgb_u32());
+    }
+
+    #[test]
+    fn draw_line_zero_thickness_no_op() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        canvas.draw_line(
+            Point::new(0.0, 0.0),
+            Point::new(20.0, 20.0),
+            0.0,
+            Color::WHITE,
+        );
+        assert!(buf.iter().all(|&p| p == BG));
+    }
+
+    #[test]
+    fn draw_line_transparent_no_op() {
+        let mut buf = vec![BG; (W * H) as usize];
+        let mut canvas = new_canvas(&mut buf);
+        canvas.draw_line(
+            Point::new(0.0, 0.0),
+            Point::new(20.0, 20.0),
+            2.0,
+            Color::TRANSPARENT,
+        );
+        assert!(buf.iter().all(|&p| p == BG));
     }
 }
