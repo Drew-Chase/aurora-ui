@@ -15,6 +15,7 @@ use aurora_render::canvas::Canvas;
 #[cfg(feature = "text")]
 use aurora_text::text_layout::TextLayout;
 use aurora_widgets::widgets::{EventResponse, LayoutCtx, Widget};
+use std::path::PathBuf;
 use std::sync::Arc;
 use winit::application::ApplicationHandler;
 use winit::dpi;
@@ -160,6 +161,9 @@ struct AppHandler<F> {
     drag_press_position: Option<Point>,
     /// Whether a drag gesture is currently in progress.
     drag_active: bool,
+    /// File paths currently being dragged over the window from the OS.
+    /// Populated on `HoveredFile`, cleared on `DroppedFile`/`HoveredFileCancelled`.
+    os_drag_paths: Vec<PathBuf>,
 }
 
 /// Per-frame information passed to the render callback.
@@ -370,6 +374,7 @@ impl App {
             resized_this_cycle: false,
             drag_press_position: None,
             drag_active: false,
+            os_drag_paths: Vec::new(),
         };
         let event_loop = winit::event_loop::EventLoop::new().map_err(AppError::from)?;
         event_loop
@@ -1032,6 +1037,21 @@ where
                     }
                 }
 
+                // Re-dispatch file hover events during OS drag so DropZones
+                // track the cursor position continuously.
+                if !self.os_drag_paths.is_empty() {
+                    for path in self.os_drag_paths.clone() {
+                        window.dispatch_event(&WidgetEvent::FileDrop(
+                            FileDropEvent::FileHovered {
+                                path,
+                                position: pos,
+                            },
+                        ));
+                    }
+                    window.request_next_frame();
+                    return;
+                }
+
                 window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)));
                 window.request_next_frame();
             }
@@ -1134,7 +1154,13 @@ where
                 self.current_modifiers = mods.state();
             }
             WindowEvent::HoveredFile(path) => {
-                let position = self.current_cursor_position.unwrap_or_default();
+                // Query real cursor position — CursorMoved may not fire
+                // during OS drag operations (Windows OLE drag).
+                let position = query_cursor_in_window(&window.window_handle)
+                    .or(self.current_cursor_position)
+                    .unwrap_or_default();
+                self.current_cursor_position = Some(position);
+                self.os_drag_paths.push(path.clone());
                 window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileHovered {
                     path,
                     position,
@@ -1142,7 +1168,11 @@ where
                 window.request_next_frame();
             }
             WindowEvent::DroppedFile(path) => {
-                let position = self.current_cursor_position.unwrap_or_default();
+                let position = query_cursor_in_window(&window.window_handle)
+                    .or(self.current_cursor_position)
+                    .unwrap_or_default();
+                self.current_cursor_position = Some(position);
+                self.os_drag_paths.retain(|p| p != &path);
                 window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileDropped {
                     path,
                     position,
@@ -1150,6 +1180,7 @@ where
                 window.request_next_frame();
             }
             WindowEvent::HoveredFileCancelled => {
+                self.os_drag_paths.clear();
                 window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileCancelled));
                 window.request_next_frame();
             }
@@ -1272,6 +1303,30 @@ fn current_memory_kb() -> u64 {
 #[cfg(not(any(target_os = "windows", target_os = "linux")))]
 fn current_memory_kb() -> u64 {
     0
+}
+
+/// Queries the actual cursor position relative to the window's client area.
+///
+/// During OS file drag operations, `CursorMoved` events may not fire so the
+/// tracked cursor position becomes stale. This function calls the platform
+/// API directly to get the real position.
+#[cfg(target_os = "windows")]
+fn query_cursor_in_window(window: &winit::window::Window) -> Option<Point> {
+    use windows::Win32::Foundation::POINT;
+    use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
+
+    let mut screen_pt = POINT::default();
+    unsafe { GetCursorPos(&mut screen_pt) }.ok()?;
+    let win_pos = window.inner_position().ok()?;
+    Some(Point::new(
+        (screen_pt.x - win_pos.x) as f32,
+        (screen_pt.y - win_pos.y) as f32,
+    ))
+}
+
+#[cfg(not(target_os = "windows"))]
+fn query_cursor_in_window(_window: &winit::window::Window) -> Option<Point> {
+    None
 }
 
 #[cfg(target_os = "windows")]
