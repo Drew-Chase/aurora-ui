@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
@@ -259,7 +259,7 @@ impl Widget for Dialog {
                 cb();
             }
             return EventResponse {
-                handled: true,
+                status: EventStatus::Canceled,
                 ..Default::default()
             };
         }
@@ -280,7 +280,7 @@ impl Widget for Dialog {
                 y + self.content_size.height,
             );
             let resp = content.event(event, content_rect);
-            if resp.handled {
+            if resp.status.is_handled() {
                 return resp;
             }
             y += self.content_size.height + 16.0;
@@ -294,14 +294,14 @@ impl Widget for Dialog {
                 y + self.footer_size.height,
             );
             let resp = footer.event(event, footer_rect);
-            if resp.handled {
+            if resp.status.is_handled() {
                 return resp;
             }
         }
 
-        // Consume all events when dialog is open to block interaction behind it
+        // Block all events behind the dialog when open
         EventResponse {
-            handled: true,
+            status: EventStatus::Canceled,
             ..Default::default()
         }
     }

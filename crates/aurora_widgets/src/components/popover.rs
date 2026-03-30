@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
@@ -210,31 +210,10 @@ impl Widget for Popover {
                 if rect.contains(&e.position) {
                     self.open = !self.open;
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Pointer),
                         ..Default::default()
                     };
-                }
-                // Click outside popover closes it
-                if self.open {
-                    let pr = self.popover_rect(&rect);
-                    if !pr.contains(&e.position) {
-                        self.open = false;
-                        return EventResponse {
-                            handled: true,
-                            ..Default::default()
-                        };
-                    }
-                    // Forward to content
-                    if let Some(ref mut content) = self.content {
-                        let content_rect = Rect::new(
-                            pr.x1 + self.padding.left,
-                            pr.y1 + self.padding.top,
-                            pr.x1 + self.padding.left + self.content_size.width,
-                            pr.y1 + self.padding.top + self.content_size.height,
-                        );
-                        return content.event(event, content_rect);
-                    }
                 }
                 EventResponse::default()
             }
@@ -245,8 +224,25 @@ impl Widget for Popover {
                         ..Default::default()
                     };
                 }
-                if self.open {
-                    let pr = self.popover_rect(&rect);
+                EventResponse::default()
+            }
+            _ => EventResponse::default(),
+        }
+    }
+
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        if !self.open {
+            return EventResponse::default();
+        }
+
+        let pr = self.popover_rect(&rect);
+
+        match event {
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
+                if e.state == MouseState::Pressed =>
+            {
+                if pr.contains(&e.position) {
+                    // Forward to content
                     if let Some(ref mut content) = self.content {
                         let content_rect = Rect::new(
                             pr.x1 + self.padding.left,
@@ -256,21 +252,39 @@ impl Widget for Popover {
                         );
                         return content.event(event, content_rect);
                     }
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        ..Default::default()
+                    };
+                }
+                // Click outside popover closes it
+                self.open = false;
+                EventResponse {
+                    status: EventStatus::Canceled,
+                    ..Default::default()
+                }
+            }
+            WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(_pos)) => {
+                if let Some(ref mut content) = self.content {
+                    let content_rect = Rect::new(
+                        pr.x1 + self.padding.left,
+                        pr.y1 + self.padding.top,
+                        pr.x1 + self.padding.left + self.content_size.width,
+                        pr.y1 + self.padding.top + self.content_size.height,
+                    );
+                    return content.event(event, content_rect);
                 }
                 EventResponse::default()
             }
             _ => {
-                if self.open {
-                    let pr = self.popover_rect(&rect);
-                    if let Some(ref mut content) = self.content {
-                        let content_rect = Rect::new(
-                            pr.x1 + self.padding.left,
-                            pr.y1 + self.padding.top,
-                            pr.x1 + self.padding.left + self.content_size.width,
-                            pr.y1 + self.padding.top + self.content_size.height,
-                        );
-                        return content.event(event, content_rect);
-                    }
+                if let Some(ref mut content) = self.content {
+                    let content_rect = Rect::new(
+                        pr.x1 + self.padding.left,
+                        pr.y1 + self.padding.top,
+                        pr.x1 + self.padding.left + self.content_size.width,
+                        pr.y1 + self.padding.top + self.content_size.height,
+                    );
+                    return content.event(event, content_rect);
                 }
                 EventResponse::default()
             }

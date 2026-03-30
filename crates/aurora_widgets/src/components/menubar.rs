@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
@@ -232,39 +232,13 @@ impl Widget for Menubar {
                         }
                         self.hover_item = None;
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };
                     }
                     x += menu_w;
                 }
-
-                // Check dropdown items
-                if let Some(menu_idx) = self.active_menu {
-                    let dr = self.dropdown_rect(menu_idx, &rect);
-                    if dr.contains(&e.position) {
-                        let relative_y = e.position.y - dr.y1 - 4.0;
-                        let idx = (relative_y / self.item_height) as usize;
-                        if idx < self.menus[menu_idx].items.len() {
-                            self.active_menu = None;
-                            if let Some(ref mut cb) = self.on_select {
-                                cb(menu_idx, idx);
-                            }
-                            return EventResponse {
-                                handled: true,
-                                ..Default::default()
-                            };
-                        }
-                    }
-                    // Click outside closes
-                    self.active_menu = None;
-                    return EventResponse {
-                        handled: true,
-                        ..Default::default()
-                    };
-                }
-
                 EventResponse::default()
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
@@ -277,31 +251,12 @@ impl Widget for Menubar {
                             self.active_menu = Some(i);
                             self.hover_item = None;
                             return EventResponse {
+                                status: EventStatus::Consumed,
                                 cursor: Some(CursorIcon::Pointer),
                                 ..Default::default()
                             };
                         }
                         x += menu_w;
-                    }
-                }
-
-                // Highlight dropdown items
-                if let Some(menu_idx) = self.active_menu {
-                    let dr = self.dropdown_rect(menu_idx, &rect);
-                    if dr.contains(pos) {
-                        let relative_y = pos.y - dr.y1 - 4.0;
-                        let idx = (relative_y / self.item_height) as usize;
-                        self.hover_item = if idx < self.menus[menu_idx].items.len() {
-                            Some(idx)
-                        } else {
-                            None
-                        };
-                        return EventResponse {
-                            cursor: Some(CursorIcon::Pointer),
-                            ..Default::default()
-                        };
-                    } else {
-                        self.hover_item = None;
                     }
                 }
 
@@ -311,6 +266,62 @@ impl Widget for Menubar {
                         ..Default::default()
                     };
                 }
+                EventResponse::default()
+            }
+            _ => EventResponse::default(),
+        }
+    }
+
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        if self.active_menu.is_none() {
+            return EventResponse::default();
+        }
+
+        let menu_idx = self.active_menu.unwrap();
+
+        match event {
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
+                if e.state == MouseState::Pressed =>
+            {
+                let dr = self.dropdown_rect(menu_idx, &rect);
+                if dr.contains(&e.position) {
+                    let relative_y = e.position.y - dr.y1 - 4.0;
+                    let idx = (relative_y / self.item_height) as usize;
+                    if idx < self.menus[menu_idx].items.len() {
+                        self.active_menu = None;
+                        if let Some(ref mut cb) = self.on_select {
+                            cb(menu_idx, idx);
+                        }
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            ..Default::default()
+                        };
+                    }
+                }
+                // Click outside closes
+                self.active_menu = None;
+                EventResponse {
+                    status: EventStatus::Canceled,
+                    ..Default::default()
+                }
+            }
+            WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
+                let dr = self.dropdown_rect(menu_idx, &rect);
+                if dr.contains(pos) {
+                    let relative_y = pos.y - dr.y1 - 4.0;
+                    let idx = (relative_y / self.item_height) as usize;
+                    self.hover_item = if idx < self.menus[menu_idx].items.len() {
+                        Some(idx)
+                    } else {
+                        None
+                    };
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Pointer),
+                        ..Default::default()
+                    };
+                }
+                self.hover_item = None;
                 EventResponse::default()
             }
             _ => EventResponse::default(),

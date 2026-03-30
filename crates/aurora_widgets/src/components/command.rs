@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
@@ -261,7 +261,7 @@ impl Widget for Command {
                 if !pr.contains(&e.position) {
                     self.open = false;
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Canceled,
                         ..Default::default()
                     };
                 }
@@ -275,13 +275,13 @@ impl Widget for Command {
                         self.open = false;
                         self.commands[cmd_idx].callback.as_mut()();
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             ..Default::default()
                         };
                     }
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     ..Default::default()
                 }
             }
@@ -300,12 +300,14 @@ impl Widget for Command {
                         self.hover_index = None;
                     }
                     return EventResponse {
+                        status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Pointer),
                         ..Default::default()
                     };
                 }
+                // Block events behind the command palette
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Canceled,
                     ..Default::default()
                 }
             }
@@ -315,7 +317,7 @@ impl Widget for Command {
                     self.hover_index = None;
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     ..Default::default()
                 }
             }
@@ -353,12 +355,13 @@ impl Widget for Command {
                     _ => {}
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     ..Default::default()
                 }
             }
+            // Block all events behind the command palette when open
             _ => EventResponse {
-                handled: true,
+                status: EventStatus::Canceled,
                 ..Default::default()
             },
         }

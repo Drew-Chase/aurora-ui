@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
@@ -219,34 +219,8 @@ impl Widget for DatePicker {
                 if rect.contains(&e.position) {
                     self.open = !self.open;
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Pointer),
-                        ..Default::default()
-                    };
-                }
-                if self.open {
-                    let dr = self.dropdown_rect(&rect);
-                    if dr.contains(&e.position) {
-                        // Forward to calendar
-                        let cal_rect = Rect::new(
-                            dr.x1 + 8.0,
-                            dr.y1 + 8.0,
-                            dr.x1 + 8.0 + self.calendar_size.width,
-                            dr.y1 + 8.0 + self.calendar_size.height,
-                        );
-                        let resp = self.calendar.event(event, cal_rect);
-                        // Check if a day was selected in the calendar
-                        // Since Calendar manages its own selected_day,
-                        // we sync afterwards
-                        if resp.handled {
-                            // Check if calendar updated its selection
-                            // We need to read it back (the calendar stores it internally)
-                            return resp;
-                        }
-                    }
-                    self.open = false;
-                    return EventResponse {
-                        handled: true,
                         ..Default::default()
                     };
                 }
@@ -259,17 +233,56 @@ impl Widget for DatePicker {
                         ..Default::default()
                     };
                 }
-                if self.open {
-                    let dr = self.dropdown_rect(&rect);
-                    if dr.contains(pos) {
-                        let cal_rect = Rect::new(
-                            dr.x1 + 8.0,
-                            dr.y1 + 8.0,
-                            dr.x1 + 8.0 + self.calendar_size.width,
-                            dr.y1 + 8.0 + self.calendar_size.height,
-                        );
-                        return self.calendar.event(event, cal_rect);
+                EventResponse::default()
+            }
+            _ => EventResponse::default(),
+        }
+    }
+
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        if !self.open {
+            return EventResponse::default();
+        }
+
+        match event {
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
+                if e.state == MouseState::Pressed =>
+            {
+                let dr = self.dropdown_rect(&rect);
+                if dr.contains(&e.position) {
+                    // Forward to calendar
+                    let cal_rect = Rect::new(
+                        dr.x1 + 8.0,
+                        dr.y1 + 8.0,
+                        dr.x1 + 8.0 + self.calendar_size.width,
+                        dr.y1 + 8.0 + self.calendar_size.height,
+                    );
+                    let resp = self.calendar.event(event, cal_rect);
+                    if resp.status.is_handled() {
+                        return resp;
                     }
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        ..Default::default()
+                    };
+                }
+                // Click outside closes
+                self.open = false;
+                EventResponse {
+                    status: EventStatus::Canceled,
+                    ..Default::default()
+                }
+            }
+            WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
+                let dr = self.dropdown_rect(&rect);
+                if dr.contains(pos) {
+                    let cal_rect = Rect::new(
+                        dr.x1 + 8.0,
+                        dr.y1 + 8.0,
+                        dr.x1 + 8.0 + self.calendar_size.width,
+                        dr.y1 + 8.0 + self.calendar_size.height,
+                    );
+                    return self.calendar.event(event, cal_rect);
                 }
                 EventResponse::default()
             }

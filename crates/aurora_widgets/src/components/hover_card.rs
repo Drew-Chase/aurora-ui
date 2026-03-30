@@ -1,11 +1,11 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::WidgetEvent;
-use aurora_core::kmi::mouse::MouseEvent;
+use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -160,20 +160,9 @@ impl Widget for HoverCard {
 
                 if let Some(ref mut trigger) = self.trigger {
                     let resp = trigger.event(event, rect);
-                    if resp.handled {
+                    if resp.status.is_handled() {
                         return resp;
                     }
-                }
-                if self.hovered
-                    && let Some(ref mut content) = self.content
-                {
-                    let content_rect = Rect::new(
-                        card_r.x1 + self.padding.left,
-                        card_r.y1 + self.padding.top,
-                        card_r.x1 + self.padding.left + self.content_size.width,
-                        card_r.y1 + self.padding.top + self.content_size.height,
-                    );
-                    return content.event(event, content_rect);
                 }
                 EventResponse::default()
             }
@@ -183,6 +172,56 @@ impl Widget for HoverCard {
                 }
                 EventResponse::default()
             }
+        }
+    }
+
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        if !self.hovered {
+            return EventResponse::default();
+        }
+
+        let card_r = self.card_rect(&rect);
+
+        match event {
+            WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
+                if card_r.contains(pos) {
+                    if let Some(ref mut content) = self.content {
+                        let content_rect = Rect::new(
+                            card_r.x1 + self.padding.left,
+                            card_r.y1 + self.padding.top,
+                            card_r.x1 + self.padding.left + self.content_size.width,
+                            card_r.y1 + self.padding.top + self.content_size.height,
+                        );
+                        return content.event(event, content_rect);
+                    }
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        ..Default::default()
+                    };
+                }
+                EventResponse::default()
+            }
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
+                if e.state == MouseState::Pressed =>
+            {
+                if card_r.contains(&e.position) {
+                    if let Some(ref mut content) = self.content {
+                        let content_rect = Rect::new(
+                            card_r.x1 + self.padding.left,
+                            card_r.y1 + self.padding.top,
+                            card_r.x1 + self.padding.left + self.content_size.width,
+                            card_r.y1 + self.padding.top + self.content_size.height,
+                        );
+                        return content.event(event, content_rect);
+                    }
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        ..Default::default()
+                    };
+                }
+                EventResponse::default()
+            }
+            _ => EventResponse::default(),
         }
     }
 

@@ -4,7 +4,7 @@ use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_render::canvas::Canvas;
-use aurora_widgets::widgets::{EventResponse, LayoutCtx, Widget};
+use aurora_widgets::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use std::sync::Arc;
 
 #[cfg(target_os = "linux")]
@@ -457,7 +457,11 @@ impl Widget for WindowControls {
                 }
                 self.hovered_button = hit;
                 EventResponse {
-                    handled: hit.is_some(),
+                    status: if hit.is_some() {
+                        EventStatus::Consumed
+                    } else {
+                        EventStatus::Ignored
+                    },
                     cursor: if hit.is_some() {
                         Some(CursorIcon::Pointer)
                     } else {
@@ -473,7 +477,7 @@ impl Widget for WindowControls {
                         if click.state == MouseState::Pressed {
                             self.pressed_button = Some(*button);
                             return EventResponse {
-                                handled: true,
+                                status: EventStatus::Consumed,
                                 ..Default::default()
                             };
                         } else if click.state == MouseState::Released
@@ -482,7 +486,7 @@ impl Widget for WindowControls {
                             self.pressed_button = None;
                             self.execute_action(*button);
                             return EventResponse {
-                                handled: true,
+                                status: EventStatus::Consumed,
                                 ..Default::default()
                             };
                         }

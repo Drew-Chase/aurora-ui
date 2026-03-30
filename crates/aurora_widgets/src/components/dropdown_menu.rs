@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
@@ -299,55 +299,68 @@ impl Widget for DropdownMenu {
                     self.start_anim(self.open);
                     self.hover_index = None;
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Pointer),
-                        ..Default::default()
-                    };
-                }
-                if self.open {
-                    let mr = self.menu_rect(&rect);
-                    if mr.contains(&e.position)
-                        && let Some(idx) = self.item_index_at(e.position.y, &mr)
-                    {
-                        self.open = false;
-                        self.start_anim(false);
-                        if let Some(ref mut cb) = self.on_select {
-                            cb(idx);
-                        }
-                        return EventResponse {
-                            handled: true,
-                            ..Default::default()
-                        };
-                    }
-                    // Click outside closes
-                    self.open = false;
-                    self.start_anim(false);
-                    return EventResponse {
-                        handled: true,
                         ..Default::default()
                     };
                 }
                 EventResponse::default()
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
-                if self.open {
-                    let mr = self.menu_rect(&rect);
-                    if mr.contains(pos) {
-                        self.hover_index = self.item_index_at(pos.y, &mr);
-                        return EventResponse {
-                            cursor: Some(CursorIcon::Pointer),
-                            ..Default::default()
-                        };
-                    } else {
-                        self.hover_index = None;
-                    }
-                }
                 if rect.contains(pos) {
                     return EventResponse {
                         cursor: Some(CursorIcon::Pointer),
                         ..Default::default()
                     };
                 }
+                EventResponse::default()
+            }
+            _ => EventResponse::default(),
+        }
+    }
+
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        if !self.open {
+            return EventResponse::default();
+        }
+
+        match event {
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
+                if e.state == MouseState::Pressed =>
+            {
+                let mr = self.menu_rect(&rect);
+                if mr.contains(&e.position)
+                    && let Some(idx) = self.item_index_at(e.position.y, &mr)
+                {
+                    self.open = false;
+                    self.start_anim(false);
+                    if let Some(ref mut cb) = self.on_select {
+                        cb(idx);
+                    }
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        ..Default::default()
+                    };
+                }
+                // Click outside closes
+                self.open = false;
+                self.start_anim(false);
+                EventResponse {
+                    status: EventStatus::Canceled,
+                    ..Default::default()
+                }
+            }
+            WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
+                let mr = self.menu_rect(&rect);
+                if mr.contains(pos) {
+                    self.hover_index = self.item_index_at(pos.y, &mr);
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Pointer),
+                        ..Default::default()
+                    };
+                }
+                self.hover_index = None;
                 EventResponse::default()
             }
             _ => EventResponse::default(),

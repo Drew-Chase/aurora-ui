@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
@@ -267,34 +267,8 @@ impl Widget for Combobox {
                     self.open = true;
                     self.search.clear();
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Text),
-                        ..Default::default()
-                    };
-                }
-                if self.open {
-                    let dr = self.dropdown_rect(&rect);
-                    if dr.contains(&e.position) {
-                        let relative_y = e.position.y - dr.y1 - 4.0;
-                        let idx = (relative_y / self.item_height) as usize;
-                        if idx < self.filtered_indices.len() {
-                            let real_idx = self.filtered_indices[idx];
-                            self.selected = Some(real_idx);
-                            self.open = false;
-                            self.search.clear();
-                            if let Some(ref mut cb) = self.on_select {
-                                cb(real_idx);
-                            }
-                            return EventResponse {
-                                handled: true,
-                                ..Default::default()
-                            };
-                        }
-                    }
-                    self.open = false;
-                    self.focused = false;
-                    return EventResponse {
-                        handled: true,
                         ..Default::default()
                     };
                 }
@@ -302,24 +276,6 @@ impl Widget for Combobox {
                 EventResponse::default()
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
-                if self.open {
-                    let dr = self.dropdown_rect(&rect);
-                    if dr.contains(pos) {
-                        let relative_y = pos.y - dr.y1 - 4.0;
-                        let idx = (relative_y / self.item_height) as usize;
-                        self.hover_index = if idx < self.filtered_indices.len() {
-                            Some(idx)
-                        } else {
-                            None
-                        };
-                        return EventResponse {
-                            cursor: Some(CursorIcon::Pointer),
-                            ..Default::default()
-                        };
-                    } else {
-                        self.hover_index = None;
-                    }
-                }
                 if rect.contains(pos) {
                     return EventResponse {
                         cursor: Some(CursorIcon::Text),
@@ -336,7 +292,7 @@ impl Widget for Combobox {
                 self.open = true;
                 self.selected = None;
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     ..Default::default()
                 }
             }
@@ -381,9 +337,67 @@ impl Widget for Combobox {
                     _ => return EventResponse::default(),
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     ..Default::default()
                 }
+            }
+            _ => EventResponse::default(),
+        }
+    }
+
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        if !self.open {
+            return EventResponse::default();
+        }
+
+        match event {
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
+                if e.state == MouseState::Pressed =>
+            {
+                let dr = self.dropdown_rect(&rect);
+                if dr.contains(&e.position) {
+                    let relative_y = e.position.y - dr.y1 - 4.0;
+                    let idx = (relative_y / self.item_height) as usize;
+                    if idx < self.filtered_indices.len() {
+                        let real_idx = self.filtered_indices[idx];
+                        self.selected = Some(real_idx);
+                        self.open = false;
+                        self.search.clear();
+                        if let Some(ref mut cb) = self.on_select {
+                            cb(real_idx);
+                        }
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            ..Default::default()
+                        };
+                    }
+                }
+                // Click outside closes
+                self.open = false;
+                self.focused = false;
+                EventResponse {
+                    status: EventStatus::Canceled,
+                    ..Default::default()
+                }
+            }
+            WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
+                let dr = self.dropdown_rect(&rect);
+                if dr.contains(pos) {
+                    let relative_y = pos.y - dr.y1 - 4.0;
+                    let idx = (relative_y / self.item_height) as usize;
+                    self.hover_index = if idx < self.filtered_indices.len() {
+                        Some(idx)
+                    } else {
+                        None
+                    };
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Pointer),
+                        ..Default::default()
+                    };
+                }
+                self.hover_index = None;
+                EventResponse::default()
             }
             _ => EventResponse::default(),
         }

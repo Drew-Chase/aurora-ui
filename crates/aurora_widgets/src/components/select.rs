@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
@@ -307,72 +307,77 @@ impl Widget for Select {
                     self.start_anim(self.open);
                     self.hover_index = None;
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Pointer),
-                        ..Default::default()
-                    };
-                }
-                if self.open {
-                    let dr = self.dropdown_rect(&rect);
-                    if dr.contains(&e.position) {
-                        let relative_y = e.position.y - dr.y1 - 4.0;
-                        let idx = (relative_y / self.item_height) as usize;
-                        if idx < self.options.len() {
-                            self.selected = Some(idx);
-                            self.open = false;
-                            self.start_anim(false);
-                            if let Some(ref mut cb) = self.on_change {
-                                cb(idx);
-                            }
-                            return EventResponse {
-                                handled: true,
-                                ..Default::default()
-                            };
-                        }
-                    }
-                    self.open = false;
-                    self.start_anim(false);
-                    return EventResponse {
-                        handled: true,
                         ..Default::default()
                     };
                 }
                 EventResponse::default()
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
-                if self.open {
-                    let dr = self.dropdown_rect(&rect);
-                    if dr.contains(pos) {
-                        let relative_y = pos.y - dr.y1 - 4.0;
-                        let idx = (relative_y / self.item_height) as usize;
-                        self.hover_index = if idx < self.options.len() {
-                            Some(idx)
-                        } else {
-                            None
-                        };
-                        return EventResponse {
-                            handled: true,
-                            cursor: Some(CursorIcon::Pointer),
-                            ..Default::default()
-                        };
-                    } else {
-                        self.hover_index = None;
-                    }
-                    // While open, consume hover over trigger area too
-                    if rect.contains(pos) {
-                        return EventResponse {
-                            handled: true,
-                            cursor: Some(CursorIcon::Pointer),
-                            ..Default::default()
-                        };
-                    }
-                }
                 if rect.contains(pos) {
                     return EventResponse {
                         cursor: Some(CursorIcon::Pointer),
                         ..Default::default()
                     };
                 }
+                EventResponse::default()
+            }
+            _ => EventResponse::default(),
+        }
+    }
+
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        if !self.open {
+            return EventResponse::default();
+        }
+
+        match event {
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
+                if e.state == MouseState::Pressed =>
+            {
+                let dr = self.dropdown_rect(&rect);
+                if dr.contains(&e.position) {
+                    let relative_y = e.position.y - dr.y1 - 4.0;
+                    let idx = (relative_y / self.item_height) as usize;
+                    if idx < self.options.len() {
+                        self.selected = Some(idx);
+                        self.open = false;
+                        self.start_anim(false);
+                        if let Some(ref mut cb) = self.on_change {
+                            cb(idx);
+                        }
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            ..Default::default()
+                        };
+                    }
+                }
+                // Click outside dropdown closes it
+                self.open = false;
+                self.start_anim(false);
+                EventResponse {
+                    status: EventStatus::Canceled,
+                    ..Default::default()
+                }
+            }
+            WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
+                let dr = self.dropdown_rect(&rect);
+                if dr.contains(pos) {
+                    let relative_y = pos.y - dr.y1 - 4.0;
+                    let idx = (relative_y / self.item_height) as usize;
+                    self.hover_index = if idx < self.options.len() {
+                        Some(idx)
+                    } else {
+                        None
+                    };
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Pointer),
+                        ..Default::default()
+                    };
+                }
+                self.hover_index = None;
                 EventResponse::default()
             }
             _ => EventResponse::default(),

@@ -193,6 +193,13 @@ pub fn composite_widget(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 }
             }
 
+            fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+                match &mut self.__composite_inner {
+                    Some(inner) => inner.event_overlay(event, rect),
+                    None => EventResponse::default(),
+                }
+            }
+
             fn needs_animation(&self) -> bool {
                 self.__composite_inner.as_ref().map_or(false, |w| w.needs_animation())
             }
