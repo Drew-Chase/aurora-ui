@@ -12,24 +12,29 @@ use super::colors;
 
 /// A group of buttons arranged in a row with shared borders.
 ///
+/// By default the group behaves like regular buttons — each has a hover
+/// effect and fires the `on_click` callback, but none stay selected.
+/// Use `.selected(index)` to opt into persistent selection (tab-like).
+///
 /// # Example
 /// ```ignore
 /// ButtonGroup::new()
-///     .button("Left")
-///     .button("Center")
-///     .button("Right")
-///     .selected(0)
+///     .button("Cut")
+///     .button("Copy")
+///     .button("Paste")
 ///     .on_click(|idx| println!("clicked: {idx}"))
 /// ```
 pub struct ButtonGroup {
     buttons: Vec<String>,
     selected: Option<usize>,
+    hovered_index: Option<usize>,
     height: f32,
     padding: f32,
     border_color: Color,
     selected_bg: Color,
-    _selected_fg: Color,
-    _normal_fg: Color,
+    selected_fg: Color,
+    normal_fg: Color,
+    hover_bg: Color,
     corners: Corners,
     on_click: Option<Box<dyn FnMut(usize)>>,
     button_layouts: Vec<Option<aurora_text::text_layout::TextLayout>>,
@@ -41,12 +46,14 @@ impl ButtonGroup {
         Self {
             buttons: Vec::new(),
             selected: None,
+            hovered_index: None,
             height: 36.0,
             padding: 16.0,
             border_color: colors::border(),
             selected_bg: colors::primary(),
-            _selected_fg: colors::primary_foreground(),
-            _normal_fg: colors::foreground(),
+            selected_fg: colors::primary_foreground(),
+            normal_fg: colors::foreground(),
+            hover_bg: colors::secondary(),
             corners: Corners::all(6.0),
             on_click: None,
             button_layouts: Vec::new(),
@@ -79,9 +86,32 @@ impl ButtonGroup {
         self
     }
 
+    pub fn selected_fg(mut self, color: Color) -> Self {
+        self.selected_fg = color;
+        self
+    }
+
+    pub fn hover_bg(mut self, color: Color) -> Self {
+        self.hover_bg = color;
+        self
+    }
+
     pub fn on_click(mut self, cb: impl FnMut(usize) + 'static) -> Self {
         self.on_click = Some(Box::new(cb));
         self
+    }
+
+    /// Computes the per-button corner radii for the button at index `i`.
+    fn button_corners(&self, i: usize) -> Corners {
+        if self.buttons.len() == 1 {
+            self.corners
+        } else if i == 0 {
+            Corners::new(self.corners.top_left, 0.0, 0.0, self.corners.bottom_left)
+        } else if i == self.buttons.len() - 1 {
+            Corners::new(0.0, self.corners.top_right, self.corners.bottom_right, 0.0)
+        } else {
+            Corners::zero()
+        }
     }
 }
 
@@ -98,7 +128,12 @@ impl Widget for ButtonGroup {
         let mut total_w = 0.0;
 
         for (i, label) in self.buttons.iter().enumerate() {
-            let _is_selected = self.selected == Some(i);
+            let is_selected = self.selected == Some(i);
+            let fg = if is_selected {
+                self.selected_fg
+            } else {
+                self.normal_fg
+            };
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
@@ -106,7 +141,7 @@ impl Widget for ButtonGroup {
                 ctx.font_manager,
                 label,
                 &opts,
-                colors::foreground(),
+                fg,
                 None,
             );
             tl.set_max_width(ctx.font_manager, f32::MAX);
@@ -128,28 +163,19 @@ impl Widget for ButtonGroup {
         for (i, btn_w) in self.button_widths.iter().enumerate() {
             let btn_rect = Rect::new(x, rect.y1, x + btn_w, rect.y2);
             let is_selected = self.selected == Some(i);
+            let is_hovered = self.hovered_index == Some(i);
 
             if is_selected {
-                // Use rounded corners only for first/last, square for middle
-                let btn_corners = if i == 0 && self.buttons.len() == 1 {
-                    self.corners
-                } else if i == 0 {
-                    Corners::new(self.corners.top_left, 0.0, 0.0, self.corners.bottom_left)
-                } else if i == self.buttons.len() - 1 {
-                    Corners::new(0.0, self.corners.top_right, self.corners.bottom_right, 0.0)
-                } else {
-                    Corners::zero()
-                };
-                canvas.fill_rounded_rect(btn_rect, btn_corners, self.selected_bg);
+                canvas.fill_rounded_rect(btn_rect, self.button_corners(i), self.selected_bg);
+            } else if is_hovered {
+                canvas.fill_rounded_rect(btn_rect, self.button_corners(i), self.hover_bg);
             }
 
             // Label
             if let Some(Some(tl)) = self.button_layouts.get(i) {
-                let _s = tl.size();
-                let tw = _s.width;
-                let th = _s.height;
-                let tx = btn_rect.x1 + (btn_rect.width() - tw) / 2.0;
-                let ty = btn_rect.y1 + (btn_rect.height() - th) / 2.0;
+                let s = tl.size();
+                let tx = btn_rect.x1 + (btn_rect.width() - s.width) / 2.0;
+                let ty = btn_rect.y1 + (btn_rect.height() - s.height) / 2.0;
                 canvas.draw_text(tl, tx as i32, ty as i32);
             }
 
@@ -179,7 +205,6 @@ impl Widget for ButtonGroup {
                 for (i, btn_w) in self.button_widths.iter().enumerate() {
                     let btn_rect = Rect::new(x, rect.y1, x + btn_w, rect.y2);
                     if btn_rect.contains(&e.position) {
-                        self.selected = Some(i);
                         if let Some(ref mut cb) = self.on_click {
                             cb(i);
                         }
@@ -193,11 +218,28 @@ impl Widget for ButtonGroup {
                 }
                 EventResponse::default()
             }
-            WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) if rect.contains(pos) => {
-                EventResponse {
-                    status: EventStatus::Consumed,
-                    cursor: Some(CursorIcon::Pointer),
-                    ..Default::default()
+            WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
+                if rect.contains(pos) {
+                    // Hit-test which button is hovered
+                    let mut x = rect.x1;
+                    let mut found = None;
+                    for (i, btn_w) in self.button_widths.iter().enumerate() {
+                        let btn_rect = Rect::new(x, rect.y1, x + btn_w, rect.y2);
+                        if btn_rect.contains(pos) {
+                            found = Some(i);
+                            break;
+                        }
+                        x += btn_w;
+                    }
+                    self.hovered_index = found;
+                    EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Pointer),
+                        ..Default::default()
+                    }
+                } else {
+                    self.hovered_index = None;
+                    EventResponse::default()
                 }
             }
             _ => EventResponse::default(),
