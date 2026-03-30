@@ -54,6 +54,7 @@ pub mod tooltip;
 
 // Complex widgets
 pub mod calendar;
+pub mod calendar_range;
 pub mod carousel;
 pub mod combobox;
 pub mod command;

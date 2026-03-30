@@ -1081,8 +1081,7 @@ where
                 if button == winit::event::MouseButton::Left
                     && state == winit::event::ElementState::Released
                     && self.drag_active
-                {
-                    if let Some(origin) = self.drag_press_position.take() {
+                    && let Some(origin) = self.drag_press_position.take() {
                         self.drag_active = false;
                         window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragEnd {
                             origin,
@@ -1091,7 +1090,6 @@ where
                         window.request_next_frame();
                         return;
                     }
-                }
 
                 // Clear drag tracking on any left release.
                 if button == winit::event::MouseButton::Left
