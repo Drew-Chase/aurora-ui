@@ -583,13 +583,15 @@ impl AppWindow {
         }
     }
 
-    pub(crate) fn dispatch_event(&mut self, event: &WidgetEvent) {
+    pub(crate) fn dispatch_event(&mut self, event: &WidgetEvent) -> EventResponse {
         if let WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) = event {
             self.last_mouse_position = Some(*pos);
         }
         let (width, height) = self.gpu.size();
         let rect = Rect::from_size((width as f32, height as f32).into());
-        if let Some(ref mut widget) = self.root_widget {
+        let Some(ref mut widget) = self.root_widget else {
+            return EventResponse::default();
+        };
             // Phase 1: overlay event dispatch (higher z-order)
             let overlay_response = widget.event_overlay(event, rect);
 
@@ -683,7 +685,7 @@ impl AppWindow {
                     self.focused_widget_id = Some(target_id);
                 }
             }
-        }
+        response
     }
 
     /// Returns a mutable reference to the window's [`FontManager`](aurora_text::font_manager::FontManager).
@@ -1075,39 +1077,51 @@ where
             WindowEvent::MouseInput { state, button, .. } => {
                 let position = self.current_cursor_position.unwrap_or_default();
 
-                // Track left-button press for drag threshold detection.
-                if button == winit::event::MouseButton::Left {
-                    match state {
-                        winit::event::ElementState::Pressed => {
-                            self.drag_press_position = Some(position);
-                            self.drag_active = false;
-                        }
-                        winit::event::ElementState::Released => {
-                            if self.drag_active {
-                                // End the active drag before dispatching the release.
-                                if let Some(origin) = self.drag_press_position.take() {
-                                    self.drag_active = false;
-                                    window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragEnd {
-                                        origin,
-                                        current: position,
-                                    }));
-                                    window.request_next_frame();
-                                    return;
-                                }
-                            }
-                            self.drag_press_position = None;
-                            self.drag_active = false;
-                        }
+                // End active drag on left-button release before dispatching.
+                if button == winit::event::MouseButton::Left
+                    && state == winit::event::ElementState::Released
+                    && self.drag_active
+                {
+                    if let Some(origin) = self.drag_press_position.take() {
+                        self.drag_active = false;
+                        window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragEnd {
+                            origin,
+                            current: position,
+                        }));
+                        window.request_next_frame();
+                        return;
                     }
                 }
 
-                window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseClickEvent(
-                    MouseClickEvent {
+                // Clear drag tracking on any left release.
+                if button == winit::event::MouseButton::Left
+                    && state == winit::event::ElementState::Released
+                {
+                    self.drag_press_position = None;
+                    self.drag_active = false;
+                }
+
+                // Dispatch click to widgets first so we can check if it was consumed.
+                let response = window.dispatch_event(&WidgetEvent::Mouse(
+                    MouseEvent::MouseClickEvent(MouseClickEvent {
                         button: translate_mouse_button(button),
                         state: translate_mouse_state(state),
                         position,
-                    },
-                )));
+                    }),
+                ));
+
+                // Only arm drag detection on left press when no widget consumed
+                // the event. If a widget handled the press (e.g. scrollbar thumb,
+                // button), the interaction belongs to that widget, not the drag
+                // system.
+                if button == winit::event::MouseButton::Left
+                    && state == winit::event::ElementState::Pressed
+                    && !response.status.is_handled()
+                {
+                    self.drag_press_position = Some(position);
+                    self.drag_active = false;
+                }
+
                 window.request_next_frame();
             }
             WindowEvent::MouseWheel { delta, .. } => {
