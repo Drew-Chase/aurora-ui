@@ -166,7 +166,7 @@ impl Widget for TouchArea {
                         if let Some(mouse_down) = &mut self.on_mouse_down {
                             mouse_down(click.button);
                         }
-                    } else if click.state == MouseState::Released && self.dragging {
+                    } else if click.state == MouseState::Released {
                         self.dragging = false;
                         if let Some(ref mut on_click) = self.on_click {
                             on_click(click);
