@@ -912,6 +912,23 @@ where
             return;
         };
 
+        // Poll cursor position during OS file drag — CursorMoved events
+        // do not fire while Windows OLE has the cursor captured.
+        if !self.os_drag_paths.is_empty() {
+            if let Some(pos) = query_cursor_in_window(&window.window_handle) {
+                self.current_cursor_position = Some(pos);
+                for path in self.os_drag_paths.clone() {
+                    window.dispatch_event(&WidgetEvent::FileDrop(
+                        FileDropEvent::FileHovered {
+                            path,
+                            position: pos,
+                        },
+                    ));
+                }
+                window.request_next_frame();
+            }
+        }
+
         if window.next_frame_requested && !resized {
             window.next_frame_requested = false;
 
@@ -929,8 +946,8 @@ where
             window.present();
         }
 
-        if window.next_frame_requested {
-            // Animation still active — schedule next frame at ~60fps
+        if window.next_frame_requested || !self.os_drag_paths.is_empty() {
+            // Animation or OS file drag active — poll at ~60fps
             event_loop.set_control_flow(winit::event_loop::ControlFlow::WaitUntil(
                 std::time::Instant::now() + std::time::Duration::from_millis(16),
             ));
