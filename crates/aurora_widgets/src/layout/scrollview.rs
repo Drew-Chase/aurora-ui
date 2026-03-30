@@ -448,8 +448,10 @@ impl Widget for ScrollView {
                     };
                 }
 
-                // Forward to child
-                if let Some(child) = &mut self.child {
+                // Forward to child — only if mouse is within viewport
+                if viewport.contains(pos)
+                    && let Some(child) = &mut self.child
+                {
                     let scrolled_rect = Rect::new(
                         rect.x1 + self.padding.left,
                         rect.y1 + self.padding.top - offset,

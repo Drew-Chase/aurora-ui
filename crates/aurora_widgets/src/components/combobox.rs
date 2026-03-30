@@ -278,6 +278,7 @@ impl Widget for Combobox {
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
                 if rect.contains(pos) {
                     return EventResponse {
+                        status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Text),
                         ..Default::default()
                     };

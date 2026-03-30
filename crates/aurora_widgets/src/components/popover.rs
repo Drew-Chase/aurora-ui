@@ -220,6 +220,7 @@ impl Widget for Popover {
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
                 if rect.contains(pos) {
                     return EventResponse {
+                        status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Pointer),
                         ..Default::default()
                     };
