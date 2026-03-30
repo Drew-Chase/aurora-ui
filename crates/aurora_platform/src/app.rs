@@ -7,6 +7,7 @@ use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
+use aurora_core::kmi::drag::{DragEvent, FileDropEvent};
 use aurora_core::kmi::keyboard::{Key, KeyboardEvent, Modifiers};
 use aurora_core::kmi::mouse::{MouseButton, MouseClickEvent, MouseEvent, MouseState};
 use aurora_gpu::gpu_context::GpuContext;
@@ -142,6 +143,9 @@ pub struct AppWindow {
     a11y: Option<crate::a11y::A11yState>,
 }
 
+/// Minimum cursor distance in pixels to trigger a drag gesture.
+const DRAG_THRESHOLD: f32 = 4.0;
+
 struct AppHandler<F> {
     config: App,
     on_render: F,
@@ -151,6 +155,11 @@ struct AppHandler<F> {
     benchmark: bool,
     start_time: std::time::Instant,
     resized_this_cycle: bool,
+    /// Position where the left mouse button was pressed. Set on press,
+    /// cleared when the drag becomes active or the button is released.
+    drag_press_position: Option<Point>,
+    /// Whether a drag gesture is currently in progress.
+    drag_active: bool,
 }
 
 /// Per-frame information passed to the render callback.
@@ -359,6 +368,8 @@ impl App {
             benchmark,
             start_time,
             resized_this_cycle: false,
+            drag_press_position: None,
+            drag_active: false,
         };
         let event_loop = winit::event_loop::EventLoop::new().map_err(AppError::from)?;
         event_loop
@@ -997,11 +1008,62 @@ where
             WindowEvent::CursorMoved { position, .. } => {
                 let pos = Point::new(position.x as f32, position.y as f32);
                 self.current_cursor_position = Some(pos);
+
+                // Drag threshold detection: if left mouse is held but drag not yet active,
+                // check if cursor has moved enough to start a drag gesture.
+                if let Some(press_pos) = self.drag_press_position {
+                    if !self.drag_active {
+                        let dx = pos.x - press_pos.x;
+                        let dy = pos.y - press_pos.y;
+                        if (dx * dx + dy * dy).sqrt() >= DRAG_THRESHOLD {
+                            self.drag_active = true;
+                            window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragStart {
+                                origin: press_pos,
+                            }));
+                        }
+                    }
+                    if self.drag_active {
+                        window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragMove {
+                            origin: press_pos,
+                            current: pos,
+                        }));
+                        window.request_next_frame();
+                        return;
+                    }
+                }
+
                 window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)));
                 window.request_next_frame();
             }
             WindowEvent::MouseInput { state, button, .. } => {
                 let position = self.current_cursor_position.unwrap_or_default();
+
+                // Track left-button press for drag threshold detection.
+                if button == winit::event::MouseButton::Left {
+                    match state {
+                        winit::event::ElementState::Pressed => {
+                            self.drag_press_position = Some(position);
+                            self.drag_active = false;
+                        }
+                        winit::event::ElementState::Released => {
+                            if self.drag_active {
+                                // End the active drag before dispatching the release.
+                                if let Some(origin) = self.drag_press_position.take() {
+                                    self.drag_active = false;
+                                    window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragEnd {
+                                        origin,
+                                        current: position,
+                                    }));
+                                    window.request_next_frame();
+                                    return;
+                                }
+                            }
+                            self.drag_press_position = None;
+                            self.drag_active = false;
+                        }
+                    }
+                }
+
                 window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseClickEvent(
                     MouseClickEvent {
                         button: translate_mouse_button(button),
@@ -1070,6 +1132,26 @@ where
             }
             WindowEvent::ModifiersChanged(mods) => {
                 self.current_modifiers = mods.state();
+            }
+            WindowEvent::HoveredFile(path) => {
+                let position = self.current_cursor_position.unwrap_or_default();
+                window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileHovered {
+                    path,
+                    position,
+                }));
+                window.request_next_frame();
+            }
+            WindowEvent::DroppedFile(path) => {
+                let position = self.current_cursor_position.unwrap_or_default();
+                window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileDropped {
+                    path,
+                    position,
+                }));
+                window.request_next_frame();
+            }
+            WindowEvent::HoveredFileCancelled => {
+                window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileCancelled));
+                window.request_next_frame();
             }
             _ => {}
         }

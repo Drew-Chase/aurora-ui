@@ -1,10 +1,13 @@
 /// Mouse cursor icon variants.
 pub mod cursor_icon;
+/// Drag-and-drop event types.
+pub mod drag;
 /// Keyboard input events.
 pub mod keyboard;
 /// Mouse input events and button/state types.
 pub mod mouse;
 
+use drag::{DragEvent, FileDropEvent};
 use keyboard::KeyboardEvent;
 use mouse::MouseEvent;
 
@@ -21,4 +24,8 @@ pub enum WidgetEvent {
     Focus(u64, bool),
     /// Request that the widget with this ID loses focus.
     Blur(u64),
+    /// An internal drag-and-drop gesture event.
+    Drag(DragEvent),
+    /// An OS-level file drag-and-drop event.
+    FileDrop(FileDropEvent),
 }
