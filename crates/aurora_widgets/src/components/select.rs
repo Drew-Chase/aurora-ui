@@ -49,6 +49,8 @@ pub struct Select {
     anim_from: f32,
     anim_to: f32,
     anim_start: Instant,
+    /// Block the Release event after the overlay closes on Press
+    block_next_release: bool,
 }
 
 impl Select {
@@ -75,6 +77,7 @@ impl Select {
             anim_from: 0.0,
             anim_to: 0.0,
             anim_start: Instant::now(),
+            block_next_release: false,
         }
     }
 
@@ -328,6 +331,19 @@ impl Widget for Select {
     }
 
     fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        // Block the Release event that follows a close-on-Press
+        if self.block_next_release
+            && let WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) = event
+            && e.state == MouseState::Released
+        {
+            self.block_next_release = false;
+            return EventResponse {
+                status: EventStatus::Canceled,
+                ..Default::default()
+            };
+        }
+        self.block_next_release = false;
+
         if !self.open {
             return EventResponse::default();
         }
@@ -342,6 +358,7 @@ impl Widget for Select {
                         if idx < self.options.len() {
                             self.selected = Some(idx);
                             self.open = false;
+                            self.block_next_release = true;
                             self.start_anim(false);
                             if let Some(ref mut cb) = self.on_change {
                                 cb(idx);
@@ -354,9 +371,9 @@ impl Widget for Select {
                     }
                     // Click outside dropdown closes it
                     self.open = false;
+                    self.block_next_release = true;
                     self.start_anim(false);
                 }
-                // Block all click events (press and release) while open
                 EventResponse {
                     status: EventStatus::Canceled,
                     ..Default::default()
@@ -379,13 +396,11 @@ impl Widget for Select {
                     };
                 }
                 self.hover_index = None;
-                // Block hover events outside dropdown too while open
                 EventResponse {
                     status: EventStatus::Canceled,
                     ..Default::default()
                 }
             }
-            // Block all other events while dropdown is open
             _ => EventResponse {
                 status: EventStatus::Canceled,
                 ..Default::default()

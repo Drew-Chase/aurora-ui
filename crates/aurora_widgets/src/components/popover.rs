@@ -42,6 +42,8 @@ pub struct Popover {
     padding: Edges,
     trigger_size: Size,
     content_size: Size,
+    /// Block the Release event after the overlay closes on Press
+    block_next_release: bool,
 }
 
 impl Popover {
@@ -58,6 +60,7 @@ impl Popover {
             padding: Edges::new(12.0, 12.0, 12.0, 12.0),
             trigger_size: Size::default(),
             content_size: Size::default(),
+            block_next_release: false,
         }
     }
 
@@ -231,6 +234,19 @@ impl Widget for Popover {
     }
 
     fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        // Block the Release event that follows a close-on-Press
+        if self.block_next_release
+            && let WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) = event
+            && e.state == MouseState::Released
+        {
+            self.block_next_release = false;
+            return EventResponse {
+                status: EventStatus::Canceled,
+                ..Default::default()
+            };
+        }
+        self.block_next_release = false;
+
         if !self.open {
             return EventResponse::default();
         }
@@ -256,6 +272,7 @@ impl Widget for Popover {
                         };
                     }
                     self.open = false;
+                    self.block_next_release = true;
                 }
                 EventResponse {
                     status: EventStatus::Canceled,

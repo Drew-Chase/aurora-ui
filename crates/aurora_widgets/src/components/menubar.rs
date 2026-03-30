@@ -41,6 +41,8 @@ pub struct Menubar {
     menu_widths: Vec<f32>,
     item_layouts: Vec<Vec<Option<aurora_text::text_layout::TextLayout>>>,
     dropdown_width: f32,
+    /// Block the Release event after the overlay closes on Press
+    block_next_release: bool,
 }
 
 impl Menubar {
@@ -60,6 +62,7 @@ impl Menubar {
             menu_widths: Vec::new(),
             item_layouts: Vec::new(),
             dropdown_width: 200.0,
+            block_next_release: false,
         }
     }
 
@@ -273,6 +276,19 @@ impl Widget for Menubar {
     }
 
     fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        // Block the Release event that follows a close-on-Press
+        if self.block_next_release
+            && let WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) = event
+            && e.state == MouseState::Released
+        {
+            self.block_next_release = false;
+            return EventResponse {
+                status: EventStatus::Canceled,
+                ..Default::default()
+            };
+        }
+        self.block_next_release = false;
+
         if self.active_menu.is_none() {
             return EventResponse::default();
         }
@@ -288,6 +304,7 @@ impl Widget for Menubar {
                         let idx = (relative_y / self.item_height) as usize;
                         if idx < self.menus[menu_idx].items.len() {
                             self.active_menu = None;
+                            self.block_next_release = true;
                             if let Some(ref mut cb) = self.on_select {
                                 cb(menu_idx, idx);
                             }
@@ -298,6 +315,7 @@ impl Widget for Menubar {
                         }
                     }
                     self.active_menu = None;
+                    self.block_next_release = true;
                 }
                 EventResponse {
                     status: EventStatus::Canceled,

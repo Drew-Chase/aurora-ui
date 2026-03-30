@@ -39,6 +39,8 @@ pub struct DatePicker {
     display_layout: Option<aurora_text::text_layout::TextLayout>,
     calendar: Calendar,
     calendar_size: Size,
+    /// Block the Release event after the overlay closes on Press
+    block_next_release: bool,
 }
 
 impl DatePicker {
@@ -59,6 +61,7 @@ impl DatePicker {
             display_layout: None,
             calendar: Calendar::new(),
             calendar_size: Size::default(),
+            block_next_release: false,
         }
     }
 
@@ -240,6 +243,19 @@ impl Widget for DatePicker {
     }
 
     fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        // Block the Release event that follows a close-on-Press
+        if self.block_next_release
+            && let WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) = event
+            && e.state == MouseState::Released
+        {
+            self.block_next_release = false;
+            return EventResponse {
+                status: EventStatus::Canceled,
+                ..Default::default()
+            };
+        }
+        self.block_next_release = false;
+
         if !self.open {
             return EventResponse::default();
         }
@@ -268,6 +284,7 @@ impl Widget for DatePicker {
                 }
                 // Click outside closes
                 self.open = false;
+                self.block_next_release = true;
                 EventResponse {
                     status: EventStatus::Canceled,
                     ..Default::default()
