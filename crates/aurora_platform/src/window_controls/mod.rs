@@ -287,17 +287,17 @@ fn close_window(window: &winit::window::Window) {
 fn close_window(window: &winit::window::Window) {
     use winit::raw_window_handle::{HasWindowHandle, RawWindowHandle};
 
-    if let Ok(handle) = window.window_handle() {
-        if let RawWindowHandle::AppKit(h) = handle.as_raw() {
-            // SAFETY: h.ns_view is a valid, non-null pointer to an NSView
-            // provided by winit's HasWindowHandle implementation. The pointer
-            // remains valid for the duration of this scope.
-            unsafe {
-                let ns_view: &objc2_app_kit::NSView =
-                    &*(h.ns_view.as_ptr() as *const objc2_app_kit::NSView);
-                if let Some(ns_window) = ns_view.window() {
-                    ns_window.performClose(None);
-                }
+    if let Ok(handle) = window.window_handle()
+        && let RawWindowHandle::AppKit(h) = handle.as_raw()
+    {
+        // SAFETY: h.ns_view is a valid, non-null pointer to an NSView
+        // provided by winit's HasWindowHandle implementation. The pointer
+        // remains valid for the duration of this scope.
+        unsafe {
+            let ns_view: &objc2_app_kit::NSView =
+                &*(h.ns_view.as_ptr() as *const objc2_app_kit::NSView);
+            if let Some(ns_window) = ns_view.window() {
+                ns_window.performClose(None);
             }
         }
     }
