@@ -188,6 +188,7 @@ impl Widget for Breadcrumb {
                     let item_rect = Rect::new(x, rect.y1, x + item_w, rect.y2);
                     if item_rect.contains(pos) && i < last_idx {
                         return EventResponse {
+                            handled: true,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };

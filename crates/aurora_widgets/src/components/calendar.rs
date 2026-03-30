@@ -407,6 +407,7 @@ impl Widget for Calendar {
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) if rect.contains(pos) => {
                 EventResponse {
+                    handled: true,
                     cursor: Some(CursorIcon::Pointer),
                     ..Default::default()
                 }

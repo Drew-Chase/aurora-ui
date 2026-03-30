@@ -317,6 +317,7 @@ impl Widget for Accordion {
                     let header_rect = Rect::new(rect.x1, y, rect.x2, y + self.header_height);
                     if header_rect.contains(pos) {
                         return EventResponse {
+                            handled: true,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };

@@ -249,89 +249,60 @@ impl Widget for Dialog {
 
         let dr = self.dialog_rect(&rect);
 
-        match event {
-            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Pressed =>
-            {
-                // Click outside dialog closes it
-                if !dr.contains(&e.position) {
-                    self.open = false;
-                    if let Some(ref mut cb) = self.on_close {
-                        cb();
-                    }
-                    return EventResponse {
-                        handled: true,
-                        ..Default::default()
-                    };
-                }
-                // Forward to content/footer
-                let mut y = dr.y1 + self.padding.top;
-                let x = dr.x1 + self.padding.left;
-
-                if self.title.is_some() {
-                    y += self.title_height + 16.0;
-                }
-
-                if let Some(ref mut content) = self.content {
-                    let content_rect = Rect::new(
-                        x,
-                        y,
-                        x + self.content_size.width,
-                        y + self.content_size.height,
-                    );
-                    let resp = content.event(event, content_rect);
-                    if resp.handled {
-                        return resp;
-                    }
-                    y += self.content_size.height + 16.0;
-                }
-
-                if let Some(ref mut footer) = self.footer {
-                    let footer_rect = Rect::new(
-                        x,
-                        y,
-                        x + self.footer_size.width,
-                        y + self.footer_size.height,
-                    );
-                    let resp = footer.event(event, footer_rect);
-                    if resp.handled {
-                        return resp;
-                    }
-                }
-
-                EventResponse {
-                    handled: true,
-                    ..Default::default()
-                }
+        // Close on click outside the dialog panel
+        if let WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) = event
+            && e.state == MouseState::Pressed
+            && !dr.contains(&e.position)
+        {
+            self.open = false;
+            if let Some(ref mut cb) = self.on_close {
+                cb();
             }
-            _ => {
-                // Forward keyboard/other events to content
-                if let Some(ref mut content) = self.content {
-                    let y = dr.y1
-                        + self.padding.top
-                        + if self.title.is_some() {
-                            self.title_height + 16.0
-                        } else {
-                            0.0
-                        };
-                    let x = dr.x1 + self.padding.left;
-                    let content_rect = Rect::new(
-                        x,
-                        y,
-                        x + self.content_size.width,
-                        y + self.content_size.height,
-                    );
-                    let resp = content.event(event, content_rect);
-                    if resp.handled {
-                        return resp;
-                    }
-                }
-                // Consume all events when dialog is open
-                EventResponse {
-                    handled: true,
-                    ..Default::default()
-                }
+            return EventResponse {
+                handled: true,
+                ..Default::default()
+            };
+        }
+
+        // Forward all events to content and footer
+        let mut y = dr.y1 + self.padding.top;
+        let x = dr.x1 + self.padding.left;
+
+        if self.title.is_some() {
+            y += self.title_height + 16.0;
+        }
+
+        if let Some(ref mut content) = self.content {
+            let content_rect = Rect::new(
+                x,
+                y,
+                x + self.content_size.width,
+                y + self.content_size.height,
+            );
+            let resp = content.event(event, content_rect);
+            if resp.handled {
+                return resp;
             }
+            y += self.content_size.height + 16.0;
+        }
+
+        if let Some(ref mut footer) = self.footer {
+            let footer_rect = Rect::new(
+                x,
+                y,
+                x + self.footer_size.width,
+                y + self.footer_size.height,
+            );
+            let resp = footer.event(event, footer_rect);
+            if resp.handled {
+                return resp;
+            }
+        }
+
+        // Consume all events when dialog is open to block interaction behind it
+        EventResponse {
+            handled: true,
+            ..Default::default()
         }
     }
 

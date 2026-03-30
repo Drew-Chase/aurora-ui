@@ -237,6 +237,7 @@ impl Widget for Collapsible {
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) if header_rect.contains(pos) => {
                 EventResponse {
+                    handled: true,
                     cursor: Some(CursorIcon::Pointer),
                     ..Default::default()
                 }
