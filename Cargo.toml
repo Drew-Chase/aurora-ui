@@ -30,7 +30,8 @@ members = [
     "examples/iconify_example",
     "examples/fonts_example",
     "examples/animation_example",
-    "examples/widget_gallery"
+    "examples/widget_gallery",
+    "examples/file_dialog_example"
 ]
 default-members = [
     "aurora",

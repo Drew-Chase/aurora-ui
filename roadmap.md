@@ -57,22 +57,17 @@ The `aurora_a11y` crate exists but is empty. Accessibility is a legal requiremen
 
 ---
 
-### 1.3 File Dialogs
+### ~~1.3 File Dialogs~~ (Done)
 
-Essential for any app that reads or writes files.
+Implemented in `aurora_platform::dialogs` behind the `dialogs` feature flag.
 
-**Required work:**
-
-- Integrate [rfd](https://github.com/PolyMeilex/rfd) (Rust File Dialog) or similar
-- Add `FileDialog` API to `aurora_platform`:
-  - `open_file(filters, default_path) -> Option<PathBuf>`
-  - `open_files(filters, default_path) -> Vec<PathBuf>`
-  - `save_file(filters, default_path) -> Option<PathBuf>`
-  - `pick_folder(default_path) -> Option<PathBuf>`
-- Support file type filters (e.g., `("Images", &["png", "jpg"])`)
-- Async variants that don't block the event loop
-
-**New crate or module:** `aurora_platform::dialogs` or feature-gated within `aurora_platform`
+- [x] Integrated [rfd](https://github.com/PolyMeilex/rfd) v0.17
+- [x] `FileDialog` builder API with `open_file`, `open_files`, `save_file`, `pick_folder`
+- [x] `_with(window)` variants for modal parent window support
+- [x] `FileFilter` for file type filtering
+- [x] Feature-gated: `dialogs` feature on `aurora_platform` / `aurora_ui`
+- [x] Example: `examples/file_dialog_example/`
+- [ ] Async variants that don't block the event loop (future enhancement)
 
 ---
 
