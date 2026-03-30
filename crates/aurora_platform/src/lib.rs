@@ -25,6 +25,8 @@ pub(crate) mod a11y;
 /// - [`app`] — Application builder, window handle, and frame info.
 /// - [`errors`] — Error types for window creation and event loop failures.
 pub mod app;
+#[cfg(feature = "dialogs")]
+pub mod dialogs;
 pub mod errors;
 pub mod window_controls;
 #[cfg(target_os = "windows")]

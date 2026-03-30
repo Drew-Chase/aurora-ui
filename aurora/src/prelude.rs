@@ -59,6 +59,10 @@ pub use aurora_render::svg_data::SvgData;
 #[cfg(feature = "svg")]
 pub use aurora_widgets::svg_widget::Svg;
 
+// Dialogs (feature-gated)
+#[cfg(feature = "dialogs")]
+pub use aurora_platform::dialogs::{FileDialog, FileFilter};
+
 // Animation (feature-gated)
 #[cfg(feature = "animate")]
 pub use aurora_animate::{
