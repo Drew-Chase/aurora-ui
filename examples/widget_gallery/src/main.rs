@@ -42,6 +42,7 @@ const SECTIONS: &[Section] = &[
             "Data Table",
             "Date Picker",
             "Dialog",
+            "Drag & Drop",
             "Dropdown Menu",
             "Empty State",
             "Field",
@@ -367,6 +368,7 @@ fn content_area(
                 .item(page_data_table())
                 .item(page_date_picker())
                 .item(page_dialog(setter))
+                .item(page_drag_drop())
                 .item(page_dropdown_menu())
                 .item(page_empty())
                 .item(page_field())

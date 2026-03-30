@@ -914,19 +914,19 @@ where
 
         // Poll cursor position during OS file drag — CursorMoved events
         // do not fire while Windows OLE has the cursor captured.
-        if !self.os_drag_paths.is_empty() {
-            if let Some(pos) = query_cursor_in_window(&window.window_handle) {
-                self.current_cursor_position = Some(pos);
-                for path in self.os_drag_paths.clone() {
-                    window.dispatch_event(&WidgetEvent::FileDrop(
-                        FileDropEvent::FileHovered {
-                            path,
-                            position: pos,
-                        },
-                    ));
-                }
-                window.request_next_frame();
+        if !self.os_drag_paths.is_empty()
+            && let Some(pos) = query_cursor_in_window(&window.window_handle)
+        {
+            self.current_cursor_position = Some(pos);
+            for path in self.os_drag_paths.clone() {
+                window.dispatch_event(&WidgetEvent::FileDrop(
+                    FileDropEvent::FileHovered {
+                        path,
+                        position: pos,
+                    },
+                ));
             }
+            window.request_next_frame();
         }
 
         if window.next_frame_requested && !resized {
