@@ -8,6 +8,7 @@ pub use aurora_core::geometry::rect::Rect;
 pub use aurora_core::geometry::size::Size;
 pub use aurora_core::kmi::WidgetEvent;
 pub use aurora_core::kmi::cursor_icon::CursorIcon;
+pub use aurora_core::kmi::drag::{DragEvent, FileDropEvent};
 pub use aurora_core::kmi::keyboard::{Key, KeyboardEvent, Modifiers};
 pub use aurora_core::kmi::mouse::{MouseButton, MouseClickEvent, MouseEvent, MouseState};
 
@@ -26,6 +27,8 @@ pub use aurora_macros::{CompositeWidget, composite_widget};
 pub use aurora_widgets::box_widget::BoxWidget;
 pub use aurora_widgets::composite::{Composite, CompositeBuilder, CompositeWrapper, StateSetter};
 pub use aurora_widgets::interactables::button::Button;
+pub use aurora_widgets::interactables::draggable::Draggable;
+pub use aurora_widgets::interactables::drop_zone::DropZone;
 pub use aurora_widgets::interactables::touch_area::TouchArea;
 pub use aurora_widgets::layout::column::Column;
 pub use aurora_widgets::layout::content_switch::ContentSwitch;

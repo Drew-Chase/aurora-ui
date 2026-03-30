@@ -31,7 +31,8 @@ members = [
     "examples/fonts_example",
     "examples/animation_example",
     "examples/widget_gallery",
-    "examples/file_dialog_example"
+    "examples/file_dialog_example",
+    "examples/drag_drop_example"
 ]
 default-members = [
     "aurora",

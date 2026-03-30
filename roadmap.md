@@ -71,23 +71,19 @@ Implemented in `aurora_platform::dialogs` behind the `dialogs` feature flag.
 
 ---
 
-### 1.4 Drag and Drop
+### ~~1.4 Drag and Drop~~ — _Complete_
 
-Required for file managers, kanban boards, list reordering, and desktop integration.
+Implemented in `aurora_core::kmi::drag`, `aurora_platform`, and `aurora_widgets::interactables`.
 
-**Required work:**
-
-- **Internal DnD** (widget-to-widget):
-  - Add `DragEvent` variants to `WidgetEvent` (DragStart, DragMove, DragEnd, DragEnter, DragLeave, Drop)
-  - Add `draggable(bool)` and `on_drop` to Widget trait or as a wrapper widget
-  - Implement hit-testing during drag to find drop targets
-  - Visual feedback: drag ghost/preview, drop zone highlighting
-- **External DnD** (OS file drops):
-  - Handle winit's `WindowEvent::DroppedFile` and `HoveredFile`
-  - Surface file drop events to widgets
-  - Support dragging files out of the app (platform-specific)
-
-**Components affected:** `aurora_core` (new event types), `aurora_platform` (event dispatch), `aurora_widgets` (DnD wrapper)
+- [x] `DragEvent` variants added to `WidgetEvent` (DragStart, DragMove, DragEnd)
+- [x] `Draggable` wrapper widget with ghost preview and callbacks
+- [x] `DropZone` wrapper widget with hover highlighting and drop callbacks
+- [x] Hit-testing during drag via origin/current position in events
+- [x] Visual feedback: ghost rectangle in overlay, drop zone border+fill highlight
+- [x] Handle winit `DroppedFile`, `HoveredFile`, `HoveredFileCancelled`
+- [x] `FileDropEvent` surfaced to widgets via `DropZone.on_file_drop/on_file_hover`
+- [x] 4px drag threshold to distinguish clicks from drags
+- [x] Example: `examples/drag_drop_example/`
 
 ---
 
