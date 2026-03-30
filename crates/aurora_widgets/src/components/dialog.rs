@@ -242,7 +242,20 @@ impl Widget for Dialog {
         &[]
     }
 
-    fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+    fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
+        if self.open {
+            // Block normal event phase when dialog is open — everything
+            // is handled in event_overlay.
+            EventResponse {
+                status: EventStatus::Canceled,
+                ..Default::default()
+            }
+        } else {
+            EventResponse::default()
+        }
+    }
+
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         if !self.open {
             return EventResponse::default();
         }

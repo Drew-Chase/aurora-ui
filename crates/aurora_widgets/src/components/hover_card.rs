@@ -5,7 +5,7 @@ use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::WidgetEvent;
-use aurora_core::kmi::mouse::{MouseEvent, MouseState};
+use aurora_core::kmi::mouse::MouseEvent;
 use aurora_render::canvas::Canvas;
 
 use super::colors;
@@ -201,9 +201,7 @@ impl Widget for HoverCard {
                 }
                 EventResponse::default()
             }
-            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Pressed =>
-            {
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
                 if card_r.contains(&e.position) {
                     if let Some(ref mut content) = self.content {
                         let content_rect = Rect::new(

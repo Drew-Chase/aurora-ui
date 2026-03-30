@@ -247,7 +247,18 @@ impl Widget for Command {
         &[]
     }
 
-    fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+    fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
+        if self.open {
+            EventResponse {
+                status: EventStatus::Canceled,
+                ..Default::default()
+            }
+        } else {
+            EventResponse::default()
+        }
+    }
+
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         if !self.open {
             return EventResponse::default();
         }
@@ -255,33 +266,32 @@ impl Widget for Command {
         let pr = self.palette_rect(&rect);
 
         match event {
-            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Pressed =>
-            {
-                if !pr.contains(&e.position) {
-                    self.open = false;
-                    return EventResponse {
-                        status: EventStatus::Canceled,
-                        ..Default::default()
-                    };
-                }
-                // Check if clicked on an item
-                let items_y = pr.y1 + self.padding.top + 48.0 + 1.0;
-                if e.position.y >= items_y {
-                    let relative_y = e.position.y - items_y;
-                    let idx = (relative_y / self.item_height) as usize;
-                    if idx < self.filtered_indices.len() {
-                        let cmd_idx = self.filtered_indices[idx];
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
+                if e.state == MouseState::Pressed {
+                    if !pr.contains(&e.position) {
                         self.open = false;
-                        self.commands[cmd_idx].callback.as_mut()();
                         return EventResponse {
-                            status: EventStatus::Consumed,
+                            status: EventStatus::Canceled,
                             ..Default::default()
                         };
                     }
+                    let items_y = pr.y1 + self.padding.top + 48.0 + 1.0;
+                    if e.position.y >= items_y {
+                        let relative_y = e.position.y - items_y;
+                        let idx = (relative_y / self.item_height) as usize;
+                        if idx < self.filtered_indices.len() {
+                            let cmd_idx = self.filtered_indices[idx];
+                            self.open = false;
+                            self.commands[cmd_idx].callback.as_mut()();
+                            return EventResponse {
+                                status: EventStatus::Consumed,
+                                ..Default::default()
+                            };
+                        }
+                    }
                 }
                 EventResponse {
-                    status: EventStatus::Consumed,
+                    status: EventStatus::Canceled,
                     ..Default::default()
                 }
             }
@@ -305,7 +315,6 @@ impl Widget for Command {
                         ..Default::default()
                     };
                 }
-                // Block events behind the command palette
                 EventResponse {
                     status: EventStatus::Canceled,
                     ..Default::default()
@@ -359,7 +368,6 @@ impl Widget for Command {
                     ..Default::default()
                 }
             }
-            // Block all events behind the command palette when open
             _ => EventResponse {
                 status: EventStatus::Canceled,
                 ..Default::default()

@@ -280,26 +280,25 @@ impl Widget for Menubar {
         let menu_idx = self.active_menu.unwrap();
 
         match event {
-            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Pressed =>
-            {
-                let dr = self.dropdown_rect(menu_idx, &rect);
-                if dr.contains(&e.position) {
-                    let relative_y = e.position.y - dr.y1 - 4.0;
-                    let idx = (relative_y / self.item_height) as usize;
-                    if idx < self.menus[menu_idx].items.len() {
-                        self.active_menu = None;
-                        if let Some(ref mut cb) = self.on_select {
-                            cb(menu_idx, idx);
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
+                if e.state == MouseState::Pressed {
+                    let dr = self.dropdown_rect(menu_idx, &rect);
+                    if dr.contains(&e.position) {
+                        let relative_y = e.position.y - dr.y1 - 4.0;
+                        let idx = (relative_y / self.item_height) as usize;
+                        if idx < self.menus[menu_idx].items.len() {
+                            self.active_menu = None;
+                            if let Some(ref mut cb) = self.on_select {
+                                cb(menu_idx, idx);
+                            }
+                            return EventResponse {
+                                status: EventStatus::Consumed,
+                                ..Default::default()
+                            };
                         }
-                        return EventResponse {
-                            status: EventStatus::Consumed,
-                            ..Default::default()
-                        };
                     }
+                    self.active_menu = None;
                 }
-                // Click outside closes
-                self.active_menu = None;
                 EventResponse {
                     status: EventStatus::Canceled,
                     ..Default::default()
@@ -322,9 +321,15 @@ impl Widget for Menubar {
                     };
                 }
                 self.hover_item = None;
-                EventResponse::default()
+                EventResponse {
+                    status: EventStatus::Canceled,
+                    ..Default::default()
+                }
             }
-            _ => EventResponse::default(),
+            _ => EventResponse {
+                status: EventStatus::Canceled,
+                ..Default::default()
+            },
         }
     }
     #[cfg(feature = "a11y")]

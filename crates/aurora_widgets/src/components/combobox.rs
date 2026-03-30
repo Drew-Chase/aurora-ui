@@ -351,30 +351,30 @@ impl Widget for Combobox {
         }
 
         match event {
-            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Pressed =>
-            {
-                let dr = self.dropdown_rect(&rect);
-                if dr.contains(&e.position) {
-                    let relative_y = e.position.y - dr.y1 - 4.0;
-                    let idx = (relative_y / self.item_height) as usize;
-                    if idx < self.filtered_indices.len() {
-                        let real_idx = self.filtered_indices[idx];
-                        self.selected = Some(real_idx);
-                        self.open = false;
-                        self.search.clear();
-                        if let Some(ref mut cb) = self.on_select {
-                            cb(real_idx);
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
+                if e.state == MouseState::Pressed {
+                    let dr = self.dropdown_rect(&rect);
+                    if dr.contains(&e.position) {
+                        let relative_y = e.position.y - dr.y1 - 4.0;
+                        let idx = (relative_y / self.item_height) as usize;
+                        if idx < self.filtered_indices.len() {
+                            let real_idx = self.filtered_indices[idx];
+                            self.selected = Some(real_idx);
+                            self.open = false;
+                            self.search.clear();
+                            if let Some(ref mut cb) = self.on_select {
+                                cb(real_idx);
+                            }
+                            return EventResponse {
+                                status: EventStatus::Consumed,
+                                ..Default::default()
+                            };
                         }
-                        return EventResponse {
-                            status: EventStatus::Consumed,
-                            ..Default::default()
-                        };
                     }
+                    // Click outside closes
+                    self.open = false;
+                    self.focused = false;
                 }
-                // Click outside closes
-                self.open = false;
-                self.focused = false;
                 EventResponse {
                     status: EventStatus::Canceled,
                     ..Default::default()
@@ -397,9 +397,15 @@ impl Widget for Combobox {
                     };
                 }
                 self.hover_index = None;
-                EventResponse::default()
+                EventResponse {
+                    status: EventStatus::Canceled,
+                    ..Default::default()
+                }
             }
-            _ => EventResponse::default(),
+            _ => EventResponse {
+                status: EventStatus::Canceled,
+                ..Default::default()
+            },
         }
     }
 

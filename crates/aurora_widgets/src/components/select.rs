@@ -333,29 +333,30 @@ impl Widget for Select {
         }
 
         match event {
-            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Pressed =>
-            {
-                let dr = self.dropdown_rect(&rect);
-                if dr.contains(&e.position) {
-                    let relative_y = e.position.y - dr.y1 - 4.0;
-                    let idx = (relative_y / self.item_height) as usize;
-                    if idx < self.options.len() {
-                        self.selected = Some(idx);
-                        self.open = false;
-                        self.start_anim(false);
-                        if let Some(ref mut cb) = self.on_change {
-                            cb(idx);
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
+                if e.state == MouseState::Pressed {
+                    let dr = self.dropdown_rect(&rect);
+                    if dr.contains(&e.position) {
+                        let relative_y = e.position.y - dr.y1 - 4.0;
+                        let idx = (relative_y / self.item_height) as usize;
+                        if idx < self.options.len() {
+                            self.selected = Some(idx);
+                            self.open = false;
+                            self.start_anim(false);
+                            if let Some(ref mut cb) = self.on_change {
+                                cb(idx);
+                            }
+                            return EventResponse {
+                                status: EventStatus::Consumed,
+                                ..Default::default()
+                            };
                         }
-                        return EventResponse {
-                            status: EventStatus::Consumed,
-                            ..Default::default()
-                        };
                     }
+                    // Click outside dropdown closes it
+                    self.open = false;
+                    self.start_anim(false);
                 }
-                // Click outside dropdown closes it
-                self.open = false;
-                self.start_anim(false);
+                // Block all click events (press and release) while open
                 EventResponse {
                     status: EventStatus::Canceled,
                     ..Default::default()
@@ -378,9 +379,17 @@ impl Widget for Select {
                     };
                 }
                 self.hover_index = None;
-                EventResponse::default()
+                // Block hover events outside dropdown too while open
+                EventResponse {
+                    status: EventStatus::Canceled,
+                    ..Default::default()
+                }
             }
-            _ => EventResponse::default(),
+            // Block all other events while dropdown is open
+            _ => EventResponse {
+                status: EventStatus::Canceled,
+                ..Default::default()
+            },
         }
     }
 

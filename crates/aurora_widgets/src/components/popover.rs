@@ -236,29 +236,27 @@ impl Widget for Popover {
         }
 
         let pr = self.popover_rect(&rect);
+        let content_rect = Rect::new(
+            pr.x1 + self.padding.left,
+            pr.y1 + self.padding.top,
+            pr.x1 + self.padding.left + self.content_size.width,
+            pr.y1 + self.padding.top + self.content_size.height,
+        );
 
         match event {
-            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Pressed =>
-            {
-                if pr.contains(&e.position) {
-                    // Forward to content
-                    if let Some(ref mut content) = self.content {
-                        let content_rect = Rect::new(
-                            pr.x1 + self.padding.left,
-                            pr.y1 + self.padding.top,
-                            pr.x1 + self.padding.left + self.content_size.width,
-                            pr.y1 + self.padding.top + self.content_size.height,
-                        );
-                        return content.event(event, content_rect);
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
+                if e.state == MouseState::Pressed {
+                    if pr.contains(&e.position) {
+                        if let Some(ref mut content) = self.content {
+                            return content.event(event, content_rect);
+                        }
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            ..Default::default()
+                        };
                     }
-                    return EventResponse {
-                        status: EventStatus::Consumed,
-                        ..Default::default()
-                    };
+                    self.open = false;
                 }
-                // Click outside popover closes it
-                self.open = false;
                 EventResponse {
                     status: EventStatus::Canceled,
                     ..Default::default()
@@ -266,27 +264,27 @@ impl Widget for Popover {
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(_pos)) => {
                 if let Some(ref mut content) = self.content {
-                    let content_rect = Rect::new(
-                        pr.x1 + self.padding.left,
-                        pr.y1 + self.padding.top,
-                        pr.x1 + self.padding.left + self.content_size.width,
-                        pr.y1 + self.padding.top + self.content_size.height,
-                    );
-                    return content.event(event, content_rect);
+                    let resp = content.event(event, content_rect);
+                    if resp.status.is_handled() {
+                        return resp;
+                    }
                 }
-                EventResponse::default()
+                EventResponse {
+                    status: EventStatus::Canceled,
+                    ..Default::default()
+                }
             }
             _ => {
                 if let Some(ref mut content) = self.content {
-                    let content_rect = Rect::new(
-                        pr.x1 + self.padding.left,
-                        pr.y1 + self.padding.top,
-                        pr.x1 + self.padding.left + self.content_size.width,
-                        pr.y1 + self.padding.top + self.content_size.height,
-                    );
-                    return content.event(event, content_rect);
+                    let resp = content.event(event, content_rect);
+                    if resp.status.is_handled() {
+                        return resp;
+                    }
                 }
-                EventResponse::default()
+                EventResponse {
+                    status: EventStatus::Canceled,
+                    ..Default::default()
+                }
             }
         }
     }

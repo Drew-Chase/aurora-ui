@@ -325,26 +325,27 @@ impl Widget for DropdownMenu {
         }
 
         match event {
-            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Pressed =>
-            {
-                let mr = self.menu_rect(&rect);
-                if mr.contains(&e.position)
-                    && let Some(idx) = self.item_index_at(e.position.y, &mr)
-                {
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
+                if e.state == MouseState::Pressed {
+                    let mr = self.menu_rect(&rect);
+                    if mr.contains(&e.position)
+                        && let Some(idx) = self.item_index_at(e.position.y, &mr)
+                    {
+                        self.open = false;
+                        self.start_anim(false);
+                        if let Some(ref mut cb) = self.on_select {
+                            cb(idx);
+                        }
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            ..Default::default()
+                        };
+                    }
+                    // Click outside closes
                     self.open = false;
                     self.start_anim(false);
-                    if let Some(ref mut cb) = self.on_select {
-                        cb(idx);
-                    }
-                    return EventResponse {
-                        status: EventStatus::Consumed,
-                        ..Default::default()
-                    };
                 }
-                // Click outside closes
-                self.open = false;
-                self.start_anim(false);
+                // Block all click events while open
                 EventResponse {
                     status: EventStatus::Canceled,
                     ..Default::default()
@@ -361,9 +362,15 @@ impl Widget for DropdownMenu {
                     };
                 }
                 self.hover_index = None;
-                EventResponse::default()
+                EventResponse {
+                    status: EventStatus::Canceled,
+                    ..Default::default()
+                }
             }
-            _ => EventResponse::default(),
+            _ => EventResponse {
+                status: EventStatus::Canceled,
+                ..Default::default()
+            },
         }
     }
 
