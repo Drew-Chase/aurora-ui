@@ -104,6 +104,13 @@ impl<S: 'static> Widget for Composite<S> {
         }
     }
 
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        match &mut self.inner {
+            Some(inner) => inner.event_overlay(event, rect),
+            None => EventResponse::default(),
+        }
+    }
+
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         match &mut self.inner {
             Some(inner) => inner.event(event, rect),
@@ -214,6 +221,13 @@ impl<T: CompositeBuilder> Widget for CompositeWrapper<T> {
         match &self.inner {
             Some(inner) => inner.children(),
             None => &[],
+        }
+    }
+
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        match &mut self.inner {
+            Some(inner) => inner.event_overlay(event, rect),
+            None => EventResponse::default(),
         }
     }
 

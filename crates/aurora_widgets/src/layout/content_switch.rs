@@ -77,6 +77,14 @@ impl Widget for ContentSwitch {
         }
     }
 
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        if let Some(child) = self.items.get_mut(self.selected) {
+            child.event_overlay(event, rect)
+        } else {
+            EventResponse::default()
+        }
+    }
+
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         if let Some(child) = self.items.get_mut(self.selected) {
             child.event(event, rect)

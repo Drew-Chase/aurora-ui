@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
@@ -131,6 +131,14 @@ impl Widget for TouchArea {
         }
     }
 
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        if let Some(child) = &mut self.child {
+            let translated = self.child_rect.translate(&rect.origin());
+            return child.event_overlay(event, translated);
+        }
+        EventResponse::default()
+    }
+
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         let event = match event {
             WidgetEvent::Mouse(e) => e,
@@ -151,7 +159,7 @@ impl Widget for TouchArea {
                 }
                 if self.hovered {
                     EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         cursor: self.hover_cursor,
                         ..Default::default()
                     }
@@ -172,7 +180,7 @@ impl Widget for TouchArea {
                             on_click(click);
                         }
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             ..EventResponse::default()
                         };
                     }
@@ -182,12 +190,12 @@ impl Widget for TouchArea {
                 }
 
                 EventResponse {
-                    handled: false,
+                    status: EventStatus::Ignored,
                     ..EventResponse::default()
                 }
             }
             _ => EventResponse {
-                handled: false,
+                status: EventStatus::Ignored,
                 ..EventResponse::default()
             },
         }

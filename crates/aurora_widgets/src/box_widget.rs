@@ -136,6 +136,15 @@ impl Widget for BoxWidget {
         }
     }
 
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        if let Some(child) = &mut self.child {
+            let translated = self.child_rect.translate(&rect.origin());
+            child.event_overlay(event, translated)
+        } else {
+            EventResponse::default()
+        }
+    }
+
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         if let Some(child) = &mut self.child {
             let translated = self.child_rect.translate(&rect.origin());

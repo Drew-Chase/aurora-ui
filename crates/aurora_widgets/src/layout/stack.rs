@@ -119,10 +119,22 @@ impl Widget for Stack {
         &self.children
     }
 
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        // Reverse order: last child = highest z-order = first to receive overlay events
+        for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()).rev() {
+            let translated = child_rect.translate(&rect.origin());
+            let response = child.event_overlay(event, translated);
+            if response.status.stops_propagation() {
+                return response;
+            }
+        }
+        EventResponse::default()
+    }
+
     fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
         for child in &mut self.children {
             let response = child.event(_event, _rect);
-            if response.handled {
+            if response.status.stops_propagation() {
                 return response;
             }
         }

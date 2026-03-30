@@ -4,11 +4,37 @@ use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_render::canvas::Canvas;
 
+/// Controls how an event propagates through the widget tree.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum EventStatus {
+    /// Widget handled the event. Stop all propagation.
+    Consumed,
+    /// Widget handled the event but allows continued propagation to lower layers.
+    Passed,
+    /// Widget did not handle the event but blocks further propagation.
+    Canceled,
+    /// Widget did not handle the event. Continue propagation.
+    #[default]
+    Ignored,
+}
+
+impl EventStatus {
+    /// Returns `true` if the widget actually processed the event.
+    pub fn is_handled(self) -> bool {
+        matches!(self, Self::Consumed | Self::Passed)
+    }
+
+    /// Returns `true` if propagation should stop.
+    pub fn stops_propagation(self) -> bool {
+        matches!(self, Self::Consumed | Self::Canceled)
+    }
+}
+
 /// The result of dispatching an event to a widget.
 #[derive(Default)]
 pub struct EventResponse {
-    /// Whether this widget (or a descendant) consumed the event.
-    pub handled: bool,
+    /// How this widget handled the event and whether propagation continues.
+    pub status: EventStatus,
     /// Cursor icon to show while hovering this widget, if any.
     pub cursor: Option<CursorIcon>,
     /// Request focus for the widget with this ID, if any.
@@ -39,6 +65,16 @@ pub trait Widget {
     ///
     /// The default implementation ignores the event.
     fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
+        EventResponse::default()
+    }
+    /// Handles an event in the overlay phase (higher z-order).
+    ///
+    /// Called before the normal [`event`](Widget::event) pass. Only overlay
+    /// widgets (dropdowns, popups, dialogs) should override this. Containers
+    /// must forward to children, mirroring [`paint_overlay`](Widget::paint_overlay).
+    ///
+    /// The default implementation ignores the event.
+    fn event_overlay(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
         EventResponse::default()
     }
     /// Returns this widget's tab index for keyboard navigation, if focusable.

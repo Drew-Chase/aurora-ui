@@ -11,7 +11,7 @@ use aurora_render::canvas::Canvas;
 use std::cell::Cell;
 use std::rc::Rc;
 
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 
 /// Shared scroll offset that persists across widget tree rebuilds.
 ///
@@ -387,6 +387,20 @@ impl Widget for ScrollView {
         }
     }
 
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        let offset = self.clamped_offset();
+        if let Some(child) = &mut self.child {
+            let scrolled_rect = Rect::new(
+                rect.x1 + self.padding.left,
+                rect.y1 + self.padding.top - offset,
+                rect.x1 + self.padding.left + self.child_size.width,
+                rect.y1 + self.padding.top - offset + self.child_size.height,
+            );
+            return child.event_overlay(event, scrolled_rect);
+        }
+        EventResponse::default()
+    }
+
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         let offset = self.clamped_offset();
         let mouse = match event {
@@ -429,7 +443,7 @@ impl Widget for ScrollView {
                         }
                     }
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
@@ -451,7 +465,7 @@ impl Widget for ScrollView {
                 if click.state == MouseState::Released && self.scrollbar_dragging {
                     self.scrollbar_dragging = false;
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
@@ -465,7 +479,7 @@ impl Widget for ScrollView {
                         self.scrollbar_dragging = true;
                         self.scrollbar_drag_anchor = click.position.y - thumb.y1;
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             ..Default::default()
                         };
                     } else if track.contains(&click.position) {
@@ -482,7 +496,7 @@ impl Widget for ScrollView {
                             }
                         }
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             ..Default::default()
                         };
                     }
@@ -513,7 +527,7 @@ impl Widget for ScrollView {
                             rect.y1 + self.padding.top - offset + self.child_size.height,
                         );
                         let resp = child.event(&WidgetEvent::Mouse(*mouse), scrolled_rect);
-                        if resp.handled {
+                        if resp.status.stops_propagation() {
                             return resp;
                         }
                     }
@@ -527,7 +541,7 @@ impl Widget for ScrollView {
                     // Only consume if we actually moved
                     if (self.scroll_offset - old_offset).abs() > 0.001 {
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             ..Default::default()
                         };
                     }

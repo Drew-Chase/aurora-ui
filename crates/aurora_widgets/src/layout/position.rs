@@ -161,6 +161,25 @@ impl Widget for Positioned {
         std::slice::from_ref(&self.child)
     }
 
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        let child_rect = match self.position {
+            Position::Relative => rect,
+            Position::Absolute(point) => Rect::new(
+                rect.x1 + point.x,
+                rect.y1 + point.y,
+                rect.x1 + point.x + self.child_size.width,
+                rect.y1 + point.y + self.child_size.height,
+            ),
+            Position::Fixed(point) => Rect::new(
+                point.x,
+                point.y,
+                point.x + self.child_size.width,
+                point.y + self.child_size.height,
+            ),
+        };
+        self.child.event_overlay(event, child_rect)
+    }
+
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         let child_rect = match self.position {
             Position::Relative => rect,

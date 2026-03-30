@@ -1,5 +1,5 @@
 use crate::layout::{Align, Justify};
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
@@ -237,6 +237,17 @@ impl Widget for Row {
         &self.children
     }
 
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
+            let translated = child_rect.translate(&rect.origin());
+            let response = child.event_overlay(event, translated);
+            if response.status.stops_propagation() {
+                return response;
+            }
+        }
+        EventResponse::default()
+    }
+
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         let mouse = match event {
             WidgetEvent::Mouse(e) => e,
@@ -245,8 +256,8 @@ impl Widget for Row {
                 for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
                     let translated = child_rect.translate(&rect.origin());
                     let response = child.event(event, translated);
-                    if response.handled {
-                        result.handled = true;
+                    if response.status.is_handled() {
+                        result.status = EventStatus::Consumed;
                     }
                     if response.focus_next {
                         result.focus_next = true;
@@ -269,7 +280,7 @@ impl Widget for Row {
                 for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
                     let translated = child_rect.translate(&rect.origin());
                     let response = child.event(event, translated);
-                    if response.handled {
+                    if response.status.stops_propagation() {
                         return response;
                     }
                 }
@@ -278,31 +289,31 @@ impl Widget for Row {
         };
 
         let is_move = matches!(mouse, MouseEvent::MouseMoveEvent(_));
-        let mut handled = false;
+        let mut status = EventStatus::Ignored;
         let mut cursor: Option<CursorIcon> = None;
 
         for (child, child_rect) in self.children.iter_mut().zip(self.child_rects.iter()) {
             let translated = child_rect.translate(&rect.origin());
             let response = child.event(event, translated);
             if is_move {
-                if response.handled && !translated.contains(&pos) {
+                if response.status.stops_propagation() && !translated.contains(&pos) {
                     return EventResponse {
-                        handled: true,
+                        status: response.status,
                         cursor: response.cursor,
                         request_focus: response.request_focus,
                         focus_next: response.focus_next,
                         focus_prev: response.focus_prev,
                     };
                 }
-                if response.handled {
-                    handled = true;
+                if response.status.is_handled() {
+                    status = EventStatus::Consumed;
                 }
                 if translated.contains(&pos) {
                     cursor = response.cursor;
                 }
-            } else if response.handled {
+            } else if response.status.stops_propagation() {
                 return EventResponse {
-                    handled: true,
+                    status: response.status,
                     cursor: response.cursor,
                     request_focus: response.request_focus,
                     focus_next: response.focus_next,
@@ -311,7 +322,7 @@ impl Widget for Row {
             }
         }
         EventResponse {
-            handled,
+            status,
             cursor,
             ..Default::default()
         }

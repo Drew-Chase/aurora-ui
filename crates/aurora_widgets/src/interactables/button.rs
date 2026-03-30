@@ -319,6 +319,10 @@ impl Widget for AnimatedBg {
         self.inner.children()
     }
 
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        self.inner.event_overlay(event, rect)
+    }
+
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         self.inner.event(event, rect)
     }
@@ -355,6 +359,10 @@ impl Widget for ChildProxy {
         &[]
     }
 
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        self.inner.borrow_mut().event_overlay(event, rect)
+    }
+
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         self.inner.borrow_mut().event(event, rect)
     }
@@ -380,6 +388,10 @@ impl Widget for FlexProxy {
 
     fn children(&self) -> &[Box<dyn Widget>] {
         &[]
+    }
+
+    fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        self.inner.borrow_mut().event_overlay(event, rect)
     }
 
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {

@@ -34,7 +34,7 @@ pub use aurora_widgets::layout::row::Row;
 pub use aurora_widgets::layout::scrollview::{ScrollState, ScrollView};
 pub use aurora_widgets::layout::stack::Stack;
 pub use aurora_widgets::layout::{Align, Justify};
-pub use aurora_widgets::widgets::{EventResponse, LayoutCtx, Widget};
+pub use aurora_widgets::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 pub use aurora_widgets::{button, col, row};
 
 // Text (feature-gated)
