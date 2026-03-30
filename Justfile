@@ -35,5 +35,10 @@ benchmark:
     done
 
 
+act_image := "ghcr.io/catthehacker/ubuntu:act-latest"
+act_env := "--env CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=gcc --env CC=gcc --env CARGO_TARGET_DIR=/tmp/cargo-target"
+act_volumes := "--container-options \"-v aurora-cargo-registry:/root/.cargo/registry -v aurora-cargo-git:/root/.cargo/git -v aurora-cargo-target:/tmp/cargo-target\""
+
 cicd:
-    gh act -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-latest --env CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=gcc --env CC=gcc
+    gh act -P ubuntu-latest={{act_image}} -j check --matrix os:ubuntu-latest {{act_env}} {{act_volumes}}
+    gh act -P ubuntu-latest={{act_image}} -j bench {{act_env}} --bind {{act_volumes}}
