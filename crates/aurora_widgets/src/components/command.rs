@@ -267,7 +267,7 @@ impl Widget for Command {
 
         match event {
             WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
-                if e.state == MouseState::Pressed {
+                if e.state == MouseState::Released {
                     if !pr.contains(&e.position) {
                         self.open = false;
                         return EventResponse {

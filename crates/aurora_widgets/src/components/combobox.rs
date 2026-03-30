@@ -46,8 +46,6 @@ pub struct Combobox {
     option_layouts: Vec<Option<aurora_text::text_layout::TextLayout>>,
     filtered_indices: Vec<usize>,
     hover_index: Option<usize>,
-    /// Block the Release event after the overlay closes on Press
-    block_next_release: bool,
 }
 
 impl Combobox {
@@ -73,7 +71,6 @@ impl Combobox {
             option_layouts: Vec::new(),
             filtered_indices: Vec::new(),
             hover_index: None,
-            block_next_release: false,
         }
     }
 
@@ -349,26 +346,13 @@ impl Widget for Combobox {
     }
 
     fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
-        // Block the Release event that follows a close-on-Press
-        if self.block_next_release
-            && let WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) = event
-            && e.state == MouseState::Released
-        {
-            self.block_next_release = false;
-            return EventResponse {
-                status: EventStatus::Canceled,
-                ..Default::default()
-            };
-        }
-        self.block_next_release = false;
-
         if !self.open {
             return EventResponse::default();
         }
 
         match event {
             WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
-                if e.state == MouseState::Pressed {
+                if e.state == MouseState::Released {
                     let dr = self.dropdown_rect(&rect);
                     if dr.contains(&e.position) {
                         let relative_y = e.position.y - dr.y1 - 4.0;
@@ -377,7 +361,6 @@ impl Widget for Combobox {
                             let real_idx = self.filtered_indices[idx];
                             self.selected = Some(real_idx);
                             self.open = false;
-                            self.block_next_release = true;
                             self.search.clear();
                             if let Some(ref mut cb) = self.on_select {
                                 cb(real_idx);
@@ -390,7 +373,6 @@ impl Widget for Combobox {
                     }
                     // Click outside closes
                     self.open = false;
-                    self.block_next_release = true;
                     self.focused = false;
                 }
                 EventResponse {

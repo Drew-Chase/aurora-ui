@@ -264,7 +264,7 @@ impl Widget for Dialog {
 
         // Close on click outside the dialog panel
         if let WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) = event
-            && e.state == MouseState::Pressed
+            && e.state == MouseState::Released
             && !dr.contains(&e.position)
         {
             self.open = false;

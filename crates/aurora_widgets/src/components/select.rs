@@ -49,8 +49,6 @@ pub struct Select {
     anim_from: f32,
     anim_to: f32,
     anim_start: Instant,
-    /// Block the Release event after the overlay closes on Press
-    block_next_release: bool,
 }
 
 impl Select {
@@ -77,7 +75,6 @@ impl Select {
             anim_from: 0.0,
             anim_to: 0.0,
             anim_start: Instant::now(),
-            block_next_release: false,
         }
     }
 
@@ -331,26 +328,13 @@ impl Widget for Select {
     }
 
     fn event_overlay(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
-        // Block the Release event that follows a close-on-Press
-        if self.block_next_release
-            && let WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) = event
-            && e.state == MouseState::Released
-        {
-            self.block_next_release = false;
-            return EventResponse {
-                status: EventStatus::Canceled,
-                ..Default::default()
-            };
-        }
-        self.block_next_release = false;
-
         if !self.open {
             return EventResponse::default();
         }
 
         match event {
             WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
-                if e.state == MouseState::Pressed {
+                if e.state == MouseState::Released {
                     let dr = self.dropdown_rect(&rect);
                     if dr.contains(&e.position) {
                         let relative_y = e.position.y - dr.y1 - 4.0;
@@ -358,7 +342,6 @@ impl Widget for Select {
                         if idx < self.options.len() {
                             self.selected = Some(idx);
                             self.open = false;
-                            self.block_next_release = true;
                             self.start_anim(false);
                             if let Some(ref mut cb) = self.on_change {
                                 cb(idx);
@@ -371,7 +354,6 @@ impl Widget for Select {
                     }
                     // Click outside dropdown closes it
                     self.open = false;
-                    self.block_next_release = true;
                     self.start_anim(false);
                 }
                 EventResponse {
