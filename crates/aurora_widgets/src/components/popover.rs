@@ -205,7 +205,7 @@ impl Widget for Popover {
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         match event {
             WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Pressed =>
+                if e.state == MouseState::Released =>
             {
                 if rect.contains(&e.position) {
                     self.open = !self.open;

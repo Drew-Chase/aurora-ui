@@ -218,7 +218,7 @@ impl Widget for Menubar {
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
         match event {
             WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Pressed =>
+                if e.state == MouseState::Released =>
             {
                 // Check bar items
                 let mut x = rect.x1;
