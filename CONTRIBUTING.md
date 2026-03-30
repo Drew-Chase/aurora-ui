@@ -10,15 +10,15 @@ All changes must be submitted via pull request from a named branch. Use the foll
 
 **Types:**
 
-| Prefix | Use when |
-|--------|----------|
-| `feat` | Adding new functionality |
-| `fix` | Fixing a bug |
-| `bug` | Investigating or fixing a reported bug |
-| `issue` | Addressing a specific GitHub issue (use the issue ID) |
-| `refactor` | Restructuring code without changing behavior |
-| `docs` | Documentation-only changes |
-| `chore` | Build, CI, or tooling changes |
+| Prefix     | Use when                                              |
+|------------|-------------------------------------------------------|
+| `feat`     | Adding new functionality                              |
+| `fix`      | Fixing a bug                                          |
+| `bug`      | Investigating or fixing a reported bug                |
+| `issue`    | Addressing a specific GitHub issue (use the issue ID) |
+| `refactor` | Restructuring code without changing behavior          |
+| `docs`     | Documentation-only changes                            |
+| `chore`    | Build, CI, or tooling changes                         |
 
 **Examples:**
 
