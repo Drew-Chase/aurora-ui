@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::point::Point;
@@ -230,14 +230,14 @@ impl Widget for Collapsible {
                     cb(self.expanded);
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     cursor: Some(CursorIcon::Pointer),
                     ..Default::default()
                 }
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) if header_rect.contains(pos) => {
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     cursor: Some(CursorIcon::Pointer),
                     ..Default::default()
                 }

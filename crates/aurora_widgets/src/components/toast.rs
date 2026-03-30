@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
@@ -239,12 +239,12 @@ impl Widget for Toast {
                         cb();
                     }
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     ..Default::default()
                 }
             }

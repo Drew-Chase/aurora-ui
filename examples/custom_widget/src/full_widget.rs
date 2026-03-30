@@ -64,7 +64,7 @@ impl Widget for ToggleSwitch {
                 if click.state == MouseState::Released && rect.contains(&click.position) {
                     self.is_on = !self.is_on;
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Pointer),
                         ..Default::default()
                     };
@@ -74,7 +74,7 @@ impl Widget for ToggleSwitch {
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
                 if rect.contains(pos) {
                     EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Pointer),
                         ..Default::default()
                     }

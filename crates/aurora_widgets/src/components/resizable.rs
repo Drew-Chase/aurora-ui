@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
@@ -226,7 +226,7 @@ impl Widget for Resizable {
                     };
                     self.drag_start_size = self.current_size;
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         cursor: Some(resize_cursor),
                         ..Default::default()
                     };
@@ -234,7 +234,7 @@ impl Widget for Resizable {
                 if e.state == MouseState::Released && self.dragging {
                     self.dragging = false;
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
@@ -255,7 +255,7 @@ impl Widget for Resizable {
                     self.current_size =
                         (self.drag_start_size + delta).clamp(self.min_size, self.max_size);
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         cursor: Some(resize_cursor),
                         ..Default::default()
                     };

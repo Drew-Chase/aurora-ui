@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
@@ -177,7 +177,7 @@ impl Widget for NavigationMenu {
                             cb(i);
                         }
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };

@@ -175,7 +175,7 @@ impl Widget for Sidebar {
         // Try sidebar first
         if let Some(ref mut sidebar) = self.sidebar {
             let resp = sidebar.event(event, sr);
-            if resp.handled {
+            if resp.status.stops_propagation() {
                 return resp;
             }
         }
@@ -183,7 +183,7 @@ impl Widget for Sidebar {
         // Then main
         if let Some(ref mut main) = self.main {
             let resp = main.event(event, mr);
-            if resp.handled {
+            if resp.status.stops_propagation() {
                 return resp;
             }
         }

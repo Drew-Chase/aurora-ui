@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
@@ -257,7 +257,7 @@ impl Widget for Carousel {
                     if self.prev_rect(&rect).contains(&e.position) {
                         self.prev();
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };
@@ -265,7 +265,7 @@ impl Widget for Carousel {
                     if self.next_rect(&rect).contains(&e.position) {
                         self.next();
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };

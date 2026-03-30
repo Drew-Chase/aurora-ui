@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::edges::Edges;
 use aurora_core::geometry::point::Point;
@@ -299,7 +299,7 @@ impl Widget for Accordion {
                             cb(i, self.sections[i].expanded);
                         }
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };
@@ -317,7 +317,7 @@ impl Widget for Accordion {
                     let header_rect = Rect::new(rect.x1, y, rect.x2, y + self.header_height);
                     if header_rect.contains(pos) {
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };
@@ -339,7 +339,7 @@ impl Widget for Accordion {
                             content_y + section.content_size.height,
                         );
                         let resp = section.content.event(event, content_rect);
-                        if resp.handled {
+                        if resp.status.stops_propagation() {
                             return resp;
                         }
                     }
@@ -370,7 +370,7 @@ impl Widget for Accordion {
                             content_y + section.content_size.height,
                         );
                         let resp = section.content.event(event, content_rect);
-                        if resp.handled {
+                        if resp.status.stops_propagation() {
                             return resp;
                         }
                     }

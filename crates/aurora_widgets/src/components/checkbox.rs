@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
@@ -201,7 +201,7 @@ impl Widget for Checkbox {
                     cb(self.checked);
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     cursor: Some(CursorIcon::Pointer),
                     ..Default::default()
                 }

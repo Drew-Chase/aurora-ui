@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
@@ -365,14 +365,14 @@ impl Widget for Calendar {
                     if e.position.x < header_rect.x1 + third {
                         self.prev_month();
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };
                     } else if e.position.x > header_rect.x2 - third {
                         self.next_month();
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };
@@ -395,7 +395,7 @@ impl Widget for Calendar {
                                     cb(day);
                                 }
                                 return EventResponse {
-                                    handled: true,
+                                    status: EventStatus::Consumed,
                                     cursor: Some(CursorIcon::Pointer),
                                     ..Default::default()
                                 };
@@ -407,7 +407,7 @@ impl Widget for Calendar {
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) if rect.contains(pos) => {
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     cursor: Some(CursorIcon::Pointer),
                     ..Default::default()
                 }

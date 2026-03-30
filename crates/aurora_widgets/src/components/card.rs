@@ -164,7 +164,7 @@ impl Widget for Card {
                 y + cs.height,
             );
             let resp = child.event(event, child_rect);
-            if resp.handled {
+            if resp.status.stops_propagation() {
                 return resp;
             }
             y += cs.height + self.spacing;

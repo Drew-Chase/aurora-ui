@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
@@ -193,7 +193,7 @@ impl Widget for Slider {
                     self.dragging = false;
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     cursor: Some(CursorIcon::Pointer),
                     ..Default::default()
                 }
@@ -205,7 +205,7 @@ impl Widget for Slider {
                         cb(self.value);
                     }
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Pointer),
                         ..Default::default()
                     };

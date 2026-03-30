@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
@@ -219,7 +219,7 @@ impl Widget for Item {
                     cb();
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     cursor: Some(CursorIcon::Pointer),
                     ..Default::default()
                 }
@@ -227,15 +227,20 @@ impl Widget for Item {
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
                 let was_hovered = self.hovered;
                 self.hovered = rect.contains(pos);
+                let status = if was_hovered != self.hovered {
+                    EventStatus::Consumed
+                } else {
+                    EventStatus::Ignored
+                };
                 if self.hovered {
                     EventResponse {
-                        handled: was_hovered != self.hovered,
+                        status,
                         cursor: Some(CursorIcon::Pointer),
                         ..Default::default()
                     }
                 } else {
                     EventResponse {
-                        handled: was_hovered != self.hovered,
+                        status,
                         ..Default::default()
                     }
                 }

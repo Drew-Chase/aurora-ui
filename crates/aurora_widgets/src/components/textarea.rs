@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
@@ -255,7 +255,7 @@ impl Widget for TextArea {
                 if *target_id == self.id {
                     self.focused = true;
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
@@ -265,7 +265,7 @@ impl Widget for TextArea {
                 if e.state == MouseState::Pressed && rect.contains(&e.position) {
                     self.focused = true;
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         request_focus: Some(self.id),
                         cursor: Some(CursorIcon::Text),
                         ..Default::default()
@@ -293,7 +293,7 @@ impl Widget for TextArea {
                 self.cursor_pos += ch.len_utf8();
                 self.notify_change();
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     ..Default::default()
                 }
             }
@@ -351,7 +351,7 @@ impl Widget for TextArea {
                     Key::Tab => {
                         self.focused = false;
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             request_focus: Some(self.id),
                             focus_next: !modifiers.shift,
                             focus_prev: modifiers.shift,
@@ -361,7 +361,7 @@ impl Widget for TextArea {
                     _ => return EventResponse::default(),
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     ..Default::default()
                 }
             }

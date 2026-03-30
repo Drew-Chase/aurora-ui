@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::rect::Rect;
@@ -194,7 +194,7 @@ impl Widget for InputOtp {
                     self.focused = true;
                     self.cursor = self.value.len().min(self.length - 1);
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
@@ -209,7 +209,7 @@ impl Widget for InputOtp {
                     let idx = (relative_x / cell_with_spacing) as usize;
                     self.cursor = idx.min(self.value.len()).min(self.length - 1);
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         request_focus: Some(self.id),
                         cursor: Some(CursorIcon::Text),
                         ..Default::default()
@@ -240,7 +240,7 @@ impl Widget for InputOtp {
                     self.notify_change();
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     ..Default::default()
                 }
             }
@@ -275,7 +275,7 @@ impl Widget for InputOtp {
                     Key::Tab => {
                         self.focused = false;
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             request_focus: Some(self.id),
                             focus_next: !modifiers.shift,
                             focus_prev: modifiers.shift,
@@ -285,7 +285,7 @@ impl Widget for InputOtp {
                     _ => return EventResponse::default(),
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     ..Default::default()
                 }
             }

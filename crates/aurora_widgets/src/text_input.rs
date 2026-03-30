@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::color::Color;
 use aurora_core::geometry::corners::Corners;
 use aurora_core::geometry::edges::Edges;
@@ -522,7 +522,7 @@ impl Widget for TextInput {
                         self.selection_anchor = Some(0);
                     }
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 } else if self.focused {
@@ -554,7 +554,7 @@ impl Widget for TextInput {
                     self.cursor_pixel_x = self.pixel_x_for(new_pos);
 
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         request_focus: Some(self.id),
                         cursor: Some(CursorIcon::Text),
                         ..Default::default()
@@ -580,7 +580,7 @@ impl Widget for TextInput {
                     self.cursor_pos = new_pos;
                     self.cursor_pixel_x = self.pixel_x_for(new_pos);
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Text),
                         ..Default::default()
                     };
@@ -606,7 +606,7 @@ impl Widget for TextInput {
                 self.clear_selection();
                 self.notify_change();
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     ..Default::default()
                 }
             }
@@ -625,7 +625,7 @@ impl Widget for TextInput {
                     self.focused = false;
                     self.clear_selection();
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         request_focus: Some(self.id),
                         focus_next: !modifiers.shift,
                         focus_prev: modifiers.shift,
@@ -639,7 +639,7 @@ impl Widget for TextInput {
                         on_submit();
                     }
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
@@ -649,7 +649,7 @@ impl Widget for TextInput {
                     self.selection_anchor = Some(0);
                     self.cursor_pos = self.text.len();
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
@@ -663,7 +663,7 @@ impl Widget for TextInput {
                         let _ = cb.set_text(&self.text[lo..hi]);
                     }
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
@@ -682,7 +682,7 @@ impl Widget for TextInput {
                         self.notify_change();
                     }
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
@@ -702,7 +702,7 @@ impl Widget for TextInput {
                         self.notify_change();
                     }
                     return EventResponse {
-                        handled: true,
+                        status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
@@ -752,7 +752,7 @@ impl Widget for TextInput {
                             self.cursor_pos = lo;
                             self.clear_selection();
                             return EventResponse {
-                                handled: true,
+                                status: EventStatus::Consumed,
                                 ..Default::default()
                             };
                         } else {
@@ -779,7 +779,7 @@ impl Widget for TextInput {
                             self.cursor_pos = hi;
                             self.clear_selection();
                             return EventResponse {
-                                handled: true,
+                                status: EventStatus::Consumed,
                                 ..Default::default()
                             };
                         } else {
@@ -817,7 +817,7 @@ impl Widget for TextInput {
                     _ => return EventResponse::default(),
                 }
                 EventResponse {
-                    handled: true,
+                    status: EventStatus::Consumed,
                     ..Default::default()
                 }
             }

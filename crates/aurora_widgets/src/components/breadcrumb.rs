@@ -1,4 +1,4 @@
-use crate::widgets::{EventResponse, LayoutCtx, Widget};
+use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
 use aurora_core::kmi::WidgetEvent;
@@ -170,7 +170,7 @@ impl Widget for Breadcrumb {
                             cb(i);
                         }
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };
@@ -188,7 +188,7 @@ impl Widget for Breadcrumb {
                     let item_rect = Rect::new(x, rect.y1, x + item_w, rect.y2);
                     if item_rect.contains(pos) && i < last_idx {
                         return EventResponse {
-                            handled: true,
+                            status: EventStatus::Consumed,
                             cursor: Some(CursorIcon::Pointer),
                             ..Default::default()
                         };

@@ -203,7 +203,7 @@ impl Widget for InputGroup {
                 py + self.prefix_size.height,
             );
             let resp = prefix.event(event, prefix_rect);
-            if resp.handled {
+            if resp.status.stops_propagation() {
                 return resp;
             }
             x += self.prefix_size.width + self.spacing;
@@ -217,7 +217,7 @@ impl Widget for InputGroup {
             iy + self.input_size.height,
         );
         let resp = self.input.event(event, input_rect);
-        if resp.handled {
+        if resp.status.stops_propagation() {
             return resp;
         }
         x += self.input_size.width + self.spacing;
@@ -231,7 +231,7 @@ impl Widget for InputGroup {
                 sy + self.suffix_size.height,
             );
             let resp = suffix.event(event, suffix_rect);
-            if resp.handled {
+            if resp.status.stops_propagation() {
                 return resp;
             }
         }

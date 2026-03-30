@@ -13,7 +13,7 @@ use aurora_gpu::gpu_context::GpuContext;
 use aurora_render::canvas::Canvas;
 #[cfg(feature = "text")]
 use aurora_text::text_layout::TextLayout;
-use aurora_widgets::widgets::{LayoutCtx, Widget};
+use aurora_widgets::widgets::{EventResponse, LayoutCtx, Widget};
 use std::sync::Arc;
 use winit::application::ApplicationHandler;
 use winit::dpi;
@@ -574,7 +574,30 @@ impl AppWindow {
         let (width, height) = self.gpu.size();
         let rect = Rect::from_size((width as f32, height as f32).into());
         if let Some(ref mut widget) = self.root_widget {
-            let response = widget.event(event, rect);
+            // Phase 1: overlay event dispatch (higher z-order)
+            let overlay_response = widget.event_overlay(event, rect);
+
+            // Phase 2: normal event dispatch, only if overlay didn't stop propagation
+            let response = if overlay_response.status.stops_propagation() {
+                overlay_response
+            } else {
+                let normal_response = widget.event(event, rect);
+                // Merge: overlay cursor wins if set, combine focus flags
+                EventResponse {
+                    status: if normal_response.status.stops_propagation() {
+                        normal_response.status
+                    } else {
+                        overlay_response.status
+                    },
+                    cursor: overlay_response.cursor.or(normal_response.cursor),
+                    request_focus: overlay_response
+                        .request_focus
+                        .or(normal_response.request_focus),
+                    focus_next: overlay_response.focus_next || normal_response.focus_next,
+                    focus_prev: overlay_response.focus_prev || normal_response.focus_prev,
+                }
+            };
+
             let is_mouse_move = matches!(event, WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(_)));
             let cursor = response.cursor.or(if is_mouse_move {
                 Some(CursorIcon::Default)
@@ -602,7 +625,7 @@ impl AppWindow {
                 }
                 self.focused_widget_id = Some(new_id);
             } else if matches!(event, WidgetEvent::Mouse(MouseEvent::MouseClickEvent(_)))
-                && response.handled
+                && response.status.is_handled()
             {
                 // A click was handled but didn't request focus — blur old and clear
                 if let Some(old_id) = self.focused_widget_id {
