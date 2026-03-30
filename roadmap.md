@@ -67,7 +67,7 @@ Implemented in `aurora_platform::dialogs` behind the `dialogs` feature flag.
 - [x] `FileFilter` for file type filtering
 - [x] Feature-gated: `dialogs` feature on `aurora_platform` / `aurora_ui`
 - [x] Example: `examples/file_dialog_example/`
-- [ ] Async variants that don't block the event loop (future enhancement)
+- [x] Async variants that don't block the event loop (`*_async` and `*_with_async` methods returning `PendingDialog<T>`)
 
 ---
 

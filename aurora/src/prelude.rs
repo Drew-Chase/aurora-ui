@@ -61,7 +61,7 @@ pub use aurora_widgets::svg_widget::Svg;
 
 // Dialogs (feature-gated)
 #[cfg(feature = "dialogs")]
-pub use aurora_platform::dialogs::{FileDialog, FileFilter};
+pub use aurora_platform::dialogs::{FileDialog, FileFilter, PendingDialog};
 
 // Animation (feature-gated)
 #[cfg(feature = "animate")]
