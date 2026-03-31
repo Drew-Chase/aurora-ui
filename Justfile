@@ -42,3 +42,13 @@ act_volumes := "--container-options \"-v aurora-cargo-registry:/root/.cargo/regi
 cicd:
     gh act -P ubuntu-latest={{act_image}} -j check --matrix os:ubuntu-latest {{act_env}} {{act_volumes}}
     gh act -P ubuntu-latest={{act_image}} -j bench {{act_env}} --bind {{act_volumes}}
+
+[windows]
+upx binary:
+    mkdir -p .\target\release\upx -Force
+    upx --best --ultra-brute --lzma --force-overwrite -o target\release\upx\{{binary}}.exe target\release\{{binary}}.exe
+[linux]
+[macos]
+upx binary:
+    mkdir .\target\release\upx
+    upx --best --ultra-brute --lzma --force-overwrite -o .\target\release\upx\{{binary}} .\target\release\{{binary}}
