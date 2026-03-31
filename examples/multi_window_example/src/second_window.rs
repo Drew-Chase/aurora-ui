@@ -1,6 +1,6 @@
 use aurora_ui::prelude::*;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 /// Opens the second window. Call from a button callback with a cloned `AppContext`.
 ///
