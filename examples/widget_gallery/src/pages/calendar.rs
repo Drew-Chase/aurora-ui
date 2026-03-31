@@ -41,11 +41,22 @@ pub fn page_calendar() -> impl Widget {
             "Click the month name or year to open a picker overlay.",
         ))
         .child(crate::example_card(
-            calendar::Calendar::new()
-                .year(2026)
-                .month(3)
-                .month_year_selector(calendar::MonthYearSelector::Combined)
-                .selector_bg(theme::colors::muted()),
+            row!()
+                .spacing(24.0)
+                .child(
+                    calendar::Calendar::new()
+                        .year(2026)
+                        .month(3)
+                        .month_year_selector(calendar::MonthYearSelector::Combined)
+                        .selector_bg(theme::colors::muted()),
+                )
+                .child(
+                    calendar::Calendar::new()
+                        .year(2026)
+                        .month(3)
+                        .month_year_selector(calendar::MonthYearSelector::Separate)
+                        .selector_bg(theme::colors::muted()),
+                ),
         ))
         .child(
             code_block::CodeBlock::new()
