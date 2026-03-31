@@ -3,8 +3,8 @@
 mod second_window;
 
 use aurora_ui::prelude::*;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 fn main() {
     let second_open = Arc::new(AtomicBool::new(false));
