@@ -16,13 +16,18 @@ use aurora_render::canvas::Canvas;
 #[cfg(feature = "text")]
 use aurora_text::text_layout::TextLayout;
 use aurora_widgets::widgets::{EventResponse, LayoutCtx, Widget};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use winit::application::ApplicationHandler;
 use winit::dpi;
 use winit::event::WindowEvent;
-use winit::event_loop::ActiveEventLoop;
+use winit::event_loop::{ActiveEventLoop, EventLoopProxy};
 use winit::window::{WindowAttributes, WindowButtons, WindowId};
+
+// ---------------------------------------------------------------------------
+// Public enums
+// ---------------------------------------------------------------------------
 
 /// Which monitor to target for window placement.
 ///
@@ -56,6 +61,182 @@ pub enum WindowPosition {
     /// monitor's top-left corner.
     At(Point),
 }
+
+/// Controls when the application exits in multi-window mode.
+#[derive(Debug, Clone, Copy, Default)]
+pub enum ExitBehavior {
+    /// Exit when the last window is closed.
+    #[default]
+    LastWindowClosed,
+    /// Exit when the primary (first) window is closed.
+    PrimaryWindowClosed,
+}
+
+// ---------------------------------------------------------------------------
+// WindowConfig — configuration for a single window
+// ---------------------------------------------------------------------------
+
+/// Configuration for creating a window.
+///
+/// Constructed via builder methods. For the primary window this is built
+/// internally from [`App`]; for secondary windows the user creates one
+/// directly with [`WindowConfig::new()`] and passes it to
+/// [`AppWindow::open_window`].
+#[derive(Clone)]
+pub struct WindowConfig {
+    pub title: String,
+    pub size: Size,
+    pub min_size: Option<Size>,
+    pub resizable: bool,
+    pub decorations: bool,
+    pub custom_titlebar: bool,
+    pub position: Option<WindowPosition>,
+    pub monitor: WindowMonitor,
+    pub background_color: Color,
+    pub use_system_font: bool,
+    pub icon: Option<IconData>,
+    pub locale_tag: String,
+    pub text_direction: TextDirection,
+    #[cfg(feature = "text")]
+    pub font_options: aurora_text::font_options::FontOptions,
+    #[cfg(feature = "text")]
+    pub fonts: Vec<&'static [u8]>,
+    /// If true, closing this window exits the application.
+    pub primary: bool,
+    /// Parent window — closing the parent closes children too.
+    pub parent: Option<WindowId>,
+    /// If true, this is a modal window that blocks input on its parent.
+    pub modal: bool,
+}
+
+impl Default for WindowConfig {
+    fn default() -> Self {
+        Self {
+            title: "Aurora Window".to_string(),
+            size: Size::new(800.0, 600.0),
+            min_size: None,
+            resizable: true,
+            decorations: true,
+            custom_titlebar: false,
+            position: None,
+            monitor: WindowMonitor::Primary,
+            background_color: Color::WHITE,
+            use_system_font: false,
+            icon: None,
+            locale_tag: String::new(),
+            text_direction: TextDirection::Ltr,
+            #[cfg(feature = "text")]
+            font_options: aurora_text::font_options::FontOptions::default(),
+            #[cfg(feature = "text")]
+            fonts: vec![],
+            primary: false,
+            parent: None,
+            modal: false,
+        }
+    }
+}
+
+impl WindowConfig {
+    /// Creates a new window configuration with defaults.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Sets the window title.
+    pub fn title(mut self, title: impl Into<String>) -> Self {
+        self.title = title.into();
+        self
+    }
+
+    /// Sets the initial window size.
+    pub fn size(mut self, size: impl Into<Size>) -> Self {
+        self.size = size.into();
+        self
+    }
+
+    /// Sets the minimum window size.
+    pub fn min_size(mut self, min_size: impl Into<Size>) -> Self {
+        self.min_size = Some(min_size.into());
+        self
+    }
+
+    /// Enables a custom (chromeless) titlebar.
+    pub fn custom_titlebar(mut self, custom_titlebar: bool) -> Self {
+        self.custom_titlebar = custom_titlebar;
+        self.decorations = false;
+        self
+    }
+
+    /// Enables or disables OS window decorations.
+    pub fn decorations(mut self, decorations: bool) -> Self {
+        if self.custom_titlebar {
+            self.decorations = false;
+            return self;
+        }
+        self.decorations = decorations;
+        self
+    }
+
+    /// Enables or disables window resizing.
+    pub fn resizable(mut self, resizable: bool) -> Self {
+        self.resizable = resizable;
+        self
+    }
+
+    /// Sets the initial window position on the target monitor.
+    pub fn position(mut self, position: WindowPosition) -> Self {
+        self.position = Some(position);
+        self
+    }
+
+    /// Selects which monitor the window spawns on.
+    pub fn monitor(mut self, monitor: WindowMonitor) -> Self {
+        self.monitor = monitor;
+        self
+    }
+
+    /// Sets the background color.
+    pub fn background_color(mut self, color: impl Into<Color>) -> Self {
+        self.background_color = color.into();
+        self
+    }
+
+    /// Enables system font discovery.
+    pub fn use_system_fonts(mut self) -> Self {
+        self.use_system_font = true;
+        self
+    }
+
+    /// Sets the BCP 47 locale tag.
+    pub fn locale(mut self, tag: impl Into<String>) -> Self {
+        self.locale_tag = tag.into();
+        self
+    }
+
+    /// Sets the text direction for layout.
+    pub fn text_direction(mut self, direction: TextDirection) -> Self {
+        self.text_direction = direction;
+        self
+    }
+
+    /// Registers a font from a static byte slice.
+    #[cfg(feature = "text")]
+    pub fn font(mut self, bytes: &'static [u8]) -> Self {
+        self.fonts.push(bytes);
+        self
+    }
+
+    /// Sets the global font options.
+    #[cfg(feature = "text")]
+    pub fn font_options(mut self, opts: aurora_text::font_options::FontOptions) -> Self {
+        self.font_options = opts;
+        self
+    }
+}
+
+// ---------------------------------------------------------------------------
+// App — builder for the primary window + application entry point
+// ---------------------------------------------------------------------------
 
 /// Builder for configuring and launching an application window.
 ///
@@ -102,14 +283,13 @@ pub struct App {
     pub background_color: Color,
     pub use_system_font: bool,
     pub icon: Option<IconData>,
-    /// BCP 47 locale tag passed to the font system (e.g. `"en-US"`, `"ar-SA"`).
     pub locale_tag: String,
-    /// Text direction for layout containers and text alignment.
     pub text_direction: TextDirection,
     #[cfg(feature = "text")]
     pub font_options: aurora_text::font_options::FontOptions,
     #[cfg(feature = "text")]
     pub fonts: Vec<&'static [u8]>,
+    exit_on: ExitBehavior,
 }
 
 /// Decoded RGBA icon data for setting the window icon.
@@ -124,65 +304,6 @@ pub struct IconData {
     pub width: u32,
     /// Icon height in pixels.
     pub height: u32,
-}
-
-/// Handle to the underlying OS window.
-///
-/// Provided to the render callback on each frame. Use it to query window
-/// properties or request redraws.
-pub struct AppWindow {
-    window_handle: Arc<winit::window::Window>,
-    gpu: Box<dyn GpuContext>,
-    root_widget: Option<Box<dyn Widget>>,
-    #[cfg(feature = "text")]
-    font_manager: aurora_text::font_manager::FontManager,
-    #[cfg(feature = "text")]
-    font_options: aurora_text::font_options::FontOptions,
-    #[cfg(feature = "text")]
-    pub swash_cache: aurora_text::cosmic_text::SwashCache,
-    text_direction: TextDirection,
-    pub(crate) _cursor: winit::window::CursorIcon,
-    pub(crate) last_mouse_position: Option<Point>,
-    pub(crate) focused_widget_id: Option<u64>,
-    next_frame_requested: bool,
-    pub(crate) background_color: Color,
-    #[cfg(feature = "a11y")]
-    a11y: Option<crate::a11y::A11yState>,
-}
-
-/// Minimum cursor distance in pixels to trigger a drag gesture.
-const DRAG_THRESHOLD: f32 = 4.0;
-
-struct AppHandler<F> {
-    config: App,
-    on_render: F,
-    window: Option<AppWindow>,
-    pub(crate) current_cursor_position: Option<Point>,
-    current_modifiers: winit::keyboard::ModifiersState,
-    benchmark: bool,
-    start_time: std::time::Instant,
-    resized_this_cycle: bool,
-    /// Position where the left mouse button was pressed. Set on press,
-    /// cleared when the drag becomes active or the button is released.
-    drag_press_position: Option<Point>,
-    /// Whether a drag gesture is currently in progress.
-    drag_active: bool,
-    /// File paths currently being dragged over the window from the OS.
-    /// Populated on `HoveredFile`, cleared on `DroppedFile`/`HoveredFileCancelled`.
-    os_drag_paths: Vec<PathBuf>,
-}
-
-/// Per-frame information passed to the render callback.
-///
-/// Contains the current drawable dimensions and the display scale factor.
-#[derive(Debug)]
-pub struct FrameInfo {
-    /// Drawable width in physical pixels.
-    pub width: u32,
-    /// Drawable height in physical pixels.
-    pub height: u32,
-    /// Display scale factor (e.g. `2.0` on Retina/HiDPI displays).
-    pub scale_factor: f64,
 }
 
 impl App {
@@ -389,6 +510,14 @@ impl App {
         self
     }
 
+    /// Sets the exit behavior for multi-window applications.
+    ///
+    /// Defaults to [`ExitBehavior::LastWindowClosed`].
+    pub fn exit_on(mut self, behavior: ExitBehavior) -> Self {
+        self.exit_on = behavior;
+        self
+    }
+
     /// Opens the window and enters the event loop.
     ///
     /// The `on_render` callback is invoked on every [`RedrawRequested`](WindowEvent::RedrawRequested)
@@ -401,20 +530,26 @@ impl App {
     {
         let benchmark = std::env::var("AURORA_BENCHMARK").is_ok();
         let start_time = std::time::Instant::now();
+        let exit_on = self.exit_on;
+
+        let config = WindowConfig::from(self);
+
+        let event_loop = winit::event_loop::EventLoop::<AppEvent>::with_user_event()
+            .build()
+            .map_err(AppError::from)?;
+        let proxy = event_loop.create_proxy();
+
         let mut app_handler = AppHandler {
-            config: self,
-            on_render,
-            window: None,
-            current_cursor_position: None,
+            windows: HashMap::new(),
+            pending_windows: vec![(config, Box::new(on_render))],
             current_modifiers: winit::keyboard::ModifiersState::default(),
+            proxy,
+            primary_window: None,
             benchmark,
             start_time,
-            resized_this_cycle: false,
-            drag_press_position: None,
-            drag_active: false,
-            os_drag_paths: Vec::new(),
+            exit_on,
         };
-        let event_loop = winit::event_loop::EventLoop::new().map_err(AppError::from)?;
+
         event_loop
             .run_app(&mut app_handler)
             .map_err(AppError::from)?;
@@ -442,14 +577,715 @@ impl Default for App {
             font_options: aurora_text::font_options::FontOptions::default(),
             #[cfg(feature = "text")]
             fonts: vec![],
+            exit_on: ExitBehavior::LastWindowClosed,
         }
     }
+}
+
+impl From<App> for WindowConfig {
+    fn from(app: App) -> Self {
+        Self {
+            title: app.title,
+            size: app.size,
+            min_size: app.min_size,
+            resizable: app.resizable,
+            decorations: app.decorations,
+            custom_titlebar: app.custom_titlebar,
+            position: app.position,
+            monitor: app.monitor,
+            background_color: app.background_color,
+            use_system_font: app.use_system_font,
+            icon: app.icon,
+            locale_tag: app.locale_tag,
+            text_direction: app.text_direction,
+            #[cfg(feature = "text")]
+            font_options: app.font_options,
+            #[cfg(feature = "text")]
+            fonts: app.fonts,
+            primary: true,
+            parent: None,
+            modal: false,
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// FrameInfo
+// ---------------------------------------------------------------------------
+
+/// Per-frame information passed to the render callback.
+///
+/// Contains the current drawable dimensions and the display scale factor.
+#[derive(Debug)]
+pub struct FrameInfo {
+    /// Drawable width in physical pixels.
+    pub width: u32,
+    /// Drawable height in physical pixels.
+    pub height: u32,
+    /// Display scale factor (e.g. `2.0` on Retina/HiDPI displays).
+    pub scale_factor: f64,
+}
+
+// ---------------------------------------------------------------------------
+// AppContext — handle for multi-window operations
+// ---------------------------------------------------------------------------
+
+/// Handle for managing the application from within render callbacks.
+///
+/// Cloneable and `Send`, allowing cross-window and cross-thread communication.
+/// Stored on every [`AppWindow`] — access via [`AppWindow::app_context`].
+#[derive(Clone)]
+pub struct AppContext {
+    proxy: EventLoopProxy<AppEvent>,
+}
+
+impl AppContext {
+    /// Opens a new window with the given configuration and render callback.
+    ///
+    /// The window is created asynchronously on the next event loop tick.
+    pub fn open_window<F>(&self, config: WindowConfig, on_render: F)
+    where
+        F: FnMut(&mut AppWindow, FrameInfo) + Send + 'static,
+    {
+        let _ = self.proxy.send_event(AppEvent::OpenWindow {
+            config,
+            on_render: Box::new(on_render),
+        });
+    }
+
+    /// Closes a specific window by ID.
+    pub fn close_window(&self, id: WindowId) {
+        let _ = self.proxy.send_event(AppEvent::CloseWindow(id));
+    }
+
+    /// Sends a typed message to a specific window (or broadcasts to all if `None`).
+    pub fn send_message<T: std::any::Any + Send>(&self, target: Option<WindowId>, message: T) {
+        let _ = self.proxy.send_event(AppEvent::UserMessage {
+            target,
+            payload: Box::new(message),
+        });
+    }
+
+    /// Requests a redraw for a specific window.
+    pub fn request_redraw(&self, id: WindowId) {
+        let _ = self.proxy.send_event(AppEvent::RequestRedraw(id));
+    }
+}
+
+// ---------------------------------------------------------------------------
+// AppEvent — user events for the event loop
+// ---------------------------------------------------------------------------
+
+pub(crate) enum AppEvent {
+    OpenWindow {
+        config: WindowConfig,
+        on_render: Box<dyn FnMut(&mut AppWindow, FrameInfo) + Send>,
+    },
+    CloseWindow(WindowId),
+    UserMessage {
+        target: Option<WindowId>,
+        payload: Box<dyn std::any::Any + Send>,
+    },
+    RequestRedraw(WindowId),
+}
+
+// ---------------------------------------------------------------------------
+// WindowState — per-window event-loop state
+// ---------------------------------------------------------------------------
+
+struct WindowState {
+    app_window: AppWindow,
+    on_render: Box<dyn FnMut(&mut AppWindow, FrameInfo)>,
+    // Per-window event tracking (previously global in AppHandler):
+    current_cursor_position: Option<Point>,
+    resized_this_cycle: bool,
+    drag_press_position: Option<Point>,
+    drag_active: bool,
+    os_drag_paths: Vec<PathBuf>,
+    // Multi-window relationships:
+    parent: Option<WindowId>,
+    modal: bool,
+    modal_child: Option<WindowId>,
+}
+
+// ---------------------------------------------------------------------------
+// AppHandler — the event loop handler
+// ---------------------------------------------------------------------------
+
+struct AppHandler {
+    windows: HashMap<WindowId, WindowState>,
+    pending_windows: Vec<(WindowConfig, Box<dyn FnMut(&mut AppWindow, FrameInfo)>)>,
+    current_modifiers: winit::keyboard::ModifiersState,
+    proxy: EventLoopProxy<AppEvent>,
+    primary_window: Option<WindowId>,
+    benchmark: bool,
+    start_time: std::time::Instant,
+    exit_on: ExitBehavior,
+}
+
+/// Minimum cursor distance in pixels to trigger a drag gesture.
+const DRAG_THRESHOLD: f32 = 4.0;
+
+impl AppHandler {
+    fn create_window(
+        &mut self,
+        event_loop: &ActiveEventLoop,
+        config: WindowConfig,
+        on_render: Box<dyn FnMut(&mut AppWindow, FrameInfo)>,
+    ) {
+        let is_primary = config.primary;
+        let parent = config.parent;
+        let modal = config.modal;
+
+        let attributes = build_window_attributes(&config, event_loop);
+
+        match event_loop.create_window(attributes) {
+            Ok(window) => {
+                let handle = Arc::new(window);
+                #[cfg(target_os = "windows")]
+                if config.custom_titlebar {
+                    crate::windows_titlebar::apply(&handle);
+                }
+
+                match AppWindow::new(handle.clone(), &config, event_loop) {
+                    Ok(mut app_window) => {
+                        let window_id = handle.id();
+
+                        // Set multi-window fields
+                        app_window.window_id = Some(window_id);
+                        app_window.app_context = Some(AppContext {
+                            proxy: self.proxy.clone(),
+                        });
+
+                        // Initialize accessibility adapter
+                        #[cfg(feature = "a11y")]
+                        {
+                            let a11y_state = crate::a11y::A11yState::new(
+                                event_loop,
+                                &app_window.window_handle,
+                                &config.title,
+                            );
+                            app_window.a11y = Some(a11y_state);
+                        }
+
+                        handle.set_visible(true);
+
+                        let state = WindowState {
+                            app_window,
+                            on_render,
+                            current_cursor_position: None,
+                            resized_this_cycle: false,
+                            drag_press_position: None,
+                            drag_active: false,
+                            os_drag_paths: Vec::new(),
+                            parent,
+                            modal,
+                            modal_child: None,
+                        };
+
+                        self.windows.insert(window_id, state);
+
+                        if is_primary || self.primary_window.is_none() {
+                            self.primary_window = Some(window_id);
+                        }
+
+                        // Mark parent as having a modal child
+                        if modal
+                            && let Some(pid) = parent
+                            && let Some(parent_state) = self.windows.get_mut(&pid)
+                        {
+                            parent_state.modal_child = Some(window_id);
+                        }
+                    }
+                    Err(err) => {
+                        log::error!("Failed to create AppWindow: {}", err);
+                    }
+                }
+            }
+            Err(err) => {
+                log::error!("Failed to create OS window: {}", err);
+            }
+        }
+    }
+
+    fn close_window(&mut self, id: WindowId, event_loop: &ActiveEventLoop) {
+        // Collect and close children first
+        let child_ids: Vec<WindowId> = self
+            .windows
+            .iter()
+            .filter(|(_, s)| s.parent == Some(id))
+            .map(|(wid, _)| *wid)
+            .collect();
+        for child_id in child_ids {
+            self.close_window(child_id, event_loop);
+        }
+
+        // Clear parent's modal_child
+        if let Some(state) = self.windows.get(&id)
+            && let Some(pid) = state.parent
+            && let Some(parent_state) = self.windows.get_mut(&pid)
+            && parent_state.modal_child == Some(id)
+        {
+            parent_state.modal_child = None;
+        }
+
+        self.windows.remove(&id);
+
+        let should_exit = match self.exit_on {
+            ExitBehavior::LastWindowClosed => self.windows.is_empty(),
+            ExitBehavior::PrimaryWindowClosed => {
+                self.primary_window == Some(id) || self.windows.is_empty()
+            }
+        };
+
+        if should_exit {
+            event_loop.exit();
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ApplicationHandler impl
+// ---------------------------------------------------------------------------
+
+impl ApplicationHandler<AppEvent> for AppHandler {
+    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+        if self.windows.is_empty() {
+            let pending = std::mem::take(&mut self.pending_windows);
+            for (config, on_render) in pending {
+                self.create_window(event_loop, config, on_render);
+            }
+        } else {
+            for state in self.windows.values() {
+                state.app_window.window_handle.focus_window();
+            }
+        }
+    }
+
+    fn user_event(&mut self, event_loop: &ActiveEventLoop, event: AppEvent) {
+        match event {
+            AppEvent::OpenWindow { config, on_render } => {
+                self.create_window(event_loop, config, on_render);
+            }
+            AppEvent::CloseWindow(id) => {
+                self.close_window(id, event_loop);
+            }
+            AppEvent::UserMessage { target, payload } => {
+                if let Some(id) = target
+                    && let Some(state) = self.windows.get_mut(&id)
+                {
+                    state.app_window.pending_messages.push(payload);
+                    state.app_window.window_handle.request_redraw();
+                }
+            }
+            AppEvent::RequestRedraw(id) => {
+                if let Some(state) = self.windows.get(&id) {
+                    state.app_window.window_handle.request_redraw();
+                }
+            }
+        }
+    }
+
+    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        // Drain pending window creation requests
+        let pending = std::mem::take(&mut self.pending_windows);
+        for (config, on_render) in pending {
+            self.create_window(event_loop, config, on_render);
+        }
+
+        let mut any_animating = false;
+
+        // Collect window IDs to iterate without borrowing self mutably twice
+        let window_ids: Vec<WindowId> = self.windows.keys().copied().collect();
+
+        for wid in window_ids {
+            let Some(state) = self.windows.get_mut(&wid) else {
+                continue;
+            };
+
+            let resized = std::mem::take(&mut state.resized_this_cycle);
+            let window = &mut state.app_window;
+
+            // Poll cursor position during OS file drag
+            if !state.os_drag_paths.is_empty()
+                && let Some(pos) = query_cursor_in_window(&window.window_handle)
+            {
+                state.current_cursor_position = Some(pos);
+                for path in state.os_drag_paths.clone() {
+                    window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileHovered {
+                        path,
+                        position: pos,
+                    }));
+                }
+                window.request_next_frame();
+            }
+
+            if window.next_frame_requested && !resized {
+                window.next_frame_requested = false;
+
+                let physical = window.window_handle.inner_size();
+                let frame_info = FrameInfo {
+                    width: physical.width,
+                    height: physical.height,
+                    scale_factor: window.window_handle.scale_factor(),
+                };
+                window.gpu.resize(frame_info.width, frame_info.height);
+                window.clear(window.background_color);
+                (state.on_render)(window, frame_info);
+                window.layout_and_paint();
+                window.present();
+            }
+
+            if window.next_frame_requested || !state.os_drag_paths.is_empty() {
+                any_animating = true;
+            }
+        }
+
+        if any_animating {
+            event_loop.set_control_flow(winit::event_loop::ControlFlow::WaitUntil(
+                std::time::Instant::now() + std::time::Duration::from_millis(16),
+            ));
+        } else {
+            event_loop.set_control_flow(winit::event_loop::ControlFlow::Wait);
+        }
+    }
+
+    fn window_event(
+        &mut self,
+        event_loop: &ActiveEventLoop,
+        window_id: WindowId,
+        event: WindowEvent,
+    ) {
+        let Some(state) = self.windows.get_mut(&window_id) else {
+            return;
+        };
+
+        // Block input events if this window has a modal child open
+        if state.modal_child.is_some() {
+            match &event {
+                WindowEvent::CloseRequested => {} // allow close
+                WindowEvent::KeyboardInput { .. }
+                | WindowEvent::MouseInput { .. }
+                | WindowEvent::CursorMoved { .. }
+                | WindowEvent::MouseWheel { .. } => return, // block input
+                _ => {}                           // allow resize, scale change, etc.
+            }
+        }
+
+        let _window = &mut state.app_window;
+
+        // Forward event to AccessKit adapter
+        #[cfg(feature = "a11y")]
+        if let Some(ref mut a11y) = window.a11y {
+            a11y.process_event(&window.window_handle, &event);
+        }
+
+        // Process accessibility action requests
+        #[cfg(feature = "a11y")]
+        if let Some(ref a11y) = window.a11y {
+            for request in a11y.drain_actions() {
+                if let Some(widget_event) = crate::a11y::action_to_widget_event(&request) {
+                    window.dispatch_event(&widget_event);
+                }
+            }
+        }
+
+        match event {
+            WindowEvent::CloseRequested => {
+                log::trace!("Window close requested: {:?}", window_id);
+                self.close_window(window_id, event_loop);
+            }
+            WindowEvent::RedrawRequested => {
+                let state = self.windows.get_mut(&window_id);
+                let Some(state) = state else { return };
+                let window = &mut state.app_window;
+
+                if self.benchmark {
+                    let elapsed = self.start_time.elapsed();
+                    println!("STARTUP_MS={:.2}", elapsed.as_secs_f64() * 1000.0);
+                    println!("MEMORY_KB={}", current_memory_kb());
+                    event_loop.exit();
+                    return;
+                }
+                log::trace!("Window redraw requested");
+                window.window_handle.pre_present_notify();
+                let physical = window.window_handle.inner_size();
+                let frame_info = FrameInfo {
+                    width: physical.width,
+                    height: physical.height,
+                    scale_factor: window.window_handle.scale_factor(),
+                };
+                window.gpu.resize(frame_info.width, frame_info.height);
+                window.clear(window.background_color);
+                window.next_frame_requested = false;
+                (state.on_render)(window, frame_info);
+                window.layout_and_paint();
+                window.present();
+            }
+            WindowEvent::Resized(physical_size) => {
+                let state = self.windows.get_mut(&window_id);
+                let Some(state) = state else { return };
+                let window = &mut state.app_window;
+
+                let frame_info = FrameInfo {
+                    width: physical_size.width,
+                    height: physical_size.height,
+                    scale_factor: window.window_handle.scale_factor(),
+                };
+                window.gpu.resize(frame_info.width, frame_info.height);
+                window.clear(window.background_color);
+                (state.on_render)(window, frame_info);
+                window.layout_and_paint();
+                window.present();
+                state.resized_this_cycle = true;
+            }
+            WindowEvent::ScaleFactorChanged { .. } => {
+                let state = self.windows.get_mut(&window_id);
+                let Some(state) = state else { return };
+                state.app_window.request_next_frame();
+            }
+            WindowEvent::CursorMoved { position, .. } => {
+                let state = self.windows.get_mut(&window_id);
+                let Some(state) = state else { return };
+                let window = &mut state.app_window;
+
+                let pos = Point::new(position.x as f32, position.y as f32);
+                state.current_cursor_position = Some(pos);
+
+                if let Some(press_pos) = state.drag_press_position {
+                    if !state.drag_active {
+                        let dx = pos.x - press_pos.x;
+                        let dy = pos.y - press_pos.y;
+                        if (dx * dx + dy * dy).sqrt() >= DRAG_THRESHOLD {
+                            state.drag_active = true;
+                            window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragStart {
+                                origin: press_pos,
+                            }));
+                        }
+                    }
+                    if state.drag_active {
+                        window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragMove {
+                            origin: press_pos,
+                            current: pos,
+                        }));
+                        window.request_next_frame();
+                        return;
+                    }
+                }
+
+                if !state.os_drag_paths.is_empty() {
+                    for path in state.os_drag_paths.clone() {
+                        window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileHovered {
+                            path,
+                            position: pos,
+                        }));
+                    }
+                    window.request_next_frame();
+                    return;
+                }
+
+                window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)));
+                window.request_next_frame();
+            }
+            WindowEvent::MouseInput {
+                state: btn_state,
+                button,
+                ..
+            } => {
+                let state = self.windows.get_mut(&window_id);
+                let Some(state) = state else { return };
+                let window = &mut state.app_window;
+
+                let position = state.current_cursor_position.unwrap_or_default();
+
+                if button == winit::event::MouseButton::Left
+                    && btn_state == winit::event::ElementState::Released
+                    && state.drag_active
+                    && let Some(origin) = state.drag_press_position.take()
+                {
+                    state.drag_active = false;
+                    window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragEnd {
+                        origin,
+                        current: position,
+                    }));
+                    window.request_next_frame();
+                    return;
+                }
+
+                if button == winit::event::MouseButton::Left
+                    && btn_state == winit::event::ElementState::Released
+                {
+                    state.drag_press_position = None;
+                    state.drag_active = false;
+                }
+
+                let response = window.dispatch_event(&WidgetEvent::Mouse(
+                    MouseEvent::MouseClickEvent(MouseClickEvent {
+                        button: translate_mouse_button(button),
+                        state: translate_mouse_state(btn_state),
+                        position,
+                    }),
+                ));
+
+                if button == winit::event::MouseButton::Left
+                    && btn_state == winit::event::ElementState::Pressed
+                    && !response.status.is_handled()
+                {
+                    state.drag_press_position = Some(position);
+                    state.drag_active = false;
+                }
+
+                window.request_next_frame();
+            }
+            WindowEvent::MouseWheel { delta, .. } => {
+                let state = self.windows.get_mut(&window_id);
+                let Some(state) = state else { return };
+                let window = &mut state.app_window;
+
+                let scroll_delta = match delta {
+                    winit::event::MouseScrollDelta::LineDelta(_, y) => y,
+                    winit::event::MouseScrollDelta::PixelDelta(pos) => {
+                        const PIXELS_PER_SCROLL_LINE: f32 = 40.0;
+                        pos.y as f32 / PIXELS_PER_SCROLL_LINE
+                    }
+                };
+                window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseScrollEvent(
+                    scroll_delta,
+                )));
+                window.request_next_frame();
+            }
+            WindowEvent::KeyboardInput { event, .. } => {
+                let state = self.windows.get_mut(&window_id);
+                let Some(state) = state else { return };
+                let window = &mut state.app_window;
+
+                let modifiers = Modifiers {
+                    shift: self.current_modifiers.shift_key(),
+                    ctrl: self.current_modifiers.control_key(),
+                    alt: self.current_modifiers.alt_key(),
+                };
+
+                let key = translate_key(&event.logical_key);
+
+                match event.state {
+                    winit::event::ElementState::Pressed => {
+                        window.dispatch_event(&WidgetEvent::Keyboard(KeyboardEvent::KeyPressed {
+                            key,
+                            modifiers,
+                        }));
+
+                        if !modifiers.ctrl && !modifiers.alt {
+                            match &event.logical_key {
+                                winit::keyboard::Key::Character(c) => {
+                                    for ch in c.chars() {
+                                        window.dispatch_event(&WidgetEvent::Keyboard(
+                                            KeyboardEvent::CharTyped(ch),
+                                        ));
+                                    }
+                                }
+                                winit::keyboard::Key::Named(winit::keyboard::NamedKey::Space) => {
+                                    window.dispatch_event(&WidgetEvent::Keyboard(
+                                        KeyboardEvent::CharTyped(' '),
+                                    ));
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                    winit::event::ElementState::Released => {
+                        window.dispatch_event(&WidgetEvent::Keyboard(KeyboardEvent::KeyReleased {
+                            key,
+                            modifiers,
+                        }));
+                    }
+                }
+                window.request_next_frame();
+            }
+            WindowEvent::ModifiersChanged(mods) => {
+                self.current_modifiers = mods.state();
+            }
+            WindowEvent::HoveredFile(path) => {
+                let state = self.windows.get_mut(&window_id);
+                let Some(state) = state else { return };
+                let window = &mut state.app_window;
+
+                let position = query_cursor_in_window(&window.window_handle)
+                    .or(state.current_cursor_position)
+                    .unwrap_or_default();
+                state.current_cursor_position = Some(position);
+                state.os_drag_paths.push(path.clone());
+                window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileHovered {
+                    path,
+                    position,
+                }));
+                window.request_next_frame();
+            }
+            WindowEvent::DroppedFile(path) => {
+                let state = self.windows.get_mut(&window_id);
+                let Some(state) = state else { return };
+                let window = &mut state.app_window;
+
+                let position = query_cursor_in_window(&window.window_handle)
+                    .or(state.current_cursor_position)
+                    .unwrap_or_default();
+                state.current_cursor_position = Some(position);
+                state.os_drag_paths.retain(|p| p != &path);
+                window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileDropped {
+                    path,
+                    position,
+                }));
+                window.request_next_frame();
+            }
+            WindowEvent::HoveredFileCancelled => {
+                let state = self.windows.get_mut(&window_id);
+                let Some(state) = state else { return };
+                let window = &mut state.app_window;
+
+                state.os_drag_paths.clear();
+                window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileCancelled));
+                window.request_next_frame();
+            }
+            _ => {}
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// AppWindow
+// ---------------------------------------------------------------------------
+
+/// Handle to the underlying OS window.
+///
+/// Provided to the render callback on each frame. Use it to query window
+/// properties, set the root widget, or open additional windows.
+pub struct AppWindow {
+    window_handle: Arc<winit::window::Window>,
+    gpu: Box<dyn GpuContext>,
+    root_widget: Option<Box<dyn Widget>>,
+    #[cfg(feature = "text")]
+    font_manager: aurora_text::font_manager::FontManager,
+    #[cfg(feature = "text")]
+    font_options: aurora_text::font_options::FontOptions,
+    #[cfg(feature = "text")]
+    pub swash_cache: aurora_text::cosmic_text::SwashCache,
+    text_direction: TextDirection,
+    pub(crate) _cursor: winit::window::CursorIcon,
+    pub(crate) last_mouse_position: Option<Point>,
+    pub(crate) focused_widget_id: Option<u64>,
+    next_frame_requested: bool,
+    pub(crate) background_color: Color,
+    #[cfg(feature = "a11y")]
+    a11y: Option<crate::a11y::A11yState>,
+    // Multi-window fields
+    app_context: Option<AppContext>,
+    window_id: Option<WindowId>,
+    pending_messages: Vec<Box<dyn std::any::Any + Send>>,
 }
 
 impl AppWindow {
     pub(crate) fn new(
         window_handle: Arc<winit::window::Window>,
-        config: &App,
+        config: &WindowConfig,
         event_loop: &ActiveEventLoop,
     ) -> Result<Self, AppError> {
         let gpu: Box<dyn GpuContext> = {
@@ -457,7 +1293,7 @@ impl AppWindow {
             {
                 let _ = event_loop;
                 let backend = aurora_gpu::backend::wgpu::WgpuBackend::new(window_handle.clone())
-                    .map_err(|err| AppError::GpuInitializationError(err))?;
+                    .map_err(AppError::GpuInitializationError)?;
                 Box::new(backend)
             }
             #[cfg(all(feature = "opengl", not(feature = "wgpu_backend")))]
@@ -511,6 +1347,9 @@ impl AppWindow {
                 background_color: config.background_color,
                 #[cfg(feature = "a11y")]
                 a11y: None,
+                app_context: None,
+                window_id: None,
+                pending_messages: Vec::new(),
             })
         }
         #[cfg(not(feature = "text"))]
@@ -526,14 +1365,50 @@ impl AppWindow {
             background_color: config.background_color,
             #[cfg(feature = "a11y")]
             a11y: None,
+            app_context: None,
+            window_id: None,
+            pending_messages: Vec::new(),
         })
     }
-    /// Lays out and paints a root widget tree into the window.
-    ///
-    /// Runs the layout phase (computing sizes) then the paint phase (drawing
-    /// into the canvas) for the given widget and all its children.
+
+    /// Sets the root widget tree for this window.
     pub fn root(&mut self, widget: impl Widget + 'static) {
         self.root_widget = Some(Box::new(widget));
+    }
+
+    /// Returns this window's unique identifier.
+    pub fn id(&self) -> WindowId {
+        self.window_id.expect("WindowId not set")
+    }
+
+    /// Returns the multi-window context.
+    pub fn app_context(&self) -> &AppContext {
+        self.app_context
+            .as_ref()
+            .expect("AppContext not initialized")
+    }
+
+    /// Opens a new window with the given configuration and render callback.
+    pub fn open_window<F>(&self, config: WindowConfig, on_render: F)
+    where
+        F: FnMut(&mut AppWindow, FrameInfo) + Send + 'static,
+    {
+        self.app_context().open_window(config, on_render);
+    }
+
+    /// Opens a modal child window that blocks input on this (parent) window.
+    pub fn open_modal<F>(&self, mut config: WindowConfig, on_render: F)
+    where
+        F: FnMut(&mut AppWindow, FrameInfo) + Send + 'static,
+    {
+        config.parent = self.window_id;
+        config.modal = true;
+        self.app_context().open_window(config, on_render);
+    }
+
+    /// Drains all pending messages from other windows.
+    pub fn drain_messages(&mut self) -> Vec<Box<dyn std::any::Any + Send>> {
+        std::mem::take(&mut self.pending_messages)
     }
 
     pub(crate) fn layout_and_paint(&mut self) {
@@ -541,7 +1416,7 @@ impl AppWindow {
         let available = Size::new(width as f32, height as f32);
 
         if let Some(ref mut widget) = self.root_widget {
-            // Layout phase — may rebuild dirty composites
+            // Layout phase
             {
                 #[cfg(feature = "text")]
                 let mut ctx = LayoutCtx {
@@ -557,16 +1432,13 @@ impl AppWindow {
                 widget.layout(available, &mut ctx);
             }
 
-            // Restore focus on rebuilt widgets so TextInput focus survives
-            // Composite rebuilds triggered by on_change state updates.
-            // select_all=false to preserve cursor position and avoid selecting all text.
+            // Restore focus
             if let Some(focus_id) = self.focused_widget_id {
                 let rect = Rect::from_size(available);
                 widget.event(&WidgetEvent::Focus(focus_id, false), rect);
             }
 
-            // Restore hover state on rebuilt widgets so visual hover and cursor
-            // survive composite rebuilds triggered by clicks or state changes.
+            // Restore hover state
             if let Some(pos) = self.last_mouse_position {
                 let rect = Rect::from_size(available);
                 let response =
@@ -583,7 +1455,7 @@ impl AppWindow {
                     self.window_handle.set_cursor(winit_cursor);
                 }
 
-                // Re-layout if hover dirtied any composites
+                // Re-layout if hover dirtied composites
                 {
                     #[cfg(feature = "text")]
                     let mut ctx = LayoutCtx {
@@ -600,7 +1472,7 @@ impl AppWindow {
                 }
             }
 
-            // Paint phase — safe to borrow font_manager again
+            // Paint phase
             let buffer = self.gpu.buffer_mut();
             #[cfg(feature = "text")]
             let mut canvas = Canvas::new(
@@ -615,16 +1487,12 @@ impl AppWindow {
 
             let rect = Rect::from_size(available);
             widget.paint(&mut canvas, rect);
-            // Overlay pass — dropdowns, popups paint above all siblings
             widget.paint_overlay(&mut canvas, rect);
 
-            // Auto-schedule next frame when any widget has active animations
             if widget.needs_animation() {
                 self.next_frame_requested = true;
             }
 
-            // Update accessibility tree after layout so screen readers see
-            // the current widget state, roles, and labels.
             #[cfg(feature = "a11y")]
             if let Some(ref mut a11y) = self.a11y {
                 let rect = Rect::from_size(available);
@@ -642,15 +1510,12 @@ impl AppWindow {
         let Some(ref mut widget) = self.root_widget else {
             return EventResponse::default();
         };
-        // Phase 1: overlay event dispatch (higher z-order)
         let overlay_response = widget.event_overlay(event, rect);
 
-        // Phase 2: normal event dispatch, only if overlay didn't stop propagation
         let response = if overlay_response.status.stops_propagation() {
             overlay_response
         } else {
             let normal_response = widget.event(event, rect);
-            // Merge: overlay cursor wins if set, combine focus flags
             EventResponse {
                 status: if normal_response.status.stops_propagation() {
                     normal_response.status
@@ -683,8 +1548,7 @@ impl AppWindow {
             };
             self.window_handle.set_cursor(winit_cursor);
         }
-        // Track focused widget for restoration after Composite rebuilds.
-        // Dispatch Blur to the old widget before switching focus.
+
         if let Some(new_id) = response.request_focus {
             if let Some(old_id) = self.focused_widget_id
                 && old_id != new_id
@@ -695,21 +1559,18 @@ impl AppWindow {
         } else if matches!(event, WidgetEvent::Mouse(MouseEvent::MouseClickEvent(_)))
             && response.status.is_handled()
         {
-            // A click was handled but didn't request focus — blur old and clear
             if let Some(old_id) = self.focused_widget_id {
                 widget.event(&WidgetEvent::Blur(old_id), rect);
             }
             self.focused_widget_id = None;
         }
 
-        // Handle tab focus cycling
         if response.focus_next || response.focus_prev {
             let mut tab_widgets: Vec<(u32, u64)> = Vec::new();
             collect_tab_widgets(widget.as_ref(), &mut tab_widgets);
             tab_widgets.sort_by_key(|(idx, _)| *idx);
 
             if !tab_widgets.is_empty() {
-                // Find which widget just unfocused (the one that sent focus_next)
                 let current_idx = response
                     .request_focus
                     .and_then(|id| tab_widgets.iter().position(|(_, wid)| *wid == id));
@@ -727,7 +1588,6 @@ impl AppWindow {
                 };
 
                 let (_, target_id) = tab_widgets[next];
-                // Blur old widget, then focus new with select_all=true
                 if let Some(old_id) = self.focused_widget_id {
                     widget.event(&WidgetEvent::Blur(old_id), rect);
                 }
@@ -745,9 +1605,6 @@ impl AppWindow {
     }
 
     /// Renders a [`TextLayout`] directly into the GPU buffer at the given pixel offset.
-    ///
-    /// For most use cases, prefer [`draw`](Self::draw) with [`Canvas::draw_text`](aurora_render::canvas::Canvas)
-    /// or the [`Text`](aurora_widgets::text_widget::Text) widget instead.
     #[cfg(feature = "text")]
     pub fn render_text(&mut self, layout: &TextLayout, x: i32, y: i32) {
         let (width, _) = self.gpu.size();
@@ -786,14 +1643,6 @@ impl AppWindow {
     }
 
     /// Requests that the render callback be invoked again on the next frame.
-    ///
-    /// Call this from your render callback when you have active animations
-    /// or other state that needs continuous updates. The actual redraw is
-    /// scheduled after the current frame finishes presenting, so it does not
-    /// interfere with the current paint cycle.
-    ///
-    /// When no call to `request_next_frame` is made, the window only redraws
-    /// in response to user input or window events.
     pub fn request_next_frame(&mut self) {
         self.next_frame_requested = true;
     }
@@ -802,10 +1651,8 @@ impl AppWindow {
     pub fn window_handle(&self) -> Arc<winit::window::Window> {
         self.window_handle.clone()
     }
+
     /// Sets the background color used to clear the window before each frame.
-    ///
-    /// Call this from the render callback to dynamically change the background,
-    /// for example when switching theme profiles.
     pub fn set_background_color(&mut self, color: Color) {
         self.background_color = color;
     }
@@ -814,18 +1661,18 @@ impl AppWindow {
     pub fn clear(&mut self, color: Color) {
         self.gpu.clear(color);
     }
+
     /// Returns a mutable reference to the raw pixel buffer.
     pub fn buffer_mut(&mut self) -> &mut [u32] {
         self.gpu.buffer_mut()
     }
+
     /// Copies the buffer to the display surface.
     pub fn present(&mut self) {
         self.gpu.present();
     }
 
     /// Creates a [`Canvas`] from the GPU buffer and passes it to the closure.
-    ///
-    /// This is the primary way to draw content onto the window.
     pub fn draw<F>(&mut self, f: F)
     where
         F: FnOnce(&mut Canvas),
@@ -852,418 +1699,76 @@ impl AppWindow {
     }
 }
 
-impl<F> ApplicationHandler for AppHandler<F>
-where
-    F: FnMut(&mut AppWindow, FrameInfo) + 'static,
-{
-    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        if let Some(window) = &self.window {
-            window.window_handle.focus_window();
-            return;
-        }
-        let config = &self.config;
-        let title = config.title.clone();
-        let size = config.size;
-        let min_size = config.min_size;
-        let resizable = config.resizable;
-        let decorations = config.decorations;
+// ---------------------------------------------------------------------------
+// Helper: build WindowAttributes from WindowConfig
+// ---------------------------------------------------------------------------
 
-        let mut attributes = WindowAttributes::default()
-            .with_title(title)
-            .with_decorations(decorations)
-            .with_resizable(resizable)
-            .with_inner_size(dpi::LogicalSize::new(size.width, size.height))
-            .with_visible(false);
-        if !resizable {
-            attributes =
-                attributes.with_enabled_buttons(WindowButtons::CLOSE | WindowButtons::MINIMIZE);
-        }
-        if let Some(position) = config.position
-            && let Some(monitor) = resolve_monitor(event_loop, config.monitor)
-        {
-            let monitor_pos = monitor.position();
-            let monitor_size = monitor.size();
-            let scale = monitor.scale_factor();
+fn build_window_attributes(
+    config: &WindowConfig,
+    event_loop: &ActiveEventLoop,
+) -> WindowAttributes {
+    let mut attributes = WindowAttributes::default()
+        .with_title(config.title.clone())
+        .with_decorations(config.decorations)
+        .with_resizable(config.resizable)
+        .with_inner_size(dpi::LogicalSize::new(config.size.width, config.size.height))
+        .with_visible(false);
 
-            let pos = match position {
-                WindowPosition::Center => {
-                    let win_w = (size.width as f64 * scale) as i32;
-                    let win_h = (size.height as f64 * scale) as i32;
-                    dpi::PhysicalPosition::new(
-                        monitor_pos.x + (monitor_size.width as i32 - win_w) / 2,
-                        monitor_pos.y + (monitor_size.height as i32 - win_h) / 2,
-                    )
-                }
-                WindowPosition::At(point) => dpi::PhysicalPosition::new(
-                    monitor_pos.x + (point.x as f64 * scale) as i32,
-                    monitor_pos.y + (point.y as f64 * scale) as i32,
-                ),
-            };
-            attributes = attributes.with_position(pos);
-        }
-        if let Some(min_size) = min_size {
-            attributes = attributes
-                .with_min_inner_size(dpi::LogicalSize::new(min_size.width, min_size.height));
-        }
-        if let Some(icon_data) = &config.icon {
-            match winit::window::Icon::from_rgba(
-                icon_data.rgba.clone(),
-                icon_data.width,
-                icon_data.height,
-            ) {
-                Ok(icon) => {
-                    attributes = attributes.with_window_icon(Some(icon));
-                }
-                Err(e) => {
-                    log::error!("Failed to create window icon: {}", e);
-                }
+    if !config.resizable {
+        attributes =
+            attributes.with_enabled_buttons(WindowButtons::CLOSE | WindowButtons::MINIMIZE);
+    }
+
+    if let Some(position) = config.position
+        && let Some(monitor) = resolve_monitor(event_loop, config.monitor)
+    {
+        let monitor_pos = monitor.position();
+        let monitor_size = monitor.size();
+        let scale = monitor.scale_factor();
+
+        let pos = match position {
+            WindowPosition::Center => {
+                let win_w = (config.size.width as f64 * scale) as i32;
+                let win_h = (config.size.height as f64 * scale) as i32;
+                dpi::PhysicalPosition::new(
+                    monitor_pos.x + (monitor_size.width as i32 - win_w) / 2,
+                    monitor_pos.y + (monitor_size.height as i32 - win_h) / 2,
+                )
             }
-        }
-        self.window = match event_loop.create_window(attributes) {
-            Ok(window) => {
-                let handle = Arc::new(window);
-                #[cfg(target_os = "windows")]
-                if config.custom_titlebar {
-                    crate::windows_titlebar::apply(&handle);
-                }
-                match AppWindow::new(handle, config, event_loop) {
-                    Ok(app_window) => Some(app_window),
-                    Err(err) => {
-                        log::error!("Failed to create window: {}", err);
-                        event_loop.exit();
-                        return;
-                    }
-                }
-            }
-            Err(err) => {
-                log::error!("Failed to create window: {}", err);
-                event_loop.exit();
-                return;
-            }
+            WindowPosition::At(point) => dpi::PhysicalPosition::new(
+                monitor_pos.x + (point.x as f64 * scale) as i32,
+                monitor_pos.y + (point.y as f64 * scale) as i32,
+            ),
         };
-        // Initialize accessibility adapter after window creation.
-        #[cfg(feature = "a11y")]
-        if let Some(win) = self.window.as_mut() {
-            let a11y_state =
-                crate::a11y::A11yState::new(event_loop, &win.window_handle, &self.config.title);
-            win.a11y = Some(a11y_state);
-        }
+        attributes = attributes.with_position(pos);
+    }
 
-        if let Some(win) = self.window.as_ref() {
-            win.window_handle.set_visible(true);
+    if let Some(min_size) = config.min_size {
+        attributes =
+            attributes.with_min_inner_size(dpi::LogicalSize::new(min_size.width, min_size.height));
+    }
+
+    if let Some(icon_data) = &config.icon {
+        match winit::window::Icon::from_rgba(
+            icon_data.rgba.clone(),
+            icon_data.width,
+            icon_data.height,
+        ) {
+            Ok(icon) => {
+                attributes = attributes.with_window_icon(Some(icon));
+            }
+            Err(e) => {
+                log::error!("Failed to create window icon: {}", e);
+            }
         }
     }
 
-    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
-        // Skip animation render if we already rendered inline during a Resized event
-        // this cycle. Winit dispatches about_to_wait inside the Windows resize modal
-        // loop, and rendering here would block it, causing resize jank.
-        let resized = std::mem::take(&mut self.resized_this_cycle);
-
-        let Some(window) = self.window.as_mut() else {
-            return;
-        };
-
-        // Poll cursor position during OS file drag — CursorMoved events
-        // do not fire while Windows OLE has the cursor captured.
-        if !self.os_drag_paths.is_empty()
-            && let Some(pos) = query_cursor_in_window(&window.window_handle)
-        {
-            self.current_cursor_position = Some(pos);
-            for path in self.os_drag_paths.clone() {
-                window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileHovered {
-                    path,
-                    position: pos,
-                }));
-            }
-            window.request_next_frame();
-        }
-
-        if window.next_frame_requested && !resized {
-            window.next_frame_requested = false;
-
-            // Direct render — paints client area only, no WM_PAINT / window frame redraw
-            let physical = window.window_handle.inner_size();
-            let frame_info = FrameInfo {
-                width: physical.width,
-                height: physical.height,
-                scale_factor: window.window_handle.scale_factor(),
-            };
-            window.gpu.resize(frame_info.width, frame_info.height);
-            window.clear(window.background_color);
-            (self.on_render)(window, frame_info);
-            window.layout_and_paint();
-            window.present();
-        }
-
-        if window.next_frame_requested || !self.os_drag_paths.is_empty() {
-            // Animation or OS file drag active — poll at ~60fps
-            event_loop.set_control_flow(winit::event_loop::ControlFlow::WaitUntil(
-                std::time::Instant::now() + std::time::Duration::from_millis(16),
-            ));
-        } else {
-            // No animation — sleep until next event
-            event_loop.set_control_flow(winit::event_loop::ControlFlow::Wait);
-        }
-    }
-
-    fn window_event(
-        &mut self,
-        event_loop: &ActiveEventLoop,
-        _window_id: WindowId,
-        event: WindowEvent,
-    ) {
-        let Some(window) = self.window.as_mut() else {
-            return;
-        };
-
-        // Forward event to AccessKit adapter.
-        #[cfg(feature = "a11y")]
-        if let Some(ref mut a11y) = window.a11y {
-            a11y.process_event(&window.window_handle, &event);
-        }
-
-        // Process any accessibility action requests (focus, click from AT).
-        #[cfg(feature = "a11y")]
-        if let Some(ref a11y) = window.a11y {
-            for request in a11y.drain_actions() {
-                if let Some(widget_event) = crate::a11y::action_to_widget_event(&request) {
-                    window.dispatch_event(&widget_event);
-                }
-            }
-        }
-
-        match event {
-            WindowEvent::CloseRequested => {
-                log::trace!("Window close requested");
-                event_loop.exit();
-            }
-            WindowEvent::RedrawRequested => {
-                if self.benchmark {
-                    let elapsed = self.start_time.elapsed();
-                    println!("STARTUP_MS={:.2}", elapsed.as_secs_f64() * 1000.0);
-                    println!("MEMORY_KB={}", current_memory_kb());
-                    event_loop.exit();
-                    return;
-                }
-                log::trace!("Window redraw requested");
-                window.window_handle.pre_present_notify();
-                let physical = window.window_handle.inner_size();
-                let frame_info = FrameInfo {
-                    width: physical.width,
-                    height: physical.height,
-                    scale_factor: window.window_handle.scale_factor(),
-                };
-                window.gpu.resize(frame_info.width, frame_info.height);
-                window.clear(window.background_color);
-                window.next_frame_requested = false;
-                (self.on_render)(window, frame_info);
-                window.layout_and_paint();
-                window.present();
-            }
-            WindowEvent::Resized(physical_size) => {
-                let frame_info = FrameInfo {
-                    width: physical_size.width,
-                    height: physical_size.height,
-                    scale_factor: window.window_handle.scale_factor(),
-                };
-                window.gpu.resize(frame_info.width, frame_info.height);
-                window.clear(window.background_color);
-                (self.on_render)(window, frame_info);
-                window.layout_and_paint();
-                window.present();
-                self.resized_this_cycle = true;
-            }
-            WindowEvent::ScaleFactorChanged { .. } => {
-                window.request_next_frame();
-            }
-            WindowEvent::CursorMoved { position, .. } => {
-                let pos = Point::new(position.x as f32, position.y as f32);
-                self.current_cursor_position = Some(pos);
-
-                // Drag threshold detection: if left mouse is held but drag not yet active,
-                // check if cursor has moved enough to start a drag gesture.
-                if let Some(press_pos) = self.drag_press_position {
-                    if !self.drag_active {
-                        let dx = pos.x - press_pos.x;
-                        let dy = pos.y - press_pos.y;
-                        if (dx * dx + dy * dy).sqrt() >= DRAG_THRESHOLD {
-                            self.drag_active = true;
-                            window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragStart {
-                                origin: press_pos,
-                            }));
-                        }
-                    }
-                    if self.drag_active {
-                        window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragMove {
-                            origin: press_pos,
-                            current: pos,
-                        }));
-                        window.request_next_frame();
-                        return;
-                    }
-                }
-
-                // Re-dispatch file hover events during OS drag so DropZones
-                // track the cursor position continuously.
-                if !self.os_drag_paths.is_empty() {
-                    for path in self.os_drag_paths.clone() {
-                        window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileHovered {
-                            path,
-                            position: pos,
-                        }));
-                    }
-                    window.request_next_frame();
-                    return;
-                }
-
-                window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)));
-                window.request_next_frame();
-            }
-            WindowEvent::MouseInput { state, button, .. } => {
-                let position = self.current_cursor_position.unwrap_or_default();
-
-                // End active drag on left-button release before dispatching.
-                if button == winit::event::MouseButton::Left
-                    && state == winit::event::ElementState::Released
-                    && self.drag_active
-                    && let Some(origin) = self.drag_press_position.take()
-                {
-                    self.drag_active = false;
-                    window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragEnd {
-                        origin,
-                        current: position,
-                    }));
-                    window.request_next_frame();
-                    return;
-                }
-
-                // Clear drag tracking on any left release.
-                if button == winit::event::MouseButton::Left
-                    && state == winit::event::ElementState::Released
-                {
-                    self.drag_press_position = None;
-                    self.drag_active = false;
-                }
-
-                // Dispatch click to widgets first so we can check if it was consumed.
-                let response = window.dispatch_event(&WidgetEvent::Mouse(
-                    MouseEvent::MouseClickEvent(MouseClickEvent {
-                        button: translate_mouse_button(button),
-                        state: translate_mouse_state(state),
-                        position,
-                    }),
-                ));
-
-                // Only arm drag detection on left press when no widget consumed
-                // the event. If a widget handled the press (e.g. scrollbar thumb,
-                // button), the interaction belongs to that widget, not the drag
-                // system.
-                if button == winit::event::MouseButton::Left
-                    && state == winit::event::ElementState::Pressed
-                    && !response.status.is_handled()
-                {
-                    self.drag_press_position = Some(position);
-                    self.drag_active = false;
-                }
-
-                window.request_next_frame();
-            }
-            WindowEvent::MouseWheel { delta, .. } => {
-                let scroll_delta = match delta {
-                    winit::event::MouseScrollDelta::LineDelta(_, y) => y,
-                    winit::event::MouseScrollDelta::PixelDelta(pos) => {
-                        /// Approximate pixels per scroll "line" on most platforms.
-                        const PIXELS_PER_SCROLL_LINE: f32 = 40.0;
-                        pos.y as f32 / PIXELS_PER_SCROLL_LINE
-                    }
-                };
-                window.dispatch_event(&WidgetEvent::Mouse(MouseEvent::MouseScrollEvent(
-                    scroll_delta,
-                )));
-                window.request_next_frame();
-            }
-            WindowEvent::KeyboardInput { event, .. } => {
-                let modifiers = Modifiers {
-                    shift: self.current_modifiers.shift_key(),
-                    ctrl: self.current_modifiers.control_key(),
-                    alt: self.current_modifiers.alt_key(),
-                };
-
-                let key = translate_key(&event.logical_key);
-
-                match event.state {
-                    winit::event::ElementState::Pressed => {
-                        window.dispatch_event(&WidgetEvent::Keyboard(KeyboardEvent::KeyPressed {
-                            key,
-                            modifiers,
-                        }));
-
-                        if !modifiers.ctrl && !modifiers.alt {
-                            match &event.logical_key {
-                                winit::keyboard::Key::Character(c) => {
-                                    for ch in c.chars() {
-                                        window.dispatch_event(&WidgetEvent::Keyboard(
-                                            KeyboardEvent::CharTyped(ch),
-                                        ));
-                                    }
-                                }
-                                winit::keyboard::Key::Named(winit::keyboard::NamedKey::Space) => {
-                                    window.dispatch_event(&WidgetEvent::Keyboard(
-                                        KeyboardEvent::CharTyped(' '),
-                                    ));
-                                }
-                                _ => {}
-                            }
-                        }
-                    }
-                    winit::event::ElementState::Released => {
-                        window.dispatch_event(&WidgetEvent::Keyboard(KeyboardEvent::KeyReleased {
-                            key,
-                            modifiers,
-                        }));
-                    }
-                }
-                window.request_next_frame();
-            }
-            WindowEvent::ModifiersChanged(mods) => {
-                self.current_modifiers = mods.state();
-            }
-            WindowEvent::HoveredFile(path) => {
-                // Query real cursor position — CursorMoved may not fire
-                // during OS drag operations (Windows OLE drag).
-                let position = query_cursor_in_window(&window.window_handle)
-                    .or(self.current_cursor_position)
-                    .unwrap_or_default();
-                self.current_cursor_position = Some(position);
-                self.os_drag_paths.push(path.clone());
-                window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileHovered {
-                    path,
-                    position,
-                }));
-                window.request_next_frame();
-            }
-            WindowEvent::DroppedFile(path) => {
-                let position = query_cursor_in_window(&window.window_handle)
-                    .or(self.current_cursor_position)
-                    .unwrap_or_default();
-                self.current_cursor_position = Some(position);
-                self.os_drag_paths.retain(|p| p != &path);
-                window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileDropped {
-                    path,
-                    position,
-                }));
-                window.request_next_frame();
-            }
-            WindowEvent::HoveredFileCancelled => {
-                self.os_drag_paths.clear();
-                window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileCancelled));
-                window.request_next_frame();
-            }
-            _ => {}
-        }
-    }
+    attributes
 }
+
+// ---------------------------------------------------------------------------
+// Free functions
+// ---------------------------------------------------------------------------
 
 fn translate_mouse_button(button: winit::event::MouseButton) -> MouseButton {
     match button {
@@ -1382,10 +1887,6 @@ fn current_memory_kb() -> u64 {
 }
 
 /// Queries the actual cursor position relative to the window's client area.
-///
-/// During OS file drag operations, `CursorMoved` events may not fire so the
-/// tracked cursor position becomes stale. This function calls the platform
-/// API directly to get the real position.
 #[cfg(target_os = "windows")]
 fn query_cursor_in_window(window: &winit::window::Window) -> Option<Point> {
     use windows::Win32::Foundation::POINT;

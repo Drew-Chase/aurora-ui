@@ -59,6 +59,7 @@ fn main() {
 
 - **Pluggable GPU backends** — Software (softbuffer), OpenGL 3.3 (glow), and Vulkan/Metal/DX12 (wgpu) — swap with a feature flag, zero code changes
 - **Custom window titlebars** — Windows 11 DWM rounded corners, drop shadow, and edge-resize via `WM_NCHITTEST` subclassing
+- **Multi-window support** — `WindowConfig` builder, `window.open_window()`, modal dialogs, cross-window messaging, parent-child relationships
 - **Feature-gated text rendering** — Font loading, shaping, and text widgets behind `text` feature flag
 - **Layout system** — `col!` and `row!` macros with flex alignment, `Stack`, `Positioned`, and `ScrollView`
 - **Image and SVG support** — PNG/JPEG decoding, SVG rasterization with gradient support, feature-gated

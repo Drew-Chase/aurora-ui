@@ -15,7 +15,8 @@ pub use aurora_core::kmi::mouse::{MouseButton, MouseClickEvent, MouseEvent, Mous
 
 // Platform
 pub use aurora_platform::app::{
-    App, AppWindow, FrameInfo, IconData, WindowMonitor, WindowPosition,
+    App, AppContext, AppWindow, ExitBehavior, FrameInfo, IconData, WindowConfig, WindowMonitor,
+    WindowPosition,
 };
 pub use aurora_platform::errors::app::AppError;
 pub use aurora_platform::window_controls::WindowControls;

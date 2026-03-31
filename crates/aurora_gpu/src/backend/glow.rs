@@ -273,6 +273,9 @@ impl GpuContext for GlowBackend {
             return;
         }
 
+        // Ensure this window's GL context is current (required for multi-window).
+        let _ = self.gl_context.make_current(&self.gl_surface);
+
         self.convert_to_rgba();
 
         unsafe {

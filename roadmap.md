@@ -110,18 +110,19 @@ These are needed for most real-world applications.
 
 ---
 
-### 2.2 Multi-Window Support
+### ~~2.2 Multi-Window Support~~
 
 **Required work:**
 
-- Refactor `App` to manage multiple `AppWindow` instances
-- Window spawning API: `app.open_window(config, root_widget)`
-- Cross-window communication (shared state, message passing)
-- Independent event loops or shared loop with window routing
-- Window lifecycle events (opened, closing, closed, focus gained/lost)
-- Parent-child window relationships (modal windows owned by parent)
+- [x] Refactor `App` to manage multiple `AppWindow` instances
+- [x] Window spawning API: `app.open_window(config, root_widget)`
+- [x] Cross-window communication (shared state, message passing)
+- [x] Independent event loops or shared loop with window routing
+- [x] Window lifecycle events (opened, closing, closed, focus gained/lost)
+- [x] Parent-child window relationships (modal windows owned by parent)
 
 **Components affected:** `aurora_platform` (major refactor of `App` and event loop)
+- Example: `examples/multi_window_example/`
 
 ---
 
