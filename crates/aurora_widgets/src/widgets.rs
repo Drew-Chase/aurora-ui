@@ -111,14 +111,30 @@ pub trait Widget {
 /// the [`FontManager`](aurora_text::font_manager::FontManager) and the global
 /// [`FontOptions`](aurora_text::font_options::FontOptions) so widgets can shape
 /// text with the application's default font settings.
+///
+/// The `direction` field controls inline text direction (LTR or RTL) for
+/// layout containers and text alignment.
 #[cfg(feature = "text")]
 pub struct LayoutCtx<'a> {
     pub font_manager: &'a mut aurora_text::font_manager::FontManager,
     pub font_options: &'a aurora_text::font_options::FontOptions,
+    pub direction: aurora_core::direction::TextDirection,
 }
 
 /// Context passed to [`Widget::layout`] during the layout phase.
 ///
 /// This is the text-free variant; no font manager is available.
+/// The `direction` field controls inline text direction (LTR or RTL).
 #[cfg(not(feature = "text"))]
-pub struct LayoutCtx;
+pub struct LayoutCtx {
+    pub direction: aurora_core::direction::TextDirection,
+}
+
+#[cfg(not(feature = "text"))]
+impl Default for LayoutCtx {
+    fn default() -> Self {
+        Self {
+            direction: aurora_core::direction::TextDirection::Ltr,
+        }
+    }
+}

@@ -1,5 +1,6 @@
 #![doc = include_str!("../../../../.wiki/Edges.md")]
 
+use crate::direction::TextDirection;
 use crate::geometry::size::Size;
 
 /// Edge insets (top, right, bottom, left) describing spacing around a rectangle.
@@ -105,6 +106,65 @@ impl Edges {
     pub fn is_zero(&self) -> bool {
         self.top == 0.0 && self.bottom == 0.0 && self.left == 0.0 && self.right == 0.0
     }
+
+    /// Returns the inline-start edge (`left` in LTR, `right` in RTL).
+    pub fn inline_start(&self, direction: TextDirection) -> f32 {
+        match direction {
+            TextDirection::Ltr => self.left,
+            TextDirection::Rtl => self.right,
+        }
+    }
+
+    /// Returns the inline-end edge (`right` in LTR, `left` in RTL).
+    pub fn inline_end(&self, direction: TextDirection) -> f32 {
+        match direction {
+            TextDirection::Ltr => self.right,
+            TextDirection::Rtl => self.left,
+        }
+    }
+
+    /// Returns the block-start edge (always `top` in horizontal writing modes).
+    pub fn block_start(&self) -> f32 {
+        self.top
+    }
+
+    /// Returns the block-end edge (always `bottom` in horizontal writing modes).
+    pub fn block_end(&self) -> f32 {
+        self.bottom
+    }
+
+    /// Returns a copy with left and right swapped when the direction is RTL.
+    ///
+    /// In LTR mode, returns `self` unchanged. Use this to convert padding or
+    /// margin that was specified with physical values into direction-aware values.
+    pub fn resolve(&self, direction: TextDirection) -> Self {
+        match direction {
+            TextDirection::Ltr => *self,
+            TextDirection::Rtl => Self {
+                top: self.top,
+                right: self.left,
+                bottom: self.bottom,
+                left: self.right,
+            },
+        }
+    }
+
+    /// Creates edges from logical values, resolving to physical edges based on direction.
+    ///
+    /// In LTR: `inline_start` → `left`, `inline_end` → `right`.
+    /// In RTL: `inline_start` → `right`, `inline_end` → `left`.
+    pub fn logical(
+        block_start: f32,
+        inline_end: f32,
+        block_end: f32,
+        inline_start: f32,
+        direction: TextDirection,
+    ) -> Self {
+        match direction {
+            TextDirection::Ltr => Self::new(block_start, inline_end, block_end, inline_start),
+            TextDirection::Rtl => Self::new(block_start, inline_start, block_end, inline_end),
+        }
+    }
 }
 
 impl From<f32> for Edges {
@@ -116,6 +176,7 @@ impl From<f32> for Edges {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::direction::TextDirection;
 
     #[test]
     fn new_sets_fields() {
@@ -183,5 +244,70 @@ mod tests {
     fn from_f32() {
         let e: Edges = 8.0.into();
         assert_eq!(e, Edges::all(8.0));
+    }
+
+    #[test]
+    fn inline_start_ltr() {
+        let e = Edges::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(e.inline_start(TextDirection::Ltr), 4.0); // left
+    }
+
+    #[test]
+    fn inline_start_rtl() {
+        let e = Edges::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(e.inline_start(TextDirection::Rtl), 2.0); // right
+    }
+
+    #[test]
+    fn inline_end_ltr() {
+        let e = Edges::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(e.inline_end(TextDirection::Ltr), 2.0); // right
+    }
+
+    #[test]
+    fn inline_end_rtl() {
+        let e = Edges::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(e.inline_end(TextDirection::Rtl), 4.0); // left
+    }
+
+    #[test]
+    fn block_start_and_end() {
+        let e = Edges::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(e.block_start(), 1.0);
+        assert_eq!(e.block_end(), 3.0);
+    }
+
+    #[test]
+    fn resolve_ltr_unchanged() {
+        let e = Edges::new(1.0, 2.0, 3.0, 4.0);
+        assert_eq!(e.resolve(TextDirection::Ltr), e);
+    }
+
+    #[test]
+    fn resolve_rtl_swaps_left_right() {
+        let e = Edges::new(1.0, 2.0, 3.0, 4.0);
+        let resolved = e.resolve(TextDirection::Rtl);
+        assert_eq!(resolved.top, 1.0);
+        assert_eq!(resolved.right, 4.0); // was left
+        assert_eq!(resolved.bottom, 3.0);
+        assert_eq!(resolved.left, 2.0); // was right
+    }
+
+    #[test]
+    fn logical_ltr() {
+        let e = Edges::logical(1.0, 2.0, 3.0, 4.0, TextDirection::Ltr);
+        assert_eq!(e.top, 1.0);
+        assert_eq!(e.right, 2.0); // inline_end
+        assert_eq!(e.bottom, 3.0);
+        assert_eq!(e.left, 4.0); // inline_start
+    }
+
+    #[test]
+    fn logical_rtl() {
+        let e = Edges::logical(1.0, 2.0, 3.0, 4.0, TextDirection::Rtl);
+        assert_eq!(e.top, 1.0);
+        assert_eq!(e.right, 4.0); // inline_start (flipped)
+        assert_eq!(e.bottom, 3.0);
+        assert_eq!(e.left, 2.0); // inline_end (flipped)
     }
 }

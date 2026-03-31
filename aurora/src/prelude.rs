@@ -1,6 +1,7 @@
 // Core types
 pub use crate::aurora_core::{hex, hexa, hsl, hsla, rgb, rgba};
 pub use aurora_core::color::{Color, IntoColor};
+pub use aurora_core::direction::TextDirection;
 pub use aurora_core::geometry::corners::Corners;
 pub use aurora_core::geometry::edges::Edges;
 pub use aurora_core::geometry::point::Point;

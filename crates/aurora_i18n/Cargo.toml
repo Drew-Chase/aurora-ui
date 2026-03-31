@@ -1,0 +1,24 @@
+[package]
+name = "aurora_i18n"
+version = "0.1.0"
+edition = "2024"
+description = "Internationalization and localization for Aurora UI"
+
+[dependencies]
+aurora_core = { path = "../aurora_core" }
+sys-locale = "0.3"
+
+# Fluent message formatting
+fluent-bundle = { version = "0.15", optional = true }
+fluent-syntax = { version = "0.11", optional = true }
+unic-langid = { version = "0.9", optional = true }
+
+# ICU4X formatting
+icu_decimal = { version = "2", optional = true }
+icu_datetime = { version = "2", optional = true }
+icu_locale = { version = "2", optional = true }
+
+[features]
+default = ["fluent"]
+fluent = ["dep:fluent-bundle", "dep:fluent-syntax", "dep:unic-langid"]
+icu = ["dep:icu_decimal", "dep:icu_datetime", "dep:icu_locale"]

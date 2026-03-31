@@ -162,14 +162,27 @@ impl Widget for Row {
         let total_width = total_child_width + total_spacing;
         let leftover = (content_width - total_width).max(0.0);
 
-        // Starting x offset based on justify
-        let mut x = self.padding.left
-            + match self.justify {
-                Justify::Start => 0.0,
-                Justify::Center => leftover / 2.0,
-                Justify::End => leftover,
-                Justify::SpaceBetween => 0.0,
-            };
+        let is_rtl = ctx.direction.is_rtl();
+
+        // Starting x offset based on justify and direction
+        let mut x = if is_rtl {
+            // RTL: cursor starts at the right edge of the content area
+            (self.padding.left + content_width)
+                - match self.justify {
+                    Justify::Start => 0.0,
+                    Justify::Center => leftover / 2.0,
+                    Justify::End => leftover,
+                    Justify::SpaceBetween => 0.0,
+                }
+        } else {
+            self.padding.left
+                + match self.justify {
+                    Justify::Start => 0.0,
+                    Justify::Center => leftover / 2.0,
+                    Justify::End => leftover,
+                    Justify::SpaceBetween => 0.0,
+                }
+        };
 
         // Spacing override for SpaceBetween
         let actual_spacing = if self.justify == Justify::SpaceBetween && self.children.len() > 1 {
@@ -202,9 +215,15 @@ impl Widget for Row {
                 child_size.height
             };
 
-            self.child_rects
-                .push(Rect::new(x, y, x + child_size.width, y + h));
-            x += child_size.width + actual_spacing;
+            if is_rtl {
+                let child_left = x - child_size.width;
+                self.child_rects.push(Rect::new(child_left, y, x, y + h));
+                x -= child_size.width + actual_spacing;
+            } else {
+                self.child_rects
+                    .push(Rect::new(x, y, x + child_size.width, y + h));
+                x += child_size.width + actual_spacing;
+            }
         }
 
         // Return the row's total size
@@ -377,7 +396,7 @@ mod tests {
     #[test]
     fn empty_row() {
         let mut row = Row::new();
-        let size = row.layout(available(), &mut LayoutCtx);
+        let size = row.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 0.0);
         assert_eq!(size.height, 0.0);
     }
@@ -385,7 +404,7 @@ mod tests {
     #[test]
     fn single_fixed_child() {
         let mut row = Row::new().child(FixedWidget::new(50.0, 30.0));
-        let size = row.layout(available(), &mut LayoutCtx);
+        let size = row.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 50.0);
         assert_eq!(size.height, 30.0);
     }
@@ -395,7 +414,7 @@ mod tests {
         let mut row = Row::new()
             .child(FixedWidget::new(50.0, 30.0))
             .child(FixedWidget::new(70.0, 40.0));
-        let size = row.layout(available(), &mut LayoutCtx);
+        let size = row.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 120.0); // 50 + 70
         assert_eq!(size.height, 40.0); // max height
     }
@@ -406,7 +425,7 @@ mod tests {
             .spacing(10.0)
             .child(FixedWidget::new(50.0, 30.0))
             .child(FixedWidget::new(70.0, 30.0));
-        let size = row.layout(available(), &mut LayoutCtx);
+        let size = row.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 130.0); // 50 + 10 + 70
     }
 
@@ -415,7 +434,7 @@ mod tests {
         let mut row = Row::new()
             .padding(Edges::all(10.0))
             .child(FixedWidget::new(50.0, 30.0));
-        let size = row.layout(available(), &mut LayoutCtx);
+        let size = row.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 70.0); // 50 + 10 + 10
         assert_eq!(size.height, 50.0); // 30 + 10 + 10
     }
@@ -425,7 +444,7 @@ mod tests {
         let mut row = Row::new()
             .padding(Edges::new(5.0, 10.0, 15.0, 20.0))
             .child(FixedWidget::new(50.0, 30.0));
-        row.layout(available(), &mut LayoutCtx);
+        row.layout(available(), &mut LayoutCtx::default());
         let r = &row.child_rects[0];
         assert_eq!(r.x1, 20.0); // left padding
         assert_eq!(r.y1, 5.0); // top padding
@@ -437,7 +456,7 @@ mod tests {
             .width(200)
             .justify(Justify::Start)
             .child(FixedWidget::new(50.0, 30.0));
-        row.layout(available(), &mut LayoutCtx);
+        row.layout(available(), &mut LayoutCtx::default());
         assert_eq!(row.child_rects[0].x1, 0.0);
     }
 
@@ -447,7 +466,7 @@ mod tests {
             .width(200)
             .justify(Justify::Center)
             .child(FixedWidget::new(50.0, 30.0));
-        row.layout(available(), &mut LayoutCtx);
+        row.layout(available(), &mut LayoutCtx::default());
         // leftover = 200 - 50 = 150, offset = 75
         assert_eq!(row.child_rects[0].x1, 75.0);
     }
@@ -458,7 +477,7 @@ mod tests {
             .width(200)
             .justify(Justify::End)
             .child(FixedWidget::new(50.0, 30.0));
-        row.layout(available(), &mut LayoutCtx);
+        row.layout(available(), &mut LayoutCtx::default());
         assert_eq!(row.child_rects[0].x1, 150.0);
     }
 
@@ -469,7 +488,7 @@ mod tests {
             .justify(Justify::SpaceBetween)
             .child(FixedWidget::new(50.0, 30.0))
             .child(FixedWidget::new(50.0, 30.0));
-        row.layout(available(), &mut LayoutCtx);
+        row.layout(available(), &mut LayoutCtx::default());
         assert_eq!(row.child_rects[0].x1, 0.0);
         // Second child: spacing = (200 - 100) / 1 = 100, so x = 50 + 100 = 150
         assert_eq!(row.child_rects[1].x1, 150.0);
@@ -481,7 +500,7 @@ mod tests {
             .height(100)
             .align(Align::Start)
             .child(FixedWidget::new(50.0, 30.0));
-        row.layout(available(), &mut LayoutCtx);
+        row.layout(available(), &mut LayoutCtx::default());
         assert_eq!(row.child_rects[0].y1, 0.0);
     }
 
@@ -491,7 +510,7 @@ mod tests {
             .height(100)
             .align(Align::Center)
             .child(FixedWidget::new(50.0, 30.0));
-        row.layout(available(), &mut LayoutCtx);
+        row.layout(available(), &mut LayoutCtx::default());
         // (100 - 30) / 2 = 35
         assert_eq!(row.child_rects[0].y1, 35.0);
     }
@@ -502,7 +521,7 @@ mod tests {
             .height(100)
             .align(Align::End)
             .child(FixedWidget::new(50.0, 30.0));
-        row.layout(available(), &mut LayoutCtx);
+        row.layout(available(), &mut LayoutCtx::default());
         assert_eq!(row.child_rects[0].y1, 70.0);
     }
 
@@ -512,7 +531,7 @@ mod tests {
             .height(100)
             .align(Align::Stretch)
             .child(FixedWidget::new(50.0, 30.0));
-        row.layout(available(), &mut LayoutCtx);
+        row.layout(available(), &mut LayoutCtx::default());
         // Stretch: child rect height should be full content height
         let r = &row.child_rects[0];
         assert_eq!(r.y2 - r.y1, 100.0);
@@ -524,7 +543,7 @@ mod tests {
             .width(300)
             .height(200)
             .child(FixedWidget::new(50.0, 30.0));
-        let size = row.layout(available(), &mut LayoutCtx);
+        let size = row.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 300.0);
         assert_eq!(size.height, 200.0);
     }
@@ -535,5 +554,90 @@ mod tests {
             .child(FixedWidget::new(10.0, 10.0))
             .child(FixedWidget::new(20.0, 20.0));
         assert_eq!(row.children().len(), 2);
+    }
+
+    // --- RTL tests ---
+
+    fn rtl_ctx() -> LayoutCtx {
+        LayoutCtx {
+            direction: aurora_core::direction::TextDirection::Rtl,
+        }
+    }
+
+    #[test]
+    fn rtl_children_right_to_left() {
+        let mut row = Row::new()
+            .width(200)
+            .child(FixedWidget::new(50.0, 30.0))
+            .child(FixedWidget::new(70.0, 30.0));
+        row.layout(available(), &mut rtl_ctx());
+        // First child at right edge
+        assert_eq!(row.child_rects[0].x2, 200.0);
+        assert_eq!(row.child_rects[0].x1, 150.0);
+        // Second child to the left of first
+        assert_eq!(row.child_rects[1].x2, 150.0);
+        assert_eq!(row.child_rects[1].x1, 80.0);
+    }
+
+    #[test]
+    fn rtl_justify_start_packs_right() {
+        let mut row = Row::new()
+            .width(200)
+            .justify(Justify::Start)
+            .child(FixedWidget::new(50.0, 30.0));
+        row.layout(available(), &mut rtl_ctx());
+        assert_eq!(row.child_rects[0].x2, 200.0);
+        assert_eq!(row.child_rects[0].x1, 150.0);
+    }
+
+    #[test]
+    fn rtl_justify_end_packs_left() {
+        let mut row = Row::new()
+            .width(200)
+            .justify(Justify::End)
+            .child(FixedWidget::new(50.0, 30.0));
+        row.layout(available(), &mut rtl_ctx());
+        assert_eq!(row.child_rects[0].x1, 0.0);
+        assert_eq!(row.child_rects[0].x2, 50.0);
+    }
+
+    #[test]
+    fn rtl_justify_center() {
+        let mut row = Row::new()
+            .width(200)
+            .justify(Justify::Center)
+            .child(FixedWidget::new(50.0, 30.0));
+        row.layout(available(), &mut rtl_ctx());
+        // leftover = 200 - 50 = 150, center = 75
+        assert_eq!(row.child_rects[0].x1, 75.0);
+        assert_eq!(row.child_rects[0].x2, 125.0);
+    }
+
+    #[test]
+    fn rtl_spacing() {
+        let mut row = Row::new()
+            .width(200)
+            .spacing(10.0)
+            .child(FixedWidget::new(50.0, 30.0))
+            .child(FixedWidget::new(70.0, 30.0));
+        row.layout(available(), &mut rtl_ctx());
+        assert_eq!(row.child_rects[0].x2, 200.0);
+        assert_eq!(row.child_rects[0].x1, 150.0);
+        // Second child: 200 - 50 - 10 - 70 = 70 from right
+        assert_eq!(row.child_rects[1].x2, 140.0);
+        assert_eq!(row.child_rects[1].x1, 70.0);
+    }
+
+    #[test]
+    fn rtl_padding() {
+        let mut row = Row::new()
+            .width(200)
+            .padding(Edges::new(5.0, 10.0, 15.0, 20.0))
+            .child(FixedWidget::new(50.0, 30.0));
+        row.layout(available(), &mut rtl_ctx());
+        // RTL: content area is [20, 190] (padding.left=20, padding.right=10)
+        // Cursor starts at 190 (left + content_width = 20 + 170 = 190)
+        assert_eq!(row.child_rects[0].x2, 190.0);
+        assert_eq!(row.child_rects[0].x1, 140.0);
     }
 }

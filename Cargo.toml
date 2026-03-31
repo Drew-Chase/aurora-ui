@@ -17,6 +17,7 @@ members = [
     "crates/aurora_theming",
     "crates/aurora_syntax",
     "crates/aurora_widgets",
+    "crates/aurora_i18n",
     "examples/layout_example",
     "examples/minimal",
     "examples/text_example",
@@ -32,7 +33,8 @@ members = [
     "examples/animation_example",
     "examples/widget_gallery",
     "examples/file_dialog_example",
-    "examples/drag_drop_example"
+    "examples/drag_drop_example",
+    "examples/i18n_example"
 ]
 default-members = [
     "aurora",
@@ -45,7 +47,8 @@ default-members = [
     "crates/aurora_text",
     "crates/aurora_theme",
     "crates/aurora_theming",
-    "crates/aurora_widgets"
+    "crates/aurora_widgets",
+    "crates/aurora_i18n"
 ]
 
 [workspace.dependencies]

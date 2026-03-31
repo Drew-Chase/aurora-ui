@@ -175,14 +175,14 @@ mod tests {
     #[test]
     fn empty_stack_zero_size() {
         let mut stack = Stack::new();
-        let size = stack.layout(available(), &mut LayoutCtx);
+        let size = stack.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size, Size::zero());
     }
 
     #[test]
     fn stack_uses_available_size() {
         let mut stack = Stack::new().child(FixedWidget::new(50.0, 30.0));
-        let size = stack.layout(available(), &mut LayoutCtx);
+        let size = stack.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 400.0);
         assert_eq!(size.height, 300.0);
     }
@@ -192,7 +192,7 @@ mod tests {
         let mut stack = Stack::new()
             .child(FixedWidget::new(50.0, 30.0))
             .child(FixedWidget::new(70.0, 40.0));
-        stack.layout(available(), &mut LayoutCtx);
+        stack.layout(available(), &mut LayoutCtx::default());
         // Both children start at (0, 0) (no padding)
         assert_eq!(stack.child_rects[0].x1, 0.0);
         assert_eq!(stack.child_rects[0].y1, 0.0);
@@ -205,7 +205,7 @@ mod tests {
         let mut stack = Stack::new()
             .padding(Edges::new(5.0, 10.0, 15.0, 20.0))
             .child(FixedWidget::new(50.0, 30.0));
-        stack.layout(available(), &mut LayoutCtx);
+        stack.layout(available(), &mut LayoutCtx::default());
         assert_eq!(stack.child_rects[0].x1, 20.0); // left padding
         assert_eq!(stack.child_rects[0].y1, 5.0); // top padding
     }
@@ -216,7 +216,7 @@ mod tests {
             .width(200.0)
             .height(100.0)
             .child(FixedWidget::new(50.0, 30.0));
-        let size = stack.layout(available(), &mut LayoutCtx);
+        let size = stack.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 200.0);
         assert_eq!(size.height, 100.0);
     }

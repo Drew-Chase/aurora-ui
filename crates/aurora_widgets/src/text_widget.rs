@@ -147,11 +147,13 @@ impl Widget for Text {
         let resolved_font = self.font.resolve(ctx.font_options);
         let font_manager = &mut ctx.font_manager;
         let max_width = (available.width - self.padding.horizontal()).max(0.0);
-        let align: cosmic_text::Align = match self.align {
-            Align::Start => cosmic_text::Align::Left,
-            Align::Center => cosmic_text::Align::Center,
-            Align::End => cosmic_text::Align::Right,
-            Align::Stretch => cosmic_text::Align::Left,
+        let is_rtl = ctx.direction.is_rtl();
+        let align: cosmic_text::Align = match (self.align, is_rtl) {
+            (Align::Start, false) | (Align::End, true) => cosmic_text::Align::Left,
+            (Align::Center, _) => cosmic_text::Align::Center,
+            (Align::End, false) | (Align::Start, true) => cosmic_text::Align::Right,
+            (Align::Stretch, false) => cosmic_text::Align::Left,
+            (Align::Stretch, true) => cosmic_text::Align::Right,
         };
 
         let mut text_layout = TextLayout::new(

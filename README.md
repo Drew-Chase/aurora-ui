@@ -113,13 +113,15 @@ When multiple backends are enabled, priority is: wgpu > opengl > software.
 
 ### Content Features
 
-| Feature    | What it adds                                 | Default |
-|------------|----------------------------------------------|---------|
-| `text`     | Font loading, shaping, text widgets, buttons | No      |
-| `image`    | PNG/JPEG decoding and Image widget           | No      |
-| `svg`      | SVG parsing, rasterization, and Svg widget   | No      |
-| `animate`  | Tweens, easing, keyframes, timelines         | No      |
-| `a11y`     | Screen reader support via AccessKit          | No      |
+| Feature    | What it adds                                           | Default |
+|------------|--------------------------------------------------------|---------|
+| `text`     | Font loading, shaping, text widgets, buttons           | No      |
+| `image`    | PNG/JPEG decoding and Image widget                     | No      |
+| `svg`      | SVG parsing, rasterization, and Svg widget             | No      |
+| `animate`  | Tweens, easing, keyframes, timelines                   | No      |
+| `a11y`     | Screen reader support via AccessKit                    | No      |
+| `i18n`     | Locale detection, fluent-rs messages, number/date formatting | No |
+| `i18n-icu` | Full ICU4X formatting (comprehensive locale coverage)  | No      |
 
 ## Performance
 
@@ -161,6 +163,7 @@ aurora/
 ├── aurora_theme      # Theming system (planned)
 ├── aurora_animate    # Animation: tweens, easing, keyframes, timelines, presets
 ├── aurora_a11y       # Accessibility via AccessKit
+├── aurora_i18n       # Internationalization: locale, fluent-rs, formatting (optional)
 └── aurora (facade)   # Public API — re-exports everything
 ```
 

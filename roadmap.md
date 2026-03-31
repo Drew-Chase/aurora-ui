@@ -91,20 +91,21 @@ Implemented in `aurora_core::kmi::drag`, `aurora_platform`, and `aurora_widgets:
 
 These are needed for most real-world applications.
 
-### 2.1 Internationalization (i18n/l10n)
+### ~~2.1 Internationalization (i18n/l10n)~~
 
 **Required work:**
 
-- Integrate or recommend [fluent-rs](https://github.com/projectfluent/fluent-rs) for message formatting
-- Add locale-aware number/date/currency formatting utilities
-- Implement RTL (right-to-left) layout support:
-  - `Row` and `Column` must respect text direction
-  - `Edges` (padding/margin) need logical properties (inline-start/end vs left/right)
-  - Text alignment needs logical values
-- Pass locale to `cosmic_text::FontSystem` instead of empty string
-- Add bidirectional text support in text layout
+- [x] Integrate or recommend [fluent-rs](https://github.com/projectfluent/fluent-rs) for message formatting
+- [x] Add locale-aware number/date/currency formatting utilities
+- [x] Implement RTL (right-to-left) layout support:
+  - [x] `Row` and `Column` must respect text direction
+  - [x] `Edges` (padding/margin) need logical properties (inline-start/end vs left/right)
+  - [x] Text alignment needs logical values
+- [x] Pass locale to `cosmic_text::FontSystem` instead of empty string
+- [x] Add bidirectional text support in text layout
 
 **Components affected:** `aurora_text`, `aurora_widgets` (layout containers), `aurora_core` (Edges logical properties)
+- Example: `examples/i18n_example/`
 
 ---
 

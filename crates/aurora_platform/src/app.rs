@@ -2,6 +2,7 @@
 
 use crate::errors::app::AppError;
 use aurora_core::color::Color;
+use aurora_core::direction::TextDirection;
 use aurora_core::geometry::point::Point;
 use aurora_core::geometry::rect::Rect;
 use aurora_core::geometry::size::Size;
@@ -101,6 +102,10 @@ pub struct App {
     pub background_color: Color,
     pub use_system_font: bool,
     pub icon: Option<IconData>,
+    /// BCP 47 locale tag passed to the font system (e.g. `"en-US"`, `"ar-SA"`).
+    pub locale_tag: String,
+    /// Text direction for layout containers and text alignment.
+    pub text_direction: TextDirection,
     #[cfg(feature = "text")]
     pub font_options: aurora_text::font_options::FontOptions,
     #[cfg(feature = "text")]
@@ -135,6 +140,7 @@ pub struct AppWindow {
     font_options: aurora_text::font_options::FontOptions,
     #[cfg(feature = "text")]
     pub swash_cache: aurora_text::cosmic_text::SwashCache,
+    text_direction: TextDirection,
     pub(crate) _cursor: winit::window::CursorIcon,
     pub(crate) last_mouse_position: Option<Point>,
     pub(crate) focused_widget_id: Option<u64>,
@@ -263,6 +269,38 @@ impl App {
     /// Enabling system font discovery can cause a ~200ms delay on startup but allows for more font options.
     pub fn set_use_system_font(mut self, use_system_font: bool) -> Self {
         self.use_system_font = use_system_font;
+        self
+    }
+
+    /// Sets the BCP 47 locale tag (e.g. `"en-US"`, `"ar-SA"`, `"he-IL"`).
+    ///
+    /// This is passed to the font system for locale-aware font fallback
+    /// (e.g. CJK disambiguation). When the `i18n` feature is enabled,
+    /// [`system_locale`](Self::system_locale) can auto-detect this.
+    pub fn locale(mut self, tag: impl Into<String>) -> Self {
+        self.locale_tag = tag.into();
+        self
+    }
+
+    /// Sets the text direction for layout (LTR or RTL).
+    ///
+    /// Controls how [`Row`] children are ordered, how `Align::Start`/`End`
+    /// resolve in [`Column`], and how text alignment maps to physical
+    /// left/right. Defaults to [`TextDirection::Ltr`].
+    pub fn text_direction(mut self, direction: TextDirection) -> Self {
+        self.text_direction = direction;
+        self
+    }
+
+    /// Detects the system locale and sets both [`locale`](Self::locale) and
+    /// [`text_direction`](Self::text_direction) from it.
+    ///
+    /// Requires the `i18n` feature.
+    #[cfg(feature = "i18n")]
+    pub fn system_locale(mut self) -> Self {
+        let locale = aurora_i18n::locale::Locale::system();
+        self.locale_tag = locale.tag().to_string();
+        self.text_direction = locale.direction();
         self
     }
 
@@ -398,6 +436,8 @@ impl Default for App {
             background_color: Color::WHITE,
             use_system_font: false,
             icon: None,
+            locale_tag: String::new(),
+            text_direction: TextDirection::Ltr,
             #[cfg(feature = "text")]
             font_options: aurora_text::font_options::FontOptions::default(),
             #[cfg(feature = "text")]
@@ -444,9 +484,11 @@ impl AppWindow {
         {
             let font_manager = {
                 let mut fm = if config.use_system_font {
-                    aurora_text::font_manager::FontManager::new_with_system_db()
+                    aurora_text::font_manager::FontManager::new_with_locale_and_system_db(
+                        &config.locale_tag,
+                    )
                 } else {
-                    aurora_text::font_manager::FontManager::new()
+                    aurora_text::font_manager::FontManager::new_with_locale(&config.locale_tag)
                 };
                 for bytes in &config.fonts {
                     fm.load_from_bytes(bytes);
@@ -460,6 +502,7 @@ impl AppWindow {
                 font_manager,
                 font_options: config.font_options.clone(),
                 swash_cache,
+                text_direction: config.text_direction,
                 root_widget: None,
                 _cursor: winit::window::CursorIcon::Default,
                 last_mouse_position: None,
@@ -474,6 +517,7 @@ impl AppWindow {
         Ok(Self {
             window_handle,
             gpu,
+            text_direction: config.text_direction,
             root_widget: None,
             _cursor: winit::window::CursorIcon::Default,
             last_mouse_position: None,
@@ -503,9 +547,12 @@ impl AppWindow {
                 let mut ctx = LayoutCtx {
                     font_manager: &mut self.font_manager,
                     font_options: &self.font_options,
+                    direction: self.text_direction,
                 };
                 #[cfg(not(feature = "text"))]
-                let mut ctx = LayoutCtx;
+                let mut ctx = LayoutCtx {
+                    direction: self.text_direction,
+                };
 
                 widget.layout(available, &mut ctx);
             }
@@ -542,9 +589,12 @@ impl AppWindow {
                     let mut ctx = LayoutCtx {
                         font_manager: &mut self.font_manager,
                         font_options: &self.font_options,
+                        direction: self.text_direction,
                     };
                     #[cfg(not(feature = "text"))]
-                    let mut ctx = LayoutCtx;
+                    let mut ctx = LayoutCtx {
+                        direction: self.text_direction,
+                    };
 
                     widget.layout(available, &mut ctx);
                 }

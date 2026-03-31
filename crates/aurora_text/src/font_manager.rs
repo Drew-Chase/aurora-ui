@@ -25,6 +25,26 @@ impl FontManager {
         manager
     }
 
+    /// Creates a new font manager with the specified BCP 47 locale tag.
+    ///
+    /// The locale is used by cosmic-text for locale-aware font fallback
+    /// (e.g. choosing Japanese vs Chinese variants of shared Han characters).
+    pub fn new_with_locale(locale: &str) -> Self {
+        Self {
+            font_system: cosmic_text::FontSystem::new_with_locale_and_db(
+                locale.into(),
+                Database::default(),
+            ),
+        }
+    }
+
+    /// Creates a new font manager with a locale and pre-loaded system fonts.
+    pub fn new_with_locale_and_system_db(locale: &str) -> Self {
+        let mut manager = Self::new_with_locale(locale);
+        manager.font_system.db_mut().load_system_fonts();
+        manager
+    }
+
     /// Loads a font from a file path on disk.
     pub fn load(&mut self, path: impl AsRef<Path>) -> Result<(), FontError> {
         let db = self.font_system.db_mut();

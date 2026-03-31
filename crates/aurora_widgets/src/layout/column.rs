@@ -188,14 +188,18 @@ impl Widget for Column {
         };
 
         // Position each child
+        let is_rtl = ctx.direction.is_rtl();
         self.child_rects.clear();
         for child_size in final_sizes.iter() {
+            // In RTL, Start means right side and End means left side
             let x = self.padding.left
-                + match self.align {
-                    Align::Start => 0.0,
-                    Align::Center => (align_width - child_size.width).max(0.0) / 2.0,
-                    Align::End => (align_width - child_size.width).max(0.0),
-                    Align::Stretch => 0.0,
+                + match (self.align, is_rtl) {
+                    (Align::Start, false) | (Align::End, true) => 0.0,
+                    (Align::Center, _) => (align_width - child_size.width).max(0.0) / 2.0,
+                    (Align::End, false) | (Align::Start, true) => {
+                        (align_width - child_size.width).max(0.0)
+                    }
+                    (Align::Stretch, _) => 0.0,
                 };
 
             let w = if self.align == Align::Stretch {
@@ -382,7 +386,7 @@ mod tests {
     #[test]
     fn empty_column() {
         let mut col = Column::new();
-        let size = col.layout(available(), &mut LayoutCtx);
+        let size = col.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 0.0);
         assert_eq!(size.height, 0.0);
     }
@@ -390,7 +394,7 @@ mod tests {
     #[test]
     fn single_fixed_child() {
         let mut col = Column::new().child(FixedWidget::new(50.0, 30.0));
-        let size = col.layout(available(), &mut LayoutCtx);
+        let size = col.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 50.0);
         assert_eq!(size.height, 30.0);
     }
@@ -400,7 +404,7 @@ mod tests {
         let mut col = Column::new()
             .child(FixedWidget::new(50.0, 30.0))
             .child(FixedWidget::new(70.0, 40.0));
-        let size = col.layout(available(), &mut LayoutCtx);
+        let size = col.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 70.0); // max width
         assert_eq!(size.height, 70.0); // 30 + 40
     }
@@ -411,7 +415,7 @@ mod tests {
             .spacing(10.0)
             .child(FixedWidget::new(50.0, 30.0))
             .child(FixedWidget::new(50.0, 40.0));
-        let size = col.layout(available(), &mut LayoutCtx);
+        let size = col.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.height, 80.0); // 30 + 10 + 40
     }
 
@@ -420,7 +424,7 @@ mod tests {
         let mut col = Column::new()
             .padding(Edges::all(10.0))
             .child(FixedWidget::new(50.0, 30.0));
-        let size = col.layout(available(), &mut LayoutCtx);
+        let size = col.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 70.0);
         assert_eq!(size.height, 50.0);
     }
@@ -431,7 +435,7 @@ mod tests {
             .height(200)
             .justify(Justify::Start)
             .child(FixedWidget::new(50.0, 30.0));
-        col.layout(available(), &mut LayoutCtx);
+        col.layout(available(), &mut LayoutCtx::default());
         assert_eq!(col.child_rects[0].y1, 0.0);
     }
 
@@ -441,7 +445,7 @@ mod tests {
             .height(200)
             .justify(Justify::Center)
             .child(FixedWidget::new(50.0, 30.0));
-        col.layout(available(), &mut LayoutCtx);
+        col.layout(available(), &mut LayoutCtx::default());
         // leftover = 200 - 30 = 170, offset = 85
         assert_eq!(col.child_rects[0].y1, 85.0);
     }
@@ -452,7 +456,7 @@ mod tests {
             .height(200)
             .justify(Justify::End)
             .child(FixedWidget::new(50.0, 30.0));
-        col.layout(available(), &mut LayoutCtx);
+        col.layout(available(), &mut LayoutCtx::default());
         assert_eq!(col.child_rects[0].y1, 170.0);
     }
 
@@ -463,7 +467,7 @@ mod tests {
             .justify(Justify::SpaceBetween)
             .child(FixedWidget::new(50.0, 30.0))
             .child(FixedWidget::new(50.0, 30.0));
-        col.layout(available(), &mut LayoutCtx);
+        col.layout(available(), &mut LayoutCtx::default());
         assert_eq!(col.child_rects[0].y1, 0.0);
         // spacing = (200 - 60) / 1 = 140, so y = 30 + 140 = 170
         assert_eq!(col.child_rects[1].y1, 170.0);
@@ -475,7 +479,7 @@ mod tests {
             .width(200)
             .align(Align::Center)
             .child(FixedWidget::new(50.0, 30.0));
-        col.layout(available(), &mut LayoutCtx);
+        col.layout(available(), &mut LayoutCtx::default());
         // (200 - 50) / 2 = 75
         assert_eq!(col.child_rects[0].x1, 75.0);
     }
@@ -486,7 +490,7 @@ mod tests {
             .width(200)
             .align(Align::End)
             .child(FixedWidget::new(50.0, 30.0));
-        col.layout(available(), &mut LayoutCtx);
+        col.layout(available(), &mut LayoutCtx::default());
         assert_eq!(col.child_rects[0].x1, 150.0);
     }
 
@@ -496,7 +500,7 @@ mod tests {
             .width(200)
             .align(Align::Stretch)
             .child(FixedWidget::new(50.0, 30.0));
-        col.layout(available(), &mut LayoutCtx);
+        col.layout(available(), &mut LayoutCtx::default());
         let r = &col.child_rects[0];
         assert_eq!(r.x2 - r.x1, 200.0); // stretched to full width
     }
@@ -507,7 +511,7 @@ mod tests {
             .width(300)
             .height(200)
             .child(FixedWidget::new(50.0, 30.0));
-        let size = col.layout(available(), &mut LayoutCtx);
+        let size = col.layout(available(), &mut LayoutCtx::default());
         assert_eq!(size.width, 300.0);
         assert_eq!(size.height, 200.0);
     }
@@ -518,5 +522,47 @@ mod tests {
             .child(FixedWidget::new(10.0, 10.0))
             .child(FixedWidget::new(20.0, 20.0));
         assert_eq!(col.children().len(), 2);
+    }
+
+    // --- RTL tests ---
+
+    fn rtl_ctx() -> LayoutCtx {
+        LayoutCtx {
+            direction: aurora_core::direction::TextDirection::Rtl,
+        }
+    }
+
+    #[test]
+    fn rtl_align_start_right() {
+        let mut col = Column::new()
+            .width(200)
+            .align(Align::Start)
+            .child(FixedWidget::new(50.0, 30.0));
+        col.layout(available(), &mut rtl_ctx());
+        // RTL Start = pack to right side
+        assert_eq!(col.child_rects[0].x1, 150.0);
+        assert_eq!(col.child_rects[0].x2, 200.0);
+    }
+
+    #[test]
+    fn rtl_align_end_left() {
+        let mut col = Column::new()
+            .width(200)
+            .align(Align::End)
+            .child(FixedWidget::new(50.0, 30.0));
+        col.layout(available(), &mut rtl_ctx());
+        // RTL End = pack to left side
+        assert_eq!(col.child_rects[0].x1, 0.0);
+        assert_eq!(col.child_rects[0].x2, 50.0);
+    }
+
+    #[test]
+    fn rtl_align_center_unchanged() {
+        let mut col = Column::new()
+            .width(200)
+            .align(Align::Center)
+            .child(FixedWidget::new(50.0, 30.0));
+        col.layout(available(), &mut rtl_ctx());
+        assert_eq!(col.child_rects[0].x1, 75.0);
     }
 }
