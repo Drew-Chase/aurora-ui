@@ -1,0 +1,14 @@
+[package]
+name = "aurora_lang"
+version = "0.1.0"
+edition = "2024"
+description = "Compile-time locale string embedding from TOML files for Aurora UI"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2", features = ["full"] }
+quote = "1"
+proc-macro2 = "1"
+toml = "0.8"

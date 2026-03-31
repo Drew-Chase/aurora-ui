@@ -120,7 +120,7 @@ When multiple backends are enabled, priority is: wgpu > opengl > software.
 | `svg`      | SVG parsing, rasterization, and Svg widget             | No      |
 | `animate`  | Tweens, easing, keyframes, timelines                   | No      |
 | `a11y`     | Screen reader support via AccessKit                    | No      |
-| `i18n`     | Locale detection, fluent-rs messages, number/date formatting | No |
+| `i18n`     | Locale detection, fluent-rs messages, formatting, `lang!` compile-time TOML | No |
 | `i18n-icu` | Full ICU4X formatting (comprehensive locale coverage)  | No      |
 
 ## Performance

@@ -26,6 +26,7 @@ aurora_text = { path = "../crates/aurora_text", optional = true }
 aurora_animate = { path = "../crates/aurora_animate", optional = true }
 aurora_a11y = { path = "../crates/aurora_a11y", optional = true }
 aurora_i18n = { path = "../crates/aurora_i18n", optional = true }
+aurora_lang = { path = "../crates/aurora_lang", optional = true }
 
 
 [features]
@@ -40,5 +41,5 @@ animate = ["dep:aurora_animate"]
 syntax = ["aurora_widgets/syntax", "text"]
 a11y = ["dep:aurora_a11y", "aurora_platform/a11y", "aurora_widgets/a11y"]
 dialogs = ["aurora_platform/dialogs"]
-i18n = ["dep:aurora_i18n", "aurora_platform/i18n"]
+i18n = ["dep:aurora_i18n", "aurora_platform/i18n", "dep:aurora_lang"]
 i18n-icu = ["i18n", "aurora_i18n/icu"]

@@ -18,6 +18,7 @@ members = [
     "crates/aurora_syntax",
     "crates/aurora_widgets",
     "crates/aurora_i18n",
+    "crates/aurora_lang",
     "examples/layout_example",
     "examples/minimal",
     "examples/text_example",

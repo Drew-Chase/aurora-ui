@@ -2,8 +2,10 @@
 
 use aurora_ui::aurora_i18n::format;
 use aurora_ui::aurora_i18n::locale::Locale;
-use aurora_ui::aurora_i18n::messages::MessageBundles;
 use aurora_ui::prelude::*;
+
+// Compile-time locale strings from TOML files — zero runtime cost
+aurora_ui::aurora_lang::lang!("locales");
 
 fn main() {
     // Detect system locale and derive text direction automatically
@@ -18,34 +20,20 @@ fn main() {
         }
     );
 
-    // Set up fluent message bundles for English and Arabic
-    let mut bundles = MessageBundles::new("en-US");
-    bundles
-        .add_from_str(
-            "en-US",
-            "app-title = Internationalization Demo\ngreeting = Welcome to Aurora UI!\nitem-count = You have { $count } items.\nformatted-price = Price: { $price }",
-        )
-        .expect("valid fluent source");
-    bundles
-        .add_from_str(
-            "ar-SA",
-            "app-title = عرض التدويل\ngreeting = !مرحبًا بك في Aurora UI\nitem-count = لديك { $count } عناصر.\nformatted-price = السعر: { $price }",
-        )
-        .expect("valid fluent source");
+    // Select compile-time translations for the detected locale (fallback to default)
+    let l = lang::by_tag(locale.tag()).unwrap_or(&lang::LANG);
 
-    // Format the greeting for the detected locale (falls back to en-US)
-    let greeting = bundles.format_for_locale(locale.tag(), "greeting", &[]);
-    let title = bundles.format_for_locale(locale.tag(), "app-title", &[]);
-
-    // Locale-aware number and date formatting
+    // Locale-aware number and date formatting (runtime)
     let number = format::format_number(1234567.89, 2, &locale);
     let date = format::format_date(2025, 6, 15, &locale);
     let currency = format::format_currency(9999.99, "USD", &locale);
     let integer = format::format_integer(42000, &locale);
 
-    // Use RTL direction for demonstration (change to locale.direction() for auto-detect)
+    // Print available compiled locales
+    println!("Available locales: {:?}", lang::LOCALE_TAGS);
+
     App::new()
-        .title(&title)
+        .title(l.title.window)
         .locale(locale.tag())
         .text_direction(TextDirection::Ltr)
         .min_size((400, 500))
@@ -56,16 +44,27 @@ fn main() {
                 col!()
                     .spacing(12.0)
                     .padding(Edges::all(20.0))
-                    // Title
-                    .child(Text::new(&greeting).font_size(24.0).align(Align::Start))
-                    // Number formatting section
+                    // Title from compile-time locale strings
+                    .child(Text::new(l.greeting).font_size(24.0).align(Align::Start))
+                    // Number formatting section (labels from compile-time, values from runtime)
                     .child(Text::new("Locale-Aware Formatting:").font_size(18.0))
-                    .child(Text::new(format!("Number: {number}")).font_size(14.0))
-                    .child(Text::new(format!("Integer: {integer}")).font_size(14.0))
-                    .child(Text::new(format!("Date: {date}")).font_size(14.0))
-                    .child(Text::new(format!("Currency: {currency}")).font_size(14.0))
-                    // Row demonstration (children flow LTR or RTL based on direction)
-                    .child(Text::new("Row Layout (follows text direction):").font_size(18.0))
+                    .child(
+                        Text::new(format!("{}: {number}", l.formatting.number_label))
+                            .font_size(14.0),
+                    )
+                    .child(
+                        Text::new(format!("{}: {integer}", l.formatting.integer_label))
+                            .font_size(14.0),
+                    )
+                    .child(
+                        Text::new(format!("{}: {date}", l.formatting.date_label)).font_size(14.0),
+                    )
+                    .child(
+                        Text::new(format!("{}: {currency}", l.formatting.currency_label))
+                            .font_size(14.0),
+                    )
+                    // Row demonstration
+                    .child(Text::new(l.row_demo).font_size(18.0))
                     .child(
                         row!()
                             .spacing(8.0)
@@ -100,10 +99,14 @@ fn main() {
                             ),
                     )
                     // Locale info
-                    .child(Text::new(format!("Locale: {}", locale.tag())).font_size(12.0))
+                    .child(
+                        Text::new(format!("{}: {}", l.locale_info.locale_label, locale.tag()))
+                            .font_size(12.0),
+                    )
                     .child(
                         Text::new(format!(
-                            "Direction: {}",
+                            "{}: {}",
+                            l.locale_info.direction_label,
                             if locale.direction().is_rtl() {
                                 "RTL"
                             } else {

@@ -12,6 +12,8 @@ pub use aurora_core;
 pub use aurora_gpu;
 #[cfg(feature = "i18n")]
 pub use aurora_i18n;
+#[cfg(feature = "i18n")]
+pub use aurora_lang;
 pub use aurora_platform;
 pub use aurora_render;
 #[cfg(feature = "text")]
