@@ -659,12 +659,12 @@ impl AppContext {
     where
         F: FnMut(&mut AppWindow, FrameInfo) + Send + 'static,
     {
-        let _ = self.proxy.send_event(AppEvent::OpenWindow(Box::new(
-            OpenWindowRequest {
+        let _ = self
+            .proxy
+            .send_event(AppEvent::OpenWindow(Box::new(OpenWindowRequest {
                 config,
                 on_render: Box::new(on_render),
-            },
-        )));
+            })));
     }
 
     /// Closes a specific window by ID.
