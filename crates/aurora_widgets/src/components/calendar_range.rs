@@ -13,9 +13,9 @@ use super::colors;
 
 /// A calendar widget that supports selecting a date range.
 ///
-/// Click once to set the range start, click again to set the range end.
-/// Days between start and end are highlighted with a translucent band.
-/// A third click resets the range and starts a new selection.
+/// Click once to set the range start — as the cursor moves over other days
+/// the range preview updates live. Click a second time to finalize the range.
+/// Clicking again resets and starts a new selection.
 ///
 /// # Example
 /// ```ignore
@@ -28,8 +28,12 @@ pub struct CalendarRange {
     calendar: Calendar,
     range_start: Option<u32>,
     range_end: Option<u32>,
+    /// Tracks the day under the cursor while selecting (before second click).
+    hover_end: Option<u32>,
     range_bg: Color,
     on_range_select: Option<Box<dyn FnMut(u32, u32)>>,
+    /// Pre-built text layouts for endpoint days (white text on primary bg).
+    endpoint_layouts: Vec<(u32, aurora_text::text_layout::TextLayout)>,
 }
 
 impl CalendarRange {
@@ -38,8 +42,10 @@ impl CalendarRange {
             calendar: Calendar::new(),
             range_start: None,
             range_end: None,
+            hover_end: None,
             range_bg: colors::primary().opacity(0.2),
             on_range_select: None,
+            endpoint_layouts: Vec::new(),
         }
     }
 
@@ -113,15 +119,22 @@ impl CalendarRange {
         self
     }
 
-    fn range_ordered(&self) -> Option<(u32, u32)> {
+    /// Returns the visual range to display — uses `hover_end` as fallback
+    /// when the range hasn't been finalized yet.
+    fn visual_range(&self) -> Option<(u32, u32)> {
+        let start = self.range_start?;
+        let end = self.range_end.or(self.hover_end)?;
+        Some(if start <= end {
+            (start, end)
+        } else {
+            (end, start)
+        })
+    }
+
+    /// Returns the finalized range (both start and end clicked).
+    fn finalized_range(&self) -> Option<(u32, u32)> {
         match (self.range_start, self.range_end) {
-            (Some(s), Some(e)) => {
-                if s <= e {
-                    Some((s, e))
-                } else {
-                    Some((e, s))
-                }
-            }
+            (Some(s), Some(e)) => Some(if s <= e { (s, e) } else { (e, s) }),
             _ => None,
         }
     }
@@ -135,7 +148,30 @@ impl Default for CalendarRange {
 
 impl Widget for CalendarRange {
     fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
-        self.calendar.layout(available, ctx)
+        let size = self.calendar.layout(available, ctx);
+
+        // Build endpoint text layouts with selected_fg (white on primary bg)
+        self.endpoint_layouts.clear();
+        if let Some((start, end)) = self.visual_range() {
+            let fg = self.calendar.selected_fg_val();
+            let mut opts = ctx.font_options.clone();
+            opts.size = Some(14.0);
+            opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
+            for day in [start, end] {
+                if day >= 1 && day <= self.calendar.days_in_month {
+                    let tl = aurora_text::text_layout::TextLayout::new(
+                        ctx.font_manager,
+                        &day.to_string(),
+                        &opts,
+                        fg,
+                        None,
+                    );
+                    self.endpoint_layouts.push((day, tl));
+                }
+            }
+        }
+
+        size
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
@@ -143,8 +179,9 @@ impl Widget for CalendarRange {
         self.calendar.paint(canvas, rect);
 
         // Overlay the range band on top of the day grid
-        if let Some((start, end)) = self.range_ordered() {
-            let weekday_y = rect.y1 + self.calendar.header_height_val() + self.calendar.cell_size_val();
+        if let Some((start, end)) = self.visual_range() {
+            let weekday_y =
+                rect.y1 + self.calendar.header_height_val() + self.calendar.cell_size_val();
             let cs = self.calendar.cell_size_val();
             let selected_bg = colors::primary();
 
@@ -161,7 +198,6 @@ impl Widget for CalendarRange {
 
                 let is_endpoint = day == start || day == end;
                 if is_endpoint {
-                    // Full-opacity selected background on endpoints
                     let corners = if start == end {
                         Corners::all(9999.0)
                     } else if day == start {
@@ -171,12 +207,11 @@ impl Widget for CalendarRange {
                     };
                     canvas.fill_rounded_rect(cell_rect, corners, selected_bg);
                 } else {
-                    // Translucent range background on in-between days
                     canvas.fill_rect(cell_rect, self.range_bg);
                 }
             }
 
-            // Repaint day labels on top of the range band so text stays visible
+            // Repaint day labels on top of the range band
             for day in start..=end {
                 if day < 1 || day > self.calendar.days_in_month {
                     continue;
@@ -187,7 +222,20 @@ impl Widget for CalendarRange {
                 let cx = rect.x1 + col as f32 * cs;
                 let cy = weekday_y + row as f32 * cs;
 
-                if let Some(Some(tl)) = self.calendar.day_layouts().get((day - 1) as usize) {
+                let is_endpoint = day == start || day == end;
+
+                // Endpoints: use pre-built white text layouts
+                // In-between: use calendar's default foreground layouts
+                let tl = if is_endpoint {
+                    self.endpoint_layouts.iter().find(|(d, _)| *d == day).map(|(_, tl)| tl)
+                } else {
+                    self.calendar
+                        .day_layouts()
+                        .get((day - 1) as usize)
+                        .and_then(|o| o.as_ref())
+                };
+
+                if let Some(tl) = tl {
                     let s = tl.size();
                     let tx = cx + (cs - s.width) / 2.0;
                     let ty = cy + (cs - s.height) / 2.0;
@@ -206,23 +254,35 @@ impl Widget for CalendarRange {
     }
 
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        // Intercept mouse moves for live range preview
+        if let WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) = event {
+            if self.range_start.is_some() && self.range_end.is_none() {
+                // Actively selecting — update hover preview
+                self.hover_end = self.calendar.day_at_position(pos, &rect);
+            }
+            // Still delegate to calendar for its own hover effects
+            return self.calendar.event(event, rect);
+        }
+
         // Intercept day clicks for range selection
         if let WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) = event {
             if e.state == MouseState::Pressed && rect.contains(&e.position) {
                 if let Some(day) = self.calendar.day_at_position(&e.position, &rect) {
                     if !self.calendar.is_day_disabled(day) {
                         if self.range_start.is_some() && self.range_end.is_none() {
-                            // Second click: set end
+                            // Second click: finalize the range
                             self.range_end = Some(day);
-                            if let Some((s, e)) = self.range_ordered() {
+                            self.hover_end = None;
+                            if let Some((s, e)) = self.finalized_range() {
                                 if let Some(ref mut cb) = self.on_range_select {
                                     cb(s, e);
                                 }
                             }
                         } else {
-                            // First click (or third+ click resets)
+                            // First click (or reset after finalized range)
                             self.range_start = Some(day);
                             self.range_end = None;
+                            self.hover_end = None;
                         }
                         return EventResponse {
                             status: EventStatus::Consumed,
@@ -244,4 +304,3 @@ impl Widget for CalendarRange {
             .with_label("Calendar range".to_string())
     }
 }
-

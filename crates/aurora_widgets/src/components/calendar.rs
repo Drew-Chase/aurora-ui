@@ -1148,4 +1148,8 @@ impl Calendar {
     pub(crate) fn day_layouts(&self) -> &[Option<aurora_text::text_layout::TextLayout>] {
         &self.day_layouts
     }
+
+    pub(crate) fn selected_fg_val(&self) -> Color {
+        self.selected_fg
+    }
 }
