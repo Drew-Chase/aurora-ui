@@ -13,7 +13,7 @@ use super::colors;
 
 // ─── Animation helpers ──────────────────────────────────────────────────────
 
-const ANIM_DURATION: f32 = 0.20;
+const ANIM_DURATION: f32 = 0.30;
 const SLIDE_DURATION: f32 = 0.25;
 const SELECTOR_ITEM_H: f32 = 32.0;
 const SELECTOR_YEAR_COUNT: i32 = 21;
@@ -666,11 +666,15 @@ impl Widget for Calendar {
             canvas.draw_text(tl, (next_btn.x1 + (btn_w - s.width) / 2.0) as i32, (next_btn.y1 + (btn_w - s.height) / 2.0) as i32);
         }
 
-        // ── Selector overlay ────────────────────────────────────────
+        // ── Selector animation state ────────────────────────────────
         let sel_t = self.selector_anim_t();
-        if self.selector_view != SelectorView::None || sel_t > 0.01 {
+        let selector_active = self.selector_view != SelectorView::None || sel_t > 0.01;
+        let selector_fully_open = sel_t > 0.99;
+
+        // If selector is fully open, skip drawing the day grid entirely
+        if selector_fully_open {
             self.paint_selector_columns(canvas, rect, sel_t);
-            if sel_t > 0.99 { return; }
+            return;
         }
 
         // ── Day grid (with dual-month slide) ────────────────────────
@@ -746,6 +750,23 @@ impl Widget for Calendar {
         }
 
         canvas.pop_clip();
+
+        // ── Selector slides down ON TOP of the day grid ─────────────
+        if selector_active {
+            // Fade out the day grid by drawing a translucent overlay
+            let grid_area = self.selector_grid_rect(&rect);
+            let fade_alpha = (sel_t * 255.0) as u8;
+            let fade_color = Color::from_rgba(
+                self.selector_bg.red,
+                self.selector_bg.green,
+                self.selector_bg.blue,
+                fade_alpha,
+            );
+            canvas.fill_rect(grid_area, fade_color);
+
+            // Paint selector (bg + content animate down together)
+            self.paint_selector_columns(canvas, rect, sel_t);
+        }
     }
 
     fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
@@ -901,13 +922,14 @@ impl Calendar {
         let gr = self.selector_grid_rect(&rect);
         let anim_h = gr.height() * t;
 
-        // Background at full height — instantly visible
-        canvas.fill_rounded_rect(gr, Corners::new(0.0, 0.0, 6.0, 6.0), self.selector_bg);
-        canvas.stroke_rounded_rect(gr, Corners::new(0.0, 0.0, 6.0, 6.0), 1, self.selector_border_color);
+        // Background + border animate down together with content
+        let visible = Rect::new(gr.x1, gr.y1, gr.x2, gr.y1 + anim_h);
+        let corners = Corners::new(0.0, 0.0, 6.0, 6.0);
+        canvas.fill_rounded_rect(visible, corners, self.selector_bg);
+        canvas.stroke_rounded_rect(visible, corners, 1, self.selector_border_color);
 
-        // Clip content to animated height (items slide into view)
-        let clip = Rect::new(gr.x1, gr.y1, gr.x2, gr.y1 + anim_h);
-        canvas.push_clip(clip);
+        // Clip content to the same animated height
+        canvas.push_clip(visible);
 
         let show_m = matches!(self.selector_view, SelectorView::MonthColumn | SelectorView::Combined);
         let show_y = matches!(self.selector_view, SelectorView::YearColumn | SelectorView::Combined);
