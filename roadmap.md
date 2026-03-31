@@ -98,13 +98,14 @@ These are needed for most real-world applications.
 - [x] Integrate or recommend [fluent-rs](https://github.com/projectfluent/fluent-rs) for message formatting
 - [x] Add locale-aware number/date/currency formatting utilities
 - [x] Implement RTL (right-to-left) layout support:
-  - [x] `Row` and `Column` must respect text direction
-  - [x] `Edges` (padding/margin) need logical properties (inline-start/end vs left/right)
-  - [x] Text alignment needs logical values
+    - [x] `Row` and `Column` must respect text direction
+    - [x] `Edges` (padding/margin) need logical properties (inline-start/end vs left/right)
+    - [x] Text alignment needs logical values
 - [x] Pass locale to `cosmic_text::FontSystem` instead of empty string
 - [x] Add bidirectional text support in text layout
 
 **Components affected:** `aurora_text`, `aurora_widgets` (layout containers), `aurora_core` (Edges logical properties)
+
 - Example: `examples/i18n_example/`
 
 ---
@@ -143,9 +144,9 @@ These are needed for most real-world applications.
 **Required work:**
 
 - Add validation trait/system for form fields:
-  - `Validator` trait with `validate(value) -> Result<(), Vec<String>>`
-  - Built-in validators: required, min/max length, regex, email, numeric range
-  - Custom validator support
+    - `Validator` trait with `validate(value) -> Result<(), Vec<String>>`
+    - Built-in validators: required, min/max length, regex, email, numeric range
+    - Custom validator support
 - Add error state rendering to form widgets (red border, error message below field)
 - Add `Field` component enhancements: label, description, error message, required indicator
 - Form-level validation: validate all fields, collect errors, prevent submit
@@ -202,21 +203,21 @@ Features that elevate the framework from functional to professional.
 
 ### 3.1 Missing Widgets
 
-| Widget | Priority | Description |
-|--------|----------|-------------|
-| **TreeView** | High | Hierarchical data display with expand/collapse, selection, lazy loading |
-| **ColorPicker** | Medium | Color selection with hex/RGB/HSL input, palette, eyedropper |
-| **TimePicker** | Medium | Time selection (hours, minutes, AM/PM or 24h) to complement DatePicker |
-| **DateTimePicker** | Medium | Combined date + time selection |
-| **DateRangePicker** | Medium | Select a start and end date |
-| **NumberInput** | Medium | Numeric input with increment/decrement buttons, min/max, step |
-| **RichTextEditor** | Low | WYSIWYG text editing with formatting (bold, italic, links) |
-| **SplitPane** | Medium | Resizable split view (horizontal/vertical) with drag handle |
-| **Stepper** | Low | Step-by-step wizard/progress indicator |
-| **SegmentedControl** | Low | iOS-style segmented toggle bar |
-| **TagInput** | Medium | Multi-value input with removable tags |
-| **AutoComplete** | Medium | Text input with suggestion dropdown (fuzzy search) |
-| **Sheet/Drawer** | Medium | Slide-in panel from edge of screen |
+| Widget               | Priority | Description                                                             |
+|----------------------|----------|-------------------------------------------------------------------------|
+| **TreeView**         | High     | Hierarchical data display with expand/collapse, selection, lazy loading |
+| **ColorPicker**      | Medium   | Color selection with hex/RGB/HSL input, palette, eyedropper             |
+| **TimePicker**       | Medium   | Time selection (hours, minutes, AM/PM or 24h) to complement DatePicker  |
+| **DateTimePicker**   | Medium   | Combined date + time selection                                          |
+| **DateRangePicker**  | Medium   | Select a start and end date                                             |
+| **NumberInput**      | Medium   | Numeric input with increment/decrement buttons, min/max, step           |
+| **RichTextEditor**   | Low      | WYSIWYG text editing with formatting (bold, italic, links)              |
+| **SplitPane**        | Medium   | Resizable split view (horizontal/vertical) with drag handle             |
+| **Stepper**          | Low      | Step-by-step wizard/progress indicator                                  |
+| **SegmentedControl** | Low      | iOS-style segmented toggle bar                                          |
+| **TagInput**         | Medium   | Multi-value input with removable tags                                   |
+| **AutoComplete**     | Medium   | Text input with suggestion dropdown (fuzzy search)                      |
+| **Sheet/Drawer**     | Medium   | Slide-in panel from edge of screen                                      |
 
 ---
 
@@ -241,9 +242,9 @@ Features that elevate the framework from functional to professional.
 **Required work:**
 
 - Add build scripts or templates for platform-specific packaging:
-  - **Windows:** WiX/NSIS installer templates, MSIX support
-  - **macOS:** .app bundle creation, DMG packaging, notarization guide
-  - **Linux:** AppImage, Flatpak, .deb/.rpm templates
+    - **Windows:** WiX/NSIS installer templates, MSIX support
+    - **macOS:** .app bundle creation, DMG packaging, notarization guide
+    - **Linux:** AppImage, Flatpak, .deb/.rpm templates
 - Code signing documentation and scripts
 - Auto-update mechanism (integrate with [self_update](https://github.com/nickelc/self_update) or similar)
 - Application icon embedding (`.ico`, `.icns`, embedded resources)
@@ -344,13 +345,13 @@ The final stretch for a truly production-grade framework.
 
 ## Summary
 
-| Phase | Focus | Readiness |
-|-------|-------|-----------|
-| **Current** | Widgets, theming, animation, rendering | **55%** |
-| **Phase 1** | Accessibility, testing, file dialogs, drag-and-drop | **70%** |
-| **Phase 2** | i18n, multi-window, system tray, validation, virtual scroll, undo, threading | **85%** |
-| **Phase 3** | Missing widgets, packaging, clipboard, error handling, dev tools | **95%** |
-| **Phase 4** | Docs, ecosystem, advanced rendering, platform integration, hardening | **100%** |
+| Phase       | Focus                                                                        | Readiness |
+|-------------|------------------------------------------------------------------------------|-----------|
+| **Current** | Widgets, theming, animation, rendering                                       | **55%**   |
+| **Phase 1** | Accessibility, testing, file dialogs, drag-and-drop                          | **70%**   |
+| **Phase 2** | i18n, multi-window, system tray, validation, virtual scroll, undo, threading | **85%**   |
+| **Phase 3** | Missing widgets, packaging, clipboard, error handling, dev tools             | **95%**   |
+| **Phase 4** | Docs, ecosystem, advanced rendering, platform integration, hardening         | **100%**  |
 
 ---
 
