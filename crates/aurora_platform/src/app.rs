@@ -659,10 +659,12 @@ impl AppContext {
     where
         F: FnMut(&mut AppWindow, FrameInfo) + Send + 'static,
     {
-        let _ = self.proxy.send_event(AppEvent::OpenWindow {
-            config,
-            on_render: Box::new(on_render),
-        });
+        let _ = self.proxy.send_event(AppEvent::OpenWindow(Box::new(
+            OpenWindowRequest {
+                config,
+                on_render: Box::new(on_render),
+            },
+        )));
     }
 
     /// Closes a specific window by ID.
@@ -685,14 +687,20 @@ impl AppContext {
 }
 
 // ---------------------------------------------------------------------------
+// Type aliases
+// ---------------------------------------------------------------------------
+
+/// Render callback type for a window.
+type RenderCallback = dyn FnMut(&mut AppWindow, FrameInfo);
+/// Render callback that can be sent across threads (for `AppEvent`).
+type SendRenderCallback = dyn FnMut(&mut AppWindow, FrameInfo) + Send;
+
+// ---------------------------------------------------------------------------
 // AppEvent — user events for the event loop
 // ---------------------------------------------------------------------------
 
 pub(crate) enum AppEvent {
-    OpenWindow {
-        config: WindowConfig,
-        on_render: Box<dyn FnMut(&mut AppWindow, FrameInfo) + Send>,
-    },
+    OpenWindow(Box<OpenWindowRequest>),
     CloseWindow(WindowId),
     UserMessage {
         target: Option<WindowId>,
@@ -701,13 +709,19 @@ pub(crate) enum AppEvent {
     RequestRedraw(WindowId),
 }
 
+/// Boxed to avoid large enum variant size difference in `AppEvent`.
+pub(crate) struct OpenWindowRequest {
+    config: WindowConfig,
+    on_render: Box<SendRenderCallback>,
+}
+
 // ---------------------------------------------------------------------------
 // WindowState — per-window event-loop state
 // ---------------------------------------------------------------------------
 
 struct WindowState {
     app_window: AppWindow,
-    on_render: Box<dyn FnMut(&mut AppWindow, FrameInfo)>,
+    on_render: Box<RenderCallback>,
     // Per-window event tracking (previously global in AppHandler):
     current_cursor_position: Option<Point>,
     resized_this_cycle: bool,
@@ -716,7 +730,6 @@ struct WindowState {
     os_drag_paths: Vec<PathBuf>,
     // Multi-window relationships:
     parent: Option<WindowId>,
-    modal: bool,
     modal_child: Option<WindowId>,
     on_close: Option<Arc<dyn Fn() + Send + Sync>>,
 }
@@ -727,7 +740,7 @@ struct WindowState {
 
 struct AppHandler {
     windows: HashMap<WindowId, WindowState>,
-    pending_windows: Vec<(WindowConfig, Box<dyn FnMut(&mut AppWindow, FrameInfo)>)>,
+    pending_windows: Vec<(WindowConfig, Box<RenderCallback>)>,
     current_modifiers: winit::keyboard::ModifiersState,
     proxy: EventLoopProxy<AppEvent>,
     primary_window: Option<WindowId>,
@@ -744,7 +757,7 @@ impl AppHandler {
         &mut self,
         event_loop: &ActiveEventLoop,
         config: WindowConfig,
-        on_render: Box<dyn FnMut(&mut AppWindow, FrameInfo)>,
+        on_render: Box<RenderCallback>,
     ) {
         let is_primary = config.primary;
         let parent = config.parent;
@@ -793,7 +806,6 @@ impl AppHandler {
                             drag_active: false,
                             os_drag_paths: Vec::new(),
                             parent,
-                            modal,
                             modal_child: None,
                             on_close,
                         };
@@ -845,10 +857,10 @@ impl AppHandler {
         }
 
         // Fire the on_close callback before dropping the window state
-        if let Some(state) = self.windows.get(&id) {
-            if let Some(ref cb) = state.on_close {
-                cb();
-            }
+        if let Some(state) = self.windows.get(&id)
+            && let Some(ref cb) = state.on_close
+        {
+            cb();
         }
 
         self.windows.remove(&id);
@@ -886,8 +898,8 @@ impl ApplicationHandler<AppEvent> for AppHandler {
 
     fn user_event(&mut self, event_loop: &ActiveEventLoop, event: AppEvent) {
         match event {
-            AppEvent::OpenWindow { config, on_render } => {
-                self.create_window(event_loop, config, on_render);
+            AppEvent::OpenWindow(req) => {
+                self.create_window(event_loop, req.config, req.on_render);
             }
             AppEvent::CloseWindow(id) => {
                 self.close_window(id, event_loop);
