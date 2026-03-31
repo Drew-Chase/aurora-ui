@@ -356,10 +356,12 @@ impl Calendar {
         self.selector_anim_to = 1.0;
         self.selector_anim_start = Instant::now();
         self.selector_view = view;
+        // Center scroll on current month/year
         let grid_h = self.cell_size * self.total_rows() as f32 + self.cell_size;
-        self.month_scroll_offset = ((self.month as f32 - 1.0) * SELECTOR_ITEM_H - grid_h / 2.0 + SELECTOR_ITEM_H / 2.0).max(0.0);
+        self.month_scroll_offset = (self.month as f32 - 1.0) * SELECTOR_ITEM_H - grid_h / 2.0 + SELECTOR_ITEM_H / 2.0;
         let yc = SELECTOR_YEAR_COUNT as f32 / 2.0;
-        self.year_scroll_offset = (yc * SELECTOR_ITEM_H - grid_h / 2.0 + SELECTOR_ITEM_H / 2.0).max(0.0);
+        self.year_scroll_offset = yc * SELECTOR_ITEM_H - grid_h / 2.0 + SELECTOR_ITEM_H / 2.0;
+        self.clamp_scroll();
     }
 
     fn close_selector(&mut self) {
@@ -399,6 +401,25 @@ impl Calendar {
         Rect::new(rect.x1, gy, rect.x1 + gw, gy + gh)
     }
 
+    fn month_scroll_max(&self) -> f32 {
+        let viewport_h = self.selector_grid_rect(&Rect::new(0.0, 0.0, 0.0, 0.0)).height();
+        // Use the real viewport: grid area height
+        let grid_h = self.cell_size * self.total_rows() as f32 + self.cell_size;
+        (12.0 * SELECTOR_ITEM_H - grid_h).max(0.0)
+    }
+
+    fn year_scroll_max(&self) -> f32 {
+        let grid_h = self.cell_size * self.total_rows() as f32 + self.cell_size;
+        (SELECTOR_YEAR_COUNT as f32 * SELECTOR_ITEM_H - grid_h).max(0.0)
+    }
+
+    fn clamp_scroll(&mut self) {
+        let m_max = self.month_scroll_max();
+        let y_max = self.year_scroll_max();
+        self.month_scroll_offset = self.month_scroll_offset.clamp(0.0, m_max);
+        self.year_scroll_offset = self.year_scroll_offset.clamp(0.0, y_max);
+    }
+
     fn selector_month_at(&self, pos: &aurora_core::geometry::point::Point, col_rect: &Rect) -> Option<u32> {
         if !col_rect.contains(pos) { return None; }
         let idx = ((pos.y - col_rect.y1 + self.month_scroll_offset) / SELECTOR_ITEM_H) as u32;
@@ -408,6 +429,7 @@ impl Calendar {
     fn selector_year_at(&self, pos: &aurora_core::geometry::point::Point, col_rect: &Rect) -> Option<u32> {
         if !col_rect.contains(pos) { return None; }
         let idx = ((pos.y - col_rect.y1 + self.year_scroll_offset) / SELECTOR_ITEM_H) as i32;
+        if idx < 0 || idx >= SELECTOR_YEAR_COUNT { return None; }
         let yr = self.year as i32 - SELECTOR_YEAR_COUNT / 2 + idx;
         if yr > 0 { Some(yr as u32) } else { None }
     }
@@ -854,15 +876,16 @@ impl Widget for Calendar {
                     let show_y = matches!(self.selector_view, SelectorView::YearColumn | SelectorView::Combined);
                     if show_m && show_y {
                         if self.hovered_selector_month.is_some() {
-                            self.month_scroll_offset = (self.month_scroll_offset - delta * SELECTOR_ITEM_H).max(0.0);
+                            self.month_scroll_offset -= delta * SELECTOR_ITEM_H;
                         } else if self.hovered_selector_year.is_some() {
-                            self.year_scroll_offset = (self.year_scroll_offset - delta * SELECTOR_ITEM_H).max(0.0);
+                            self.year_scroll_offset -= delta * SELECTOR_ITEM_H;
                         }
                     } else if show_m {
-                        self.month_scroll_offset = (self.month_scroll_offset - delta * SELECTOR_ITEM_H).max(0.0);
+                        self.month_scroll_offset -= delta * SELECTOR_ITEM_H;
                     } else if show_y {
-                        self.year_scroll_offset = (self.year_scroll_offset - delta * SELECTOR_ITEM_H).max(0.0);
+                        self.year_scroll_offset -= delta * SELECTOR_ITEM_H;
                     }
+                    self.clamp_scroll();
                     return EventResponse { status: EventStatus::Consumed, ..Default::default() };
                 }
                 EventResponse::default()
