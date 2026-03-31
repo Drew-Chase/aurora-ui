@@ -38,7 +38,7 @@ fn main() {
         .text_direction(TextDirection::Ltr)
         .min_size((400, 500))
         .size((500, 600))
-        .font(include_bytes!("../../Roboto-Regular.ttf"))
+        .use_system_fonts()
         .run(move |window, _frame_info| {
             window.root(
                 col!()
