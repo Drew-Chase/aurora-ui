@@ -10,7 +10,7 @@ use std::time::Instant;
 
 use super::colors;
 
-const SLIDE_DURATION: f32 = 0.30;
+const SLIDE_DURATION: f32 = 0.50;
 
 fn ease_out_cubic(t: f32) -> f32 {
     1.0 - (1.0 - t).powi(3)
