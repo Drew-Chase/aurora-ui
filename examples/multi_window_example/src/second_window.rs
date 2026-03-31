@@ -4,19 +4,21 @@ use std::sync::Arc;
 
 /// Opens the second window. Call from a button callback with a cloned `AppContext`.
 ///
-/// The `open_flag` is set to `false` when the window closes so the primary
+/// The `open_flag` is set to `false` when the window closes (by any means —
+/// the X button, `close_window()`, or the parent closing) so the primary
 /// window can re-enable the "Open" button.
 pub fn open(ctx: &AppContext, open_flag: &Arc<AtomicBool>) {
-    let flag = open_flag.clone();
+    let flag_for_close = open_flag.clone();
 
     ctx.open_window(
         WindowConfig::new()
             .title("Second Window")
             .size((400, 300))
-            .use_system_fonts(),
+            .use_system_fonts()
+            .on_close(move || {
+                flag_for_close.store(false, Ordering::Relaxed);
+            }),
         move |window, _frame| {
-            let flag = flag.clone();
-
             window.root(
                 col!()
                     .spacing(12.0)
@@ -34,7 +36,6 @@ pub fn open(ctx: &AppContext, open_flag: &Arc<AtomicBool>) {
                         let ctx = window.app_context().clone();
                         let id = window.id();
                         button!("Close This Window").on_click(move |_| {
-                            flag.store(false, Ordering::Relaxed);
                             ctx.close_window(id);
                         })
                     }),

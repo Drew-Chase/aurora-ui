@@ -107,6 +107,10 @@ pub struct WindowConfig {
     pub parent: Option<WindowId>,
     /// If true, this is a modal window that blocks input on its parent.
     pub modal: bool,
+    /// Callback invoked when the window is closed (by any means: X button,
+    /// `close_window()`, or parent closing). Use this to clean up shared
+    /// state such as "is open" flags.
+    pub on_close: Option<Arc<dyn Fn() + Send + Sync>>,
 }
 
 impl Default for WindowConfig {
@@ -132,6 +136,7 @@ impl Default for WindowConfig {
             primary: false,
             parent: None,
             modal: false,
+            on_close: None,
         }
     }
 }
@@ -230,6 +235,12 @@ impl WindowConfig {
     #[cfg(feature = "text")]
     pub fn font_options(mut self, opts: aurora_text::font_options::FontOptions) -> Self {
         self.font_options = opts;
+        self
+    }
+
+    /// Sets a callback invoked when the window is closed by any means.
+    pub fn on_close(mut self, f: impl Fn() + Send + Sync + 'static) -> Self {
+        self.on_close = Some(Arc::new(f));
         self
     }
 }
@@ -605,6 +616,7 @@ impl From<App> for WindowConfig {
             primary: true,
             parent: None,
             modal: false,
+            on_close: None,
         }
     }
 }
@@ -706,6 +718,7 @@ struct WindowState {
     parent: Option<WindowId>,
     modal: bool,
     modal_child: Option<WindowId>,
+    on_close: Option<Arc<dyn Fn() + Send + Sync>>,
 }
 
 // ---------------------------------------------------------------------------
@@ -736,6 +749,7 @@ impl AppHandler {
         let is_primary = config.primary;
         let parent = config.parent;
         let modal = config.modal;
+        let on_close = config.on_close.clone();
 
         let attributes = build_window_attributes(&config, event_loop);
 
@@ -781,6 +795,7 @@ impl AppHandler {
                             parent,
                             modal,
                             modal_child: None,
+                            on_close,
                         };
 
                         self.windows.insert(window_id, state);
@@ -827,6 +842,13 @@ impl AppHandler {
             && parent_state.modal_child == Some(id)
         {
             parent_state.modal_child = None;
+        }
+
+        // Fire the on_close callback before dropping the window state
+        if let Some(state) = self.windows.get(&id) {
+            if let Some(ref cb) = state.on_close {
+                cb();
+            }
         }
 
         self.windows.remove(&id);
