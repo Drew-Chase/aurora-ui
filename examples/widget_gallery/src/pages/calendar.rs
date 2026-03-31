@@ -44,7 +44,8 @@ pub fn page_calendar() -> impl Widget {
             calendar::Calendar::new()
                 .year(2026)
                 .month(3)
-                .month_year_selector(calendar::MonthYearSelector::Combined),
+                .month_year_selector(calendar::MonthYearSelector::Combined)
+                .selector_bg(theme::colors::muted()),
         ))
         .child(
             code_block::CodeBlock::new()

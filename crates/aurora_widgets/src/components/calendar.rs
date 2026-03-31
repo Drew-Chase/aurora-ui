@@ -330,11 +330,11 @@ impl Calendar {
     }
 
     fn header_hit(&self, pos: &aurora_core::geometry::point::Point, rect: &Rect) -> HeaderHit {
-        let hr = Rect::new(rect.x1, rect.y1, rect.x2, rect.y1 + self.header_height);
+        let hr = Rect::new(rect.x1, rect.y1, rect.x1 + self.cell_size * 7.0, rect.y1 + self.header_height);
         if !hr.contains(pos) { return HeaderHit::None; }
-        let third = hr.width() / 3.0;
-        if pos.x < hr.x1 + third { HeaderHit::Prev }
-        else if pos.x > hr.x2 - third { HeaderHit::Next }
+        let btn_w = self.header_height; // 1:1 aspect ratio buttons
+        if pos.x < hr.x1 + btn_w { HeaderHit::Prev }
+        else if pos.x > hr.x2 - btn_w { HeaderHit::Next }
         else { HeaderHit::MonthYear }
     }
 
@@ -635,34 +635,35 @@ impl Widget for Calendar {
         let grid_w = self.cell_size * 7.0;
         let header_rect = Rect::new(rect.x1, rect.y1, rect.x1 + grid_w, rect.y1 + self.header_height);
 
-        // ── Header backgrounds (hover) ──────────────────────────────
-        let third = header_rect.width() / 3.0;
-        let prev_rect = Rect::new(header_rect.x1, header_rect.y1, header_rect.x1 + third, header_rect.y2);
-        let mid_rect = Rect::new(header_rect.x1 + third, header_rect.y1, header_rect.x2 - third, header_rect.y2);
-        let next_rect = Rect::new(header_rect.x2 - third, header_rect.y1, header_rect.x2, header_rect.y2);
+        // ── Header button rects (1:1 prev/next, center for label) ───
+        let btn_w = self.header_height;
+        let prev_btn = Rect::new(header_rect.x1, header_rect.y1, header_rect.x1 + btn_w, header_rect.y2);
+        let next_btn = Rect::new(header_rect.x2 - btn_w, header_rect.y1, header_rect.x2, header_rect.y2);
+        let mid_rect = Rect::new(prev_btn.x2, header_rect.y1, next_btn.x1, header_rect.y2);
 
+        // Header hover backgrounds (same corner style as day cells)
         if self.hovered_header == Some(HeaderHit::Prev) && self.can_go_prev() {
-            canvas.fill_rounded_rect(prev_rect, Corners::all(4.0), self.header_hover_bg);
+            canvas.fill_rounded_rect(prev_btn, self.corners, self.header_hover_bg);
         }
         if self.hovered_header == Some(HeaderHit::MonthYear) && self.month_year_selector.is_some() {
             canvas.fill_rounded_rect(mid_rect, Corners::all(4.0), self.header_hover_bg);
         }
         if self.hovered_header == Some(HeaderHit::Next) && self.can_go_next() {
-            canvas.fill_rounded_rect(next_rect, Corners::all(4.0), self.header_hover_bg);
+            canvas.fill_rounded_rect(next_btn, self.corners, self.header_hover_bg);
         }
 
-        // ── Header text ─────────────────────────────────────────────
+        // ── Header text (centered in each region) ───────────────────
         if let Some(ref tl) = self.prev_layout {
             let s = tl.size();
-            canvas.draw_text(tl, (rect.x1 + 8.0) as i32, (rect.y1 + (self.header_height - s.height) / 2.0) as i32);
+            canvas.draw_text(tl, (prev_btn.x1 + (btn_w - s.width) / 2.0) as i32, (prev_btn.y1 + (btn_w - s.height) / 2.0) as i32);
         }
         if let Some(ref tl) = self.month_label_layout {
             let s = tl.size();
-            canvas.draw_text(tl, (rect.x1 + (grid_w - s.width) / 2.0) as i32, (rect.y1 + (self.header_height - s.height) / 2.0) as i32);
+            canvas.draw_text(tl, (mid_rect.x1 + (mid_rect.width() - s.width) / 2.0) as i32, (mid_rect.y1 + (self.header_height - s.height) / 2.0) as i32);
         }
         if let Some(ref tl) = self.next_layout {
             let s = tl.size();
-            canvas.draw_text(tl, (rect.x1 + grid_w - s.width - 8.0) as i32, (rect.y1 + (self.header_height - s.height) / 2.0) as i32);
+            canvas.draw_text(tl, (next_btn.x1 + (btn_w - s.width) / 2.0) as i32, (next_btn.y1 + (btn_w - s.height) / 2.0) as i32);
         }
 
         // ── Selector overlay ────────────────────────────────────────
@@ -899,21 +900,13 @@ impl Calendar {
     fn paint_selector_columns(&self, canvas: &mut Canvas, rect: Rect, t: f32) {
         let gr = self.selector_grid_rect(&rect);
         let anim_h = gr.height() * t;
+
+        // Background at full height — instantly visible
+        canvas.fill_rounded_rect(gr, Corners::new(0.0, 0.0, 6.0, 6.0), self.selector_bg);
+        canvas.stroke_rounded_rect(gr, Corners::new(0.0, 0.0, 6.0, 6.0), 1, self.selector_border_color);
+
+        // Clip content to animated height (items slide into view)
         let clip = Rect::new(gr.x1, gr.y1, gr.x2, gr.y1 + anim_h);
-
-        // Background + border
-        canvas.fill_rounded_rect(
-            Rect::new(gr.x1, gr.y1, gr.x2, gr.y1 + anim_h),
-            Corners::new(0.0, 0.0, 6.0, 6.0),
-            self.selector_bg,
-        );
-        canvas.stroke_rounded_rect(
-            Rect::new(gr.x1, gr.y1, gr.x2, gr.y1 + anim_h),
-            Corners::new(0.0, 0.0, 6.0, 6.0),
-            1,
-            self.selector_border_color,
-        );
-
         canvas.push_clip(clip);
 
         let show_m = matches!(self.selector_view, SelectorView::MonthColumn | SelectorView::Combined);
