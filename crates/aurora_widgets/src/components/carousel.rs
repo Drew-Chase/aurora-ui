@@ -109,7 +109,7 @@ impl Carousel {
             return;
         }
         self.slide_from = self.current;
-        self.slide_direction = if index > self.current { -1.0 } else { 1.0 };
+        self.slide_direction = if index > self.current { 1.0 } else { -1.0 };
         self.slide_start = Instant::now();
         self.current = index;
         if let Some(ref mut cb) = self.on_change {
@@ -121,7 +121,7 @@ impl Carousel {
         if self.slides.is_empty() { return; }
         let new = if self.current == 0 { self.slides.len() - 1 } else { self.current - 1 };
         self.slide_from = self.current;
-        self.slide_direction = 1.0;
+        self.slide_direction = -1.0; // new enters from left
         self.slide_start = Instant::now();
         self.current = new;
         if let Some(ref mut cb) = self.on_change { cb(self.current); }
@@ -130,7 +130,7 @@ impl Carousel {
     fn next(&mut self) {
         if self.slides.is_empty() { return; }
         self.slide_from = self.current;
-        self.slide_direction = -1.0;
+        self.slide_direction = 1.0; // new enters from right
         self.slide_start = Instant::now();
         self.current = (self.current + 1) % self.slides.len();
         if let Some(ref mut cb) = self.on_change { cb(self.current); }
