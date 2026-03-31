@@ -402,8 +402,6 @@ impl Calendar {
     }
 
     fn month_scroll_max(&self) -> f32 {
-        let viewport_h = self.selector_grid_rect(&Rect::new(0.0, 0.0, 0.0, 0.0)).height();
-        // Use the real viewport: grid area height
         let grid_h = self.cell_size * self.total_rows() as f32 + self.cell_size;
         (12.0 * SELECTOR_ITEM_H - grid_h).max(0.0)
     }
@@ -429,13 +427,14 @@ impl Calendar {
     fn selector_year_at(&self, pos: &aurora_core::geometry::point::Point, col_rect: &Rect) -> Option<u32> {
         if !col_rect.contains(pos) { return None; }
         let idx = ((pos.y - col_rect.y1 + self.year_scroll_offset) / SELECTOR_ITEM_H) as i32;
-        if idx < 0 || idx >= SELECTOR_YEAR_COUNT { return None; }
+        if !(0..SELECTOR_YEAR_COUNT).contains(&idx) { return None; }
         let yr = self.year as i32 - SELECTOR_YEAR_COUNT / 2 + idx;
         if yr > 0 { Some(yr as u32) } else { None }
     }
 
     // ── Paint a day grid at an x-offset (for slide animation) ───────────
 
+    #[allow(clippy::too_many_arguments)]
     fn paint_day_grid(
         canvas: &mut Canvas,
         day_layouts: &[Option<aurora_text::text_layout::TextLayout>],
