@@ -124,13 +124,14 @@ pub fn lang(input: TokenStream) -> TokenStream {
         locale_tag_strs.push(quote! { #tag_str });
     }
 
-    // Rebuild tracking: include_str! forces cargo to watch the TOML files
+    // Rebuild tracking: include_bytes! triggers Cargo file watching,
+    // but we only store a bool (not the file contents) to avoid binary bloat.
     let toml_paths = load::collect_toml_paths(&full_path);
     let track_paths: Vec<proc_macro2::TokenStream> = toml_paths
         .iter()
         .map(|p| {
             let path_str = p.to_string_lossy().replace('\\', "/");
-            quote! { const _: &str = include_str!(#path_str); }
+            quote! { const _: bool = !include_bytes!(#path_str).is_empty(); }
         })
         .collect();
 
@@ -149,8 +150,10 @@ pub fn lang(input: TokenStream) -> TokenStream {
             #(#locale_modules)*
 
             /// Returns the `Lang` struct for a locale tag, or `None` if unknown.
+            ///
+            /// Matching is case-insensitive: `"en-US"` and `"en-us"` both work.
             pub fn by_tag(tag: &str) -> ::core::option::Option<&'static Lang> {
-                match tag {
+                match tag.to_ascii_lowercase().as_str() {
                     #(#locale_tag_arms,)*
                     _ => ::core::option::Option::None,
                 }
