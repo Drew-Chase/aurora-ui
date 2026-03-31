@@ -209,59 +209,138 @@ impl Calendar {
 
     // ── Builder methods ─────────────────────────────────────────────────
 
-    pub fn year(mut self, year: u32) -> Self { self.year = year; self }
-    pub fn month(mut self, month: u32) -> Self { self.month = month.clamp(1, 12); self }
-    pub fn selected_day(mut self, day: u32) -> Self { self.selected_day = Some(day); self }
-    pub fn today(mut self, day: u32) -> Self { self.today_day = Some(day); self }
-    pub fn cell_size(mut self, size: f32) -> Self { self.cell_size = size; self }
-    pub fn hover_bg(mut self, color: Color) -> Self { self.hover_bg = color; self }
-    pub fn header_hover_bg(mut self, color: Color) -> Self { self.header_hover_bg = color; self }
-    pub fn selector_bg(mut self, color: Color) -> Self { self.selector_bg = color; self }
-    pub fn selector_border_color(mut self, color: Color) -> Self { self.selector_border_color = color; self }
+    pub fn year(mut self, year: u32) -> Self {
+        self.year = year;
+        self
+    }
+    pub fn month(mut self, month: u32) -> Self {
+        self.month = month.clamp(1, 12);
+        self
+    }
+    pub fn selected_day(mut self, day: u32) -> Self {
+        self.selected_day = Some(day);
+        self
+    }
+    pub fn today(mut self, day: u32) -> Self {
+        self.today_day = Some(day);
+        self
+    }
+    pub fn cell_size(mut self, size: f32) -> Self {
+        self.cell_size = size;
+        self
+    }
+    pub fn hover_bg(mut self, color: Color) -> Self {
+        self.hover_bg = color;
+        self
+    }
+    pub fn header_hover_bg(mut self, color: Color) -> Self {
+        self.header_hover_bg = color;
+        self
+    }
+    pub fn selector_bg(mut self, color: Color) -> Self {
+        self.selector_bg = color;
+        self
+    }
+    pub fn selector_border_color(mut self, color: Color) -> Self {
+        self.selector_border_color = color;
+        self
+    }
 
     pub fn on_select(mut self, cb: impl FnMut(u32) + 'static) -> Self {
-        self.on_select = Some(Box::new(cb)); self
+        self.on_select = Some(Box::new(cb));
+        self
     }
     pub fn on_month_change(mut self, cb: impl FnMut(u32, u32) + 'static) -> Self {
-        self.on_month_change = Some(Box::new(cb)); self
+        self.on_month_change = Some(Box::new(cb));
+        self
     }
-    pub fn disabled_day(mut self, day: u32) -> Self { self.disabled_days.push(day); self }
-    pub fn disabled_days(mut self, days: Vec<u32>) -> Self { self.disabled_days = days; self }
-    pub fn min_date(mut self, year: u32, month: u32, day: u32) -> Self { self.min_date = Some((year, month, day)); self }
-    pub fn max_date(mut self, year: u32, month: u32, day: u32) -> Self { self.max_date = Some((year, month, day)); self }
-    pub fn month_year_selector(mut self, selector: MonthYearSelector) -> Self { self.month_year_selector = Some(selector); self }
-    pub fn indicator(mut self, indicator: CellIndicator) -> Self { self.indicators.push(indicator); self }
-    pub fn indicators(mut self, indicators: Vec<CellIndicator>) -> Self { self.indicators = indicators; self }
+    pub fn disabled_day(mut self, day: u32) -> Self {
+        self.disabled_days.push(day);
+        self
+    }
+    pub fn disabled_days(mut self, days: Vec<u32>) -> Self {
+        self.disabled_days = days;
+        self
+    }
+    pub fn min_date(mut self, year: u32, month: u32, day: u32) -> Self {
+        self.min_date = Some((year, month, day));
+        self
+    }
+    pub fn max_date(mut self, year: u32, month: u32, day: u32) -> Self {
+        self.max_date = Some((year, month, day));
+        self
+    }
+    pub fn month_year_selector(mut self, selector: MonthYearSelector) -> Self {
+        self.month_year_selector = Some(selector);
+        self
+    }
+    pub fn indicator(mut self, indicator: CellIndicator) -> Self {
+        self.indicators.push(indicator);
+        self
+    }
+    pub fn indicators(mut self, indicators: Vec<CellIndicator>) -> Self {
+        self.indicators = indicators;
+        self
+    }
 
     // ── Internal helpers ────────────────────────────────────────────────
 
     pub(crate) fn is_day_disabled(&self, day: u32) -> bool {
-        if self.disabled_days.contains(&day) { return true; }
+        if self.disabled_days.contains(&day) {
+            return true;
+        }
         let date = (self.year, self.month, day);
-        if let Some(min) = self.min_date && date < min { return true; }
-        if let Some(max) = self.max_date && date > max { return true; }
+        if let Some(min) = self.min_date
+            && date < min
+        {
+            return true;
+        }
+        if let Some(max) = self.max_date
+            && date > max
+        {
+            return true;
+        }
         false
     }
 
     fn can_go_prev(&self) -> bool {
         if let Some((min_y, min_m, _)) = self.min_date {
-            let (py, pm) = if self.month == 1 { (self.year - 1, 12) } else { (self.year, self.month - 1) };
+            let (py, pm) = if self.month == 1 {
+                (self.year - 1, 12)
+            } else {
+                (self.year, self.month - 1)
+            };
             (py, pm) >= (min_y, min_m)
-        } else { true }
+        } else {
+            true
+        }
     }
 
     fn can_go_next(&self) -> bool {
         if let Some((max_y, max_m, _)) = self.max_date {
-            let (ny, nm) = if self.month == 12 { (self.year + 1, 1) } else { (self.year, self.month + 1) };
+            let (ny, nm) = if self.month == 12 {
+                (self.year + 1, 1)
+            } else {
+                (self.year, self.month + 1)
+            };
             (ny, nm) <= (max_y, max_m)
-        } else { true }
+        } else {
+            true
+        }
     }
 
     pub(crate) fn compute_days_in_month(year: u32, month: u32) -> u32 {
         match month {
             1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
             4 | 6 | 9 | 11 => 30,
-            2 => if (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400) { 29 } else { 28 },
+            2 => {
+                if (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400)
+                {
+                    29
+                } else {
+                    28
+                }
+            }
             _ => 30,
         }
     }
@@ -274,23 +353,44 @@ impl Calendar {
 
     pub(crate) fn month_name(month: u32) -> &'static str {
         match month {
-            1 => "January", 2 => "February", 3 => "March", 4 => "April",
-            5 => "May", 6 => "June", 7 => "July", 8 => "August",
-            9 => "September", 10 => "October", 11 => "November", 12 => "December",
+            1 => "January",
+            2 => "February",
+            3 => "March",
+            4 => "April",
+            5 => "May",
+            6 => "June",
+            7 => "July",
+            8 => "August",
+            9 => "September",
+            10 => "October",
+            11 => "November",
+            12 => "December",
             _ => "",
         }
     }
 
     fn month_name_short(month: u32) -> &'static str {
         match month {
-            1 => "Jan", 2 => "Feb", 3 => "Mar", 4 => "Apr", 5 => "May", 6 => "Jun",
-            7 => "Jul", 8 => "Aug", 9 => "Sep", 10 => "Oct", 11 => "Nov", 12 => "Dec",
+            1 => "Jan",
+            2 => "Feb",
+            3 => "Mar",
+            4 => "Apr",
+            5 => "May",
+            6 => "Jun",
+            7 => "Jul",
+            8 => "Aug",
+            9 => "Sep",
+            10 => "Oct",
+            11 => "Nov",
+            12 => "Dec",
             _ => "",
         }
     }
 
     fn prev_month(&mut self) {
-        if !self.can_go_prev() { return; }
+        if !self.can_go_prev() {
+            return;
+        }
         // Save old grid for dual-slide
         self.slide_old_day_layouts = std::mem::take(&mut self.day_layouts);
         self.slide_old_prev_trailing = std::mem::take(&mut self.prev_trailing_layouts);
@@ -299,12 +399,21 @@ impl Calendar {
         self.slide_old_days_in_month = self.days_in_month;
         self.slide_direction = -1.0; // new enters from left
         self.slide_start = Instant::now();
-        if self.month == 1 { self.month = 12; self.year -= 1; } else { self.month -= 1; }
-        if let Some(ref mut cb) = self.on_month_change { cb(self.year, self.month); }
+        if self.month == 1 {
+            self.month = 12;
+            self.year -= 1;
+        } else {
+            self.month -= 1;
+        }
+        if let Some(ref mut cb) = self.on_month_change {
+            cb(self.year, self.month);
+        }
     }
 
     fn next_month(&mut self) {
-        if !self.can_go_next() { return; }
+        if !self.can_go_next() {
+            return;
+        }
         self.slide_old_day_layouts = std::mem::take(&mut self.day_layouts);
         self.slide_old_prev_trailing = std::mem::take(&mut self.prev_trailing_layouts);
         self.slide_old_next_trailing = std::mem::take(&mut self.next_trailing_layouts);
@@ -312,40 +421,78 @@ impl Calendar {
         self.slide_old_days_in_month = self.days_in_month;
         self.slide_direction = 1.0; // new enters from right
         self.slide_start = Instant::now();
-        if self.month == 12 { self.month = 1; self.year += 1; } else { self.month += 1; }
-        if let Some(ref mut cb) = self.on_month_change { cb(self.year, self.month); }
+        if self.month == 12 {
+            self.month = 1;
+            self.year += 1;
+        } else {
+            self.month += 1;
+        }
+        if let Some(ref mut cb) = self.on_month_change {
+            cb(self.year, self.month);
+        }
     }
 
-    fn total_rows(&self) -> u32 { (self.first_weekday + self.days_in_month).div_ceil(7) }
+    fn total_rows(&self) -> u32 {
+        (self.first_weekday + self.days_in_month).div_ceil(7)
+    }
 
     fn total_rows_for(first_weekday: u32, days_in_month: u32) -> u32 {
         (first_weekday + days_in_month).div_ceil(7)
     }
 
-    pub(crate) fn day_at_position(&self, pos: &aurora_core::geometry::point::Point, rect: &Rect) -> Option<u32> {
+    pub(crate) fn day_at_position(
+        &self,
+        pos: &aurora_core::geometry::point::Point,
+        rect: &Rect,
+    ) -> Option<u32> {
         let grid_y = rect.y1 + self.header_height + self.cell_size;
-        if pos.y < grid_y || pos.x < rect.x1 || pos.x > rect.x1 + self.cell_size * 7.0 { return None; }
+        if pos.y < grid_y || pos.x < rect.x1 || pos.x > rect.x1 + self.cell_size * 7.0 {
+            return None;
+        }
         let col = ((pos.x - rect.x1) / self.cell_size) as u32;
         let row = ((pos.y - grid_y) / self.cell_size) as u32;
-        if col >= 7 || row >= self.total_rows() { return None; }
+        if col >= 7 || row >= self.total_rows() {
+            return None;
+        }
         let cell_idx = row * 7 + col;
-        if cell_idx < self.first_weekday { return None; }
+        if cell_idx < self.first_weekday {
+            return None;
+        }
         let day = cell_idx - self.first_weekday + 1;
-        if (1..=self.days_in_month).contains(&day) { Some(day) } else { None }
+        if (1..=self.days_in_month).contains(&day) {
+            Some(day)
+        } else {
+            None
+        }
     }
 
     fn header_hit(&self, pos: &aurora_core::geometry::point::Point, rect: &Rect) -> HeaderHit {
-        let hr = Rect::new(rect.x1, rect.y1, rect.x1 + self.cell_size * 7.0, rect.y1 + self.header_height);
-        if !hr.contains(pos) { return HeaderHit::None; }
+        let hr = Rect::new(
+            rect.x1,
+            rect.y1,
+            rect.x1 + self.cell_size * 7.0,
+            rect.y1 + self.header_height,
+        );
+        if !hr.contains(pos) {
+            return HeaderHit::None;
+        }
         let btn_w = self.header_height;
-        if pos.x < hr.x1 + btn_w { return HeaderHit::Prev; }
-        if pos.x > hr.x2 - btn_w { return HeaderHit::Next; }
+        if pos.x < hr.x1 + btn_w {
+            return HeaderHit::Prev;
+        }
+        if pos.x > hr.x2 - btn_w {
+            return HeaderHit::Next;
+        }
         // Center area: split into Month/Year for Separate mode
         if self.month_year_selector == Some(MonthYearSelector::Separate) {
             let mid_start = hr.x1 + btn_w;
             let mid_end = hr.x2 - btn_w;
             let mid = mid_start + (mid_end - mid_start) / 2.0;
-            if pos.x < mid { HeaderHit::Month } else { HeaderHit::Year }
+            if pos.x < mid {
+                HeaderHit::Month
+            } else {
+                HeaderHit::Year
+            }
         } else {
             HeaderHit::Month // Combined/None: whole center is one button
         }
@@ -358,7 +505,8 @@ impl Calendar {
         self.selector_view = view;
         // Center scroll on current month/year
         let grid_h = self.cell_size * self.total_rows() as f32 + self.cell_size;
-        self.month_scroll_offset = (self.month as f32 - 1.0) * SELECTOR_ITEM_H - grid_h / 2.0 + SELECTOR_ITEM_H / 2.0;
+        self.month_scroll_offset =
+            (self.month as f32 - 1.0) * SELECTOR_ITEM_H - grid_h / 2.0 + SELECTOR_ITEM_H / 2.0;
         let yc = SELECTOR_YEAR_COUNT as f32 / 2.0;
         self.year_scroll_offset = yc * SELECTOR_ITEM_H - grid_h / 2.0 + SELECTOR_ITEM_H / 2.0;
         self.clamp_scroll();
@@ -381,11 +529,18 @@ impl Calendar {
     }
 
     fn selector_anim_t(&self) -> f32 {
-        anim_t(self.selector_anim_from, self.selector_anim_to, self.selector_anim_start, ANIM_DURATION)
+        anim_t(
+            self.selector_anim_from,
+            self.selector_anim_to,
+            self.selector_anim_start,
+            ANIM_DURATION,
+        )
     }
 
     fn slide_progress(&self) -> f32 {
-        if self.slide_direction == 0.0 { return 1.0; }
+        if self.slide_direction == 0.0 {
+            return 1.0;
+        }
         let elapsed = self.slide_start.elapsed().as_secs_f32();
         ease_out_cubic((elapsed / SLIDE_DURATION).min(1.0))
     }
@@ -418,16 +573,34 @@ impl Calendar {
         self.year_scroll_offset = self.year_scroll_offset.clamp(0.0, y_max);
     }
 
-    fn selector_month_at(&self, pos: &aurora_core::geometry::point::Point, col_rect: &Rect) -> Option<u32> {
-        if !col_rect.contains(pos) { return None; }
+    fn selector_month_at(
+        &self,
+        pos: &aurora_core::geometry::point::Point,
+        col_rect: &Rect,
+    ) -> Option<u32> {
+        if !col_rect.contains(pos) {
+            return None;
+        }
         let idx = ((pos.y - col_rect.y1 + self.month_scroll_offset) / SELECTOR_ITEM_H) as u32;
-        if (1..=12).contains(&(idx + 1)) { Some(idx + 1) } else { None }
+        if (1..=12).contains(&(idx + 1)) {
+            Some(idx + 1)
+        } else {
+            None
+        }
     }
 
-    fn selector_year_at(&self, pos: &aurora_core::geometry::point::Point, col_rect: &Rect) -> Option<u32> {
-        if !col_rect.contains(pos) { return None; }
+    fn selector_year_at(
+        &self,
+        pos: &aurora_core::geometry::point::Point,
+        col_rect: &Rect,
+    ) -> Option<u32> {
+        if !col_rect.contains(pos) {
+            return None;
+        }
         let idx = ((pos.y - col_rect.y1 + self.year_scroll_offset) / SELECTOR_ITEM_H) as i32;
-        if !(0..SELECTOR_YEAR_COUNT).contains(&idx) { return None; }
+        if !(0..SELECTOR_YEAR_COUNT).contains(&idx) {
+            return None;
+        }
         let yr = self.year as i32 - SELECTOR_YEAR_COUNT / 2 + idx;
         if yr > 0 { Some(yr as u32) } else { None }
     }
@@ -469,7 +642,11 @@ impl Calendar {
                 let cx = rect_x1 + i as f32 * cell_size + offset_x;
                 let cy = grid_y;
                 let s = tl.size();
-                canvas.draw_text(tl, (cx + (cell_size - s.width) / 2.0) as i32, (cy + (cell_size - s.height) / 2.0) as i32);
+                canvas.draw_text(
+                    tl,
+                    (cx + (cell_size - s.width) / 2.0) as i32,
+                    (cy + (cell_size - s.height) / 2.0) as i32,
+                );
             }
         }
 
@@ -502,16 +679,32 @@ impl Calendar {
 
                 // Indicators
                 for ind in indicators {
-                    if ind.day != day { continue; }
+                    if ind.day != day {
+                        continue;
+                    }
                     match ind.style {
                         IndicatorStyle::Dot => {
                             let dy = cy + cell_size - 8.0;
                             let dcx = cx + cell_size / 2.0;
-                            canvas.fill_rounded_rect(Rect::new(dcx - 2.0, dy - 2.0, dcx + 2.0, dy + 2.0), Corners::all(9999.0), ind.color);
+                            canvas.fill_rounded_rect(
+                                Rect::new(dcx - 2.0, dy - 2.0, dcx + 2.0, dy + 2.0),
+                                Corners::all(9999.0),
+                                ind.color,
+                            );
                         }
                         IndicatorStyle::Ring => {
                             let ins = 2.0;
-                            canvas.stroke_rounded_rect(Rect::new(cx + ins, cy + ins, cx + cell_size - ins, cy + cell_size - ins), corners, 1, ind.color);
+                            canvas.stroke_rounded_rect(
+                                Rect::new(
+                                    cx + ins,
+                                    cy + ins,
+                                    cx + cell_size - ins,
+                                    cy + cell_size - ins,
+                                ),
+                                corners,
+                                1,
+                                ind.color,
+                            );
                         }
                     }
                 }
@@ -519,7 +712,11 @@ impl Calendar {
 
             if let Some(Some(tl)) = day_layouts.get((day - 1) as usize) {
                 let s = tl.size();
-                canvas.draw_text(tl, (cx + (cell_size - s.width) / 2.0) as i32, (cy + (cell_size - s.height) / 2.0) as i32);
+                canvas.draw_text(
+                    tl,
+                    (cx + (cell_size - s.width) / 2.0) as i32,
+                    (cy + (cell_size - s.height) / 2.0) as i32,
+                );
             }
         }
 
@@ -527,7 +724,9 @@ impl Calendar {
         let last_cell = first_weekday + days_in_month;
         let total_cells = total_rows * 7;
         for (i, layout) in next_trailing.iter().enumerate() {
-            if i as u32 >= total_cells - last_cell { break; }
+            if i as u32 >= total_cells - last_cell {
+                break;
+            }
             if let Some(tl) = layout {
                 let cell_idx = last_cell + i as u32;
                 let row = cell_idx / 7;
@@ -535,14 +734,20 @@ impl Calendar {
                 let cx = rect_x1 + col as f32 * cell_size + offset_x;
                 let cy = grid_y + row as f32 * cell_size;
                 let s = tl.size();
-                canvas.draw_text(tl, (cx + (cell_size - s.width) / 2.0) as i32, (cy + (cell_size - s.height) / 2.0) as i32);
+                canvas.draw_text(
+                    tl,
+                    (cx + (cell_size - s.width) / 2.0) as i32,
+                    (cy + (cell_size - s.height) / 2.0) as i32,
+                );
             }
         }
     }
 }
 
 impl Default for Calendar {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 // ─── Widget implementation ──────────────────────────────────────────────────
@@ -554,7 +759,11 @@ impl Widget for Calendar {
 
         self.days_in_month = Self::compute_days_in_month(self.year, self.month);
         self.first_weekday = Self::first_day_of_week(self.year, self.month);
-        let (py, pm) = if self.month == 1 { (self.year - 1, 12) } else { (self.year, self.month - 1) };
+        let (py, pm) = if self.month == 1 {
+            (self.year - 1, 12)
+        } else {
+            (self.year, self.month - 1)
+        };
         self.prev_month_days = Self::compute_days_in_month(py, pm);
 
         let mut opts = ctx.font_options.clone();
@@ -564,24 +773,56 @@ impl Widget for Calendar {
         // Month/year labels
         let month_str = format!("{} {}", Self::month_name(self.month), self.year);
         self.month_label_layout = Some(aurora_text::text_layout::TextLayout::new(
-            ctx.font_manager, &month_str, &opts, colors::foreground(), None,
+            ctx.font_manager,
+            &month_str,
+            &opts,
+            colors::foreground(),
+            None,
         ));
         // Separate month and year labels for Separate selector mode
         self.month_name_layout = Some(aurora_text::text_layout::TextLayout::new(
-            ctx.font_manager, Self::month_name(self.month), &opts, colors::foreground(), None,
+            ctx.font_manager,
+            Self::month_name(self.month),
+            &opts,
+            colors::foreground(),
+            None,
         ));
         self.year_label_layout = Some(aurora_text::text_layout::TextLayout::new(
-            ctx.font_manager, &self.year.to_string(), &opts, colors::foreground(), None,
+            ctx.font_manager,
+            &self.year.to_string(),
+            &opts,
+            colors::foreground(),
+            None,
         ));
 
         // Prev/Next arrows
         let mut ao = ctx.font_options.clone();
         ao.size = Some(14.0);
         ao.weight = Some(aurora_text::font_options::FontWeight::Normal);
-        let pc = if self.can_go_prev() { colors::foreground() } else { colors::muted_foreground() };
-        let nc = if self.can_go_next() { colors::foreground() } else { colors::muted_foreground() };
-        self.prev_layout = Some(aurora_text::text_layout::TextLayout::new(ctx.font_manager, "<", &ao, pc, None));
-        self.next_layout = Some(aurora_text::text_layout::TextLayout::new(ctx.font_manager, ">", &ao, nc, None));
+        let pc = if self.can_go_prev() {
+            colors::foreground()
+        } else {
+            colors::muted_foreground()
+        };
+        let nc = if self.can_go_next() {
+            colors::foreground()
+        } else {
+            colors::muted_foreground()
+        };
+        self.prev_layout = Some(aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            "<",
+            &ao,
+            pc,
+            None,
+        ));
+        self.next_layout = Some(aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager,
+            ">",
+            &ao,
+            nc,
+            None,
+        ));
 
         // Weekday headers
         self.weekday_layouts.clear();
@@ -590,9 +831,14 @@ impl Widget for Calendar {
             let mut o = ctx.font_options.clone();
             o.size = Some(12.0);
             o.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            self.weekday_layouts.push(Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, wd, &o, colors::muted_foreground(), None,
-            )));
+            self.weekday_layouts
+                .push(Some(aurora_text::text_layout::TextLayout::new(
+                    ctx.font_manager,
+                    wd,
+                    &o,
+                    colors::muted_foreground(),
+                    None,
+                )));
         }
 
         // Day layouts
@@ -601,12 +847,21 @@ impl Widget for Calendar {
         do_.size = Some(14.0);
         do_.weight = Some(aurora_text::font_options::FontWeight::Normal);
         for day in 1..=self.days_in_month {
-            let fg = if self.selected_day == Some(day) { self.selected_fg }
-                else if self.is_day_disabled(day) { colors::muted_foreground() }
-                else { colors::foreground() };
-            self.day_layouts.push(Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, &day.to_string(), &do_, fg, None,
-            )));
+            let fg = if self.selected_day == Some(day) {
+                self.selected_fg
+            } else if self.is_day_disabled(day) {
+                colors::muted_foreground()
+            } else {
+                colors::foreground()
+            };
+            self.day_layouts
+                .push(Some(aurora_text::text_layout::TextLayout::new(
+                    ctx.font_manager,
+                    &day.to_string(),
+                    &do_,
+                    fg,
+                    None,
+                )));
         }
 
         // Trailing days
@@ -616,17 +871,27 @@ impl Widget for Calendar {
         to_.weight = Some(aurora_text::font_options::FontWeight::Normal);
         for i in 0..self.first_weekday {
             let d = self.prev_month_days - self.first_weekday + i + 1;
-            self.prev_trailing_layouts.push(Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, &d.to_string(), &to_, colors::muted_foreground(), None,
-            )));
+            self.prev_trailing_layouts
+                .push(Some(aurora_text::text_layout::TextLayout::new(
+                    ctx.font_manager,
+                    &d.to_string(),
+                    &to_,
+                    colors::muted_foreground(),
+                    None,
+                )));
         }
         self.next_trailing_layouts.clear();
         let last = self.first_weekday + self.days_in_month;
         let total = self.total_rows() * 7;
         for i in 0..(total - last) {
-            self.next_trailing_layouts.push(Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, &(i + 1).to_string(), &to_, colors::muted_foreground(), None,
-            )));
+            self.next_trailing_layouts
+                .push(Some(aurora_text::text_layout::TextLayout::new(
+                    ctx.font_manager,
+                    &(i + 1).to_string(),
+                    &to_,
+                    colors::muted_foreground(),
+                    None,
+                )));
         }
 
         // Selector layouts
@@ -636,19 +901,37 @@ impl Widget for Calendar {
             so.size = Some(13.0);
             so.weight = Some(aurora_text::font_options::FontWeight::Normal);
             for m in 1..=12u32 {
-                let fg = if m == self.month { self.selected_fg } else { colors::foreground() };
-                self.selector_month_layouts.push(Some(aurora_text::text_layout::TextLayout::new(
-                    ctx.font_manager, Self::month_name_short(m), &so, fg, None,
-                )));
+                let fg = if m == self.month {
+                    self.selected_fg
+                } else {
+                    colors::foreground()
+                };
+                self.selector_month_layouts
+                    .push(Some(aurora_text::text_layout::TextLayout::new(
+                        ctx.font_manager,
+                        Self::month_name_short(m),
+                        &so,
+                        fg,
+                        None,
+                    )));
             }
             self.selector_year_layouts.clear();
             let base = self.year as i32 - SELECTOR_YEAR_COUNT / 2;
             for i in 0..SELECTOR_YEAR_COUNT {
                 let yr = base + i;
-                let fg = if yr as u32 == self.year { self.selected_fg } else { colors::foreground() };
-                self.selector_year_layouts.push(Some(aurora_text::text_layout::TextLayout::new(
-                    ctx.font_manager, &yr.to_string(), &so, fg, None,
-                )));
+                let fg = if yr as u32 == self.year {
+                    self.selected_fg
+                } else {
+                    colors::foreground()
+                };
+                self.selector_year_layouts
+                    .push(Some(aurora_text::text_layout::TextLayout::new(
+                        ctx.font_manager,
+                        &yr.to_string(),
+                        &so,
+                        fg,
+                        None,
+                    )));
             }
         }
 
@@ -663,23 +946,45 @@ impl Widget for Calendar {
             o.size = Some(12.0);
             o.weight = Some(aurora_text::font_options::FontWeight::Normal);
             self.indicator_tooltip_layout = Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, tip, &o, colors::popover_foreground(), None,
+                ctx.font_manager,
+                tip,
+                &o,
+                colors::popover_foreground(),
+                None,
             ));
             self.indicator_tooltip_day = Some(hovered);
         }
 
         let rows = self.total_rows();
-        Size::new(self.cell_size * 7.0, self.header_height + self.cell_size + self.cell_size * rows as f32)
+        Size::new(
+            self.cell_size * 7.0,
+            self.header_height + self.cell_size + self.cell_size * rows as f32,
+        )
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
         let grid_w = self.cell_size * 7.0;
-        let header_rect = Rect::new(rect.x1, rect.y1, rect.x1 + grid_w, rect.y1 + self.header_height);
+        let header_rect = Rect::new(
+            rect.x1,
+            rect.y1,
+            rect.x1 + grid_w,
+            rect.y1 + self.header_height,
+        );
 
         // ── Header button rects (1:1 prev/next, center for label) ───
         let btn_w = self.header_height;
-        let prev_btn = Rect::new(header_rect.x1, header_rect.y1, header_rect.x1 + btn_w, header_rect.y2);
-        let next_btn = Rect::new(header_rect.x2 - btn_w, header_rect.y1, header_rect.x2, header_rect.y2);
+        let prev_btn = Rect::new(
+            header_rect.x1,
+            header_rect.y1,
+            header_rect.x1 + btn_w,
+            header_rect.y2,
+        );
+        let next_btn = Rect::new(
+            header_rect.x2 - btn_w,
+            header_rect.y1,
+            header_rect.x2,
+            header_rect.y2,
+        );
         let mid_start = prev_btn.x2;
         let mid_end = next_btn.x1;
         let is_separate = self.month_year_selector == Some(MonthYearSelector::Separate);
@@ -707,12 +1012,20 @@ impl Widget for Calendar {
             // Month name centered in left button
             if let Some(ref tl) = self.month_name_layout {
                 let s = tl.size();
-                canvas.draw_text(tl, (month_btn.x1 + (month_btn.width() - s.width) / 2.0) as i32, (month_btn.y1 + (self.header_height - s.height) / 2.0) as i32);
+                canvas.draw_text(
+                    tl,
+                    (month_btn.x1 + (month_btn.width() - s.width) / 2.0) as i32,
+                    (month_btn.y1 + (self.header_height - s.height) / 2.0) as i32,
+                );
             }
             // Year centered in right button
             if let Some(ref tl) = self.year_label_layout {
                 let s = tl.size();
-                canvas.draw_text(tl, (year_btn.x1 + (year_btn.width() - s.width) / 2.0) as i32, (year_btn.y1 + (self.header_height - s.height) / 2.0) as i32);
+                canvas.draw_text(
+                    tl,
+                    (year_btn.x1 + (year_btn.width() - s.width) / 2.0) as i32,
+                    (year_btn.y1 + (self.header_height - s.height) / 2.0) as i32,
+                );
             }
         } else {
             // Single combined "March 2026" button
@@ -722,18 +1035,30 @@ impl Widget for Calendar {
             }
             if let Some(ref tl) = self.month_label_layout {
                 let s = tl.size();
-                canvas.draw_text(tl, (mid_rect.x1 + (mid_rect.width() - s.width) / 2.0) as i32, (mid_rect.y1 + (self.header_height - s.height) / 2.0) as i32);
+                canvas.draw_text(
+                    tl,
+                    (mid_rect.x1 + (mid_rect.width() - s.width) / 2.0) as i32,
+                    (mid_rect.y1 + (self.header_height - s.height) / 2.0) as i32,
+                );
             }
         }
 
         // ── Prev/Next arrow text ────────────────────────────────────
         if let Some(ref tl) = self.prev_layout {
             let s = tl.size();
-            canvas.draw_text(tl, (prev_btn.x1 + (btn_w - s.width) / 2.0) as i32, (prev_btn.y1 + (btn_w - s.height) / 2.0) as i32);
+            canvas.draw_text(
+                tl,
+                (prev_btn.x1 + (btn_w - s.width) / 2.0) as i32,
+                (prev_btn.y1 + (btn_w - s.height) / 2.0) as i32,
+            );
         }
         if let Some(ref tl) = self.next_layout {
             let s = tl.size();
-            canvas.draw_text(tl, (next_btn.x1 + (btn_w - s.width) / 2.0) as i32, (next_btn.y1 + (btn_w - s.height) / 2.0) as i32);
+            canvas.draw_text(
+                tl,
+                (next_btn.x1 + (btn_w - s.width) / 2.0) as i32,
+                (next_btn.y1 + (btn_w - s.height) / 2.0) as i32,
+            );
         }
 
         // ── Selector animation state ────────────────────────────────
@@ -766,7 +1091,11 @@ impl Widget for Calendar {
                 if let Some(tl) = layout {
                     let s = tl.size();
                     let cx = rect.x1 + col as f32 * self.cell_size + self.cell_size / 2.0 + new_x;
-                    canvas.draw_text(tl, (cx - s.width / 2.0) as i32, (weekday_y + (self.cell_size - s.height) / 2.0) as i32);
+                    canvas.draw_text(
+                        tl,
+                        (cx - s.width / 2.0) as i32,
+                        (weekday_y + (self.cell_size - s.height) / 2.0) as i32,
+                    );
                 }
             }
             // Weekday headers for old grid (same labels)
@@ -774,29 +1103,68 @@ impl Widget for Calendar {
                 if let Some(tl) = layout {
                     let s = tl.size();
                     let cx = rect.x1 + col as f32 * self.cell_size + self.cell_size / 2.0 + old_x;
-                    canvas.draw_text(tl, (cx - s.width / 2.0) as i32, (weekday_y + (self.cell_size - s.height) / 2.0) as i32);
+                    canvas.draw_text(
+                        tl,
+                        (cx - s.width / 2.0) as i32,
+                        (weekday_y + (self.cell_size - s.height) / 2.0) as i32,
+                    );
                 }
             }
 
             // Old grid (no hover/select/indicators)
             Self::paint_day_grid(
-                canvas, &self.slide_old_day_layouts, &self.slide_old_prev_trailing, &self.slide_old_next_trailing,
-                self.slide_old_first_weekday, self.slide_old_days_in_month,
-                rect.x1, grid_y, self.cell_size, old_x,
-                None, None, None,
-                self.selected_bg, self.hover_bg, self.today_bg, self.corners,
-                false, &[], &[], None, None, self.year, self.month,
+                canvas,
+                &self.slide_old_day_layouts,
+                &self.slide_old_prev_trailing,
+                &self.slide_old_next_trailing,
+                self.slide_old_first_weekday,
+                self.slide_old_days_in_month,
+                rect.x1,
+                grid_y,
+                self.cell_size,
+                old_x,
+                None,
+                None,
+                None,
+                self.selected_bg,
+                self.hover_bg,
+                self.today_bg,
+                self.corners,
+                false,
+                &[],
+                &[],
+                None,
+                None,
+                self.year,
+                self.month,
             );
 
             // New grid (active)
             Self::paint_day_grid(
-                canvas, &self.day_layouts, &self.prev_trailing_layouts, &self.next_trailing_layouts,
-                self.first_weekday, self.days_in_month,
-                rect.x1, grid_y, self.cell_size, new_x,
-                self.hovered_day, self.selected_day, self.today_day,
-                self.selected_bg, self.hover_bg, self.today_bg, self.corners,
-                true, &self.indicators, &self.disabled_days, self.min_date, self.max_date,
-                self.year, self.month,
+                canvas,
+                &self.day_layouts,
+                &self.prev_trailing_layouts,
+                &self.next_trailing_layouts,
+                self.first_weekday,
+                self.days_in_month,
+                rect.x1,
+                grid_y,
+                self.cell_size,
+                new_x,
+                self.hovered_day,
+                self.selected_day,
+                self.today_day,
+                self.selected_bg,
+                self.hover_bg,
+                self.today_bg,
+                self.corners,
+                true,
+                &self.indicators,
+                &self.disabled_days,
+                self.min_date,
+                self.max_date,
+                self.year,
+                self.month,
             );
         } else {
             // Static render (no slide)
@@ -804,18 +1172,39 @@ impl Widget for Calendar {
                 if let Some(tl) = layout {
                     let s = tl.size();
                     let cx = rect.x1 + col as f32 * self.cell_size + self.cell_size / 2.0;
-                    canvas.draw_text(tl, (cx - s.width / 2.0) as i32, (weekday_y + (self.cell_size - s.height) / 2.0) as i32);
+                    canvas.draw_text(
+                        tl,
+                        (cx - s.width / 2.0) as i32,
+                        (weekday_y + (self.cell_size - s.height) / 2.0) as i32,
+                    );
                 }
             }
 
             Self::paint_day_grid(
-                canvas, &self.day_layouts, &self.prev_trailing_layouts, &self.next_trailing_layouts,
-                self.first_weekday, self.days_in_month,
-                rect.x1, grid_y, self.cell_size, 0.0,
-                self.hovered_day, self.selected_day, self.today_day,
-                self.selected_bg, self.hover_bg, self.today_bg, self.corners,
-                true, &self.indicators, &self.disabled_days, self.min_date, self.max_date,
-                self.year, self.month,
+                canvas,
+                &self.day_layouts,
+                &self.prev_trailing_layouts,
+                &self.next_trailing_layouts,
+                self.first_weekday,
+                self.days_in_month,
+                rect.x1,
+                grid_y,
+                self.cell_size,
+                0.0,
+                self.hovered_day,
+                self.selected_day,
+                self.today_day,
+                self.selected_bg,
+                self.hover_bg,
+                self.today_bg,
+                self.corners,
+                true,
+                &self.indicators,
+                &self.disabled_days,
+                self.min_date,
+                self.max_date,
+                self.year,
+                self.month,
             );
         }
 
@@ -840,7 +1229,8 @@ impl Widget for Calendar {
     }
 
     fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
-        if let (Some(day), Some(tl)) = (self.indicator_tooltip_day, &self.indicator_tooltip_layout) {
+        if let (Some(day), Some(tl)) = (self.indicator_tooltip_day, &self.indicator_tooltip_layout)
+        {
             let cell_idx = self.first_weekday + day - 1;
             let grid_y = rect.y1 + self.header_height + self.cell_size;
             let cx = rect.x1 + (cell_idx % 7) as f32 * self.cell_size;
@@ -858,11 +1248,12 @@ impl Widget for Calendar {
         }
     }
 
-    fn children(&self) -> &[Box<dyn Widget>] { &[] }
+    fn children(&self) -> &[Box<dyn Widget>] {
+        &[]
+    }
 
     fn needs_animation(&self) -> bool {
-        anim_active(self.selector_anim_start, ANIM_DURATION)
-            || self.is_sliding()
+        anim_active(self.selector_anim_start, ANIM_DURATION) || self.is_sliding()
     }
 
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
@@ -871,8 +1262,14 @@ impl Widget for Calendar {
         match event {
             WidgetEvent::Mouse(MouseEvent::MouseScrollEvent(delta)) => {
                 if self.selector_view != SelectorView::None {
-                    let show_m = matches!(self.selector_view, SelectorView::MonthColumn | SelectorView::Combined);
-                    let show_y = matches!(self.selector_view, SelectorView::YearColumn | SelectorView::Combined);
+                    let show_m = matches!(
+                        self.selector_view,
+                        SelectorView::MonthColumn | SelectorView::Combined
+                    );
+                    let show_y = matches!(
+                        self.selector_view,
+                        SelectorView::YearColumn | SelectorView::Combined
+                    );
                     if show_m && show_y {
                         if self.hovered_selector_month.is_some() {
                             self.month_scroll_offset -= delta * SELECTOR_ITEM_H;
@@ -885,7 +1282,10 @@ impl Widget for Calendar {
                         self.year_scroll_offset -= delta * SELECTOR_ITEM_H;
                     }
                     self.clamp_scroll();
-                    return EventResponse { status: EventStatus::Consumed, ..Default::default() };
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        ..Default::default()
+                    };
                 }
                 EventResponse::default()
             }
@@ -899,11 +1299,19 @@ impl Widget for Calendar {
                 match self.header_hit(&e.position, &rect) {
                     HeaderHit::Prev if self.can_go_prev() => {
                         self.prev_month();
-                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
                     HeaderHit::Next if self.can_go_next() => {
                         self.next_month();
-                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
                     HeaderHit::Month if self.month_year_selector.is_some() => {
                         if self.selector_view != SelectorView::None {
@@ -915,15 +1323,25 @@ impl Widget for Calendar {
                             };
                             self.open_selector(view);
                         }
-                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
-                    HeaderHit::Year if self.month_year_selector == Some(MonthYearSelector::Separate) => {
+                    HeaderHit::Year
+                        if self.month_year_selector == Some(MonthYearSelector::Separate) =>
+                    {
                         if self.selector_view != SelectorView::None {
                             self.close_selector();
                         } else {
                             self.open_selector(SelectorView::YearColumn);
                         }
-                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
                     _ => {}
                 }
@@ -932,8 +1350,14 @@ impl Widget for Calendar {
                     && !self.is_day_disabled(day)
                 {
                     self.selected_day = Some(day);
-                    if let Some(ref mut cb) = self.on_select { cb(day); }
-                    return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                    if let Some(ref mut cb) = self.on_select {
+                        cb(day);
+                    }
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Pointer),
+                        ..Default::default()
+                    };
                 }
                 EventResponse::default()
             }
@@ -953,14 +1377,55 @@ impl Widget for Calendar {
 
                 // Header hover
                 let hit = self.header_hit(pos, &rect);
-                self.hovered_header = if matches!(hit, HeaderHit::None) { None } else { Some(hit) };
+                self.hovered_header = if matches!(hit, HeaderHit::None) {
+                    None
+                } else {
+                    Some(hit)
+                };
 
                 match hit {
-                    HeaderHit::Prev if self.can_go_prev() => { self.hovered_day = None; return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() }; }
-                    HeaderHit::Next if self.can_go_next() => { self.hovered_day = None; return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() }; }
-                    HeaderHit::Month if self.month_year_selector.is_some() => { self.hovered_day = None; return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() }; }
-                    HeaderHit::Year if self.month_year_selector == Some(MonthYearSelector::Separate) => { self.hovered_day = None; return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() }; }
-                    HeaderHit::Prev | HeaderHit::Next | HeaderHit::Month | HeaderHit::Year => { self.hovered_day = None; return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Default), ..Default::default() }; }
+                    HeaderHit::Prev if self.can_go_prev() => {
+                        self.hovered_day = None;
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
+                    }
+                    HeaderHit::Next if self.can_go_next() => {
+                        self.hovered_day = None;
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
+                    }
+                    HeaderHit::Month if self.month_year_selector.is_some() => {
+                        self.hovered_day = None;
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
+                    }
+                    HeaderHit::Year
+                        if self.month_year_selector == Some(MonthYearSelector::Separate) =>
+                    {
+                        self.hovered_day = None;
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
+                    }
+                    HeaderHit::Prev | HeaderHit::Next | HeaderHit::Month | HeaderHit::Year => {
+                        self.hovered_day = None;
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Default),
+                            ..Default::default()
+                        };
+                    }
                     HeaderHit::None => {}
                 }
 
@@ -968,18 +1433,34 @@ impl Widget for Calendar {
                 let wy = rect.y1 + self.header_height;
                 if pos.y >= wy && pos.y < wy + self.cell_size {
                     self.hovered_day = None;
-                    return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Default), ..Default::default() };
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Default),
+                        ..Default::default()
+                    };
                 }
 
                 // Day grid
                 if let Some(day) = self.day_at_position(pos, &rect) {
                     let dis = self.is_day_disabled(day);
                     self.hovered_day = if dis { None } else { Some(day) };
-                    return EventResponse { status: EventStatus::Consumed, cursor: if dis { Some(CursorIcon::Default) } else { Some(CursorIcon::Pointer) }, ..Default::default() };
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: if dis {
+                            Some(CursorIcon::Default)
+                        } else {
+                            Some(CursorIcon::Pointer)
+                        },
+                        ..Default::default()
+                    };
                 }
 
                 self.hovered_day = None;
-                EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Default), ..Default::default() }
+                EventResponse {
+                    status: EventStatus::Consumed,
+                    cursor: Some(CursorIcon::Default),
+                    ..Default::default()
+                }
             }
             _ => EventResponse::default(),
         }
@@ -987,7 +1468,8 @@ impl Widget for Calendar {
 
     #[cfg(feature = "a11y")]
     fn access_info(&self) -> aurora_a11y::NodeInfo {
-        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group).with_label("Calendar".to_string())
+        aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::Group)
+            .with_label("Calendar".to_string())
     }
 }
 
@@ -1007,15 +1489,24 @@ impl Calendar {
         // Clip content to the same animated height
         canvas.push_clip(visible);
 
-        let show_m = matches!(self.selector_view, SelectorView::MonthColumn | SelectorView::Combined);
-        let show_y = matches!(self.selector_view, SelectorView::YearColumn | SelectorView::Combined);
+        let show_m = matches!(
+            self.selector_view,
+            SelectorView::MonthColumn | SelectorView::Combined
+        );
+        let show_y = matches!(
+            self.selector_view,
+            SelectorView::YearColumn | SelectorView::Combined
+        );
 
         if show_m && show_y {
             let hw = gr.width() / 2.0;
             let mc = Rect::new(gr.x1, gr.y1, gr.x1 + hw, gr.y2);
             let yc = Rect::new(gr.x1 + hw, gr.y1, gr.x2, gr.y2);
             self.paint_month_column(canvas, &mc);
-            canvas.fill_rect(Rect::new(mc.x2 - 0.5, gr.y1 + 4.0, mc.x2 + 0.5, gr.y1 + anim_h - 4.0), self.selector_border_color);
+            canvas.fill_rect(
+                Rect::new(mc.x2 - 0.5, gr.y1 + 4.0, mc.x2 + 0.5, gr.y1 + anim_h - 4.0),
+                self.selector_border_color,
+            );
             self.paint_year_column(canvas, &yc);
         } else if show_m {
             self.paint_month_column(canvas, &gr);
@@ -1039,7 +1530,11 @@ impl Calendar {
             }
             if let Some(Some(tl)) = self.selector_month_layouts.get(i) {
                 let s = tl.size();
-                canvas.draw_text(tl, (col_rect.x1 + (col_rect.width() - s.width) / 2.0) as i32, (cy + (SELECTOR_ITEM_H - s.height) / 2.0) as i32);
+                canvas.draw_text(
+                    tl,
+                    (col_rect.x1 + (col_rect.width() - s.width) / 2.0) as i32,
+                    (cy + (SELECTOR_ITEM_H - s.height) / 2.0) as i32,
+                );
             }
         }
         canvas.pop_clip();
@@ -1059,61 +1554,115 @@ impl Calendar {
             }
             if let Some(Some(tl)) = self.selector_year_layouts.get(i) {
                 let s = tl.size();
-                canvas.draw_text(tl, (col_rect.x1 + (col_rect.width() - s.width) / 2.0) as i32, (cy + (SELECTOR_ITEM_H - s.height) / 2.0) as i32);
+                canvas.draw_text(
+                    tl,
+                    (col_rect.x1 + (col_rect.width() - s.width) / 2.0) as i32,
+                    (cy + (SELECTOR_ITEM_H - s.height) / 2.0) as i32,
+                );
             }
         }
         canvas.pop_clip();
     }
 
-    fn handle_selector_click(&mut self, e: &aurora_core::kmi::mouse::MouseClickEvent, rect: &Rect) -> EventResponse {
+    fn handle_selector_click(
+        &mut self,
+        e: &aurora_core::kmi::mouse::MouseClickEvent,
+        rect: &Rect,
+    ) -> EventResponse {
         let gr = self.selector_grid_rect(rect);
         if e.position.y < gr.y1 {
             self.close_selector();
-            return EventResponse { status: EventStatus::Consumed, ..Default::default() };
+            return EventResponse {
+                status: EventStatus::Consumed,
+                ..Default::default()
+            };
         }
-        let show_m = matches!(self.selector_view, SelectorView::MonthColumn | SelectorView::Combined);
-        let show_y = matches!(self.selector_view, SelectorView::YearColumn | SelectorView::Combined);
+        let show_m = matches!(
+            self.selector_view,
+            SelectorView::MonthColumn | SelectorView::Combined
+        );
+        let show_y = matches!(
+            self.selector_view,
+            SelectorView::YearColumn | SelectorView::Combined
+        );
 
         if show_m && show_y {
             let hw = gr.width() / 2.0;
             let mc = Rect::new(gr.x1, gr.y1, gr.x1 + hw, gr.y2);
             let yc = Rect::new(gr.x1 + hw, gr.y1, gr.x2, gr.y2);
             if let Some(m) = self.selector_month_at(&e.position, &mc) {
-                self.month = m; self.close_selector();
-                if let Some(ref mut cb) = self.on_month_change { cb(self.year, self.month); }
-                return EventResponse { status: EventStatus::Consumed, ..Default::default() };
+                self.month = m;
+                self.close_selector();
+                if let Some(ref mut cb) = self.on_month_change {
+                    cb(self.year, self.month);
+                }
+                return EventResponse {
+                    status: EventStatus::Consumed,
+                    ..Default::default()
+                };
             }
             if let Some(y) = self.selector_year_at(&e.position, &yc) {
-                self.year = y; self.close_selector();
-                if let Some(ref mut cb) = self.on_month_change { cb(self.year, self.month); }
-                return EventResponse { status: EventStatus::Consumed, ..Default::default() };
+                self.year = y;
+                self.close_selector();
+                if let Some(ref mut cb) = self.on_month_change {
+                    cb(self.year, self.month);
+                }
+                return EventResponse {
+                    status: EventStatus::Consumed,
+                    ..Default::default()
+                };
             }
         } else if show_m {
             if let Some(m) = self.selector_month_at(&e.position, &gr) {
-                self.month = m; self.close_selector();
-                if let Some(ref mut cb) = self.on_month_change { cb(self.year, self.month); }
-                return EventResponse { status: EventStatus::Consumed, ..Default::default() };
+                self.month = m;
+                self.close_selector();
+                if let Some(ref mut cb) = self.on_month_change {
+                    cb(self.year, self.month);
+                }
+                return EventResponse {
+                    status: EventStatus::Consumed,
+                    ..Default::default()
+                };
             }
-        } else if show_y
-            && let Some(y) = self.selector_year_at(&e.position, &gr) {
-                self.year = y; self.close_selector();
-                if let Some(ref mut cb) = self.on_month_change { cb(self.year, self.month); }
-                return EventResponse { status: EventStatus::Consumed, ..Default::default() };
+        } else if show_y && let Some(y) = self.selector_year_at(&e.position, &gr) {
+            self.year = y;
+            self.close_selector();
+            if let Some(ref mut cb) = self.on_month_change {
+                cb(self.year, self.month);
             }
+            return EventResponse {
+                status: EventStatus::Consumed,
+                ..Default::default()
+            };
+        }
         EventResponse::default()
     }
 
-    fn handle_selector_hover(&mut self, pos: &aurora_core::geometry::point::Point, rect: &Rect) -> EventResponse {
+    fn handle_selector_hover(
+        &mut self,
+        pos: &aurora_core::geometry::point::Point,
+        rect: &Rect,
+    ) -> EventResponse {
         let gr = self.selector_grid_rect(rect);
         self.hovered_selector_month = None;
         self.hovered_selector_year = None;
 
         // Header hover even when selector is open
         let hit = self.header_hit(pos, rect);
-        self.hovered_header = if matches!(hit, HeaderHit::None) { None } else { Some(hit) };
+        self.hovered_header = if matches!(hit, HeaderHit::None) {
+            None
+        } else {
+            Some(hit)
+        };
 
-        let show_m = matches!(self.selector_view, SelectorView::MonthColumn | SelectorView::Combined);
-        let show_y = matches!(self.selector_view, SelectorView::YearColumn | SelectorView::Combined);
+        let show_m = matches!(
+            self.selector_view,
+            SelectorView::MonthColumn | SelectorView::Combined
+        );
+        let show_y = matches!(
+            self.selector_view,
+            SelectorView::YearColumn | SelectorView::Combined
+        );
         if show_m && show_y {
             let hw = gr.width() / 2.0;
             let mc = Rect::new(gr.x1, gr.y1, gr.x1 + hw, gr.y2);
@@ -1126,18 +1675,31 @@ impl Calendar {
             self.hovered_selector_year = self.selector_year_at(pos, &gr);
         }
 
-        let hovering = self.hovered_selector_month.is_some() || self.hovered_selector_year.is_some();
+        let hovering =
+            self.hovered_selector_month.is_some() || self.hovered_selector_year.is_some();
         EventResponse {
             status: EventStatus::Consumed,
-            cursor: Some(if hovering || self.hovered_header.is_some() { CursorIcon::Pointer } else { CursorIcon::Default }),
+            cursor: Some(if hovering || self.hovered_header.is_some() {
+                CursorIcon::Pointer
+            } else {
+                CursorIcon::Default
+            }),
             ..Default::default()
         }
     }
 
     // ── Accessors for CalendarRange ─────────────────────────────────────
 
-    pub(crate) fn header_height_val(&self) -> f32 { self.header_height }
-    pub(crate) fn cell_size_val(&self) -> f32 { self.cell_size }
-    pub(crate) fn day_layouts(&self) -> &[Option<aurora_text::text_layout::TextLayout>] { &self.day_layouts }
-    pub(crate) fn selected_fg_val(&self) -> Color { self.selected_fg }
+    pub(crate) fn header_height_val(&self) -> f32 {
+        self.header_height
+    }
+    pub(crate) fn cell_size_val(&self) -> f32 {
+        self.cell_size
+    }
+    pub(crate) fn day_layouts(&self) -> &[Option<aurora_text::text_layout::TextLayout>] {
+        &self.day_layouts
+    }
+    pub(crate) fn selected_fg_val(&self) -> Color {
+        self.selected_fg
+    }
 }

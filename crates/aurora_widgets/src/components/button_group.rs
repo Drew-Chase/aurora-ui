@@ -137,13 +137,8 @@ impl Widget for ButtonGroup {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(14.0);
             opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
-            let mut tl = aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager,
-                label,
-                &opts,
-                fg,
-                None,
-            );
+            let mut tl =
+                aurora_text::text_layout::TextLayout::new(ctx.font_manager, label, &opts, fg, None);
             tl.set_max_width(ctx.font_manager, f32::MAX);
             let tw = tl.size().width;
             let btn_w = tw + self.padding * 2.0;

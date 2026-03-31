@@ -227,7 +227,10 @@ impl Widget for CalendarRange {
                 // Endpoints: use pre-built white text layouts
                 // In-between: use calendar's default foreground layouts
                 let tl = if is_endpoint {
-                    self.endpoint_layouts.iter().find(|(d, _)| *d == day).map(|(_, tl)| tl)
+                    self.endpoint_layouts
+                        .iter()
+                        .find(|(d, _)| *d == day)
+                        .map(|(_, tl)| tl)
                 } else {
                     self.calendar
                         .day_layouts()
@@ -266,29 +269,32 @@ impl Widget for CalendarRange {
 
         // Intercept day clicks for range selection
         if let WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) = event
-            && e.state == MouseState::Pressed && rect.contains(&e.position)
-                && let Some(day) = self.calendar.day_at_position(&e.position, &rect)
-                    && !self.calendar.is_day_disabled(day) {
-                        if self.range_start.is_some() && self.range_end.is_none() {
-                            // Second click: finalize the range
-                            self.range_end = Some(day);
-                            self.hover_end = None;
-                            if let Some((s, e)) = self.finalized_range()
-                                && let Some(ref mut cb) = self.on_range_select {
-                                    cb(s, e);
-                                }
-                        } else {
-                            // First click (or reset after finalized range)
-                            self.range_start = Some(day);
-                            self.range_end = None;
-                            self.hover_end = None;
-                        }
-                        return EventResponse {
-                            status: EventStatus::Consumed,
-                            cursor: Some(CursorIcon::Pointer),
-                            ..Default::default()
-                        };
-                    }
+            && e.state == MouseState::Pressed
+            && rect.contains(&e.position)
+            && let Some(day) = self.calendar.day_at_position(&e.position, &rect)
+            && !self.calendar.is_day_disabled(day)
+        {
+            if self.range_start.is_some() && self.range_end.is_none() {
+                // Second click: finalize the range
+                self.range_end = Some(day);
+                self.hover_end = None;
+                if let Some((s, e)) = self.finalized_range()
+                    && let Some(ref mut cb) = self.on_range_select
+                {
+                    cb(s, e);
+                }
+            } else {
+                // First click (or reset after finalized range)
+                self.range_start = Some(day);
+                self.range_end = None;
+                self.hover_end = None;
+            }
+            return EventResponse {
+                status: EventStatus::Consumed,
+                cursor: Some(CursorIcon::Pointer),
+                ..Default::default()
+            };
+        }
 
         // Delegate everything else to the inner calendar
         self.calendar.event(event, rect)

@@ -592,99 +592,99 @@ impl AppWindow {
         let Some(ref mut widget) = self.root_widget else {
             return EventResponse::default();
         };
-            // Phase 1: overlay event dispatch (higher z-order)
-            let overlay_response = widget.event_overlay(event, rect);
+        // Phase 1: overlay event dispatch (higher z-order)
+        let overlay_response = widget.event_overlay(event, rect);
 
-            // Phase 2: normal event dispatch, only if overlay didn't stop propagation
-            let response = if overlay_response.status.stops_propagation() {
-                overlay_response
-            } else {
-                let normal_response = widget.event(event, rect);
-                // Merge: overlay cursor wins if set, combine focus flags
-                EventResponse {
-                    status: if normal_response.status.stops_propagation() {
-                        normal_response.status
-                    } else {
-                        overlay_response.status
-                    },
-                    cursor: overlay_response.cursor.or(normal_response.cursor),
-                    request_focus: overlay_response
-                        .request_focus
-                        .or(normal_response.request_focus),
-                    focus_next: overlay_response.focus_next || normal_response.focus_next,
-                    focus_prev: overlay_response.focus_prev || normal_response.focus_prev,
-                }
-            };
-
-            let is_mouse_move = matches!(event, WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(_)));
-            let cursor = response.cursor.or(if is_mouse_move {
-                Some(CursorIcon::Default)
-            } else {
-                None
-            });
-            if let Some(cursor) = cursor {
-                let winit_cursor = match cursor {
-                    CursorIcon::Default => winit::window::CursorIcon::Default,
-                    CursorIcon::Pointer => winit::window::CursorIcon::Pointer,
-                    CursorIcon::Text => winit::window::CursorIcon::Text,
-                    CursorIcon::Grab => winit::window::CursorIcon::Grab,
-                    CursorIcon::Grabbing => winit::window::CursorIcon::Grabbing,
-                    CursorIcon::NotAllowed => winit::window::CursorIcon::NotAllowed,
-                };
-                self.window_handle.set_cursor(winit_cursor);
+        // Phase 2: normal event dispatch, only if overlay didn't stop propagation
+        let response = if overlay_response.status.stops_propagation() {
+            overlay_response
+        } else {
+            let normal_response = widget.event(event, rect);
+            // Merge: overlay cursor wins if set, combine focus flags
+            EventResponse {
+                status: if normal_response.status.stops_propagation() {
+                    normal_response.status
+                } else {
+                    overlay_response.status
+                },
+                cursor: overlay_response.cursor.or(normal_response.cursor),
+                request_focus: overlay_response
+                    .request_focus
+                    .or(normal_response.request_focus),
+                focus_next: overlay_response.focus_next || normal_response.focus_next,
+                focus_prev: overlay_response.focus_prev || normal_response.focus_prev,
             }
-            // Track focused widget for restoration after Composite rebuilds.
-            // Dispatch Blur to the old widget before switching focus.
-            if let Some(new_id) = response.request_focus {
-                if let Some(old_id) = self.focused_widget_id
-                    && old_id != new_id
-                {
-                    widget.event(&WidgetEvent::Blur(old_id), rect);
-                }
-                self.focused_widget_id = Some(new_id);
-            } else if matches!(event, WidgetEvent::Mouse(MouseEvent::MouseClickEvent(_)))
-                && response.status.is_handled()
+        };
+
+        let is_mouse_move = matches!(event, WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(_)));
+        let cursor = response.cursor.or(if is_mouse_move {
+            Some(CursorIcon::Default)
+        } else {
+            None
+        });
+        if let Some(cursor) = cursor {
+            let winit_cursor = match cursor {
+                CursorIcon::Default => winit::window::CursorIcon::Default,
+                CursorIcon::Pointer => winit::window::CursorIcon::Pointer,
+                CursorIcon::Text => winit::window::CursorIcon::Text,
+                CursorIcon::Grab => winit::window::CursorIcon::Grab,
+                CursorIcon::Grabbing => winit::window::CursorIcon::Grabbing,
+                CursorIcon::NotAllowed => winit::window::CursorIcon::NotAllowed,
+            };
+            self.window_handle.set_cursor(winit_cursor);
+        }
+        // Track focused widget for restoration after Composite rebuilds.
+        // Dispatch Blur to the old widget before switching focus.
+        if let Some(new_id) = response.request_focus {
+            if let Some(old_id) = self.focused_widget_id
+                && old_id != new_id
             {
-                // A click was handled but didn't request focus — blur old and clear
+                widget.event(&WidgetEvent::Blur(old_id), rect);
+            }
+            self.focused_widget_id = Some(new_id);
+        } else if matches!(event, WidgetEvent::Mouse(MouseEvent::MouseClickEvent(_)))
+            && response.status.is_handled()
+        {
+            // A click was handled but didn't request focus — blur old and clear
+            if let Some(old_id) = self.focused_widget_id {
+                widget.event(&WidgetEvent::Blur(old_id), rect);
+            }
+            self.focused_widget_id = None;
+        }
+
+        // Handle tab focus cycling
+        if response.focus_next || response.focus_prev {
+            let mut tab_widgets: Vec<(u32, u64)> = Vec::new();
+            collect_tab_widgets(widget.as_ref(), &mut tab_widgets);
+            tab_widgets.sort_by_key(|(idx, _)| *idx);
+
+            if !tab_widgets.is_empty() {
+                // Find which widget just unfocused (the one that sent focus_next)
+                let current_idx = response
+                    .request_focus
+                    .and_then(|id| tab_widgets.iter().position(|(_, wid)| *wid == id));
+
+                let next = if response.focus_next {
+                    match current_idx {
+                        Some(i) => (i + 1) % tab_widgets.len(),
+                        None => 0,
+                    }
+                } else {
+                    match current_idx {
+                        Some(i) if i > 0 => i - 1,
+                        _ => tab_widgets.len() - 1,
+                    }
+                };
+
+                let (_, target_id) = tab_widgets[next];
+                // Blur old widget, then focus new with select_all=true
                 if let Some(old_id) = self.focused_widget_id {
                     widget.event(&WidgetEvent::Blur(old_id), rect);
                 }
-                self.focused_widget_id = None;
+                widget.event(&WidgetEvent::Focus(target_id, true), rect);
+                self.focused_widget_id = Some(target_id);
             }
-
-            // Handle tab focus cycling
-            if response.focus_next || response.focus_prev {
-                let mut tab_widgets: Vec<(u32, u64)> = Vec::new();
-                collect_tab_widgets(widget.as_ref(), &mut tab_widgets);
-                tab_widgets.sort_by_key(|(idx, _)| *idx);
-
-                if !tab_widgets.is_empty() {
-                    // Find which widget just unfocused (the one that sent focus_next)
-                    let current_idx = response
-                        .request_focus
-                        .and_then(|id| tab_widgets.iter().position(|(_, wid)| *wid == id));
-
-                    let next = if response.focus_next {
-                        match current_idx {
-                            Some(i) => (i + 1) % tab_widgets.len(),
-                            None => 0,
-                        }
-                    } else {
-                        match current_idx {
-                            Some(i) if i > 0 => i - 1,
-                            _ => tab_widgets.len() - 1,
-                        }
-                    };
-
-                    let (_, target_id) = tab_widgets[next];
-                    // Blur old widget, then focus new with select_all=true
-                    if let Some(old_id) = self.focused_widget_id {
-                        widget.event(&WidgetEvent::Blur(old_id), rect);
-                    }
-                    widget.event(&WidgetEvent::Focus(target_id, true), rect);
-                    self.focused_widget_id = Some(target_id);
-                }
-            }
+        }
         response
     }
 
@@ -921,12 +921,10 @@ where
         {
             self.current_cursor_position = Some(pos);
             for path in self.os_drag_paths.clone() {
-                window.dispatch_event(&WidgetEvent::FileDrop(
-                    FileDropEvent::FileHovered {
-                        path,
-                        position: pos,
-                    },
-                ));
+                window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileHovered {
+                    path,
+                    position: pos,
+                }));
             }
             window.request_next_frame();
         }
@@ -1060,12 +1058,10 @@ where
                 // track the cursor position continuously.
                 if !self.os_drag_paths.is_empty() {
                     for path in self.os_drag_paths.clone() {
-                        window.dispatch_event(&WidgetEvent::FileDrop(
-                            FileDropEvent::FileHovered {
-                                path,
-                                position: pos,
-                            },
-                        ));
+                        window.dispatch_event(&WidgetEvent::FileDrop(FileDropEvent::FileHovered {
+                            path,
+                            position: pos,
+                        }));
                     }
                     window.request_next_frame();
                     return;
@@ -1081,15 +1077,16 @@ where
                 if button == winit::event::MouseButton::Left
                     && state == winit::event::ElementState::Released
                     && self.drag_active
-                    && let Some(origin) = self.drag_press_position.take() {
-                        self.drag_active = false;
-                        window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragEnd {
-                            origin,
-                            current: position,
-                        }));
-                        window.request_next_frame();
-                        return;
-                    }
+                    && let Some(origin) = self.drag_press_position.take()
+                {
+                    self.drag_active = false;
+                    window.dispatch_event(&WidgetEvent::Drag(DragEvent::DragEnd {
+                        origin,
+                        current: position,
+                    }));
+                    window.request_next_frame();
+                    return;
+                }
 
                 // Clear drag tracking on any left release.
                 if button == winit::event::MouseButton::Left

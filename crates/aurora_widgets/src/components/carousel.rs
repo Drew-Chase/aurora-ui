@@ -118,22 +118,34 @@ impl Carousel {
     }
 
     fn prev(&mut self) {
-        if self.slides.is_empty() { return; }
-        let new = if self.current == 0 { self.slides.len() - 1 } else { self.current - 1 };
+        if self.slides.is_empty() {
+            return;
+        }
+        let new = if self.current == 0 {
+            self.slides.len() - 1
+        } else {
+            self.current - 1
+        };
         self.slide_from = self.current;
         self.slide_direction = -1.0; // new enters from left
         self.slide_start = Instant::now();
         self.current = new;
-        if let Some(ref mut cb) = self.on_change { cb(self.current); }
+        if let Some(ref mut cb) = self.on_change {
+            cb(self.current);
+        }
     }
 
     fn next(&mut self) {
-        if self.slides.is_empty() { return; }
+        if self.slides.is_empty() {
+            return;
+        }
         self.slide_from = self.current;
         self.slide_direction = 1.0; // new enters from right
         self.slide_start = Instant::now();
         self.current = (self.current + 1) % self.slides.len();
-        if let Some(ref mut cb) = self.on_change { cb(self.current); }
+        if let Some(ref mut cb) = self.on_change {
+            cb(self.current);
+        }
     }
 
     fn is_sliding(&self) -> bool {
@@ -147,13 +159,23 @@ impl Carousel {
     fn prev_rect(&self, rect: &Rect) -> Rect {
         let cy = rect.y1 + rect.height() / 2.0;
         let x = rect.x1 + 8.0;
-        Rect::new(x, cy - self.arrow_size / 2.0, x + self.arrow_size, cy + self.arrow_size / 2.0)
+        Rect::new(
+            x,
+            cy - self.arrow_size / 2.0,
+            x + self.arrow_size,
+            cy + self.arrow_size / 2.0,
+        )
     }
 
     fn next_rect(&self, rect: &Rect) -> Rect {
         let cy = rect.y1 + rect.height() / 2.0;
         let x = rect.x2 - 8.0 - self.arrow_size;
-        Rect::new(x, cy - self.arrow_size / 2.0, x + self.arrow_size, cy + self.arrow_size / 2.0)
+        Rect::new(
+            x,
+            cy - self.arrow_size / 2.0,
+            x + self.arrow_size,
+            cy + self.arrow_size / 2.0,
+        )
     }
 
     fn indicator_rect(&self, rect: &Rect, index: usize) -> Rect {
@@ -166,20 +188,30 @@ impl Carousel {
         Rect::new(ix, y, ix + self.indicator_size, y + self.indicator_size)
     }
 
-    fn indicator_hit(&self, pos: &aurora_core::geometry::point::Point, rect: &Rect) -> Option<usize> {
-        if !self.show_indicators || self.slides.len() <= 1 { return None; }
+    fn indicator_hit(
+        &self,
+        pos: &aurora_core::geometry::point::Point,
+        rect: &Rect,
+    ) -> Option<usize> {
+        if !self.show_indicators || self.slides.len() <= 1 {
+            return None;
+        }
         let pad = 4.0;
         for i in 0..self.slides.len() {
             let ir = self.indicator_rect(rect, i);
             let hit = Rect::new(ir.x1 - pad, ir.y1 - pad, ir.x2 + pad, ir.y2 + pad);
-            if hit.contains(pos) { return Some(i); }
+            if hit.contains(pos) {
+                return Some(i);
+            }
         }
         None
     }
 }
 
 impl Default for Carousel {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Widget for Carousel {
@@ -197,10 +229,18 @@ impl Widget for Carousel {
         opts.size = Some(18.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Bold);
         self.prev_layout = Some(aurora_text::text_layout::TextLayout::new(
-            ctx.font_manager, "<", &opts, colors::foreground(), None,
+            ctx.font_manager,
+            "<",
+            &opts,
+            colors::foreground(),
+            None,
         ));
         self.next_layout = Some(aurora_text::text_layout::TextLayout::new(
-            ctx.font_manager, ">", &opts, colors::foreground(), None,
+            ctx.font_manager,
+            ">",
+            &opts,
+            colors::foreground(),
+            None,
         ));
 
         if self.current >= self.slides.len() && !self.slides.is_empty() {
@@ -247,7 +287,11 @@ impl Widget for Carousel {
             canvas.stroke_rounded_rect(pr, ac, 1, colors::border());
             if let Some(ref tl) = self.prev_layout {
                 let s = tl.size();
-                canvas.draw_text(tl, (pr.x1 + (pr.width() - s.width) / 2.0) as i32, (pr.y1 + (pr.height() - s.height) / 2.0) as i32);
+                canvas.draw_text(
+                    tl,
+                    (pr.x1 + (pr.width() - s.width) / 2.0) as i32,
+                    (pr.y1 + (pr.height() - s.height) / 2.0) as i32,
+                );
             }
 
             let nr = self.next_rect(&rect);
@@ -255,7 +299,11 @@ impl Widget for Carousel {
             canvas.stroke_rounded_rect(nr, ac, 1, colors::border());
             if let Some(ref tl) = self.next_layout {
                 let s = tl.size();
-                canvas.draw_text(tl, (nr.x1 + (nr.width() - s.width) / 2.0) as i32, (nr.y1 + (nr.height() - s.height) / 2.0) as i32);
+                canvas.draw_text(
+                    tl,
+                    (nr.x1 + (nr.width() - s.width) / 2.0) as i32,
+                    (nr.y1 + (nr.height() - s.height) / 2.0) as i32,
+                );
             }
         }
 
@@ -264,7 +312,11 @@ impl Widget for Carousel {
             for i in 0..self.slides.len() {
                 let dr = self.indicator_rect(&rect, i);
                 let dc = Corners::all(self.indicator_size / 2.0);
-                let color = if i == self.current { colors::primary() } else { colors::muted_foreground() };
+                let color = if i == self.current {
+                    colors::primary()
+                } else {
+                    colors::muted_foreground()
+                };
                 canvas.fill_rounded_rect(dr, dc, color);
             }
         }
@@ -286,16 +338,28 @@ impl Widget for Carousel {
                 if self.show_arrows && self.slides.len() > 1 {
                     if self.prev_rect(&rect).contains(&e.position) {
                         self.prev();
-                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
                     if self.next_rect(&rect).contains(&e.position) {
                         self.next();
-                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
                 }
                 if let Some(i) = self.indicator_hit(&e.position, &rect) {
                     self.go_to(i);
-                    return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Pointer),
+                        ..Default::default()
+                    };
                 }
                 if let Some(slide) = self.slides.get_mut(self.current) {
                     return slide.event(event, rect);
@@ -303,13 +367,22 @@ impl Widget for Carousel {
                 EventResponse::default()
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) if rect.contains(pos) => {
-                if self.show_arrows && self.slides.len() > 1
+                if self.show_arrows
+                    && self.slides.len() > 1
                     && (self.prev_rect(&rect).contains(pos) || self.next_rect(&rect).contains(pos))
                 {
-                    return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Pointer),
+                        ..Default::default()
+                    };
                 }
                 if self.indicator_hit(pos, &rect).is_some() {
-                    return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Pointer),
+                        ..Default::default()
+                    };
                 }
                 if let Some(slide) = self.slides.get_mut(self.current) {
                     return slide.event(event, rect);

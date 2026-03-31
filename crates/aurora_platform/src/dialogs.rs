@@ -48,9 +48,7 @@ impl<T: Send + 'static> PendingDialog<T> {
     /// Returns `true` if the background thread has finished and a result
     /// is available (or the dialog was cancelled / thread panicked).
     pub fn is_ready(&self) -> bool {
-        self.handle
-            .as_ref()
-            .is_none_or(|h| h.is_finished())
+        self.handle.as_ref().is_none_or(|h| h.is_finished())
     }
 
     /// Non-blocking check for a result. Returns `Some(T)` exactly once
