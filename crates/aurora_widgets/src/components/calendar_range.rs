@@ -265,19 +265,18 @@ impl Widget for CalendarRange {
         }
 
         // Intercept day clicks for range selection
-        if let WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) = event {
-            if e.state == MouseState::Pressed && rect.contains(&e.position) {
-                if let Some(day) = self.calendar.day_at_position(&e.position, &rect) {
-                    if !self.calendar.is_day_disabled(day) {
+        if let WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) = event
+            && e.state == MouseState::Pressed && rect.contains(&e.position)
+                && let Some(day) = self.calendar.day_at_position(&e.position, &rect)
+                    && !self.calendar.is_day_disabled(day) {
                         if self.range_start.is_some() && self.range_end.is_none() {
                             // Second click: finalize the range
                             self.range_end = Some(day);
                             self.hover_end = None;
-                            if let Some((s, e)) = self.finalized_range() {
-                                if let Some(ref mut cb) = self.on_range_select {
+                            if let Some((s, e)) = self.finalized_range()
+                                && let Some(ref mut cb) = self.on_range_select {
                                     cb(s, e);
                                 }
-                            }
                         } else {
                             // First click (or reset after finalized range)
                             self.range_start = Some(day);
@@ -290,9 +289,6 @@ impl Widget for CalendarRange {
                             ..Default::default()
                         };
                     }
-                }
-            }
-        }
 
         // Delegate everything else to the inner calendar
         self.calendar.event(event, rect)

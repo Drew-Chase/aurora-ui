@@ -77,7 +77,8 @@ enum HeaderHit {
     None,
     Prev,
     Next,
-    MonthYear,
+    Month,
+    Year,
 }
 
 // ─── Calendar widget ────────────────────────────────────────────────────────
@@ -134,6 +135,8 @@ pub struct Calendar {
     next_trailing_layouts: Vec<Option<aurora_text::text_layout::TextLayout>>,
     weekday_layouts: Vec<Option<aurora_text::text_layout::TextLayout>>,
     month_label_layout: Option<aurora_text::text_layout::TextLayout>,
+    month_name_layout: Option<aurora_text::text_layout::TextLayout>,
+    year_label_layout: Option<aurora_text::text_layout::TextLayout>,
     prev_layout: Option<aurora_text::text_layout::TextLayout>,
     next_layout: Option<aurora_text::text_layout::TextLayout>,
     selector_month_layouts: Vec<Option<aurora_text::text_layout::TextLayout>>,
@@ -192,6 +195,8 @@ impl Calendar {
             next_trailing_layouts: Vec::new(),
             weekday_layouts: Vec::new(),
             month_label_layout: None,
+            month_name_layout: None,
+            year_label_layout: None,
             prev_layout: None,
             next_layout: None,
             selector_month_layouts: Vec::new(),
@@ -332,10 +337,18 @@ impl Calendar {
     fn header_hit(&self, pos: &aurora_core::geometry::point::Point, rect: &Rect) -> HeaderHit {
         let hr = Rect::new(rect.x1, rect.y1, rect.x1 + self.cell_size * 7.0, rect.y1 + self.header_height);
         if !hr.contains(pos) { return HeaderHit::None; }
-        let btn_w = self.header_height; // 1:1 aspect ratio buttons
-        if pos.x < hr.x1 + btn_w { HeaderHit::Prev }
-        else if pos.x > hr.x2 - btn_w { HeaderHit::Next }
-        else { HeaderHit::MonthYear }
+        let btn_w = self.header_height;
+        if pos.x < hr.x1 + btn_w { return HeaderHit::Prev; }
+        if pos.x > hr.x2 - btn_w { return HeaderHit::Next; }
+        // Center area: split into Month/Year for Separate mode
+        if self.month_year_selector == Some(MonthYearSelector::Separate) {
+            let mid_start = hr.x1 + btn_w;
+            let mid_end = hr.x2 - btn_w;
+            let mid = mid_start + (mid_end - mid_start) / 2.0;
+            if pos.x < mid { HeaderHit::Month } else { HeaderHit::Year }
+        } else {
+            HeaderHit::Month // Combined/None: whole center is one button
+        }
     }
 
     fn open_selector(&mut self, view: SelectorView) {
@@ -527,10 +540,17 @@ impl Widget for Calendar {
         opts.size = Some(14.0);
         opts.weight = Some(aurora_text::font_options::FontWeight::Medium);
 
-        // Month label
+        // Month/year labels
         let month_str = format!("{} {}", Self::month_name(self.month), self.year);
         self.month_label_layout = Some(aurora_text::text_layout::TextLayout::new(
             ctx.font_manager, &month_str, &opts, colors::foreground(), None,
+        ));
+        // Separate month and year labels for Separate selector mode
+        self.month_name_layout = Some(aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager, Self::month_name(self.month), &opts, colors::foreground(), None,
+        ));
+        self.year_label_layout = Some(aurora_text::text_layout::TextLayout::new(
+            ctx.font_manager, &self.year.to_string(), &opts, colors::foreground(), None,
         ));
 
         // Prev/Next arrows
@@ -639,27 +659,56 @@ impl Widget for Calendar {
         let btn_w = self.header_height;
         let prev_btn = Rect::new(header_rect.x1, header_rect.y1, header_rect.x1 + btn_w, header_rect.y2);
         let next_btn = Rect::new(header_rect.x2 - btn_w, header_rect.y1, header_rect.x2, header_rect.y2);
-        let mid_rect = Rect::new(prev_btn.x2, header_rect.y1, next_btn.x1, header_rect.y2);
+        let mid_start = prev_btn.x2;
+        let mid_end = next_btn.x1;
+        let is_separate = self.month_year_selector == Some(MonthYearSelector::Separate);
+        let gap = 2.0;
+        let mid_center = mid_start + (mid_end - mid_start) / 2.0;
 
         // Header hover backgrounds (same corner style as day cells)
         if self.hovered_header == Some(HeaderHit::Prev) && self.can_go_prev() {
             canvas.fill_rounded_rect(prev_btn, self.corners, self.header_hover_bg);
         }
-        if self.hovered_header == Some(HeaderHit::MonthYear) && self.month_year_selector.is_some() {
-            canvas.fill_rounded_rect(mid_rect, Corners::all(4.0), self.header_hover_bg);
-        }
         if self.hovered_header == Some(HeaderHit::Next) && self.can_go_next() {
             canvas.fill_rounded_rect(next_btn, self.corners, self.header_hover_bg);
         }
 
-        // ── Header text (centered in each region) ───────────────────
+        if is_separate {
+            // Two separate buttons: month (left half) and year (right half)
+            let month_btn = Rect::new(mid_start, header_rect.y1, mid_center - gap, header_rect.y2);
+            let year_btn = Rect::new(mid_center + gap, header_rect.y1, mid_end, header_rect.y2);
+            if self.hovered_header == Some(HeaderHit::Month) {
+                canvas.fill_rounded_rect(month_btn, self.corners, self.header_hover_bg);
+            }
+            if self.hovered_header == Some(HeaderHit::Year) {
+                canvas.fill_rounded_rect(year_btn, self.corners, self.header_hover_bg);
+            }
+            // Month name centered in left button
+            if let Some(ref tl) = self.month_name_layout {
+                let s = tl.size();
+                canvas.draw_text(tl, (month_btn.x1 + (month_btn.width() - s.width) / 2.0) as i32, (month_btn.y1 + (self.header_height - s.height) / 2.0) as i32);
+            }
+            // Year centered in right button
+            if let Some(ref tl) = self.year_label_layout {
+                let s = tl.size();
+                canvas.draw_text(tl, (year_btn.x1 + (year_btn.width() - s.width) / 2.0) as i32, (year_btn.y1 + (self.header_height - s.height) / 2.0) as i32);
+            }
+        } else {
+            // Single combined "March 2026" button
+            let mid_rect = Rect::new(mid_start, header_rect.y1, mid_end, header_rect.y2);
+            if self.hovered_header == Some(HeaderHit::Month) && self.month_year_selector.is_some() {
+                canvas.fill_rounded_rect(mid_rect, self.corners, self.header_hover_bg);
+            }
+            if let Some(ref tl) = self.month_label_layout {
+                let s = tl.size();
+                canvas.draw_text(tl, (mid_rect.x1 + (mid_rect.width() - s.width) / 2.0) as i32, (mid_rect.y1 + (self.header_height - s.height) / 2.0) as i32);
+            }
+        }
+
+        // ── Prev/Next arrow text ────────────────────────────────────
         if let Some(ref tl) = self.prev_layout {
             let s = tl.size();
             canvas.draw_text(tl, (prev_btn.x1 + (btn_w - s.width) / 2.0) as i32, (prev_btn.y1 + (btn_w - s.height) / 2.0) as i32);
-        }
-        if let Some(ref tl) = self.month_label_layout {
-            let s = tl.size();
-            canvas.draw_text(tl, (mid_rect.x1 + (mid_rect.width() - s.width) / 2.0) as i32, (mid_rect.y1 + (self.header_height - s.height) / 2.0) as i32);
         }
         if let Some(ref tl) = self.next_layout {
             let s = tl.size();
@@ -834,19 +883,23 @@ impl Widget for Calendar {
                         self.next_month();
                         return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
                     }
-                    HeaderHit::MonthYear if self.month_year_selector.is_some() => {
+                    HeaderHit::Month if self.month_year_selector.is_some() => {
                         if self.selector_view != SelectorView::None {
                             self.close_selector();
                         } else {
-                            let sel = self.month_year_selector.unwrap();
-                            let view = match sel {
-                                MonthYearSelector::Separate => {
-                                    let hr = Rect::new(rect.x1, rect.y1, rect.x2, rect.y1 + self.header_height);
-                                    if e.position.x < hr.x1 + hr.width() / 2.0 { SelectorView::MonthColumn } else { SelectorView::YearColumn }
-                                }
+                            let view = match self.month_year_selector.unwrap() {
+                                MonthYearSelector::Separate => SelectorView::MonthColumn,
                                 MonthYearSelector::Combined => SelectorView::Combined,
                             };
                             self.open_selector(view);
+                        }
+                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                    }
+                    HeaderHit::Year if self.month_year_selector == Some(MonthYearSelector::Separate) => {
+                        if self.selector_view != SelectorView::None {
+                            self.close_selector();
+                        } else {
+                            self.open_selector(SelectorView::YearColumn);
                         }
                         return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
                     }
@@ -883,8 +936,9 @@ impl Widget for Calendar {
                 match hit {
                     HeaderHit::Prev if self.can_go_prev() => { self.hovered_day = None; return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() }; }
                     HeaderHit::Next if self.can_go_next() => { self.hovered_day = None; return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() }; }
-                    HeaderHit::MonthYear if self.month_year_selector.is_some() => { self.hovered_day = None; return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() }; }
-                    HeaderHit::Prev | HeaderHit::Next | HeaderHit::MonthYear => { self.hovered_day = None; return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Default), ..Default::default() }; }
+                    HeaderHit::Month if self.month_year_selector.is_some() => { self.hovered_day = None; return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() }; }
+                    HeaderHit::Year if self.month_year_selector == Some(MonthYearSelector::Separate) => { self.hovered_day = None; return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() }; }
+                    HeaderHit::Prev | HeaderHit::Next | HeaderHit::Month | HeaderHit::Year => { self.hovered_day = None; return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Default), ..Default::default() }; }
                     HeaderHit::None => {}
                 }
 
@@ -1018,13 +1072,12 @@ impl Calendar {
                 if let Some(ref mut cb) = self.on_month_change { cb(self.year, self.month); }
                 return EventResponse { status: EventStatus::Consumed, ..Default::default() };
             }
-        } else if show_y {
-            if let Some(y) = self.selector_year_at(&e.position, &gr) {
+        } else if show_y
+            && let Some(y) = self.selector_year_at(&e.position, &gr) {
                 self.year = y; self.close_selector();
                 if let Some(ref mut cb) = self.on_month_change { cb(self.year, self.month); }
                 return EventResponse { status: EventStatus::Consumed, ..Default::default() };
             }
-        }
         EventResponse::default()
     }
 
