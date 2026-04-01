@@ -451,16 +451,16 @@ impl ColorPicker {
         #[cfg(feature = "text")]
         {
             let text_x = (swatch.x2 + 10.0) as i32;
-            if self.show_hex {
-                if let Some(ref layout) = self.hex_layout {
-                    canvas.draw_text(layout, text_x, info.y1 as i32);
-                }
+            if self.show_hex
+                && let Some(ref layout) = self.hex_layout
+            {
+                canvas.draw_text(layout, text_x, info.y1 as i32);
             }
-            if self.show_rgb {
-                if let Some(ref layout) = self.rgb_layout {
-                    let y_offset = if self.show_hex { 16.0 } else { 0.0 };
-                    canvas.draw_text(layout, text_x, (info.y1 + y_offset) as i32);
-                }
+            if self.show_rgb
+                && let Some(ref layout) = self.rgb_layout
+            {
+                let y_offset = if self.show_hex { 16.0 } else { 0.0 };
+                canvas.draw_text(layout, text_x, (info.y1 + y_offset) as i32);
             }
         }
     }

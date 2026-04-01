@@ -243,9 +243,7 @@ impl Widget for Stepper {
             let mut num_opts = ctx.font_options.clone();
             num_opts.size = Some(13.0);
             num_opts.weight = Some(FontWeight::SemiBold);
-            let num_color = if i < current {
-                colors::primary_foreground()
-            } else if i == current {
+            let num_color = if i <= current {
                 colors::primary_foreground()
             } else {
                 self.upcoming_color
@@ -499,9 +497,9 @@ impl Stepper {
         }
 
         // Draw circles and labels
-        for i in 0..n {
+        for (i, &row_top) in row_tops.iter().enumerate().take(n) {
             let cx = rect.x1 + half;
-            let cy = row_tops[i] + half;
+            let cy = row_top + half;
             let circle_rect = Rect::new(cx - half, cy - half, cx + half, cy + half);
             let corners = Corners::all(half);
 
