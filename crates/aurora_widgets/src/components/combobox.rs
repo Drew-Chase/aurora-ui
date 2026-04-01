@@ -154,7 +154,7 @@ impl Widget for Combobox {
             self.search.clone()
         };
 
-        let _text_color = if !self.search.is_empty() || self.selected.is_some() {
+        let text_color = if !self.search.is_empty() || self.selected.is_some() {
             colors::foreground()
         } else {
             colors::muted_foreground()
@@ -168,7 +168,7 @@ impl Widget for Combobox {
             ctx.font_manager,
             &display_text,
             &opts,
-            colors::foreground(),
+            text_color,
             None,
         );
         tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
@@ -230,6 +230,27 @@ impl Widget for Combobox {
             1.0,
             colors::muted_foreground(),
         );
+
+        // Text cursor
+        if self.focused {
+            let cursor_x = if let Some(ref tl) = self.input_layout {
+                let positions = tl.char_x_positions();
+                if !self.search.is_empty() && !positions.is_empty() {
+                    rect.x1
+                        + self.padding.left
+                        + positions[positions.len().min(self.search.len()) - 1]
+                } else {
+                    rect.x1 + self.padding.left
+                }
+            } else {
+                rect.x1 + self.padding.left
+            };
+            let cy = rect.y1 + (rect.height() - self.height * 0.5) / 2.0;
+            canvas.fill_rect(
+                Rect::new(cursor_x, cy, cursor_x + 1.5, cy + self.height * 0.5),
+                colors::foreground(),
+            );
+        }
     }
 
     fn paint_overlay(&self, canvas: &mut Canvas, rect: Rect) {
