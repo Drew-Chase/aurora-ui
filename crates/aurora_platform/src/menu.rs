@@ -376,10 +376,7 @@ impl std::fmt::Debug for NativeMenu {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("NativeMenu")
             .field("items", &self.items)
-            .field(
-                "on_item_click",
-                &self.on_item_click.as_ref().map(|_| "..."),
-            )
+            .field("on_item_click", &self.on_item_click.as_ref().map(|_| "..."))
             .finish()
     }
 }

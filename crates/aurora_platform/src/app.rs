@@ -933,8 +933,7 @@ impl AppHandler {
                         // Attach per-window native menu bar (if configured).
                         #[cfg(feature = "menu")]
                         if let Some(ref menu_cfg) = config.menu {
-                            let (muda_menu, id_map) =
-                                crate::menu::build_muda_menu(menu_cfg);
+                            let (muda_menu, id_map) = crate::menu::build_muda_menu(menu_cfg);
 
                             #[cfg(target_os = "macos")]
                             crate::menu::attach_menu_to_app(&muda_menu);
@@ -1058,10 +1057,7 @@ impl ApplicationHandler<AppEvent> for AppHandler {
                 if let Some(primary_id) = self.primary_window
                     && let Some(state) = self.windows.get(&primary_id)
                 {
-                    crate::menu::attach_menu_to_window(
-                        &muda_menu,
-                        &state.app_window.window_handle,
-                    );
+                    crate::menu::attach_menu_to_window(&muda_menu, &state.app_window.window_handle);
                 }
 
                 // Merge ID map into the shared map.

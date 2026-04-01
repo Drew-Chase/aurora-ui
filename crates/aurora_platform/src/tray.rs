@@ -128,10 +128,7 @@ impl TrayConfig {
     }
 
     /// Sets the click handler for tray icon interactions.
-    pub fn on_click(
-        mut self,
-        f: impl Fn(TrayInteraction) + Send + Sync + 'static,
-    ) -> Self {
+    pub fn on_click(mut self, f: impl Fn(TrayInteraction) + Send + Sync + 'static) -> Self {
         self.on_click = Some(Arc::new(f));
         self
     }
@@ -146,7 +143,13 @@ impl Default for TrayConfig {
 impl std::fmt::Debug for TrayConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("TrayConfig")
-            .field("icon", &self.icon.as_ref().map(|i| format!("{}x{}", i.width, i.height)))
+            .field(
+                "icon",
+                &self
+                    .icon
+                    .as_ref()
+                    .map(|i| format!("{}x{}", i.width, i.height)),
+            )
             .field("tooltip", &self.tooltip)
             .field("menu", &self.menu)
             .field("on_click", &self.on_click.as_ref().map(|_| "..."))
@@ -169,12 +172,9 @@ pub(crate) fn build_tray_icon(
     let mut builder = tray_icon::TrayIconBuilder::new();
 
     if let Some(ref icon_data) = config.icon {
-        let icon = tray_icon::Icon::from_rgba(
-            icon_data.rgba.clone(),
-            icon_data.width,
-            icon_data.height,
-        )
-        .map_err(|e| format!("Invalid tray icon data: {e}"))?;
+        let icon =
+            tray_icon::Icon::from_rgba(icon_data.rgba.clone(), icon_data.width, icon_data.height)
+                .map_err(|e| format!("Invalid tray icon data: {e}"))?;
         builder = builder.with_icon(icon);
     }
 
@@ -186,7 +186,9 @@ pub(crate) fn build_tray_icon(
         builder = builder.with_menu(menu);
     }
 
-    builder.build().map_err(|e| format!("Failed to build tray icon: {e}"))
+    builder
+        .build()
+        .map_err(|e| format!("Failed to build tray icon: {e}"))
 }
 
 // ---------------------------------------------------------------------------
@@ -208,9 +210,7 @@ mod tests {
 
     #[test]
     fn tray_config_builder_chain() {
-        let config = TrayConfig::new()
-            .tooltip("My App")
-            .on_click(|_| {});
+        let config = TrayConfig::new().tooltip("My App").on_click(|_| {});
 
         assert_eq!(config.tooltip.as_deref(), Some("My App"));
         assert!(config.on_click.is_some());

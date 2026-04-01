@@ -120,25 +120,20 @@ fn main() {
                             .align(Align::Center),
                     )
                     .child(
-                        Text::new(
-                            "This window has a native OS menu bar (File, Edit, View).",
-                        )
-                        .font_size(14.0),
+                        Text::new("This window has a native OS menu bar (File, Edit, View).")
+                            .font_size(14.0),
                     )
                     .child(
-                        Text::new(
-                            "A system tray icon is visible in the notification area.",
-                        )
-                        .font_size(14.0),
+                        Text::new("A system tray icon is visible in the notification area.")
+                            .font_size(14.0),
                     )
                     .child(
-                        Text::new("Right-click the tray icon for its context menu.").font_size(14.0),
+                        Text::new("Right-click the tray icon for its context menu.")
+                            .font_size(14.0),
                     )
                     .child(
-                        Text::new(
-                            "Menu and tray events are printed to the console.",
-                        )
-                        .font_size(14.0),
+                        Text::new("Menu and tray events are printed to the console.")
+                            .font_size(14.0),
                     ),
             );
         })
