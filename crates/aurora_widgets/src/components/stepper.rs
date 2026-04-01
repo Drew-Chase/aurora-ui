@@ -596,14 +596,11 @@ mod tests {
 
     #[test]
     fn clickable_interaction() {
-        let mut clicked = None;
         let s = Stepper::new()
             .step("Step 1")
             .step("Step 2")
             .clickable(true)
-            .on_step_click(move |idx| {
-                clicked = Some(idx);
-            });
+            .on_step_click(move |_idx| {});
 
         assert!(s.clickable);
         assert!(s.on_step_click.is_some());
