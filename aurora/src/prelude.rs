@@ -68,6 +68,17 @@ pub use aurora_widgets::svg_widget::Svg;
 #[cfg(feature = "dialogs")]
 pub use aurora_platform::dialogs::{FileDialog, FileFilter, PendingDialog};
 
+// Native Menu (feature-gated)
+#[cfg(feature = "menu")]
+pub use aurora_platform::menu::{
+    CheckMenuItemBuilder, MenuAccelerator, MenuItemBuilder, MenuModifiers, NativeMenu,
+    NativeMenuItem, PredefinedItem, SubmenuBuilder,
+};
+
+// System Tray (feature-gated)
+#[cfg(feature = "tray")]
+pub use aurora_platform::tray::{TrayConfig, TrayInteraction};
+
 // Animation (feature-gated)
 #[cfg(feature = "animate")]
 pub use aurora_animate::{

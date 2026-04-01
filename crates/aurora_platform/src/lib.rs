@@ -28,6 +28,10 @@ pub mod app;
 #[cfg(feature = "dialogs")]
 pub mod dialogs;
 pub mod errors;
+#[cfg(feature = "menu")]
+pub mod menu;
+#[cfg(feature = "tray")]
+pub mod tray;
 pub mod window_controls;
 #[cfg(target_os = "windows")]
 pub mod windows_titlebar;

@@ -19,6 +19,8 @@ use aurora_widgets::widgets::{EventResponse, LayoutCtx, Widget};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
+#[cfg(feature = "menu")]
+use std::sync::Mutex;
 use winit::application::ApplicationHandler;
 use winit::dpi;
 use winit::event::WindowEvent;
@@ -101,6 +103,9 @@ pub struct WindowConfig {
     pub font_options: aurora_text::font_options::FontOptions,
     #[cfg(feature = "text")]
     pub fonts: Vec<&'static [u8]>,
+    /// Native OS menu bar for this window (requires `menu` feature).
+    #[cfg(feature = "menu")]
+    pub menu: Option<crate::menu::NativeMenu>,
     /// If true, closing this window exits the application.
     pub primary: bool,
     /// Parent window — closing the parent closes children too.
@@ -133,6 +138,8 @@ impl Default for WindowConfig {
             font_options: aurora_text::font_options::FontOptions::default(),
             #[cfg(feature = "text")]
             fonts: vec![],
+            #[cfg(feature = "menu")]
+            menu: None,
             primary: false,
             parent: None,
             modal: false,
@@ -243,6 +250,13 @@ impl WindowConfig {
         self.on_close = Some(Arc::new(f));
         self
     }
+
+    /// Sets a native OS menu bar for this window.
+    #[cfg(feature = "menu")]
+    pub fn menu(mut self, menu: crate::menu::NativeMenu) -> Self {
+        self.menu = Some(menu);
+        self
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -301,6 +315,10 @@ pub struct App {
     #[cfg(feature = "text")]
     pub fonts: Vec<&'static [u8]>,
     exit_on: ExitBehavior,
+    #[cfg(feature = "menu")]
+    pub(crate) menu: Option<crate::menu::NativeMenu>,
+    #[cfg(feature = "tray")]
+    pub(crate) tray: Option<crate::tray::TrayConfig>,
 }
 
 /// Decoded RGBA icon data for setting the window icon.
@@ -529,13 +547,34 @@ impl App {
         self
     }
 
+    /// Sets the native OS menu bar for the primary window.
+    ///
+    /// On macOS this becomes the app-wide menu bar. On Windows and Linux it
+    /// is attached to the primary window.
+    #[cfg(feature = "menu")]
+    pub fn menu(mut self, menu: crate::menu::NativeMenu) -> Self {
+        self.menu = Some(menu);
+        self
+    }
+
+    /// Configures a system tray icon for the application.
+    ///
+    /// The tray icon is created when the event loop starts. Requires the
+    /// `tray` feature.
+    #[cfg(feature = "tray")]
+    pub fn tray(mut self, config: crate::tray::TrayConfig) -> Self {
+        self.tray = Some(config);
+        self
+    }
+
     /// Opens the window and enters the event loop.
     ///
     /// The `on_render` callback is invoked on every [`RedrawRequested`](WindowEvent::RedrawRequested)
     /// event with a reference to the [`AppWindow`] and the current [`FrameInfo`].
     ///
     /// Returns an [`AppError`] if the window or event loop could not be created.
-    pub fn run<F>(self, on_render: F) -> Result<(), AppError>
+    #[allow(unused_mut)]
+    pub fn run<F>(mut self, on_render: F) -> Result<(), AppError>
     where
         F: FnMut(&mut AppWindow, FrameInfo) + 'static,
     {
@@ -543,12 +582,65 @@ impl App {
         let start_time = std::time::Instant::now();
         let exit_on = self.exit_on;
 
+        // Extract menu/tray configs before converting to WindowConfig
+        // (which consumes `self`).
+        #[cfg(feature = "menu")]
+        let menu_config = self.menu.take();
+        #[cfg(feature = "tray")]
+        let tray_config = self.tray.take();
+
         let config = WindowConfig::from(self);
 
         let event_loop = winit::event_loop::EventLoop::<AppEvent>::with_user_event()
             .build()
             .map_err(AppError::from)?;
         let proxy = event_loop.create_proxy();
+
+        // Set up the global muda MenuEvent handler that forwards menu item
+        // clicks into our event loop.
+        #[cfg(feature = "menu")]
+        let menu_id_map: Arc<Mutex<HashMap<muda::MenuId, String>>> =
+            Arc::new(Mutex::new(HashMap::new()));
+        #[cfg(feature = "menu")]
+        {
+            let proxy_clone = proxy.clone();
+            let map = menu_id_map.clone();
+            muda::MenuEvent::set_event_handler(Some(move |event: muda::MenuEvent| {
+                if let Ok(guard) = map.lock()
+                    && let Some(user_id) = guard.get(&event.id)
+                {
+                    let _ = proxy_clone.send_event(AppEvent::MenuEvent(user_id.clone()));
+                }
+            }));
+        }
+
+        // Set up the global TrayIconEvent handler.
+        #[cfg(feature = "tray")]
+        {
+            let proxy_clone = proxy.clone();
+            tray_icon::TrayIconEvent::set_event_handler(Some(move |event| {
+                let interaction = match event {
+                    tray_icon::TrayIconEvent::Click {
+                        button: tray_icon::MouseButton::Left,
+                        button_state: tray_icon::MouseButtonState::Up,
+                        ..
+                    } => Some(crate::tray::TrayInteraction::Click),
+                    tray_icon::TrayIconEvent::DoubleClick {
+                        button: tray_icon::MouseButton::Left,
+                        ..
+                    } => Some(crate::tray::TrayInteraction::DoubleClick),
+                    tray_icon::TrayIconEvent::Click {
+                        button: tray_icon::MouseButton::Right,
+                        button_state: tray_icon::MouseButtonState::Up,
+                        ..
+                    } => Some(crate::tray::TrayInteraction::RightClick),
+                    _ => None,
+                };
+                if let Some(interaction) = interaction {
+                    let _ = proxy_clone.send_event(AppEvent::TrayEvent(interaction));
+                }
+            }));
+        }
 
         let mut app_handler = AppHandler {
             windows: HashMap::new(),
@@ -559,6 +651,20 @@ impl App {
             benchmark,
             start_time,
             exit_on,
+            #[cfg(feature = "menu")]
+            menu_config,
+            #[cfg(feature = "menu")]
+            menu_id_map,
+            #[cfg(feature = "menu")]
+            menu_callbacks: Vec::new(),
+            #[cfg(feature = "menu")]
+            muda_menus: Vec::new(),
+            #[cfg(feature = "tray")]
+            tray_config,
+            #[cfg(feature = "tray")]
+            tray_icon: None,
+            #[cfg(feature = "tray")]
+            tray_click_callback: None,
         };
 
         event_loop
@@ -589,6 +695,10 @@ impl Default for App {
             #[cfg(feature = "text")]
             fonts: vec![],
             exit_on: ExitBehavior::LastWindowClosed,
+            #[cfg(feature = "menu")]
+            menu: None,
+            #[cfg(feature = "tray")]
+            tray: None,
         }
     }
 }
@@ -613,6 +723,8 @@ impl From<App> for WindowConfig {
             font_options: app.font_options,
             #[cfg(feature = "text")]
             fonts: app.fonts,
+            #[cfg(feature = "menu")]
+            menu: app.menu,
             primary: true,
             parent: None,
             modal: false,
@@ -707,6 +819,10 @@ pub(crate) enum AppEvent {
         payload: Box<dyn std::any::Any + Send>,
     },
     RequestRedraw(WindowId),
+    #[cfg(feature = "menu")]
+    MenuEvent(String),
+    #[cfg(feature = "tray")]
+    TrayEvent(crate::tray::TrayInteraction),
 }
 
 /// Boxed to avoid large enum variant size difference in `AppEvent`.
@@ -747,6 +863,23 @@ struct AppHandler {
     benchmark: bool,
     start_time: std::time::Instant,
     exit_on: ExitBehavior,
+    // Native menu support
+    #[cfg(feature = "menu")]
+    menu_config: Option<crate::menu::NativeMenu>,
+    #[cfg(feature = "menu")]
+    menu_id_map: Arc<Mutex<HashMap<muda::MenuId, String>>>,
+    #[cfg(feature = "menu")]
+    menu_callbacks: Vec<crate::menu::MenuClickHandler>,
+    /// Keep `muda::Menu` objects alive for the lifetime of the app.
+    #[cfg(feature = "menu")]
+    muda_menus: Vec<muda::Menu>,
+    // System tray support
+    #[cfg(feature = "tray")]
+    tray_config: Option<crate::tray::TrayConfig>,
+    #[cfg(feature = "tray")]
+    tray_icon: Option<tray_icon::TrayIcon>,
+    #[cfg(feature = "tray")]
+    tray_click_callback: Option<Arc<dyn Fn(crate::tray::TrayInteraction) + Send + Sync>>,
 }
 
 /// Minimum cursor distance in pixels to trigger a drag gesture.
@@ -796,6 +929,27 @@ impl AppHandler {
                         }
 
                         handle.set_visible(true);
+
+                        // Attach per-window native menu bar (if configured).
+                        #[cfg(feature = "menu")]
+                        if let Some(ref menu_cfg) = config.menu {
+                            let (muda_menu, id_map) =
+                                crate::menu::build_muda_menu(menu_cfg);
+
+                            #[cfg(target_os = "macos")]
+                            crate::menu::attach_menu_to_app(&muda_menu);
+
+                            #[cfg(target_os = "windows")]
+                            crate::menu::attach_menu_to_window(&muda_menu, &handle);
+
+                            if let Ok(mut guard) = self.menu_id_map.lock() {
+                                guard.extend(id_map);
+                            }
+                            if let Some(ref cb) = menu_cfg.on_item_click {
+                                self.menu_callbacks.push(cb.clone());
+                            }
+                            self.muda_menus.push(muda_menu);
+                        }
 
                         let state = WindowState {
                             app_window,
@@ -889,6 +1043,73 @@ impl ApplicationHandler<AppEvent> for AppHandler {
             for (config, on_render) in pending {
                 self.create_window(event_loop, config, on_render);
             }
+
+            // --- Initialize native menu bar for the primary window ---
+            #[cfg(feature = "menu")]
+            if let Some(menu_config) = self.menu_config.take() {
+                let (muda_menu, id_map) = crate::menu::build_muda_menu(&menu_config);
+
+                // On macOS the menu bar is app-wide.
+                #[cfg(target_os = "macos")]
+                crate::menu::attach_menu_to_app(&muda_menu);
+
+                // On Windows/Linux attach to the primary window.
+                #[cfg(target_os = "windows")]
+                if let Some(primary_id) = self.primary_window
+                    && let Some(state) = self.windows.get(&primary_id)
+                {
+                    crate::menu::attach_menu_to_window(
+                        &muda_menu,
+                        &state.app_window.window_handle,
+                    );
+                }
+
+                // Merge ID map into the shared map.
+                if let Ok(mut guard) = self.menu_id_map.lock() {
+                    guard.extend(id_map);
+                }
+
+                // Store the callback.
+                if let Some(cb) = menu_config.on_item_click {
+                    self.menu_callbacks.push(cb);
+                }
+
+                // Keep the muda menu alive.
+                self.muda_menus.push(muda_menu);
+            }
+
+            // --- Initialize system tray icon ---
+            #[cfg(feature = "tray")]
+            if let Some(tray_config) = self.tray_config.take() {
+                self.tray_click_callback = tray_config.on_click.clone();
+
+                // Build the tray context menu (if any).
+                let tray_menu = tray_config.menu.as_ref().map(|m| {
+                    let (menu, id_map) = crate::menu::build_muda_menu(m);
+                    // Merge IDs into the shared map so the global handler
+                    // can resolve tray-menu clicks too.
+                    if let Ok(mut guard) = self.menu_id_map.lock() {
+                        guard.extend(id_map);
+                    }
+                    // Store the tray menu's callback.
+                    if let Some(ref cb) = m.on_item_click {
+                        self.menu_callbacks.push(cb.clone());
+                    }
+                    menu
+                });
+
+                let tray_menu_box: Option<Box<dyn muda::ContextMenu>> =
+                    tray_menu.map(|m| Box::new(m) as Box<dyn muda::ContextMenu>);
+
+                match crate::tray::build_tray_icon(&tray_config, tray_menu_box) {
+                    Ok(icon) => {
+                        self.tray_icon = Some(icon);
+                    }
+                    Err(e) => {
+                        log::error!("Failed to create tray icon: {e}");
+                    }
+                }
+            }
         } else {
             for state in self.windows.values() {
                 state.app_window.window_handle.focus_window();
@@ -915,6 +1136,22 @@ impl ApplicationHandler<AppEvent> for AppHandler {
             AppEvent::RequestRedraw(id) => {
                 if let Some(state) = self.windows.get(&id) {
                     state.app_window.window_handle.request_redraw();
+                }
+            }
+            #[cfg(feature = "menu")]
+            AppEvent::MenuEvent(id) => {
+                for cb in &self.menu_callbacks {
+                    cb(&id);
+                }
+                // Request redraw on all windows so the UI can react.
+                for state in self.windows.values() {
+                    state.app_window.window_handle.request_redraw();
+                }
+            }
+            #[cfg(feature = "tray")]
+            AppEvent::TrayEvent(interaction) => {
+                if let Some(ref cb) = self.tray_click_callback {
+                    cb(interaction);
                 }
             }
         }
