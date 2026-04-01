@@ -26,6 +26,7 @@ const SECTIONS: &[Section] = &[
             "Accordion",
             "Alert",
             "Aspect Ratio",
+            "AutoComplete",
             "Avatar",
             "Badge",
             "Breadcrumb",
@@ -36,6 +37,7 @@ const SECTIONS: &[Section] = &[
             "Carousel",
             "Checkbox",
             "Code Block",
+            "Color Picker",
             "Collapsible",
             "Combobox",
             "Command",
@@ -55,22 +57,29 @@ const SECTIONS: &[Section] = &[
             "Label",
             "Menubar",
             "Navigation Menu",
+            "Number Input",
             "Pagination",
             "Popover",
             "Progress",
             "Radio Group",
             "Resizable",
             "Scroll Area",
+            "Segmented Control",
             "Select",
             "Separator",
+            "Sheet",
             "Sidebar",
             "Skeleton",
             "Slider",
             "Spinner",
+            "Split Pane",
+            "Stepper",
             "Switch",
             "Table",
+            "Tag Input",
             "Tabs",
             "Textarea",
+            "Time Picker",
             "Toast",
             "Toggle",
             "Toggle Group",
@@ -122,6 +131,7 @@ pub struct GalleryState {
     pub sidebar_scroll: ScrollState,
     pub content_scroll: ScrollState,
     pub dialog_open: bool,
+    pub sheet_open: bool,
 }
 
 fn gallery() -> impl Widget {
@@ -134,6 +144,7 @@ fn gallery() -> impl Widget {
             sidebar_scroll: ScrollState::new(),
             content_scroll: ScrollState::new(),
             dialog_open: false,
+            sheet_open: false,
         },
         move |state, set_state| {
             // Apply the selected theme profile
@@ -349,10 +360,11 @@ fn content_area(
                 .item(page_installation())
                 .item(page_first_app())
                 .item(page_custom_components())
-                // Components (indices 3-55)
+                // Components (indices 3-58)
                 .item(page_accordion())
                 .item(page_alert())
                 .item(page_aspect_ratio())
+                .item(page_autocomplete())
                 .item(page_avatar())
                 .item(page_badge())
                 .item(page_breadcrumb())
@@ -363,12 +375,13 @@ fn content_area(
                 .item(page_carousel())
                 .item(page_checkbox())
                 .item(page_code_block())
+                .item(page_color_picker())
                 .item(page_collapsible())
                 .item(page_combobox())
                 .item(page_command())
                 .item(page_data_table())
                 .item(page_date_picker())
-                .item(page_dialog(setter))
+                .item(page_dialog(setter.clone()))
                 .item(page_drag_drop())
                 .item(page_dropdown_menu())
                 .item(page_empty())
@@ -382,20 +395,26 @@ fn content_area(
                 .item(page_label())
                 .item(page_menubar())
                 .item(page_navigation_menu())
+                .item(page_number_input())
                 .item(page_pagination())
                 .item(page_popover())
                 .item(page_progress())
                 .item(page_radio_group())
                 .item(page_resizable())
                 .item(page_scroll_area())
+                .item(page_segmented_control())
                 .item(page_select())
                 .item(page_separator())
+                .item(page_sheet(setter))
                 .item(page_sidebar())
                 .item(page_skeleton())
                 .item(page_slider())
                 .item(page_spinner())
+                .item(page_split_pane())
+                .item(page_stepper())
                 .item(page_switch())
                 .item(page_table())
+                .item(page_tag_input())
                 .item(page_tabs())
                 .item(page_textarea())
                 .item(page_toast())

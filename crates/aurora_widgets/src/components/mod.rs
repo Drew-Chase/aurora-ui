@@ -17,19 +17,26 @@ pub mod progress;
 pub mod separator;
 pub mod skeleton;
 pub mod spinner;
+pub mod stepper;
 pub mod typography;
 
 // Interactive widgets
 pub mod accordion;
+pub mod autocomplete;
 pub mod button_group;
 pub mod checkbox;
 pub mod collapsible;
+pub mod color_picker;
 pub mod field;
 pub mod input_group;
+pub mod number_input;
 pub mod radio_group;
+pub mod segmented_control;
 pub mod slider;
 pub mod switch;
 pub mod tabs;
+pub mod tag_input;
+pub mod time_picker;
 pub mod toggle;
 pub mod toggle_group;
 
@@ -40,6 +47,7 @@ pub mod pagination;
 pub mod resizable;
 pub mod scroll_area;
 pub mod sidebar;
+pub mod split_pane;
 pub mod table;
 pub mod textarea;
 pub mod tree_view;
@@ -50,6 +58,7 @@ pub mod dropdown_menu;
 pub mod hover_card;
 pub mod popover;
 pub mod select;
+pub mod sheet;
 pub mod toast;
 pub mod tooltip;
 
