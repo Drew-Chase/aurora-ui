@@ -38,6 +38,7 @@ pub use aurora_widgets::layout::position::{Position, Positioned};
 pub use aurora_widgets::layout::row::Row;
 pub use aurora_widgets::layout::scrollview::{ScrollState, ScrollView};
 pub use aurora_widgets::layout::stack::Stack;
+pub use aurora_widgets::layout::virtual_list::VirtualList;
 pub use aurora_widgets::layout::{Align, Justify};
 #[cfg(feature = "regex")]
 pub use aurora_widgets::validation::Pattern;

@@ -18,6 +18,8 @@ pub mod row;
 /// Scrollable viewport container.
 pub mod scrollview;
 pub mod stack;
+/// Virtualized list for rendering large datasets efficiently.
+pub mod virtual_list;
 
 /// Controls distribution of children along the main axis.
 ///
