@@ -35,108 +35,128 @@ fn main() {
     App::new()
         .title("Form Validation Example")
         .size((500, 400))
+        .resizable(false)
         .use_system_fonts()
         .position(WindowPosition::Center)
-        .run(|window, _frame| {
-            window.root(Composite::new(FormState::default(), |state, set_state| {
-                let email_err = state.email_error.clone();
-                let password_err = state.password_error.clone();
-                let has_email_err = email_err.is_some();
-                let has_password_err = password_err.is_some();
-                let submitted = state.submitted;
-
-                // Email field
-                let mut email_field = Field::new("Email")
-                    .required(true)
-                    .description("We'll never share your email.")
-                    .input(
-                        TextInput::new()
-                            .text(state.email.clone())
-                            .placeholder("you@example.com")
-                            .id(100)
-                            .tab_index(1)
-                            .error(has_email_err)
-                            .on_change({
-                                let set = set_state.clone();
-                                move |text: &str| {
-                                    let err = validate_field(text, &email_chain());
-                                    set.set({
-                                        let text = text.to_string();
-                                        move |s| {
-                                            s.email = text;
-                                            s.email_error = err;
-                                        }
-                                    });
-                                }
-                            }),
-                    )
-                    .width(400.0);
-
-                if let Some(ref err) = email_err {
-                    email_field = email_field.error(err.clone());
+        .run({
+            let mut initialized = false;
+            move |window, _frame| {
+                if initialized {
+                    return;
                 }
-
-                // Password field
-                let mut password_field = Field::new("Password")
-                    .required(true)
-                    .input(
-                        TextInput::new()
-                            .text(state.password.clone())
-                            .placeholder("At least 8 characters")
-                            .password(true)
-                            .id(200)
-                            .tab_index(2)
-                            .error(has_password_err)
-                            .on_change({
-                                let set = set_state.clone();
-                                move |text: &str| {
-                                    let err = validate_field(text, &password_chain());
-                                    set.set({
-                                        let text = text.to_string();
-                                        move |s| {
-                                            s.password = text;
-                                            s.password_error = err;
-                                        }
-                                    });
-                                }
-                            }),
-                    )
-                    .width(400.0);
-
-                if let Some(ref err) = password_err {
-                    password_field = password_field.error(err.clone());
-                }
-
-                // Status message
-                let status = if submitted && !has_email_err && !has_password_err {
-                    "Form submitted successfully!"
-                } else if submitted {
-                    "Please fix the errors above."
-                } else {
-                    ""
-                };
-
-                Box::new(
-                    col!()
-                        .spacing(16.0)
-                        .padding(Edges::all(32.0))
-                        .child(Text::new("Form Validation Demo").font_size(24.0))
-                        .child(email_field)
-                        .child(password_field)
-                        .child(button!("Submit").on_click({
-                            let set = set_state.clone();
-                            move |_| {
-                                set.set(|s| {
-                                    s.email_error = validate_field(&s.email, &email_chain());
-                                    s.password_error =
-                                        validate_field(&s.password, &password_chain());
+                initialized = true;
+                window.root(Composite::new(FormState::default(), |state, set_state| {
+                    let email_err = state.email_error.clone();
+                    let password_err = state.password_error.clone();
+                    let has_email_err = email_err.is_some();
+                    let has_password_err = password_err.is_some();
+                    let submitted = state.submitted;
+                    let do_submit = {
+                        let set = set_state.clone();
+                        move || {
+                            set.set(|s| {
+                                s.email_error = validate_field(&s.email, &email_chain());
+                                s.password_error =
+                                    validate_field(&s.password, &password_chain());
+                                if s.email_error.is_none() && s.password_error.is_none() {
                                     s.submitted = true;
-                                });
-                            }
+                                    println!(
+                                        "Submitting form with email: \"{}\" and password: \"{}\"",
+                                        s.email, s.password
+                                    );
+                                }
+                            });
+                        }
+                    };
+
+                    // Email field
+                    let mut email_field = Field::new("Email")
+                        .required(true)
+                        .description("We'll never share your email.")
+                        .input(
+                            TextInput::new()
+                                .text(state.email.clone())
+                                .placeholder("you@example.com")
+                                .id(100)
+                                .tab_index(1)
+                                .on_submit(do_submit.clone())
+                                .error(has_email_err)
+                                .on_change({
+                                    let set = set_state.clone();
+                                    move |text: &str| {
+                                        let err = validate_field(text, &email_chain());
+                                        set.set({
+                                            let text = text.to_string();
+                                            move |s| {
+                                                s.email = text;
+                                                s.email_error = err;
+                                            }
+                                        });
+                                    }
+                                }),
+                        )
+                        .width(400.0);
+
+                    if let Some(ref err) = email_err {
+                        email_field = email_field.error(err.clone());
+                    }
+
+                    // Password field
+                    let mut password_field = Field::new("Password")
+                        .required(true)
+                        .input(
+                            TextInput::new()
+                                .on_submit(do_submit.clone())
+                                .text(state.password.clone())
+                                .placeholder("At least 8 characters")
+                                .password(true)
+                                .id(200)
+                                .tab_index(2)
+                                .error(has_password_err)
+                                .on_change({
+                                    let set = set_state.clone();
+                                    move |text: &str| {
+                                        let err = validate_field(text, &password_chain());
+                                        set.set({
+                                            let text = text.to_string();
+                                            move |s| {
+                                                s.password = text;
+                                                s.password_error = err;
+                                            }
+                                        });
+                                    }
+                                }),
+                        )
+                        .width(400.0);
+
+                    if let Some(ref err) = password_err {
+                        password_field = password_field.error(err.clone());
+                    }
+
+                    // Status message
+                    let status = if submitted && !has_email_err && !has_password_err {
+                        "Form submitted successfully!"
+                    } else if submitted {
+                        "Please fix the errors above."
+                    } else {
+                        ""
+                    };
+
+                    Box::new(
+                        col!()
+                            .spacing(16.0)
+                            .padding(Edges::all(32.0))
+                            .child(Text::new("Form Validation Demo").font_size(24.0))
+                            .child(email_field)
+                            .child(password_field)
+                            .child(button!("Submit").on_click({
+                            let submit = do_submit.clone();
+                            move |_| submit()
                         }))
-                        .child(Text::new(status).font_size(14.0)),
-                )
-            }));
+                            .child(Text::new(status).font_size(14.0)),
+                    )
+                }));
+            }
         })
         .expect("Failed to run app");
 }

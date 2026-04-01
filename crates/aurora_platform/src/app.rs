@@ -1823,9 +1823,17 @@ impl AppWindow {
                 widget.event(&WidgetEvent::Blur(old_id), rect);
             }
             self.focused_widget_id = Some(new_id);
-        } else if matches!(event, WidgetEvent::Mouse(MouseEvent::MouseClickEvent(_)))
-            && response.status.is_handled()
-        {
+            // Dispatch Focus immediately so the widget is ready for
+            // keyboard input without waiting for the next layout pass.
+            widget.event(&WidgetEvent::Focus(new_id, false), rect);
+        } else if matches!(
+            event,
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(c)) if c.state == MouseState::Pressed
+        ) {
+            // A mouse-down that doesn't request focus blurs the current
+            // widget (clicking empty space, buttons, etc.). Only fires on
+            // Pressed — not Released — so that the full click lifecycle
+            // (press → release → on_click) completes without interference.
             if let Some(old_id) = self.focused_widget_id {
                 widget.event(&WidgetEvent::Blur(old_id), rect);
             }
