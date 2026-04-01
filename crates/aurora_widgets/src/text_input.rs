@@ -8,9 +8,18 @@ use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::keyboard::{Key, KeyboardEvent, Modifiers};
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
+use aurora_core::undo::UndoStack;
 use aurora_render::canvas::Canvas;
 use aurora_text::font_options::FontOptions;
 use aurora_text::text_layout::TextLayout;
+
+/// Tracks the last mutation type for undo grouping.
+#[derive(PartialEq)]
+enum LastAction {
+    None,
+    Typing,
+    Other,
+}
 
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -78,6 +87,8 @@ pub struct TextInput {
     border_color: Color,
     border_width: u32,
     error: bool,
+    undo_stack: UndoStack<(String, usize)>,
+    last_action: LastAction,
 }
 
 impl Default for TextInput {
@@ -115,6 +126,8 @@ impl Default for TextInput {
             border_color: aurora_theme::color(aurora_theme::slots::INPUT_BORDER),
             border_width: 1,
             error: false,
+            undo_stack: UndoStack::new(),
+            last_action: LastAction::None,
         }
     }
 }
@@ -647,6 +660,12 @@ impl Widget for TextInput {
                 if !self.focused || ch.is_control() {
                     return EventResponse::default();
                 }
+                // Undo grouping: only push snapshot at the start of a typing run
+                if self.last_action != LastAction::Typing {
+                    self.undo_stack
+                        .push((self.text.clone(), self.cursor_pos));
+                }
+                self.last_action = LastAction::Typing;
                 if self.has_selection() {
                     self.delete_selection();
                 }
@@ -693,6 +712,40 @@ impl Widget for TextInput {
                     };
                 }
 
+                // Ctrl+Z — undo
+                if modifiers.ctrl && !modifiers.shift && *key == Key::Character('z') {
+                    let current = (self.text.clone(), self.cursor_pos);
+                    if let Some((text, pos)) = self.undo_stack.undo(current) {
+                        self.text = text;
+                        self.cursor_pos = pos;
+                        self.clear_selection();
+                        self.last_action = LastAction::None;
+                        self.notify_change();
+                    }
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        ..Default::default()
+                    };
+                }
+
+                // Ctrl+Shift+Z or Ctrl+Y — redo
+                if (modifiers.ctrl && modifiers.shift && *key == Key::Character('z'))
+                    || (modifiers.ctrl && *key == Key::Character('y'))
+                {
+                    let current = (self.text.clone(), self.cursor_pos);
+                    if let Some((text, pos)) = self.undo_stack.redo(current) {
+                        self.text = text;
+                        self.cursor_pos = pos;
+                        self.clear_selection();
+                        self.last_action = LastAction::None;
+                        self.notify_change();
+                    }
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        ..Default::default()
+                    };
+                }
+
                 // Ctrl+A selects all
                 if modifiers.ctrl && *key == Key::Character('a') {
                     self.selection_anchor = Some(0);
@@ -726,6 +779,9 @@ impl Widget for TextInput {
                         let _ = cb.set_text(&self.text[lo..hi]);
                     }
                     if self.has_selection() {
+                        self.undo_stack
+                            .push((self.text.clone(), self.cursor_pos));
+                        self.last_action = LastAction::Other;
                         self.delete_selection();
                         self.clear_selection();
                         self.notify_change();
@@ -742,6 +798,9 @@ impl Widget for TextInput {
                     if let Ok(mut cb) = arboard::Clipboard::new()
                         && let Ok(text) = cb.get_text()
                     {
+                        self.undo_stack
+                            .push((self.text.clone(), self.cursor_pos));
+                        self.last_action = LastAction::Other;
                         if self.has_selection() {
                             self.delete_selection();
                         }
@@ -758,6 +817,9 @@ impl Widget for TextInput {
 
                 match key {
                     Key::Backspace => {
+                        self.undo_stack
+                            .push((self.text.clone(), self.cursor_pos));
+                        self.last_action = LastAction::Other;
                         if self.has_selection() {
                             self.delete_selection();
                         } else if modifiers.ctrl {
@@ -777,6 +839,9 @@ impl Widget for TextInput {
                         self.notify_change();
                     }
                     Key::Delete => {
+                        self.undo_stack
+                            .push((self.text.clone(), self.cursor_pos));
+                        self.last_action = LastAction::Other;
                         if self.has_selection() {
                             self.delete_selection();
                         } else if modifiers.ctrl {
