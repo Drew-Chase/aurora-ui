@@ -46,6 +46,7 @@ pub struct TextArea {
     on_change: Option<Box<dyn FnMut(&str)>>,
     text_layout: Option<aurora_text::text_layout::TextLayout>,
     placeholder_layout: Option<aurora_text::text_layout::TextLayout>,
+    error: bool,
 }
 
 impl TextArea {
@@ -70,6 +71,7 @@ impl TextArea {
             on_change: None,
             text_layout: None,
             placeholder_layout: None,
+            error: false,
         }
     }
 
@@ -131,6 +133,12 @@ impl TextArea {
 
     pub fn on_change(mut self, cb: impl FnMut(&str) + 'static) -> Self {
         self.on_change = Some(Box::new(cb));
+        self
+    }
+
+    /// Enables or disables the error state (red border).
+    pub fn error(mut self, error: bool) -> Self {
+        self.error = error;
         self
     }
 
@@ -199,8 +207,10 @@ impl Widget for TextArea {
         // Background
         canvas.fill_rounded_rect(rect, self.corners, self.background);
 
-        // Border
-        let border_color = if self.focused {
+        // Border (error > focused > default)
+        let border_color = if self.error {
+            colors::destructive()
+        } else if self.focused {
             colors::ring()
         } else {
             self.border_color

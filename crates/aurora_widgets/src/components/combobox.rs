@@ -46,6 +46,7 @@ pub struct Combobox {
     option_layouts: Vec<Option<aurora_text::text_layout::TextLayout>>,
     filtered_indices: Vec<usize>,
     hover_index: Option<usize>,
+    error: bool,
 }
 
 impl Combobox {
@@ -71,6 +72,7 @@ impl Combobox {
             option_layouts: Vec::new(),
             filtered_indices: Vec::new(),
             hover_index: None,
+            error: false,
         }
     }
 
@@ -96,6 +98,12 @@ impl Combobox {
 
     pub fn on_select(mut self, cb: impl FnMut(usize) + 'static) -> Self {
         self.on_select = Some(Box::new(cb));
+        self
+    }
+
+    /// Enables or disables the error state (red border).
+    pub fn error(mut self, error: bool) -> Self {
+        self.error = error;
         self
     }
 
@@ -188,8 +196,10 @@ impl Widget for Combobox {
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
-        // Input box
-        let border_color = if self.focused {
+        // Input box (error > focused > default)
+        let border_color = if self.error {
+            colors::destructive()
+        } else if self.focused {
             colors::ring()
         } else {
             self.border_color

@@ -31,6 +31,7 @@ pub struct InputGroup {
     input_size: Size,
     prefix_size: Size,
     suffix_size: Size,
+    error: bool,
 }
 
 impl InputGroup {
@@ -49,6 +50,7 @@ impl InputGroup {
             input_size: Size::default(),
             prefix_size: Size::default(),
             suffix_size: Size::default(),
+            error: false,
         }
     }
 
@@ -91,6 +93,12 @@ impl InputGroup {
         self.spacing = spacing;
         self
     }
+
+    /// Enables or disables the error state (red border).
+    pub fn error(mut self, error: bool) -> Self {
+        self.error = error;
+        self
+    }
 }
 
 impl Widget for InputGroup {
@@ -120,9 +128,14 @@ impl Widget for InputGroup {
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
-        // Background and border
+        // Background and border (error > default)
+        let border = if self.error {
+            colors::destructive()
+        } else {
+            self.border_color
+        };
         canvas.fill_rounded_rect(rect, self.corners, self.background);
-        canvas.stroke_rounded_rect(rect, self.corners, 1, self.border_color);
+        canvas.stroke_rounded_rect(rect, self.corners, 1, border);
 
         let mut x = rect.x1 + self.padding.left;
         let cy = rect.y1 + rect.height() / 2.0;

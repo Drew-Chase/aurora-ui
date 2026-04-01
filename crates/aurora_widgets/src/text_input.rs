@@ -75,6 +75,9 @@ pub struct TextInput {
     on_key_down: Option<OnKeyCallback>,
     on_key_up: Option<OnKeyCallback>,
     mouse_down: bool,
+    border_color: Color,
+    border_width: u32,
+    error: bool,
 }
 
 impl Default for TextInput {
@@ -109,6 +112,9 @@ impl Default for TextInput {
             on_submit: None,
             on_key_down: None,
             on_key_up: None,
+            border_color: aurora_theme::color(aurora_theme::slots::INPUT_BORDER),
+            border_width: 1,
+            error: false,
         }
     }
 }
@@ -250,6 +256,24 @@ impl TextInput {
     /// Registers a callback invoked on key release while focused.
     pub fn on_key_up(mut self, f: impl FnMut(&Key, &Modifiers) + 'static) -> Self {
         self.on_key_up = Some(Box::new(f));
+        self
+    }
+
+    /// Sets the border color (default: `input_border()` from theme).
+    pub fn border_color(mut self, color: Color) -> Self {
+        self.border_color = color;
+        self
+    }
+
+    /// Sets the border width in pixels (default: 1).
+    pub fn border_width(mut self, width: u32) -> Self {
+        self.border_width = width;
+        self
+    }
+
+    /// Enables or disables the error state (red border).
+    pub fn error(mut self, error: bool) -> Self {
+        self.error = error;
         self
     }
 
@@ -455,6 +479,16 @@ impl Widget for TextInput {
             self.background
         };
         canvas.fill_rounded_rect(rect, self.corners, bg);
+
+        // Border (error > focused > default)
+        let border = if self.error {
+            aurora_theme::color(aurora_theme::slots::DESTRUCTIVE)
+        } else if self.focused {
+            aurora_theme::color(aurora_theme::slots::RING)
+        } else {
+            self.border_color
+        };
+        canvas.stroke_rounded_rect(rect, self.corners, self.border_width, border);
 
         let content_rect = Rect::new(
             rect.x1 + self.padding.left,

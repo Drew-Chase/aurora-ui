@@ -49,6 +49,7 @@ pub struct Select {
     anim_from: f32,
     anim_to: f32,
     anim_start: Instant,
+    error: bool,
 }
 
 impl Select {
@@ -75,6 +76,7 @@ impl Select {
             anim_from: 0.0,
             anim_to: 0.0,
             anim_start: Instant::now(),
+            error: false,
         }
     }
 
@@ -125,6 +127,12 @@ impl Select {
 
     pub fn on_change(mut self, cb: impl FnMut(usize) + 'static) -> Self {
         self.on_change = Some(Box::new(cb));
+        self
+    }
+
+    /// Enables or disables the error state (red border).
+    pub fn error(mut self, error: bool) -> Self {
+        self.error = error;
         self
     }
 
@@ -215,8 +223,10 @@ impl Widget for Select {
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
-        // Trigger box
-        let border_color = if self.open {
+        // Trigger box (error > open > default)
+        let border_color = if self.error {
+            colors::destructive()
+        } else if self.open {
             colors::ring()
         } else {
             self.border_color

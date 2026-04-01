@@ -146,7 +146,7 @@ impl Widget for Field {
                 ctx.font_manager,
                 error,
                 &opts,
-                colors::foreground(),
+                colors::destructive(),
                 None,
             );
             tl.set_max_width(ctx.font_manager, w);
