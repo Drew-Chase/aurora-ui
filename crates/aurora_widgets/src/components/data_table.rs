@@ -151,7 +151,7 @@ impl DataTable {
 
     /// Persistent scroll position that survives widget rebuilds.
     pub fn scroll_state(mut self, state: ScrollState) -> Self {
-        self.scroll_offset = state.get();
+        self.scroll_offset = state.get() as f32;
         self.scroll_state = Some(state);
         self
     }
@@ -230,7 +230,7 @@ impl Widget for DataTable {
 
         // Virtualization: determine visible row range
         if let Some(ref state) = self.scroll_state {
-            self.scroll_offset = state.get();
+            self.scroll_offset = state.get() as f32;
         }
         let row_count = self.sorted_indices.len();
 
@@ -393,7 +393,7 @@ impl Widget for DataTable {
                     self.scroll_offset =
                         (self.scroll_offset - delta * SCROLL_SPEED).clamp(0.0, self.max_scroll);
                     if let Some(ref state) = self.scroll_state {
-                        state.set(self.scroll_offset);
+                        state.set(self.scroll_offset as f64);
                     }
                     if (self.scroll_offset - old).abs() > 0.001 {
                         return EventResponse {
@@ -421,7 +421,7 @@ impl Widget for DataTable {
                             self.scroll_offset =
                                 (r * self.max_scroll).clamp(0.0, self.max_scroll);
                             if let Some(ref state) = self.scroll_state {
-                                state.set(self.scroll_offset);
+                                state.set(self.scroll_offset as f64);
                             }
                         }
                     }

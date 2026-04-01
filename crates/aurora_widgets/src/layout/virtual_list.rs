@@ -156,7 +156,7 @@ impl VirtualList {
 
     /// Persistent scroll position that survives widget rebuilds.
     pub fn scroll_state(mut self, state: ScrollState) -> Self {
-        self.scroll_offset = state.get() as f64;
+        self.scroll_offset = state.get();
         self.state = Some(state);
         self
     }
@@ -296,7 +296,7 @@ impl Widget for VirtualList {
 
         // Restore scroll from persistent state
         if let Some(ref state) = self.state {
-            self.scroll_offset = state.get() as f64;
+            self.scroll_offset = state.get();
         }
 
         let total = self.total_content_height();
@@ -434,7 +434,7 @@ impl Widget for VirtualList {
                         self.scroll_offset =
                             (ratio * self.max_scroll).clamp(0.0, self.max_scroll);
                         if let Some(ref state) = self.state {
-                            state.set(self.scroll_offset as f32);
+                            state.set(self.scroll_offset);
                         }
                     }
                     return EventResponse {
@@ -488,7 +488,7 @@ impl Widget for VirtualList {
                             self.scroll_offset =
                                 (ratio * self.max_scroll).clamp(0.0, self.max_scroll);
                             if let Some(ref state) = self.state {
-                                state.set(self.scroll_offset as f32);
+                                state.set(self.scroll_offset);
                             }
                         }
                         return EventResponse {
@@ -545,7 +545,7 @@ impl Widget for VirtualList {
                     self.scroll_offset =
                         (self.scroll_offset - (*delta as f64) * SCROLL_SPEED as f64).clamp(0.0, self.max_scroll);
                     if let Some(ref state) = self.state {
-                        state.set(self.scroll_offset as f32);
+                        state.set(self.scroll_offset);
                     }
                     if (self.scroll_offset - old).abs() > 0.001 {
                         return EventResponse {

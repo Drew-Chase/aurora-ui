@@ -31,7 +31,7 @@ use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 /// ```
 #[derive(Clone)]
 pub struct ScrollState {
-    offset: Rc<Cell<f32>>,
+    offset: Rc<Cell<f64>>,
 }
 
 impl ScrollState {
@@ -43,12 +43,12 @@ impl ScrollState {
     }
 
     /// Returns the current scroll offset.
-    pub fn get(&self) -> f32 {
+    pub fn get(&self) -> f64 {
         self.offset.get()
     }
 
     /// Sets the scroll offset.
-    pub fn set(&self, value: f32) {
+    pub fn set(&self, value: f64) {
         self.offset.set(value);
     }
 }
@@ -221,7 +221,7 @@ impl ScrollView {
     /// Attaches a shared [`ScrollState`] so the scroll offset persists across
     /// widget tree rebuilds (e.g. inside a [`Composite`](crate::composite::Composite)).
     pub fn state(mut self, state: ScrollState) -> Self {
-        self.scroll_offset = state.get();
+        self.scroll_offset = state.get() as f32;
         self.state = Some(state);
         self
     }
@@ -439,7 +439,7 @@ impl Widget for ScrollView {
                         let ratio = new_thumb_top / scrollable_track;
                         self.scroll_offset = (ratio * self.max_scroll).clamp(0.0, self.max_scroll);
                         if let Some(ref state) = self.state {
-                            state.set(self.scroll_offset);
+                            state.set(self.scroll_offset as f64);
                         }
                     }
                     return EventResponse {
@@ -494,7 +494,7 @@ impl Widget for ScrollView {
                             self.scroll_offset =
                                 (ratio * self.max_scroll).clamp(0.0, self.max_scroll);
                             if let Some(ref state) = self.state {
-                                state.set(self.scroll_offset);
+                                state.set(self.scroll_offset as f64);
                             }
                         }
                         return EventResponse {
@@ -538,7 +538,7 @@ impl Widget for ScrollView {
                     self.scroll_offset =
                         (self.scroll_offset - delta * SCROLL_SPEED).clamp(0.0, self.max_scroll);
                     if let Some(ref state) = self.state {
-                        state.set(self.scroll_offset);
+                        state.set(self.scroll_offset as f64);
                     }
                     // Only consume if we actually moved
                     if (self.scroll_offset - old_offset).abs() > 0.001 {
