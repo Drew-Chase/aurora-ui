@@ -1,7 +1,6 @@
 mod accordion;
 mod alert;
 mod aspect_ratio;
-mod autocomplete;
 mod avatar;
 mod badge;
 mod breadcrumb;
@@ -70,7 +69,6 @@ mod typography;
 pub use accordion::page_accordion;
 pub use alert::page_alert;
 pub use aspect_ratio::page_aspect_ratio;
-pub use autocomplete::page_autocomplete;
 pub use avatar::page_avatar;
 pub use badge::page_badge;
 pub use breadcrumb::page_breadcrumb;

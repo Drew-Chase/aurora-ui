@@ -26,7 +26,6 @@ const SECTIONS: &[Section] = &[
             "Accordion",
             "Alert",
             "Aspect Ratio",
-            "AutoComplete",
             "Avatar",
             "Badge",
             "Breadcrumb",
@@ -392,11 +391,10 @@ fn content_area(
                 .item(page_installation())
                 .item(page_first_app())
                 .item(page_custom_components())
-                // Components (indices 3-58)
+                // Components (indices 3-57)
                 .item(page_accordion())
                 .item(page_alert())
                 .item(page_aspect_ratio())
-                .item(page_autocomplete())
                 .item(page_avatar())
                 .item(page_badge())
                 .item(page_breadcrumb())

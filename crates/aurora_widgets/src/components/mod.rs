@@ -22,7 +22,6 @@ pub mod typography;
 
 // Interactive widgets
 pub mod accordion;
-pub mod autocomplete;
 pub mod button_group;
 pub mod checkbox;
 pub mod collapsible;
