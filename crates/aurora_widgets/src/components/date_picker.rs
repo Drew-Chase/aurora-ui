@@ -246,12 +246,10 @@ impl Widget for DatePicker {
         }
 
         match event {
-            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Released =>
-            {
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
                 let dr = self.dropdown_rect(&rect);
                 if dr.contains(&e.position) {
-                    // Forward to calendar
+                    // Forward all click events (Pressed + Released) to calendar
                     let cal_rect = Rect::new(
                         dr.x1 + 8.0,
                         dr.y1 + 8.0,
@@ -260,6 +258,15 @@ impl Widget for DatePicker {
                     );
                     let resp = self.calendar.event(event, cal_rect);
                     if resp.status.is_handled() {
+                        // Check if a day was selected to sync state back
+                        if let Some(day) = self.calendar.get_selected_day() {
+                            self.selected_day = Some(day);
+                            self.year = self.calendar.get_year();
+                            self.month = self.calendar.get_month();
+                            if let Some(ref mut cb) = self.on_select {
+                                cb(self.year, self.month, day);
+                            }
+                        }
                         return resp;
                     }
                     return EventResponse {
@@ -267,8 +274,10 @@ impl Widget for DatePicker {
                         ..Default::default()
                     };
                 }
-                // Click outside closes
-                self.open = false;
+                // Click outside — only close on Release
+                if e.state == MouseState::Released {
+                    self.open = false;
+                }
                 EventResponse {
                     status: EventStatus::Canceled,
                     ..Default::default()
@@ -287,8 +296,22 @@ impl Widget for DatePicker {
                 }
                 EventResponse::default()
             }
+            WidgetEvent::Mouse(MouseEvent::MouseScrollEvent(_)) => {
+                let dr = self.dropdown_rect(&rect);
+                let cal_rect = Rect::new(
+                    dr.x1 + 8.0,
+                    dr.y1 + 8.0,
+                    dr.x1 + 8.0 + self.calendar_size.width,
+                    dr.y1 + 8.0 + self.calendar_size.height,
+                );
+                self.calendar.event(event, cal_rect)
+            }
             _ => EventResponse::default(),
         }
+    }
+
+    fn needs_animation(&self) -> bool {
+        self.calendar.needs_animation()
     }
     #[cfg(feature = "a11y")]
     fn access_info(&self) -> aurora_a11y::NodeInfo {

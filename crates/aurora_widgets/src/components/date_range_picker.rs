@@ -746,72 +746,80 @@ impl Widget for DateRangePicker {
         let dr = self.dropdown_rect(&rect);
 
         match event {
-            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Released =>
-            {
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
                 if !dr.contains(&e.position) {
-                    // Click outside closes
-                    self.open = false;
-                    self.hover_day_left = None;
-                    self.hover_day_right = None;
+                    // Click outside — only close on Release
+                    if e.state == MouseState::Released {
+                        self.open = false;
+                        self.hover_day_left = None;
+                        self.hover_day_right = None;
+                    }
                     return EventResponse {
                         status: EventStatus::Canceled,
                         ..Default::default()
                     };
                 }
 
-                let inner_x = dr.x1 + DROPDOWN_PAD;
-                let inner_y = dr.y1 + DROPDOWN_PAD;
-                let right_x = inner_x + CAL_WIDTH + GAP;
+                // Handle inside clicks on Pressed for responsiveness
+                if e.state == MouseState::Pressed {
+                    let inner_x = dr.x1 + DROPDOWN_PAD;
+                    let inner_y = dr.y1 + DROPDOWN_PAD;
+                    let right_x = inner_x + CAL_WIDTH + GAP;
 
-                // Check prev arrow (far left header area)
-                let prev_rect = Rect::new(inner_x, inner_y, inner_x + 28.0, inner_y + HEADER_H);
-                if prev_rect.contains(&e.position) {
-                    self.prev_month();
-                    return EventResponse {
-                        status: EventStatus::Consumed,
-                        cursor: Some(CursorIcon::Pointer),
-                        ..Default::default()
-                    };
-                }
+                    // Check prev arrow (far left header area)
+                    let prev_rect =
+                        Rect::new(inner_x, inner_y, inner_x + 28.0, inner_y + HEADER_H);
+                    if prev_rect.contains(&e.position) {
+                        self.prev_month();
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
+                    }
 
-                // Check next arrow (far right header area)
-                let next_rect = Rect::new(
-                    right_x + CAL_WIDTH - 28.0,
-                    inner_y,
-                    right_x + CAL_WIDTH,
-                    inner_y + HEADER_H,
-                );
-                if next_rect.contains(&e.position) {
-                    self.next_month();
-                    return EventResponse {
-                        status: EventStatus::Consumed,
-                        cursor: Some(CursorIcon::Pointer),
-                        ..Default::default()
-                    };
-                }
+                    // Check next arrow (far right header area)
+                    let next_rect = Rect::new(
+                        right_x + CAL_WIDTH - 28.0,
+                        inner_y,
+                        right_x + CAL_WIDTH,
+                        inner_y + HEADER_H,
+                    );
+                    if next_rect.contains(&e.position) {
+                        self.next_month();
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
+                    }
 
-                // Check left calendar day click
-                if let Some(day) =
-                    self.day_at_pos(&e.position, inner_x, inner_y, self.left_year, self.left_month)
-                {
-                    self.select_day(self.left_year, self.left_month, day);
-                    return EventResponse {
-                        status: EventStatus::Consumed,
-                        cursor: Some(CursorIcon::Pointer),
-                        ..Default::default()
-                    };
-                }
+                    // Check left calendar day click
+                    if let Some(day) = self.day_at_pos(
+                        &e.position,
+                        inner_x,
+                        inner_y,
+                        self.left_year,
+                        self.left_month,
+                    ) {
+                        self.select_day(self.left_year, self.left_month, day);
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
+                    }
 
-                // Check right calendar day click
-                let (ry, rm) = self.right_year_month();
-                if let Some(day) = self.day_at_pos(&e.position, right_x, inner_y, ry, rm) {
-                    self.select_day(ry, rm, day);
-                    return EventResponse {
-                        status: EventStatus::Consumed,
-                        cursor: Some(CursorIcon::Pointer),
-                        ..Default::default()
-                    };
+                    // Check right calendar day click
+                    let (ry, rm) = self.right_year_month();
+                    if let Some(day) = self.day_at_pos(&e.position, right_x, inner_y, ry, rm) {
+                        self.select_day(ry, rm, day);
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
+                    }
                 }
 
                 EventResponse {
@@ -844,6 +852,10 @@ impl Widget for DateRangePicker {
             }
             _ => EventResponse::default(),
         }
+    }
+
+    fn needs_animation(&self) -> bool {
+        self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
 
     #[cfg(feature = "a11y")]

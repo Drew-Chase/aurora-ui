@@ -16,8 +16,8 @@ use super::colors;
 // ─── Animation helpers ──────────────────────────────────────────────────────
 
 const ANIM_DURATION: f32 = 0.20;
-const TIME_SPINNER_H: f32 = 28.0;
-const TIME_SECTION_PADDING: f32 = 12.0;
+const TIME_SPINNER_H: f32 = 80.0;
+const TIME_SECTION_PADDING: f32 = 16.0;
 
 fn ease_out_cubic(t: f32) -> f32 {
     1.0 - (1.0 - t).powi(3)
@@ -350,8 +350,8 @@ impl DateTimePicker {
         let cal_h = 40.0 + 32.0 + rows as f32 * 32.0;
         let time_y = dr.y1 + 8.0 + cal_h + TIME_SECTION_PADDING;
 
-        let spinner_w = 48.0;
-        let arrow_h = 10.0;
+        let spinner_w = 60.0;
+        let arrow_h = 20.0;
         let val_h = TIME_SPINNER_H - arrow_h * 2.0;
         let colon_w = 12.0;
 
@@ -821,101 +821,104 @@ impl Widget for DateTimePicker {
         }
 
         match event {
-            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
-                if e.state == MouseState::Released =>
-            {
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
                 let dr = self.dropdown_rect(&rect);
                 if !dr.contains(&e.position) {
-                    // Click outside closes
-                    self.open = false;
-                    self.anim_from = 1.0;
-                    self.anim_to = 0.0;
-                    self.anim_start = Instant::now();
+                    // Click outside — only close on Release
+                    if e.state == MouseState::Released {
+                        self.open = false;
+                        self.anim_from = 1.0;
+                        self.anim_to = 0.0;
+                        self.anim_start = Instant::now();
+                    }
                     return EventResponse {
                         status: EventStatus::Canceled,
                         ..Default::default()
                     };
                 }
 
-                // Check nav arrows
-                let prev_rect = self.prev_arrow_rect(&dr);
-                let next_rect = self.next_arrow_rect(&dr);
-                if prev_rect.contains(&e.position) {
-                    if self.view_month == 1 {
-                        self.view_month = 12;
-                        self.view_year -= 1;
-                    } else {
-                        self.view_month -= 1;
+                // Handle inside clicks on Pressed for responsiveness
+                if e.state == MouseState::Pressed {
+                    // Check nav arrows
+                    let prev_rect = self.prev_arrow_rect(&dr);
+                    let next_rect = self.next_arrow_rect(&dr);
+                    if prev_rect.contains(&e.position) {
+                        if self.view_month == 1 {
+                            self.view_month = 12;
+                            self.view_year -= 1;
+                        } else {
+                            self.view_month -= 1;
+                        }
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
-                    return EventResponse {
-                        status: EventStatus::Consumed,
-                        cursor: Some(CursorIcon::Pointer),
-                        ..Default::default()
-                    };
-                }
-                if next_rect.contains(&e.position) {
-                    if self.view_month == 12 {
-                        self.view_month = 1;
-                        self.view_year += 1;
-                    } else {
-                        self.view_month += 1;
+                    if next_rect.contains(&e.position) {
+                        if self.view_month == 12 {
+                            self.view_month = 1;
+                            self.view_year += 1;
+                        } else {
+                            self.view_month += 1;
+                        }
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
-                    return EventResponse {
-                        status: EventStatus::Consumed,
-                        cursor: Some(CursorIcon::Pointer),
-                        ..Default::default()
-                    };
-                }
 
-                // Check day grid
-                let grid = self.grid_rect(&dr);
-                if grid.contains(&e.position)
-                    && let Some(day) = self.day_at_position(&e.position, &grid)
-                {
-                    self.day = day;
-                    self.year = self.view_year;
-                    self.month = self.view_month;
-                    self.clamp_day();
-                    self.fire_on_change();
-                    return EventResponse {
-                        status: EventStatus::Consumed,
-                        cursor: Some(CursorIcon::Pointer),
-                        ..Default::default()
-                    };
-                }
+                    // Check day grid
+                    let grid = self.grid_rect(&dr);
+                    if grid.contains(&e.position)
+                        && let Some(day) = self.day_at_position(&e.position, &grid)
+                    {
+                        self.day = day;
+                        self.year = self.view_year;
+                        self.month = self.view_month;
+                        self.clamp_day();
+                        self.fire_on_change();
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
+                    }
 
-                // Check time spinners
-                let tr = self.time_rects(&dr);
-                if tr.hour_up.contains(&e.position) {
-                    self.hour = if self.hour == 23 { 0 } else { self.hour + 1 };
-                    self.fire_on_change();
-                    return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
-                }
-                if tr.hour_down.contains(&e.position) {
-                    self.hour = if self.hour == 0 { 23 } else { self.hour - 1 };
-                    self.fire_on_change();
-                    return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
-                }
-                if tr.min_up.contains(&e.position) {
-                    self.minute = if self.minute == 59 { 0 } else { self.minute + 1 };
-                    self.fire_on_change();
-                    return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
-                }
-                if tr.min_down.contains(&e.position) {
-                    self.minute = if self.minute == 0 { 59 } else { self.minute - 1 };
-                    self.fire_on_change();
-                    return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
-                }
-                if self.show_seconds {
-                    if tr.sec_up.contains(&e.position) {
-                        self.second = if self.second == 59 { 0 } else { self.second + 1 };
+                    // Check time spinners
+                    let tr = self.time_rects(&dr);
+                    if tr.hour_up.contains(&e.position) {
+                        self.hour = if self.hour == 23 { 0 } else { self.hour + 1 };
                         self.fire_on_change();
                         return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
                     }
-                    if tr.sec_down.contains(&e.position) {
-                        self.second = if self.second == 0 { 59 } else { self.second - 1 };
+                    if tr.hour_down.contains(&e.position) {
+                        self.hour = if self.hour == 0 { 23 } else { self.hour - 1 };
                         self.fire_on_change();
                         return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                    }
+                    if tr.min_up.contains(&e.position) {
+                        self.minute = if self.minute == 59 { 0 } else { self.minute + 1 };
+                        self.fire_on_change();
+                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                    }
+                    if tr.min_down.contains(&e.position) {
+                        self.minute = if self.minute == 0 { 59 } else { self.minute - 1 };
+                        self.fire_on_change();
+                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                    }
+                    if self.show_seconds {
+                        if tr.sec_up.contains(&e.position) {
+                            self.second = if self.second == 59 { 0 } else { self.second + 1 };
+                            self.fire_on_change();
+                            return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                        }
+                        if tr.sec_down.contains(&e.position) {
+                            self.second = if self.second == 0 { 59 } else { self.second - 1 };
+                            self.fire_on_change();
+                            return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                        }
                     }
                 }
 
@@ -993,6 +996,10 @@ impl Widget for DateTimePicker {
             }
             _ => EventResponse::default(),
         }
+    }
+
+    fn needs_animation(&self) -> bool {
+        self.anim_start.elapsed().as_secs_f32() < ANIM_DURATION
     }
 
     #[cfg(feature = "a11y")]

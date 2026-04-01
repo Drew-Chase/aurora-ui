@@ -1702,4 +1702,13 @@ impl Calendar {
     pub(crate) fn selected_fg_val(&self) -> Color {
         self.selected_fg
     }
+    pub(crate) fn get_year(&self) -> u32 {
+        self.year
+    }
+    pub(crate) fn get_month(&self) -> u32 {
+        self.month
+    }
+    pub(crate) fn get_selected_day(&self) -> Option<u32> {
+        self.selected_day
+    }
 }
