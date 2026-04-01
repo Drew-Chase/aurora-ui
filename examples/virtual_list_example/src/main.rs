@@ -10,6 +10,7 @@ fn main() {
         .size((500, 600))
         .use_system_fonts()
         .position(WindowPosition::Center)
+        .resizable(false)
         .run({
             let mut initialized = false;
             move |window, _frame| {
@@ -24,7 +25,7 @@ fn main() {
                         .padding(Edges::all(20.0))
                         .spacing(12.0)
                         .child(
-                            Text::new("Virtual List — 100,000 items")
+                            Text::new("Virtual List — 1,000,000 items")
                                 .font_size(20.0)
                                 .font_weight(FontWeight::Bold),
                         )
@@ -32,7 +33,7 @@ fn main() {
                             "Only visible items + a 5-item buffer are rendered each frame.",
                         ))
                         .child(
-                            VirtualList::new(100_000, 36.0, |index| {
+                            VirtualList::new(1_000_000, 36.0, |index| {
                                 Box::new(
                                     row!()
                                         .padding(Edges::symmetric(0.0, 12.0))
