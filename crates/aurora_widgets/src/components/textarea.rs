@@ -269,10 +269,25 @@ impl Widget for TextArea {
             canvas.draw_text(pl, tx as i32, ty as i32);
         }
 
-        // Cursor — don't show cursor when disabled
+        // Cursor — compute X offset from char positions in the layout
         if self.focused && !self.disabled {
+            let cursor_offset_x = if let Some(ref tl) = self.text_layout {
+                let positions = tl.char_x_positions();
+                if self.cursor_pos > 0 && !positions.is_empty() {
+                    positions[self.cursor_pos.min(positions.len()) - 1]
+                } else {
+                    0.0
+                }
+            } else {
+                0.0
+            };
             canvas.fill_rect(
-                Rect::new(tx, ty, tx + 1.5, ty + self.font_size),
+                Rect::new(
+                    tx + cursor_offset_x,
+                    ty,
+                    tx + cursor_offset_x + 1.5,
+                    ty + self.font_size,
+                ),
                 self.text_color,
             );
         }

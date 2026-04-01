@@ -598,17 +598,25 @@ impl Widget for RichTextEditor {
             canvas.draw_text(pl, tx as i32, ty as i32);
         }
 
-        // Cursor
+        // Cursor — compute X from char positions in the layout
         if self.focused {
-            let cursor_x = tx;
-            let cursor_y = ty;
             let line_height = self.font_size * 1.4;
+            let cursor_offset_x = if let Some(ref tl) = self.content_layout {
+                let positions = tl.char_x_positions();
+                if self.cursor_pos > 0 && !positions.is_empty() {
+                    positions[self.cursor_pos.min(positions.len()) - 1]
+                } else {
+                    0.0
+                }
+            } else {
+                0.0
+            };
             canvas.fill_rect(
                 Rect::new(
-                    cursor_x,
-                    cursor_y,
-                    cursor_x + 1.5,
-                    cursor_y + line_height,
+                    tx + cursor_offset_x,
+                    ty,
+                    tx + cursor_offset_x + 1.5,
+                    ty + line_height,
                 ),
                 self.text_color,
             );
