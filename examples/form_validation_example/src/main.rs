@@ -56,8 +56,7 @@ fn main() {
                         move || {
                             set.set(|s| {
                                 s.email_error = validate_field(&s.email, &email_chain());
-                                s.password_error =
-                                    validate_field(&s.password, &password_chain());
+                                s.password_error = validate_field(&s.password, &password_chain());
                                 if s.email_error.is_none() && s.password_error.is_none() {
                                     s.submitted = true;
                                     println!(
@@ -154,9 +153,9 @@ fn main() {
                             .child(email_field)
                             .child(password_field)
                             .child(button!("Submit").on_click({
-                            let submit = do_submit.clone();
-                            move |_| submit()
-                        }))
+                                let submit = do_submit.clone();
+                                move |_| submit()
+                            }))
                             .child(Text::new(status).font_size(14.0)),
                     )
                 }));
