@@ -156,7 +156,7 @@ These are needed for most real-world applications.
 
 ---
 
-### 2.5 Virtual Scrolling
+### ~~2.5 Virtual Scrolling~~
 
 **Required work:**
 
