@@ -183,7 +183,7 @@ These are needed for most real-world applications.
 
 ---
 
-### 2.7 Multi-Threading Support ✅
+### ~~2.7 Multi-Threading Support~~ 
 
 **Completed work:**
 
