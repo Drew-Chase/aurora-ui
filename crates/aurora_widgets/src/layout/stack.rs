@@ -132,13 +132,23 @@ impl Widget for Stack {
     }
 
     fn event(&mut self, _event: &WidgetEvent, _rect: Rect) -> EventResponse {
+        let mut last_cursor = None;
         for child in &mut self.children {
             let response = child.event(_event, _rect);
+            if response.cursor.is_some() {
+                last_cursor = response.cursor;
+            }
             if response.status.stops_propagation() {
-                return response;
+                return EventResponse {
+                    cursor: response.cursor.or(last_cursor),
+                    ..response
+                };
             }
         }
-        EventResponse::default()
+        EventResponse {
+            cursor: last_cursor,
+            ..Default::default()
+        }
     }
 }
 
