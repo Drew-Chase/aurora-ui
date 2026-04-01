@@ -126,7 +126,7 @@ These are needed for most real-world applications.
 
 ---
 
-### ~~2.3 System Tray & Native Menus~~ - 
+### ~~2.3 System Tray & Native Menus~~
 
 **Required work:**
 
@@ -140,7 +140,7 @@ These are needed for most real-world applications.
 
 ---
 
-### 2.4 Form Validation
+### ~~2.4 Form Validation~~
 
 **Required work:**
 
