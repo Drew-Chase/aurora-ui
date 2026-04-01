@@ -29,6 +29,9 @@ pub mod image_widget;
 #[cfg(feature = "svg")]
 pub mod svg_widget;
 
+/// Form validation: [`Validator`](validation::Validator) trait, built-in validators, and [`FormValidator`](validation::FormValidator).
+pub mod validation;
+
 /// Component library — display, interactive, data, and overlay widgets.
 #[cfg(feature = "text")]
 pub mod components;
