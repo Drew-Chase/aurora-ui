@@ -71,6 +71,8 @@ pub mod combobox;
 pub mod command;
 pub mod data_table;
 pub mod date_picker;
+pub mod date_range_picker;
+pub mod date_time_picker;
 pub mod input_otp;
 pub mod menubar;
 pub mod navigation_menu;

@@ -43,6 +43,8 @@ const SECTIONS: &[Section] = &[
             "Command",
             "Data Table",
             "Date Picker",
+            "Date Range Picker",
+            "Date Time Picker",
             "Dialog",
             "Drag & Drop",
             "Dropdown Menu",
@@ -63,6 +65,7 @@ const SECTIONS: &[Section] = &[
             "Progress",
             "Radio Group",
             "Resizable",
+            "Rich Text Editor",
             "Scroll Area",
             "Segmented Control",
             "Select",
@@ -197,6 +200,33 @@ fn gallery() -> impl Widget {
                                             .on_click(move |_| continue_setter.set(|s| s.dialog_open = false)),
                                     ),
                             ),
+                    )
+                    .child(
+                        sheet::Sheet::new()
+                            .open(state.sheet_open)
+                            .side(sheet::SheetSide::Right)
+                            .panel_width(400.0)
+                            .child(
+                                col!()
+                                    .padding(Edges::all(24.0))
+                                    .spacing(16.0)
+                                    .child(
+                                        Text::new("Sheet Panel")
+                                            .font_size(18.0)
+                                            .font_weight(FontWeight::Bold)
+                                            .color(theme::colors::foreground()),
+                                    )
+                                    .child(
+                                        Text::new(
+                                            "This is a slide-in panel from the right edge of the screen.",
+                                        )
+                                        .font_size(14.0)
+                                        .color(theme::colors::muted_foreground()),
+                                    ),
+                            )
+                            .on_close(move || {
+                                sheet_close.set(|s| s.sheet_open = false);
+                            }),
                     ),
             )
         },
@@ -383,6 +413,8 @@ fn content_area(
                 .item(page_command())
                 .item(page_data_table())
                 .item(page_date_picker())
+                .item(page_date_range_picker())
+                .item(page_date_time_picker())
                 .item(page_dialog(setter.clone()))
                 .item(page_drag_drop())
                 .item(page_dropdown_menu())
@@ -403,6 +435,7 @@ fn content_area(
                 .item(page_progress())
                 .item(page_radio_group())
                 .item(page_resizable())
+                .item(page_rich_text_editor())
                 .item(page_scroll_area())
                 .item(page_segmented_control())
                 .item(page_select())
