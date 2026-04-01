@@ -46,6 +46,45 @@ impl TextLayout {
 
         Self { buffer, color }
     }
+    /// Creates a rich text layout with per-span font options.
+    ///
+    /// Each span is a `(&str, &FontOptions)` pair. The buffer is shaped with
+    /// `set_rich_text` so that different spans can have different weights,
+    /// styles, and families.
+    pub fn new_rich(
+        font_manager: &mut FontManager,
+        spans: &[(&str, &FontOptions)],
+        color: Color,
+        align: Option<cosmic_text::Align>,
+    ) -> Self {
+        let first_opts = spans
+            .first()
+            .map(|(_, o)| *o)
+            .cloned()
+            .unwrap_or_default();
+        let size = first_opts.effective_size();
+        let line_height = first_opts.effective_line_height();
+        let metrics = cosmic_text::Metrics::new(size, line_height);
+        let mut buffer = cosmic_text::Buffer::new(font_manager.font_system_mut(), metrics);
+        let default_attrs = first_opts.to_cosmic_attrs();
+
+        let rich_spans: Vec<(&str, cosmic_text::Attrs<'_>)> = spans
+            .iter()
+            .map(|(text, opts)| (*text, opts.to_cosmic_attrs()))
+            .collect();
+
+        buffer.set_rich_text(
+            font_manager.font_system_mut(),
+            rich_spans,
+            &default_attrs,
+            cosmic_text::Shaping::Advanced,
+            align,
+        );
+        buffer.shape_until_scroll(font_manager.font_system_mut(), false);
+
+        Self { buffer, color }
+    }
+
     /// Sets the maximum width for line wrapping and re-shapes the buffer.
     pub fn set_max_width(&mut self, font_manager: &mut FontManager, width: f32) {
         self.buffer

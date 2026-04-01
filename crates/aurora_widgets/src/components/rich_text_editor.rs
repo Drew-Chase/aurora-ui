@@ -470,21 +470,40 @@ impl Widget for RichTextEditor {
         let inner_w =
             (w - CONTENT_PADDING.left - CONTENT_PADDING.right).max(0.0);
 
-        // Content text layout
-        let plain = self.plain_text();
-        if !plain.is_empty() {
-            let mut opts = ctx.font_options.clone();
-            opts.size = Some(self.font_size);
-            opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
-            let mut tl = TextLayout::new(
-                ctx.font_manager,
-                &plain,
-                &opts,
-                self.text_color,
-                None,
-            );
-            tl.set_max_width(ctx.font_manager, inner_w);
-            self.content_layout = Some(tl);
+        // Content text layout — per-span formatting (bold/italic/underline)
+        if !self.spans.is_empty() && !self.is_empty() {
+            let span_opts: Vec<(String, aurora_text::font_options::FontOptions)> = self
+                .spans
+                .iter()
+                .filter(|s| !s.text.is_empty())
+                .map(|span| {
+                    let mut opts = ctx.font_options.clone();
+                    opts.size = Some(self.font_size);
+                    opts.weight = Some(if span.bold {
+                        aurora_text::font_options::FontWeight::Bold
+                    } else {
+                        aurora_text::font_options::FontWeight::Normal
+                    });
+                    opts.style = Some(if span.italic {
+                        aurora_text::font_options::FontStyle::Italic
+                    } else {
+                        aurora_text::font_options::FontStyle::Normal
+                    });
+                    (span.text.clone(), opts)
+                })
+                .collect();
+            let refs: Vec<(&str, &aurora_text::font_options::FontOptions)> = span_opts
+                .iter()
+                .map(|(t, o)| (t.as_str(), o))
+                .collect();
+            if !refs.is_empty() {
+                let mut tl =
+                    TextLayout::new_rich(ctx.font_manager, &refs, self.text_color, None);
+                tl.set_max_width(ctx.font_manager, inner_w);
+                self.content_layout = Some(tl);
+            } else {
+                self.content_layout = None;
+            }
         } else {
             self.content_layout = None;
         }
@@ -592,6 +611,40 @@ impl Widget for RichTextEditor {
         // Draw content or placeholder
         if let Some(ref tl) = self.content_layout {
             canvas.draw_text(tl, tx as i32, ty as i32);
+
+            // Draw underlines for underlined spans
+            let positions = tl.char_x_positions();
+            let line_height = self.font_size * 1.4;
+            let underline_y = ty + line_height - 2.0;
+            let mut char_offset = 0usize;
+            for span in &self.spans {
+                let span_len = span.text.chars().count();
+                if span.underline && span_len > 0 {
+                    let start_x = if char_offset > 0 && char_offset <= positions.len() {
+                        positions[char_offset - 1]
+                    } else {
+                        0.0
+                    };
+                    let end_idx = (char_offset + span_len).min(positions.len());
+                    let end_x = if end_idx > 0 {
+                        positions[end_idx - 1]
+                    } else {
+                        0.0
+                    };
+                    if end_x > start_x {
+                        canvas.fill_rect(
+                            Rect::new(
+                                tx + start_x,
+                                underline_y,
+                                tx + end_x,
+                                underline_y + 1.0,
+                            ),
+                            self.text_color,
+                        );
+                    }
+                }
+                char_offset += span_len;
+            }
         } else if !self.focused
             && let Some(ref pl) = self.placeholder_layout
         {
