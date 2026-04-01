@@ -11,13 +11,12 @@ fn main() {
         .use_system_fonts()
         .position(WindowPosition::Center)
         .resizable(false)
+        .max_fps(60)
         .run({
             let mut initialized = false;
-            move |window, _frame| {
-                if initialized {
-                    return;
-                }
-                initialized = true;
+            move |window, frame| {
+                if !initialized {
+                    initialized = true;
 
                 let scroll = scroll.clone();
                 window.root(
@@ -25,7 +24,7 @@ fn main() {
                         .padding(Edges::all(20.0))
                         .spacing(12.0)
                         .child(
-                            Text::new("Virtual List — 1,000,000 items")
+                            Text::new("Virtual List — 1,000,000,000 items")
                                 .font_size(20.0)
                                 .font_weight(FontWeight::Bold),
                         )
@@ -33,7 +32,7 @@ fn main() {
                             "Only visible items + a 5-item buffer are rendered each frame.",
                         ))
                         .child(
-                            VirtualList::new(1_000_000, 36.0, |index| {
+                            VirtualList::new(1_000_000_000, 36.0, |index| {
                                 Box::new(
                                     row!()
                                         .padding(Edges::symmetric(0.0, 12.0))
@@ -50,6 +49,11 @@ fn main() {
                             .on_select(|idx| println!("Selected: {idx}")),
                         ),
                 );
+                }
+                window.set_title(&format!(
+                    "Virtual List Example — {:.0} FPS",
+                    frame.fps
+                ));
             }
         })
         .expect("Failed to run app");

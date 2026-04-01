@@ -103,6 +103,8 @@ pub struct WindowConfig {
     pub font_options: aurora_text::font_options::FontOptions,
     #[cfg(feature = "text")]
     pub fonts: Vec<&'static [u8]>,
+    /// Maximum frames per second for this window. Default: 60. 0 = unlimited.
+    pub max_fps: u32,
     /// Native OS menu bar for this window (requires `menu` feature).
     #[cfg(feature = "menu")]
     pub menu: Option<crate::menu::NativeMenu>,
@@ -138,6 +140,7 @@ impl Default for WindowConfig {
             font_options: aurora_text::font_options::FontOptions::default(),
             #[cfg(feature = "text")]
             fonts: vec![],
+            max_fps: 60,
             #[cfg(feature = "menu")]
             menu: None,
             primary: false,
@@ -315,6 +318,7 @@ pub struct App {
     #[cfg(feature = "text")]
     pub fonts: Vec<&'static [u8]>,
     exit_on: ExitBehavior,
+    max_fps: u32,
     #[cfg(feature = "menu")]
     pub(crate) menu: Option<crate::menu::NativeMenu>,
     #[cfg(feature = "tray")]
@@ -547,6 +551,14 @@ impl App {
         self
     }
 
+    /// Sets the maximum frames per second. Default: 60.
+    ///
+    /// Set to `0` for unlimited (renders as fast as possible when animating).
+    pub fn max_fps(mut self, fps: u32) -> Self {
+        self.max_fps = fps;
+        self
+    }
+
     /// Sets the native OS menu bar for the primary window.
     ///
     /// On macOS this becomes the app-wide menu bar. On Windows and Linux it
@@ -695,6 +707,7 @@ impl Default for App {
             #[cfg(feature = "text")]
             fonts: vec![],
             exit_on: ExitBehavior::LastWindowClosed,
+            max_fps: 60,
             #[cfg(feature = "menu")]
             menu: None,
             #[cfg(feature = "tray")]
@@ -723,6 +736,7 @@ impl From<App> for WindowConfig {
             font_options: app.font_options,
             #[cfg(feature = "text")]
             fonts: app.fonts,
+            max_fps: app.max_fps,
             #[cfg(feature = "menu")]
             menu: app.menu,
             primary: true,
@@ -748,6 +762,8 @@ pub struct FrameInfo {
     pub height: u32,
     /// Display scale factor (e.g. `2.0` on Retina/HiDPI displays).
     pub scale_factor: f64,
+    /// Measured frames per second (based on interval since last frame).
+    pub fps: f32,
 }
 
 // ---------------------------------------------------------------------------
@@ -1190,11 +1206,17 @@ impl ApplicationHandler<AppEvent> for AppHandler {
             if window.next_frame_requested && !resized {
                 window.next_frame_requested = false;
 
+                let now = std::time::Instant::now();
+                let dt = now.duration_since(window.last_frame_instant).as_secs_f32();
+                window.current_fps = if dt > 0.0 { 1.0 / dt } else { 0.0 };
+                window.last_frame_instant = now;
+
                 let physical = window.window_handle.inner_size();
                 let frame_info = FrameInfo {
                     width: physical.width,
                     height: physical.height,
                     scale_factor: window.window_handle.scale_factor(),
+                    fps: window.current_fps,
                 };
                 window.gpu.resize(frame_info.width, frame_info.height);
                 window.clear(window.background_color);
@@ -1209,8 +1231,17 @@ impl ApplicationHandler<AppEvent> for AppHandler {
         }
 
         if any_animating {
+            // Use the most restrictive (lowest nonzero) max_fps among all windows.
+            let min_fps = self
+                .windows
+                .values()
+                .map(|s| s.app_window.max_fps)
+                .filter(|&fps| fps > 0)
+                .min()
+                .unwrap_or(60);
+            let interval = std::time::Duration::from_micros(1_000_000 / min_fps as u64);
             event_loop.set_control_flow(winit::event_loop::ControlFlow::WaitUntil(
-                std::time::Instant::now() + std::time::Duration::from_millis(16),
+                std::time::Instant::now() + interval,
             ));
         } else {
             event_loop.set_control_flow(winit::event_loop::ControlFlow::Wait);
@@ -1275,12 +1306,18 @@ impl ApplicationHandler<AppEvent> for AppHandler {
                     return;
                 }
                 log::trace!("Window redraw requested");
+                let now = std::time::Instant::now();
+                let dt = now.duration_since(window.last_frame_instant).as_secs_f32();
+                window.current_fps = if dt > 0.0 { 1.0 / dt } else { 0.0 };
+                window.last_frame_instant = now;
+
                 window.window_handle.pre_present_notify();
                 let physical = window.window_handle.inner_size();
                 let frame_info = FrameInfo {
                     width: physical.width,
                     height: physical.height,
                     scale_factor: window.window_handle.scale_factor(),
+                    fps: window.current_fps,
                 };
                 window.gpu.resize(frame_info.width, frame_info.height);
                 window.clear(window.background_color);
@@ -1294,10 +1331,16 @@ impl ApplicationHandler<AppEvent> for AppHandler {
                 let Some(state) = state else { return };
                 let window = &mut state.app_window;
 
+                let now = std::time::Instant::now();
+                let dt = now.duration_since(window.last_frame_instant).as_secs_f32();
+                window.current_fps = if dt > 0.0 { 1.0 / dt } else { 0.0 };
+                window.last_frame_instant = now;
+
                 let frame_info = FrameInfo {
                     width: physical_size.width,
                     height: physical_size.height,
                     scale_factor: window.window_handle.scale_factor(),
+                    fps: window.current_fps,
                 };
                 window.gpu.resize(frame_info.width, frame_info.height);
                 window.clear(window.background_color);
@@ -1543,6 +1586,10 @@ pub struct AppWindow {
     pub(crate) background_color: Color,
     #[cfg(feature = "a11y")]
     a11y: Option<crate::a11y::A11yState>,
+    // Frame rate
+    pub(crate) max_fps: u32,
+    last_frame_instant: std::time::Instant,
+    current_fps: f32,
     // Multi-window fields
     app_context: Option<AppContext>,
     window_id: Option<WindowId>,
@@ -1614,6 +1661,9 @@ impl AppWindow {
                 background_color: config.background_color,
                 #[cfg(feature = "a11y")]
                 a11y: None,
+                max_fps: config.max_fps,
+                last_frame_instant: std::time::Instant::now(),
+                current_fps: 0.0,
                 app_context: None,
                 window_id: None,
                 pending_messages: Vec::new(),
@@ -1632,6 +1682,9 @@ impl AppWindow {
             background_color: config.background_color,
             #[cfg(feature = "a11y")]
             a11y: None,
+            max_fps: config.max_fps,
+            last_frame_instant: std::time::Instant::now(),
+            current_fps: 0.0,
             app_context: None,
             window_id: None,
             pending_messages: Vec::new(),
@@ -1925,6 +1978,26 @@ impl AppWindow {
     /// Returns a shared reference to the underlying [`winit::window::Window`].
     pub fn window_handle(&self) -> Arc<winit::window::Window> {
         self.window_handle.clone()
+    }
+
+    /// Sets the window title at runtime.
+    pub fn set_title(&self, title: &str) {
+        self.window_handle.set_title(title);
+    }
+
+    /// Sets the maximum frames per second. `0` = unlimited.
+    pub fn set_max_fps(&mut self, fps: u32) {
+        self.max_fps = fps;
+    }
+
+    /// Returns the current max FPS setting.
+    pub fn max_fps(&self) -> u32 {
+        self.max_fps
+    }
+
+    /// Returns the measured frames per second.
+    pub fn fps(&self) -> f32 {
+        self.current_fps
     }
 
     /// Sets the background color used to clear the window before each frame.
