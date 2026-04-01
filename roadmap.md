@@ -200,23 +200,25 @@ These are needed for most real-world applications.
 
 Features that elevate the framework from functional to professional.
 
-### 3.1 Missing Widgets
+### ~~3.1 Missing Widgets~~ ✅
 
-| Widget               | Priority | Description                                                             |
-|----------------------|----------|-------------------------------------------------------------------------|
-| **TreeView**         | High     | Hierarchical data display with expand/collapse, selection, lazy loading |
-| **ColorPicker**      | Medium   | Color selection with hex/RGB/HSL input, palette, eyedropper             |
-| **TimePicker**       | Medium   | Time selection (hours, minutes, AM/PM or 24h) to complement DatePicker  |
-| **DateTimePicker**   | Medium   | Combined date + time selection                                          |
-| **DateRangePicker**  | Medium   | Select a start and end date                                             |
-| **NumberInput**      | Medium   | Numeric input with increment/decrement buttons, min/max, step           |
-| **RichTextEditor**   | Low      | WYSIWYG text editing with formatting (bold, italic, links)              |
-| **SplitPane**        | Medium   | Resizable split view (horizontal/vertical) with drag handle             |
-| **Stepper**          | Low      | Step-by-step wizard/progress indicator                                  |
-| **SegmentedControl** | Low      | iOS-style segmented toggle bar                                          |
-| **TagInput**         | Medium   | Multi-value input with removable tags                                   |
-| **AutoComplete**     | Medium   | Text input with suggestion dropdown (fuzzy search)                      |
-| **Sheet/Drawer**     | Medium   | Slide-in panel from edge of screen                                      |
+All 13 widgets implemented with unit tests, widget gallery pages, and wiki documentation.
+
+| Widget               | Priority | Status |
+|----------------------|----------|--------|
+| **TreeView**         | High     | ✅ Expand/collapse, selection, animated transitions, connecting lines |
+| **NumberInput**      | Medium   | ✅ +/- buttons, min/max clamping, step, precision, scroll wheel |
+| **TagInput**         | Medium   | ✅ Flow layout, removable tags, duplicate prevention, max_tags |
+| **AutoComplete**     | Medium   | ✅ Substring filtering, animated dropdown, keyboard navigation |
+| **SplitPane**        | Medium   | ✅ Horizontal/vertical, drag handle, min sizes, double-click reset |
+| **Sheet/Drawer**     | Medium   | ✅ Slide-in from any edge, backdrop overlay, animated transitions |
+| **ColorPicker**      | Medium   | ✅ HSV gradient area, hue slider, hex/RGB display, palette swatches |
+| **TimePicker**       | Medium   | ✅ Hour/minute/second spinners, 12h/24h, wrap-around, scroll |
+| **DateTimePicker**   | Medium   | ✅ Calendar dropdown + time spinners, 12h/24h format |
+| **DateRangePicker**  | Medium   | ✅ Dual calendar view, range highlighting, month navigation |
+| **Stepper**          | Low      | ✅ Horizontal/vertical, checkmarks, connecting lines, clickable |
+| **SegmentedControl** | Low      | ✅ Sliding pill indicator, animated transitions, equal segments |
+| **RichTextEditor**   | Low      | ✅ Bold/italic/underline toolbar, span model, keyboard shortcuts |
 
 ---
 
