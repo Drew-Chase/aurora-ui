@@ -418,8 +418,7 @@ impl Widget for DataTable {
                         if scrollable > 0.0 {
                             let top = pos.y - self.scrollbar_drag_anchor - data_top;
                             let r = top / scrollable;
-                            self.scroll_offset =
-                                (r * self.max_scroll).clamp(0.0, self.max_scroll);
+                            self.scroll_offset = (r * self.max_scroll).clamp(0.0, self.max_scroll);
                             if let Some(ref state) = self.scroll_state {
                                 state.set(self.scroll_offset as f64);
                             }
@@ -515,8 +514,7 @@ impl Widget for DataTable {
                 // Row click (account for scroll offset when virtualized)
                 let offset = self.scroll_offset.clamp(0.0, self.max_scroll);
                 let data_y = rect.y1 + self.header_height;
-                let display_idx =
-                    ((e.position.y - data_y + offset) / self.row_height) as usize;
+                let display_idx = ((e.position.y - data_y + offset) / self.row_height) as usize;
                 if display_idx < self.sorted_indices.len() {
                     let real_idx = self.sorted_indices[display_idx];
                     if let Some(ref mut cb) = self.on_row_click {

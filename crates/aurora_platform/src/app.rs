@@ -1240,8 +1240,7 @@ impl ApplicationHandler<AppEvent> for AppHandler {
             // final render so the on_render callback can update the title.
             if !rendered
                 && window.current_fps > 0.0
-                && window.last_render_instant.elapsed()
-                    > std::time::Duration::from_millis(200)
+                && window.last_render_instant.elapsed() > std::time::Duration::from_millis(200)
             {
                 window.current_fps = 0.0;
                 window.next_frame_requested = true;
@@ -1330,9 +1329,8 @@ impl ApplicationHandler<AppEvent> for AppHandler {
                 log::trace!("Window redraw requested");
                 // Hard FPS cap: skip if too soon since last render.
                 if window.max_fps > 0 {
-                    let interval = std::time::Duration::from_micros(
-                        1_000_000 / window.max_fps as u64,
-                    );
+                    let interval =
+                        std::time::Duration::from_micros(1_000_000 / window.max_fps as u64);
                     if window.last_render_instant.elapsed() < interval {
                         return;
                     }

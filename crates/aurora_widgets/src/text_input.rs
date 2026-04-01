@@ -662,8 +662,7 @@ impl Widget for TextInput {
                 }
                 // Undo grouping: only push snapshot at the start of a typing run
                 if self.last_action != LastAction::Typing {
-                    self.undo_stack
-                        .push((self.text.clone(), self.cursor_pos));
+                    self.undo_stack.push((self.text.clone(), self.cursor_pos));
                 }
                 self.last_action = LastAction::Typing;
                 if self.has_selection() {
@@ -779,8 +778,7 @@ impl Widget for TextInput {
                         let _ = cb.set_text(&self.text[lo..hi]);
                     }
                     if self.has_selection() {
-                        self.undo_stack
-                            .push((self.text.clone(), self.cursor_pos));
+                        self.undo_stack.push((self.text.clone(), self.cursor_pos));
                         self.last_action = LastAction::Other;
                         self.delete_selection();
                         self.clear_selection();
@@ -798,8 +796,7 @@ impl Widget for TextInput {
                     if let Ok(mut cb) = arboard::Clipboard::new()
                         && let Ok(text) = cb.get_text()
                     {
-                        self.undo_stack
-                            .push((self.text.clone(), self.cursor_pos));
+                        self.undo_stack.push((self.text.clone(), self.cursor_pos));
                         self.last_action = LastAction::Other;
                         if self.has_selection() {
                             self.delete_selection();
@@ -817,8 +814,7 @@ impl Widget for TextInput {
 
                 match key {
                     Key::Backspace => {
-                        self.undo_stack
-                            .push((self.text.clone(), self.cursor_pos));
+                        self.undo_stack.push((self.text.clone(), self.cursor_pos));
                         self.last_action = LastAction::Other;
                         if self.has_selection() {
                             self.delete_selection();
@@ -839,8 +835,7 @@ impl Widget for TextInput {
                         self.notify_change();
                     }
                     Key::Delete => {
-                        self.undo_stack
-                            .push((self.text.clone(), self.cursor_pos));
+                        self.undo_stack.push((self.text.clone(), self.cursor_pos));
                         self.last_action = LastAction::Other;
                         if self.has_selection() {
                             self.delete_selection();

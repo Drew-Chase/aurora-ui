@@ -265,7 +265,12 @@ impl VirtualList {
     fn thumb_rect(&self, rect: &Rect) -> Rect {
         let (thumb_h, thumb_y) = self.thumb_geometry();
         let track = self.track_rect(rect);
-        Rect::new(track.x1, track.y1 + thumb_y, track.x2, track.y1 + thumb_y + thumb_h)
+        Rect::new(
+            track.x1,
+            track.y1 + thumb_y,
+            track.x2,
+            track.y1 + thumb_y + thumb_h,
+        )
     }
 
     /// Compute an item's screen rect using f64 math to avoid precision loss
@@ -338,7 +343,13 @@ impl Widget for VirtualList {
 
         for (local_idx, item) in self.visible_items.iter().enumerate() {
             let global_idx = self.visible_range.0 + local_idx;
-            let screen = Self::item_screen_rect(&rect, global_idx, self.item_height, self.content_width, offset);
+            let screen = Self::item_screen_rect(
+                &rect,
+                global_idx,
+                self.item_height,
+                self.content_width,
+                offset,
+            );
 
             // Skip items entirely outside viewport
             if screen.y2 < viewport.y1 || screen.y1 > viewport.y2 {
@@ -371,7 +382,13 @@ impl Widget for VirtualList {
         let offset = self.clamped_offset();
         for (local_idx, item) in self.visible_items.iter().enumerate() {
             let global_idx = self.visible_range.0 + local_idx;
-            let screen = Self::item_screen_rect(&rect, global_idx, self.item_height, self.content_width, offset);
+            let screen = Self::item_screen_rect(
+                &rect,
+                global_idx,
+                self.item_height,
+                self.content_width,
+                offset,
+            );
             item.paint_overlay(canvas, screen);
         }
     }
@@ -400,7 +417,13 @@ impl Widget for VirtualList {
                 let mut result = EventResponse::default();
                 for (local_idx, item) in self.visible_items.iter_mut().enumerate() {
                     let global_idx = range_start + local_idx;
-                    let screen = Self::item_screen_rect(&rect, global_idx, item_height, content_width, offset);
+                    let screen = Self::item_screen_rect(
+                        &rect,
+                        global_idx,
+                        item_height,
+                        content_width,
+                        offset,
+                    );
                     let resp = item.event(event, screen);
                     if resp.status.is_handled() {
                         result.status = EventStatus::Consumed;
@@ -431,8 +454,7 @@ impl Widget for VirtualList {
                     if scrollable > 0.0 {
                         let top = pos.y - self.scrollbar_drag_anchor - track.y1;
                         let ratio = (top / scrollable) as f64;
-                        self.scroll_offset =
-                            (ratio * self.max_scroll).clamp(0.0, self.max_scroll);
+                        self.scroll_offset = (ratio * self.max_scroll).clamp(0.0, self.max_scroll);
                         if let Some(ref state) = self.state {
                             state.set(self.scroll_offset);
                         }
@@ -447,7 +469,13 @@ impl Widget for VirtualList {
                 if viewport.contains(pos) {
                     for (local_idx, item) in self.visible_items.iter_mut().enumerate() {
                         let global_idx = range_start + local_idx;
-                        let screen = Self::item_screen_rect(&rect, global_idx, item_height, content_width, offset);
+                        let screen = Self::item_screen_rect(
+                            &rect,
+                            global_idx,
+                            item_height,
+                            content_width,
+                            offset,
+                        );
                         let resp = item.event(&WidgetEvent::Mouse(*mouse), screen);
                         if resp.status.stops_propagation() {
                             return resp;
@@ -502,7 +530,13 @@ impl Widget for VirtualList {
                 if viewport.contains(&click.position) {
                     for (local_idx, item) in self.visible_items.iter_mut().enumerate() {
                         let global_idx = range_start + local_idx;
-                        let screen = Self::item_screen_rect(&rect, global_idx, item_height, content_width, offset);
+                        let screen = Self::item_screen_rect(
+                            &rect,
+                            global_idx,
+                            item_height,
+                            content_width,
+                            offset,
+                        );
                         let resp = item.event(&WidgetEvent::Mouse(*mouse), screen);
                         if resp.status.stops_propagation() {
                             return resp;
@@ -534,7 +568,13 @@ impl Widget for VirtualList {
                     // Forward to children first (nested scrollables)
                     for (local_idx, item) in self.visible_items.iter_mut().enumerate() {
                         let global_idx = range_start + local_idx;
-                        let screen = Self::item_screen_rect(&rect, global_idx, item_height, content_width, offset);
+                        let screen = Self::item_screen_rect(
+                            &rect,
+                            global_idx,
+                            item_height,
+                            content_width,
+                            offset,
+                        );
                         let resp = item.event(&WidgetEvent::Mouse(*mouse), screen);
                         if resp.status.stops_propagation() {
                             return resp;
@@ -542,8 +582,9 @@ impl Widget for VirtualList {
                     }
 
                     let old = self.scroll_offset;
-                    self.scroll_offset =
-                        (self.scroll_offset - (*delta as f64) * SCROLL_SPEED as f64).clamp(0.0, self.max_scroll);
+                    self.scroll_offset = (self.scroll_offset
+                        - (*delta as f64) * SCROLL_SPEED as f64)
+                        .clamp(0.0, self.max_scroll);
                     if let Some(ref state) = self.state {
                         state.set(self.scroll_offset);
                     }
@@ -566,7 +607,8 @@ impl Widget for VirtualList {
         let range_start = self.visible_range.0;
         for (local_idx, item) in self.visible_items.iter_mut().enumerate() {
             let global_idx = range_start + local_idx;
-            let screen = Self::item_screen_rect(&rect, global_idx, item_height, content_width, offset);
+            let screen =
+                Self::item_screen_rect(&rect, global_idx, item_height, content_width, offset);
             let resp = item.event_overlay(event, screen);
             if resp.status.stops_propagation() {
                 return resp;

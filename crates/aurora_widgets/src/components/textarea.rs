@@ -313,8 +313,7 @@ impl Widget for TextArea {
                     return EventResponse::default();
                 }
                 if self.last_action != LastAction::Typing {
-                    self.undo_stack
-                        .push((self.text.clone(), self.cursor_pos));
+                    self.undo_stack.push((self.text.clone(), self.cursor_pos));
                 }
                 self.last_action = LastAction::Typing;
                 self.text.insert(self.cursor_pos, *ch);
@@ -365,8 +364,7 @@ impl Widget for TextArea {
                 match key {
                     Key::Enter => {
                         if self.last_action != LastAction::Typing {
-                            self.undo_stack
-                                .push((self.text.clone(), self.cursor_pos));
+                            self.undo_stack.push((self.text.clone(), self.cursor_pos));
                         }
                         self.last_action = LastAction::Typing;
                         self.text.insert(self.cursor_pos, '\n');
@@ -374,8 +372,7 @@ impl Widget for TextArea {
                         self.notify_change();
                     }
                     Key::Backspace => {
-                        self.undo_stack
-                            .push((self.text.clone(), self.cursor_pos));
+                        self.undo_stack.push((self.text.clone(), self.cursor_pos));
                         self.last_action = LastAction::Other;
                         if self.cursor_pos > 0 {
                             let prev = self.text[..self.cursor_pos]
@@ -389,8 +386,7 @@ impl Widget for TextArea {
                         }
                     }
                     Key::Delete => {
-                        self.undo_stack
-                            .push((self.text.clone(), self.cursor_pos));
+                        self.undo_stack.push((self.text.clone(), self.cursor_pos));
                         self.last_action = LastAction::Other;
                         if self.cursor_pos < self.text.len() {
                             let next = self.text[self.cursor_pos..]
