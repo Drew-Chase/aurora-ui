@@ -402,18 +402,18 @@ impl Widget for SplitPane {
                 // Forward to children
                 let fr = self.first_rect(&rect);
                 let sr = self.second_rect(&rect);
-                if let Some(ref mut child) = self.first {
-                    if fr.contains(&e.position) {
-                        let resp = child.event(event, fr);
-                        if resp.status.is_handled() {
-                            return resp;
-                        }
+                if let Some(ref mut child) = self.first
+                    && fr.contains(&e.position)
+                {
+                    let resp = child.event(event, fr);
+                    if resp.status.is_handled() {
+                        return resp;
                     }
                 }
-                if let Some(ref mut child) = self.second {
-                    if sr.contains(&e.position) {
-                        return child.event(event, sr);
-                    }
+                if let Some(ref mut child) = self.second
+                    && sr.contains(&e.position)
+                {
+                    return child.event(event, sr);
                 }
                 EventResponse::default()
             }
@@ -456,15 +456,15 @@ impl Widget for SplitPane {
                 // Forward to children
                 let fr = self.first_rect(&rect);
                 let sr = self.second_rect(&rect);
-                if let Some(ref mut child) = self.first {
-                    if fr.contains(pos) {
-                        return child.event(event, fr);
-                    }
+                if let Some(ref mut child) = self.first
+                    && fr.contains(pos)
+                {
+                    return child.event(event, fr);
                 }
-                if let Some(ref mut child) = self.second {
-                    if sr.contains(pos) {
-                        return child.event(event, sr);
-                    }
+                if let Some(ref mut child) = self.second
+                    && sr.contains(pos)
+                {
+                    return child.event(event, sr);
                 }
                 EventResponse::default()
             }
@@ -503,15 +503,15 @@ impl Widget for SplitPane {
             return true;
         }
         // Check children
-        if let Some(ref child) = self.first {
-            if child.needs_animation() {
-                return true;
-            }
+        if let Some(ref child) = self.first
+            && child.needs_animation()
+        {
+            return true;
         }
-        if let Some(ref child) = self.second {
-            if child.needs_animation() {
-                return true;
-            }
+        if let Some(ref child) = self.second
+            && child.needs_animation()
+        {
+            return true;
         }
         false
     }
