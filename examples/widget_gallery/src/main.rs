@@ -136,6 +136,7 @@ pub struct GalleryState {
 
 fn gallery() -> impl Widget {
     use aurora_ui::aurora_widgets::components::dialog;
+    use aurora_ui::aurora_widgets::components::sheet;
 
     Composite::new(
         GalleryState {
@@ -159,6 +160,7 @@ fn gallery() -> impl Widget {
             let cancel_setter = set_state.clone();
             let continue_setter = set_state.clone();
 
+            let sheet_close = set_state.clone();
             Box::new(
                 Stack::new()
                     .child(

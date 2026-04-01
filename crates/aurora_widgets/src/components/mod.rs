@@ -31,6 +31,7 @@ pub mod field;
 pub mod input_group;
 pub mod number_input;
 pub mod radio_group;
+pub mod rich_text_editor;
 pub mod segmented_control;
 pub mod slider;
 pub mod switch;
