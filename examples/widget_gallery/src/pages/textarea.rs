@@ -26,7 +26,8 @@ pub fn page_textarea() -> impl Widget {
                     textarea::TextArea::new()
                         .placeholder("Disabled textarea")
                         .rows(3)
-                        .width(400.0),
+                        .width(400.0)
+                        .disabled(true),
                 ),
         ))
         .child(

@@ -56,6 +56,7 @@ pub struct TextArea {
     text_layout: Option<aurora_text::text_layout::TextLayout>,
     placeholder_layout: Option<aurora_text::text_layout::TextLayout>,
     error: bool,
+    disabled: bool,
     undo_stack: UndoStack<(String, usize)>,
     last_action: LastAction,
 }
@@ -83,6 +84,7 @@ impl TextArea {
             text_layout: None,
             placeholder_layout: None,
             error: false,
+            disabled: false,
             undo_stack: UndoStack::new(),
             last_action: LastAction::None,
         }
@@ -155,6 +157,12 @@ impl TextArea {
         self
     }
 
+    /// Enables or disables the disabled state.
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
+    }
+
     fn notify_change(&mut self) {
         if let Some(ref mut cb) = self.on_change {
             cb(&self.text);
@@ -177,6 +185,13 @@ impl Widget for TextArea {
             .unwrap_or(self.padding.top + line_height * self.rows as f32 + self.padding.bottom);
         let inner_w = w - self.padding.left - self.padding.right;
 
+        // Use muted foreground color when disabled
+        let text_color = if self.disabled {
+            colors::muted_foreground()
+        } else {
+            colors::foreground()
+        };
+
         // Text layout
         if !self.text.is_empty() {
             let mut opts = ctx.font_options.clone();
@@ -186,7 +201,7 @@ impl Widget for TextArea {
                 ctx.font_manager,
                 &self.text,
                 &opts,
-                colors::foreground(),
+                text_color,
                 None,
             );
             tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
@@ -204,7 +219,7 @@ impl Widget for TextArea {
                 ctx.font_manager,
                 &self.placeholder,
                 &opts,
-                colors::foreground(),
+                text_color,
                 None,
             );
             tl.set_max_width(ctx.font_manager, inner_w.max(0.0));
@@ -217,13 +232,18 @@ impl Widget for TextArea {
     }
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
-        // Background
-        canvas.fill_rounded_rect(rect, self.corners, self.background);
+        // Background — use muted color when disabled for a faded look
+        let bg = if self.disabled {
+            colors::muted()
+        } else {
+            self.background
+        };
+        canvas.fill_rounded_rect(rect, self.corners, bg);
 
         // Border (error > focused > default)
         let border_color = if self.error {
             colors::destructive()
-        } else if self.focused {
+        } else if self.focused && !self.disabled {
             colors::ring()
         } else {
             self.border_color
@@ -249,8 +269,8 @@ impl Widget for TextArea {
             canvas.draw_text(pl, tx as i32, ty as i32);
         }
 
-        // Cursor
-        if self.focused {
+        // Cursor — don't show cursor when disabled
+        if self.focused && !self.disabled {
             canvas.fill_rect(
                 Rect::new(tx, ty, tx + 1.5, ty + self.font_size),
                 self.text_color,
@@ -273,6 +293,9 @@ impl Widget for TextArea {
     }
 
     fn event(&mut self, event: &WidgetEvent, rect: Rect) -> EventResponse {
+        if self.disabled {
+            return EventResponse::default();
+        }
         match event {
             WidgetEvent::Focus(target_id, _select_all) => {
                 if *target_id == self.id {
