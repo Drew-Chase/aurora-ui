@@ -57,6 +57,18 @@ pub use aurora_text::{font_manager::FontManager, text_layout::TextLayout};
 pub use aurora_widgets::text_input::TextInput;
 #[cfg(feature = "text")]
 pub use aurora_widgets::text_widget::Text;
+#[cfg(feature = "text")]
+pub use aurora_widgets::components::combobox::Combobox;
+#[cfg(feature = "text")]
+pub use aurora_widgets::components::field::Field;
+#[cfg(feature = "text")]
+pub use aurora_widgets::components::input_group::InputGroup;
+#[cfg(feature = "text")]
+pub use aurora_widgets::components::label::Label;
+#[cfg(feature = "text")]
+pub use aurora_widgets::components::select::Select;
+#[cfg(feature = "text")]
+pub use aurora_widgets::components::textarea::TextArea;
 
 // Image (feature-gated)
 #[cfg(feature = "image")]

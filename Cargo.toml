@@ -37,7 +37,8 @@ members = [
     "examples/drag_drop_example",
     "examples/i18n_example",
     "examples/multi_window_example",
-    "examples/tray_menu_example"
+    "examples/tray_menu_example",
+    "examples/form_validation_example"
 ]
 default-members = [
     "aurora",
