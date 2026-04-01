@@ -122,6 +122,7 @@ These are needed for most real-world applications.
 - [x] Parent-child window relationships (modal windows owned by parent)
 
 **Components affected:** `aurora_platform` (major refactor of `App` and event loop)
+
 - Example: `examples/multi_window_example/`
 
 ---
@@ -183,7 +184,7 @@ These are needed for most real-world applications.
 
 ---
 
-### ~~2.7 Multi-Threading Support~~ 
+### ~~2.7 Multi-Threading Support~~
 
 **Completed work:**
 
@@ -204,21 +205,21 @@ Features that elevate the framework from functional to professional.
 
 All 13 widgets implemented with unit tests, widget gallery pages, and wiki documentation.
 
-| Widget               | Priority | Status |
-|----------------------|----------|--------|
+| Widget               | Priority | Status                                                               |
+|----------------------|----------|----------------------------------------------------------------------|
 | **TreeView**         | High     | ✅ Expand/collapse, selection, animated transitions, connecting lines |
-| **NumberInput**      | Medium   | ✅ +/- buttons, min/max clamping, step, precision, scroll wheel |
-| **TagInput**         | Medium   | ✅ Flow layout, removable tags, duplicate prevention, max_tags |
-| **AutoComplete**     | Medium   | ✅ Substring filtering, animated dropdown, keyboard navigation |
-| **SplitPane**        | Medium   | ✅ Horizontal/vertical, drag handle, min sizes, double-click reset |
-| **Sheet/Drawer**     | Medium   | ✅ Slide-in from any edge, backdrop overlay, animated transitions |
-| **ColorPicker**      | Medium   | ✅ HSV gradient area, hue slider, hex/RGB display, palette swatches |
-| **TimePicker**       | Medium   | ✅ Hour/minute/second spinners, 12h/24h, wrap-around, scroll |
-| **DateTimePicker**   | Medium   | ✅ Calendar dropdown + time spinners, 12h/24h format |
-| **DateRangePicker**  | Medium   | ✅ Dual calendar view, range highlighting, month navigation |
-| **Stepper**          | Low      | ✅ Horizontal/vertical, checkmarks, connecting lines, clickable |
-| **SegmentedControl** | Low      | ✅ Sliding pill indicator, animated transitions, equal segments |
-| **RichTextEditor**   | Low      | ✅ Bold/italic/underline toolbar, span model, keyboard shortcuts |
+| **NumberInput**      | Medium   | ✅ +/- buttons, min/max clamping, step, precision, scroll wheel       |
+| **TagInput**         | Medium   | ✅ Flow layout, removable tags, duplicate prevention, max_tags        |
+| **AutoComplete**     | Medium   | ✅ Substring filtering, animated dropdown, keyboard navigation        |
+| **SplitPane**        | Medium   | ✅ Horizontal/vertical, drag handle, min sizes, double-click reset    |
+| **Sheet/Drawer**     | Medium   | ✅ Slide-in from any edge, backdrop overlay, animated transitions     |
+| **ColorPicker**      | Medium   | ✅ HSV gradient area, hue slider, hex/RGB display, palette swatches   |
+| **TimePicker**       | Medium   | ✅ Hour/minute/second spinners, 12h/24h, wrap-around, scroll          |
+| **DateTimePicker**   | Medium   | ✅ Calendar dropdown + time spinners, 12h/24h format                  |
+| **DateRangePicker**  | Medium   | ✅ Dual calendar view, range highlighting, month navigation           |
+| **Stepper**          | Low      | ✅ Horizontal/vertical, checkmarks, connecting lines, clickable       |
+| **SegmentedControl** | Low      | ✅ Sliding pill indicator, animated transitions, equal segments       |
+| **RichTextEditor**   | Low      | ✅ Bold/italic/underline toolbar, span model, keyboard shortcuts      |
 
 ---
 
