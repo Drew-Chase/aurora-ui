@@ -194,7 +194,11 @@ impl Validator for Email {
         let valid = trimmed
             .split_once('@')
             .is_some_and(|(local, domain)| !local.is_empty() && domain.contains('.'));
-        if valid { Ok(()) } else { Err(vec![self.message.clone()]) }
+        if valid {
+            Ok(())
+        } else {
+            Err(vec![self.message.clone()])
+        }
     }
 }
 
@@ -335,7 +339,11 @@ impl ValidatorChain {
                 errors.append(&mut errs);
             }
         }
-        if errors.is_empty() { Ok(()) } else { Err(errors) }
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
     }
 }
 
@@ -370,9 +378,7 @@ pub struct FormValidator {
 
 impl FormValidator {
     pub fn new() -> Self {
-        Self {
-            fields: Vec::new(),
-        }
+        Self { fields: Vec::new() }
     }
 
     /// Registers a named field with its validator chain.
@@ -495,10 +501,7 @@ mod tests {
                     .with(Required::new())
                     .with(Email::new()),
             )
-            .field(
-                "name",
-                ValidatorChain::new().with(Required::new()),
-            );
+            .field("name", ValidatorChain::new().with(Required::new()));
 
         let errors = form.validate(&[("email", "bad"), ("name", "")]);
         assert!(errors.contains_key("email")); // bad email
@@ -549,10 +552,7 @@ mod tests {
 
     #[test]
     fn form_validator_is_valid() {
-        let form = FormValidator::new().field(
-            "name",
-            ValidatorChain::new().with(Required::new()),
-        );
+        let form = FormValidator::new().field("name", ValidatorChain::new().with(Required::new()));
         assert!(!form.is_valid(&[("name", "")]));
         assert!(form.is_valid(&[("name", "Alice")]));
     }

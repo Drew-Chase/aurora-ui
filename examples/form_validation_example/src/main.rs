@@ -123,20 +123,17 @@ fn main() {
                         .child(Text::new("Form Validation Demo").font_size(24.0))
                         .child(email_field)
                         .child(password_field)
-                        .child(
-                            button!("Submit").on_click({
-                                let set = set_state.clone();
-                                move |_| {
-                                    set.set(|s| {
-                                        s.email_error =
-                                            validate_field(&s.email, &email_chain());
-                                        s.password_error =
-                                            validate_field(&s.password, &password_chain());
-                                        s.submitted = true;
-                                    });
-                                }
-                            }),
-                        )
+                        .child(button!("Submit").on_click({
+                            let set = set_state.clone();
+                            move |_| {
+                                set.set(|s| {
+                                    s.email_error = validate_field(&s.email, &email_chain());
+                                    s.password_error =
+                                        validate_field(&s.password, &password_chain());
+                                    s.submitted = true;
+                                });
+                            }
+                        }))
                         .child(Text::new(status).font_size(14.0)),
                 )
             }));

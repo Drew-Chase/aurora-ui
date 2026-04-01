@@ -39,13 +39,13 @@ pub use aurora_widgets::layout::row::Row;
 pub use aurora_widgets::layout::scrollview::{ScrollState, ScrollView};
 pub use aurora_widgets::layout::stack::Stack;
 pub use aurora_widgets::layout::{Align, Justify};
-pub use aurora_widgets::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
+#[cfg(feature = "regex")]
+pub use aurora_widgets::validation::Pattern;
 pub use aurora_widgets::validation::{
     Custom, Email, FormValidator, MaxLength, MinLength, NumericRange, Required, ValidationResult,
     Validator, ValidatorChain,
 };
-#[cfg(feature = "regex")]
-pub use aurora_widgets::validation::Pattern;
+pub use aurora_widgets::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 pub use aurora_widgets::{button, col, row};
 
 // Text (feature-gated)
@@ -53,10 +53,6 @@ pub use aurora_widgets::{button, col, row};
 pub use aurora_text::font_options::{FontOptions, FontStretch, FontStyle, FontWeight};
 #[cfg(feature = "text")]
 pub use aurora_text::{font_manager::FontManager, text_layout::TextLayout};
-#[cfg(feature = "text")]
-pub use aurora_widgets::text_input::TextInput;
-#[cfg(feature = "text")]
-pub use aurora_widgets::text_widget::Text;
 #[cfg(feature = "text")]
 pub use aurora_widgets::components::combobox::Combobox;
 #[cfg(feature = "text")]
@@ -69,6 +65,10 @@ pub use aurora_widgets::components::label::Label;
 pub use aurora_widgets::components::select::Select;
 #[cfg(feature = "text")]
 pub use aurora_widgets::components::textarea::TextArea;
+#[cfg(feature = "text")]
+pub use aurora_widgets::text_input::TextInput;
+#[cfg(feature = "text")]
+pub use aurora_widgets::text_widget::Text;
 
 // Image (feature-gated)
 #[cfg(feature = "image")]
