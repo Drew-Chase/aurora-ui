@@ -183,18 +183,16 @@ These are needed for most real-world applications.
 
 ---
 
-### 2.7 Multi-Threading Support
+### 2.7 Multi-Threading Support ✅
 
-**Required work:**
+**Completed work:**
 
-- Evaluate migration from `Rc<RefCell<T>>` to `Arc<Mutex<T>>` or channel-based messaging
-- Add async task spawning for background work (file I/O, network, computation)
-- Thread-safe state updates that trigger UI rebuilds on the main thread
-- Consider adopting a message-passing architecture (like Elm/Iced) for thread safety
+- [x] Migrated `Composite`/`StateSetter` from `Rc<RefCell<T>>` to `Arc<Mutex<T>>` + `Arc<AtomicBool>` — `StateSetter` is now `Send + Sync`
+- [x] Migrated `ScrollState` from `Rc<Cell<f64>>` to `Arc<AtomicU64>` (lock-free)
+- [x] Added `TaskSpawner` API (`spawn`, `spawn_with_callback`) for background thread work with automatic main-thread redraw
+- [x] Thread-safe state updates via `StateSetter::set()` from any thread, with `TaskSpawner` ensuring event-loop wake
 
-**Components affected:** `aurora_widgets` (Composite, StateSetter), `aurora_platform` (event loop)
-
-**Note:** This is a significant architectural decision. A message-passing model may be preferable to shared-state concurrency.
+**Architecture:** Hybrid approach — `Arc<Mutex>` for shared state, `EventLoopProxy` for main-thread communication. Widget internals remain `Rc<RefCell>` (single-threaded) since the `Widget` trait is not `Send`.
 
 ---
 
