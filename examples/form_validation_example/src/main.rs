@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use aurora_ui::aurora_theme::color;
 use aurora_ui::prelude::*;
 
 #[derive(Default)]
@@ -81,6 +82,8 @@ fn main() {
                                 .tab_index(1)
                                 .on_submit(do_submit.clone())
                                 .error(has_email_err)
+                                .selection_text_color(Color::WHITE)
+                                .selection_color(hsl!(207, 1.0, 0.42))
                                 .on_change({
                                     let set = set_state.clone();
                                     move |text: &str| {
@@ -113,6 +116,8 @@ fn main() {
                                 .id(200)
                                 .tab_index(2)
                                 .error(has_password_err)
+                                .selection_text_color(Color::WHITE)
+                                .selection_color(hsl!(207, 1.0, 0.42))
                                 .on_change({
                                     let set = set_state.clone();
                                     move |text: &str| {
