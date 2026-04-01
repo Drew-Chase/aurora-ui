@@ -39,7 +39,8 @@ members = [
     "examples/multi_window_example",
     "examples/tray_menu_example",
     "examples/form_validation_example",
-    "examples/virtual_list_example"
+    "examples/virtual_list_example",
+    "examples/threading_example"
 ]
 default-members = [
     "aurora",
