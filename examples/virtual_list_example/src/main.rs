@@ -50,10 +50,14 @@ fn main() {
                         ),
                 );
                 }
-                window.set_title(&format!(
-                    "Virtual List Example — {:.0} FPS",
-                    frame.fps
-                ));
+                if frame.fps > 0.0 {
+                    window.set_title(&format!(
+                        "Virtual List Example — {:.0} FPS",
+                        frame.fps
+                    ));
+                } else {
+                    window.set_title("Virtual List Example — Static");
+                }
             }
         })
         .expect("Failed to run app");

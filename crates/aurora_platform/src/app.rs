@@ -1203,13 +1203,23 @@ impl ApplicationHandler<AppEvent> for AppHandler {
                 window.request_next_frame();
             }
 
-            if window.next_frame_requested && !resized {
+            // Hard FPS cap: only render if enough time has elapsed.
+            let frame_interval = if window.max_fps > 0 {
+                std::time::Duration::from_micros(1_000_000 / window.max_fps as u64)
+            } else {
+                std::time::Duration::ZERO
+            };
+            let ready = window.last_render_instant.elapsed() >= frame_interval;
+            let mut rendered = false;
+
+            if window.next_frame_requested && !resized && ready {
                 window.next_frame_requested = false;
 
                 let now = std::time::Instant::now();
                 let dt = now.duration_since(window.last_frame_instant).as_secs_f32();
                 window.current_fps = if dt > 0.0 { 1.0 / dt } else { 0.0 };
                 window.last_frame_instant = now;
+                window.last_render_instant = now;
 
                 let physical = window.window_handle.inner_size();
                 let frame_info = FrameInfo {
@@ -1223,6 +1233,18 @@ impl ApplicationHandler<AppEvent> for AppHandler {
                 (state.on_render)(window, frame_info);
                 window.layout_and_paint();
                 window.present();
+                rendered = true;
+            }
+
+            // Decay FPS to 0 after 200ms of inactivity, then fire one
+            // final render so the on_render callback can update the title.
+            if !rendered
+                && window.current_fps > 0.0
+                && window.last_render_instant.elapsed()
+                    > std::time::Duration::from_millis(200)
+            {
+                window.current_fps = 0.0;
+                window.next_frame_requested = true;
             }
 
             if window.next_frame_requested || !state.os_drag_paths.is_empty() {
@@ -1306,10 +1328,21 @@ impl ApplicationHandler<AppEvent> for AppHandler {
                     return;
                 }
                 log::trace!("Window redraw requested");
+                // Hard FPS cap: skip if too soon since last render.
+                if window.max_fps > 0 {
+                    let interval = std::time::Duration::from_micros(
+                        1_000_000 / window.max_fps as u64,
+                    );
+                    if window.last_render_instant.elapsed() < interval {
+                        return;
+                    }
+                }
+
                 let now = std::time::Instant::now();
                 let dt = now.duration_since(window.last_frame_instant).as_secs_f32();
                 window.current_fps = if dt > 0.0 { 1.0 / dt } else { 0.0 };
                 window.last_frame_instant = now;
+                window.last_render_instant = now;
 
                 window.window_handle.pre_present_notify();
                 let physical = window.window_handle.inner_size();
@@ -1335,6 +1368,7 @@ impl ApplicationHandler<AppEvent> for AppHandler {
                 let dt = now.duration_since(window.last_frame_instant).as_secs_f32();
                 window.current_fps = if dt > 0.0 { 1.0 / dt } else { 0.0 };
                 window.last_frame_instant = now;
+                window.last_render_instant = now;
 
                 let frame_info = FrameInfo {
                     width: physical_size.width,
@@ -1589,6 +1623,7 @@ pub struct AppWindow {
     // Frame rate
     pub(crate) max_fps: u32,
     last_frame_instant: std::time::Instant,
+    pub(crate) last_render_instant: std::time::Instant,
     current_fps: f32,
     // Multi-window fields
     app_context: Option<AppContext>,
@@ -1663,6 +1698,7 @@ impl AppWindow {
                 a11y: None,
                 max_fps: config.max_fps,
                 last_frame_instant: std::time::Instant::now(),
+                last_render_instant: std::time::Instant::now(),
                 current_fps: 0.0,
                 app_context: None,
                 window_id: None,
@@ -1684,6 +1720,7 @@ impl AppWindow {
             a11y: None,
             max_fps: config.max_fps,
             last_frame_instant: std::time::Instant::now(),
+            last_render_instant: std::time::Instant::now(),
             current_fps: 0.0,
             app_context: None,
             window_id: None,
