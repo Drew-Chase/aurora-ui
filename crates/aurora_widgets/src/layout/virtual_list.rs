@@ -56,10 +56,11 @@ pub struct VirtualList {
     hover_bg: Color,
     selected_bg: Color,
 
-    // Scroll state
-    scroll_offset: f32,
-    max_scroll: f32,
-    viewport_height: f32,
+    // Scroll state (f64 to avoid precision loss at large item counts;
+    // 2M items * 36px = 72M pixels exceeds f32's ~7-digit precision)
+    scroll_offset: f64,
+    max_scroll: f64,
+    viewport_height: f64,
     state: Option<ScrollState>,
 
     // Scrollbar
@@ -155,7 +156,7 @@ impl VirtualList {
 
     /// Persistent scroll position that survives widget rebuilds.
     pub fn scroll_state(mut self, state: ScrollState) -> Self {
-        self.scroll_offset = state.get();
+        self.scroll_offset = state.get() as f64;
         self.state = Some(state);
         self
     }
@@ -195,15 +196,15 @@ impl VirtualList {
     // Virtualization internals
     // -----------------------------------------------------------------------
 
-    fn total_content_height(&self) -> f32 {
-        self.item_count as f32 * self.item_height
+    fn total_content_height(&self) -> f64 {
+        self.item_count as f64 * self.item_height as f64
     }
 
     fn has_overflow(&self) -> bool {
         self.max_scroll > 0.0
     }
 
-    fn clamped_offset(&self) -> f32 {
+    fn clamped_offset(&self) -> f64 {
         self.scroll_offset.clamp(0.0, self.max_scroll)
     }
 
@@ -221,8 +222,9 @@ impl VirtualList {
             return (0, 0);
         }
         let offset = self.clamped_offset();
-        let first_visible = (offset / self.item_height).floor() as usize;
-        let visible_count = (self.viewport_height / self.item_height).ceil() as usize + 1;
+        let ih = self.item_height as f64;
+        let first_visible = (offset / ih).floor() as usize;
+        let visible_count = (self.viewport_height / ih).ceil() as usize + 1;
         let last_visible = (first_visible + visible_count).min(self.item_count);
 
         let start = first_visible.saturating_sub(self.buffer_count);
@@ -238,11 +240,12 @@ impl VirtualList {
         if total <= 0.0 {
             return (0.0, 0.0);
         }
-        let ratio = self.viewport_height / total;
-        let thumb_h = (ratio * self.viewport_height).max(self.min_thumb_height);
-        let scrollable = self.viewport_height - thumb_h;
+        let vp = self.viewport_height as f32;
+        let ratio = vp / total as f32;
+        let thumb_h = (ratio * vp).max(self.min_thumb_height);
+        let scrollable = vp - thumb_h;
         let thumb_y = if self.max_scroll > 0.0 {
-            (self.clamped_offset() / self.max_scroll) * scrollable
+            (self.clamped_offset() as f32 / self.max_scroll as f32) * scrollable
         } else {
             0.0
         };
@@ -250,11 +253,12 @@ impl VirtualList {
     }
 
     fn track_rect(&self, rect: &Rect) -> Rect {
+        let vp = self.viewport_height as f32;
         Rect::new(
             rect.x1 + self.content_width,
             rect.y1,
             rect.x1 + self.content_width + self.effective_scrollbar_width(),
-            rect.y1 + self.viewport_height,
+            rect.y1 + vp,
         )
     }
 
@@ -264,21 +268,22 @@ impl VirtualList {
         Rect::new(track.x1, track.y1 + thumb_y, track.x2, track.y1 + thumb_y + thumb_h)
     }
 
-    /// Compute an item's screen rect from pre-extracted values (avoids
-    /// borrowing `self` which conflicts with `visible_items` iteration).
+    /// Compute an item's screen rect using f64 math to avoid precision loss
+    /// at large item counts, then convert to f32 for the final Rect.
     fn item_screen_rect(
         rect: &Rect,
         global_idx: usize,
         item_height: f32,
         content_width: f32,
-        offset: f32,
+        offset: f64,
     ) -> Rect {
-        let y = global_idx as f32 * item_height;
+        let y = global_idx as f64 * item_height as f64;
+        let screen_y = (rect.y1 as f64 + y - offset) as f32;
         Rect::new(
             rect.x1,
-            rect.y1 + y - offset,
+            screen_y,
             rect.x1 + content_width,
-            rect.y1 + y + item_height - offset,
+            screen_y + item_height,
         )
     }
 }
@@ -287,11 +292,11 @@ impl Widget for VirtualList {
     fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
         let width = self.width.unwrap_or(available.width);
         let height = self.height.unwrap_or(available.height);
-        self.viewport_height = height.max(0.0);
+        self.viewport_height = height.max(0.0) as f64;
 
         // Restore scroll from persistent state
         if let Some(ref state) = self.state {
-            self.scroll_offset = state.get();
+            self.scroll_offset = state.get() as f64;
         }
 
         let total = self.total_content_height();
@@ -322,11 +327,12 @@ impl Widget for VirtualList {
 
     fn paint(&self, canvas: &mut Canvas, rect: Rect) {
         let offset = self.clamped_offset();
+        let vp_h = self.viewport_height as f32;
         let viewport = Rect::new(
             rect.x1,
             rect.y1,
             rect.x1 + self.content_width,
-            rect.y1 + self.viewport_height,
+            rect.y1 + vp_h,
         );
         canvas.push_clip(viewport);
 
@@ -379,11 +385,12 @@ impl Widget for VirtualList {
         let item_height = self.item_height;
         let content_width = self.content_width;
         let range_start = self.visible_range.0;
+        let vp_h = self.viewport_height as f32;
         let viewport = Rect::new(
             rect.x1,
             rect.y1,
             rect.x1 + self.content_width + self.effective_scrollbar_width(),
-            rect.y1 + self.viewport_height,
+            rect.y1 + vp_h,
         );
 
         let mouse = match event {
@@ -420,14 +427,14 @@ impl Widget for VirtualList {
                 if self.scrollbar_dragging {
                     let track = self.track_rect(&rect);
                     let (thumb_h, _) = self.thumb_geometry();
-                    let scrollable = self.viewport_height - thumb_h;
+                    let scrollable = vp_h - thumb_h;
                     if scrollable > 0.0 {
                         let top = pos.y - self.scrollbar_drag_anchor - track.y1;
-                        let ratio = top / scrollable;
+                        let ratio = (top / scrollable) as f64;
                         self.scroll_offset =
                             (ratio * self.max_scroll).clamp(0.0, self.max_scroll);
                         if let Some(ref state) = self.state {
-                            state.set(self.scroll_offset);
+                            state.set(self.scroll_offset as f32);
                         }
                     }
                     return EventResponse {
@@ -475,13 +482,13 @@ impl Widget for VirtualList {
                     if track.contains(&click.position) {
                         let (thumb_h, _) = self.thumb_geometry();
                         let center = click.position.y - track.y1 - thumb_h / 2.0;
-                        let scrollable = self.viewport_height - thumb_h;
+                        let scrollable = vp_h - thumb_h;
                         if scrollable > 0.0 {
-                            let ratio = center / scrollable;
+                            let ratio = (center / scrollable) as f64;
                             self.scroll_offset =
                                 (ratio * self.max_scroll).clamp(0.0, self.max_scroll);
                             if let Some(ref state) = self.state {
-                                state.set(self.scroll_offset);
+                                state.set(self.scroll_offset as f32);
                             }
                         }
                         return EventResponse {
@@ -504,8 +511,8 @@ impl Widget for VirtualList {
 
                     // If no child consumed, handle selection on release
                     if click.state == MouseState::Released {
-                        let content_y = click.position.y - rect.y1 + offset;
-                        let idx = (content_y / self.item_height) as usize;
+                        let content_y = (click.position.y - rect.y1) as f64 + offset;
+                        let idx = (content_y / self.item_height as f64) as usize;
                         if idx < self.item_count {
                             self.selected = Some(idx);
                             if let Some(ref mut cb) = self.on_select {
@@ -536,9 +543,9 @@ impl Widget for VirtualList {
 
                     let old = self.scroll_offset;
                     self.scroll_offset =
-                        (self.scroll_offset - delta * SCROLL_SPEED).clamp(0.0, self.max_scroll);
+                        (self.scroll_offset - (*delta as f64) * SCROLL_SPEED as f64).clamp(0.0, self.max_scroll);
                     if let Some(ref state) = self.state {
-                        state.set(self.scroll_offset);
+                        state.set(self.scroll_offset as f32);
                     }
                     if (self.scroll_offset - old).abs() > 0.001 {
                         return EventResponse {
