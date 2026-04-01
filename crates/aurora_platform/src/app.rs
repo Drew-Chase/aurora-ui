@@ -812,6 +812,97 @@ impl AppContext {
     pub fn request_redraw(&self, id: WindowId) {
         let _ = self.proxy.send_event(AppEvent::RequestRedraw(id));
     }
+
+    /// Returns a [`TaskSpawner`] for the given window, allowing background
+    /// work to be spawned and results delivered back on the main thread.
+    pub fn task_spawner(&self, window_id: WindowId) -> TaskSpawner {
+        TaskSpawner {
+            proxy: self.proxy.clone(),
+            window_id,
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// TaskSpawner — run work on background threads
+// ---------------------------------------------------------------------------
+
+/// A handle for spawning background tasks that can communicate results back
+/// to the main (UI) thread.
+///
+/// `TaskSpawner` is `Clone`, `Send`, and `Sync`. Create one via
+/// [`AppWindow::task_spawner`] or [`AppContext::task_spawner`] and pass it
+/// into widget closures.
+///
+/// # Examples
+///
+/// ```ignore
+/// // Inside a render callback:
+/// let spawner = window.task_spawner();
+/// let setter = set_state.clone();
+///
+/// button!("Load").on_click(move |_| {
+///     let setter = setter.clone();
+///     spawner.spawn(move || {
+///         let data = std::fs::read_to_string("big_file.txt").unwrap();
+///         setter.set(|s| s.content = data);
+///     });
+/// });
+/// ```
+#[derive(Clone)]
+pub struct TaskSpawner {
+    proxy: EventLoopProxy<AppEvent>,
+    window_id: WindowId,
+}
+
+impl TaskSpawner {
+    /// Spawns a closure on a background thread.
+    ///
+    /// When the closure completes, a redraw is automatically requested
+    /// for the associated window so any dirty state is picked up.
+    pub fn spawn<F>(&self, task: F)
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        let proxy = self.proxy.clone();
+        let wid = self.window_id;
+        std::thread::spawn(move || {
+            task();
+            let _ = proxy.send_event(AppEvent::RequestRedraw(wid));
+        });
+    }
+
+    /// Spawns a background task that produces a value, then runs a callback
+    /// on the main thread with the result.
+    ///
+    /// The `task` closure runs on a background thread and returns `T`.
+    /// Once complete, `on_complete` is called on the main (event-loop)
+    /// thread with that value, and a redraw is requested.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// spawner.spawn_with_callback(
+    ///     || expensive_computation(),
+    ///     |result| set_state.set(|s| s.answer = result),
+    /// );
+    /// ```
+    pub fn spawn_with_callback<T, F, C>(&self, task: F, on_complete: C)
+    where
+        T: Send + 'static,
+        F: FnOnce() -> T + Send + 'static,
+        C: FnOnce(T) + Send + 'static,
+    {
+        let proxy = self.proxy.clone();
+        let wid = self.window_id;
+        std::thread::spawn(move || {
+            let result = task();
+            let _ = proxy.send_event(AppEvent::RunOnMainThread {
+                target: wid,
+                callback: Box::new(move || on_complete(result)),
+            });
+        });
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -835,6 +926,10 @@ pub(crate) enum AppEvent {
         payload: Box<dyn std::any::Any + Send>,
     },
     RequestRedraw(WindowId),
+    RunOnMainThread {
+        target: WindowId,
+        callback: Box<dyn FnOnce() + Send>,
+    },
     #[cfg(feature = "menu")]
     MenuEvent(String),
     #[cfg(feature = "tray")]
@@ -1147,6 +1242,12 @@ impl ApplicationHandler<AppEvent> for AppHandler {
             }
             AppEvent::RequestRedraw(id) => {
                 if let Some(state) = self.windows.get(&id) {
+                    state.app_window.window_handle.request_redraw();
+                }
+            }
+            AppEvent::RunOnMainThread { target, callback } => {
+                callback();
+                if let Some(state) = self.windows.get(&target) {
                     state.app_window.window_handle.request_redraw();
                 }
             }
@@ -1741,6 +1842,24 @@ impl AppWindow {
         self.app_context
             .as_ref()
             .expect("AppContext not initialized")
+    }
+
+    /// Returns a [`TaskSpawner`] for this window, allowing background work
+    /// to be spawned from widget callbacks.
+    ///
+    /// The spawner is `Clone + Send + Sync`, so it can be moved into
+    /// closures and shared across threads.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// let spawner = window.task_spawner();
+    /// button!("Go").on_click(move |_| {
+    ///     spawner.spawn(|| println!("background work"));
+    /// });
+    /// ```
+    pub fn task_spawner(&self) -> TaskSpawner {
+        self.app_context().task_spawner(self.id())
     }
 
     /// Opens a new window with the given configuration and render callback.

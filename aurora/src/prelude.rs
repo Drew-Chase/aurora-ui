@@ -16,8 +16,8 @@ pub use aurora_core::undo::UndoStack;
 
 // Platform
 pub use aurora_platform::app::{
-    App, AppContext, AppWindow, ExitBehavior, FrameInfo, IconData, WindowConfig, WindowMonitor,
-    WindowPosition,
+    App, AppContext, AppWindow, ExitBehavior, FrameInfo, IconData, TaskSpawner, WindowConfig,
+    WindowMonitor, WindowPosition,
 };
 pub use aurora_platform::errors::app::AppError;
 pub use aurora_platform::window_controls::WindowControls;
