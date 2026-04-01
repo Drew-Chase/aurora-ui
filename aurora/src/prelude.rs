@@ -12,6 +12,7 @@ pub use aurora_core::kmi::cursor_icon::CursorIcon;
 pub use aurora_core::kmi::drag::{DragEvent, FileDropEvent};
 pub use aurora_core::kmi::keyboard::{Key, KeyboardEvent, Modifiers};
 pub use aurora_core::kmi::mouse::{MouseButton, MouseClickEvent, MouseEvent, MouseState};
+pub use aurora_core::undo::UndoStack;
 
 // Platform
 pub use aurora_platform::app::{
