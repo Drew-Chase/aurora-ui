@@ -417,6 +417,7 @@ fn content_area(
                 .item(page_tag_input())
                 .item(page_tabs())
                 .item(page_textarea())
+                .item(page_time_picker())
                 .item(page_toast())
                 .item(page_toggle())
                 .item(page_toggle_group())
