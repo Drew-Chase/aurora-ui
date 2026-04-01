@@ -8,7 +8,16 @@ use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::cursor_icon::CursorIcon;
 use aurora_core::kmi::keyboard::{Key, KeyboardEvent};
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
+use aurora_core::undo::UndoStack;
 use aurora_render::canvas::Canvas;
+
+/// Tracks the last mutation type for undo grouping.
+#[derive(PartialEq)]
+enum LastAction {
+    None,
+    Typing,
+    Other,
+}
 
 use super::colors;
 
@@ -47,6 +56,8 @@ pub struct TextArea {
     text_layout: Option<aurora_text::text_layout::TextLayout>,
     placeholder_layout: Option<aurora_text::text_layout::TextLayout>,
     error: bool,
+    undo_stack: UndoStack<(String, usize)>,
+    last_action: LastAction,
 }
 
 impl TextArea {
@@ -72,6 +83,8 @@ impl TextArea {
             text_layout: None,
             placeholder_layout: None,
             error: false,
+            undo_stack: UndoStack::new(),
+            last_action: LastAction::None,
         }
     }
 
@@ -299,6 +312,11 @@ impl Widget for TextArea {
                 if !self.focused {
                     return EventResponse::default();
                 }
+                if self.last_action != LastAction::Typing {
+                    self.undo_stack
+                        .push((self.text.clone(), self.cursor_pos));
+                }
+                self.last_action = LastAction::Typing;
                 self.text.insert(self.cursor_pos, *ch);
                 self.cursor_pos += ch.len_utf8();
                 self.notify_change();
@@ -311,13 +329,54 @@ impl Widget for TextArea {
                 if !self.focused {
                     return EventResponse::default();
                 }
+
+                // Ctrl+Z — undo
+                if modifiers.ctrl && !modifiers.shift && *key == Key::Character('z') {
+                    let current = (self.text.clone(), self.cursor_pos);
+                    if let Some((text, pos)) = self.undo_stack.undo(current) {
+                        self.text = text;
+                        self.cursor_pos = pos;
+                        self.last_action = LastAction::None;
+                        self.notify_change();
+                    }
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        ..Default::default()
+                    };
+                }
+
+                // Ctrl+Shift+Z or Ctrl+Y — redo
+                if (modifiers.ctrl && modifiers.shift && *key == Key::Character('z'))
+                    || (modifiers.ctrl && *key == Key::Character('y'))
+                {
+                    let current = (self.text.clone(), self.cursor_pos);
+                    if let Some((text, pos)) = self.undo_stack.redo(current) {
+                        self.text = text;
+                        self.cursor_pos = pos;
+                        self.last_action = LastAction::None;
+                        self.notify_change();
+                    }
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        ..Default::default()
+                    };
+                }
+
                 match key {
                     Key::Enter => {
+                        if self.last_action != LastAction::Typing {
+                            self.undo_stack
+                                .push((self.text.clone(), self.cursor_pos));
+                        }
+                        self.last_action = LastAction::Typing;
                         self.text.insert(self.cursor_pos, '\n');
                         self.cursor_pos += 1;
                         self.notify_change();
                     }
                     Key::Backspace => {
+                        self.undo_stack
+                            .push((self.text.clone(), self.cursor_pos));
+                        self.last_action = LastAction::Other;
                         if self.cursor_pos > 0 {
                             let prev = self.text[..self.cursor_pos]
                                 .char_indices()
@@ -330,6 +389,9 @@ impl Widget for TextArea {
                         }
                     }
                     Key::Delete => {
+                        self.undo_stack
+                            .push((self.text.clone(), self.cursor_pos));
+                        self.last_action = LastAction::Other;
                         if self.cursor_pos < self.text.len() {
                             let next = self.text[self.cursor_pos..]
                                 .char_indices()
