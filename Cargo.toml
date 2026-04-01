@@ -38,7 +38,8 @@ members = [
     "examples/i18n_example",
     "examples/multi_window_example",
     "examples/tray_menu_example",
-    "examples/form_validation_example"
+    "examples/form_validation_example",
+    "examples/virtual_list_example"
 ]
 default-members = [
     "aurora",
