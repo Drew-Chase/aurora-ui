@@ -347,20 +347,19 @@ impl ColorPicker {
 
     /// Paints the saturation/brightness gradient area.
     fn paint_sv_area(&self, canvas: &mut Canvas, sv: Rect) {
-        let cols = 24u32;
-        let rows = 16u32;
-        let cell_w = sv.width() / cols as f32;
-        let cell_h = sv.height() / rows as f32;
+        let w = sv.width() as u32;
+        let bands = 40u32;
+        let band_h = sv.height() / bands as f32;
 
-        for row in 0..rows {
-            let v = 1.0 - (row as f32 + 0.5) / rows as f32;
-            for col in 0..cols {
-                let s = (col as f32 + 0.5) / cols as f32;
+        for col in 0..w {
+            let s = (col as f32 + 0.5) / w as f32;
+            let x1 = sv.x1 + col as f32;
+            let x2 = x1 + 1.0;
+            for row in 0..bands {
+                let v = 1.0 - (row as f32 + 0.5) / bands as f32;
                 let color = hsv_to_rgb(self.hue, s, v);
-                let x1 = sv.x1 + col as f32 * cell_w;
-                let y1 = sv.y1 + row as f32 * cell_h;
-                let x2 = if col == cols - 1 { sv.x2 } else { x1 + cell_w };
-                let y2 = if row == rows - 1 { sv.y2 } else { y1 + cell_h };
+                let y1 = sv.y1 + row as f32 * band_h;
+                let y2 = if row == bands - 1 { sv.y2 } else { y1 + band_h };
                 canvas.fill_rect(Rect::new(x1, y1, x2, y2), color);
             }
         }
