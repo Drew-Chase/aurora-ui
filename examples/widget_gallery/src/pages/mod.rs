@@ -51,6 +51,7 @@ mod toast;
 mod toggle;
 mod toggle_group;
 mod tooltip;
+mod tree_view;
 mod tutorials;
 mod typography;
 
@@ -107,5 +108,6 @@ pub use toast::page_toast;
 pub use toggle::page_toggle;
 pub use toggle_group::page_toggle_group;
 pub use tooltip::page_tooltip;
+pub use tree_view::page_tree_view;
 pub use tutorials::*;
 pub use typography::page_typography;

@@ -75,6 +75,7 @@ const SECTIONS: &[Section] = &[
             "Toggle",
             "Toggle Group",
             "Tooltip",
+            "Tree View",
             "Typography",
         ],
     },
@@ -401,6 +402,7 @@ fn content_area(
                 .item(page_toggle())
                 .item(page_toggle_group())
                 .item(page_tooltip())
+                .item(page_tree_view())
                 .item(page_typography())
                 // Tutorials
                 .item(page_counter())

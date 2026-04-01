@@ -42,6 +42,7 @@ pub mod scroll_area;
 pub mod sidebar;
 pub mod table;
 pub mod textarea;
+pub mod tree_view;
 
 // Overlay widgets
 pub mod dialog;
