@@ -1,6 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use aurora_ui::aurora_theme::color;
 use aurora_ui::prelude::*;
 
 #[derive(Default)]

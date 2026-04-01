@@ -517,7 +517,22 @@ impl Widget for TextInput {
 
         // Draw text or placeholder
         if let Some(ref tl) = self.text_layout {
-            canvas.draw_text(tl, text_x as i32, text_y as i32);
+            if self.focused
+                && let Some((lo, hi)) = self.selection_range()
+                && lo != hi
+            {
+                // Render selected text in selection_fg color
+                let display_lo = self.display_byte_pos(lo);
+                let display_hi = self.display_byte_pos(hi);
+                canvas.draw_rich_text(
+                    tl,
+                    text_x as i32,
+                    text_y as i32,
+                    &[(display_lo..display_hi, self.selection_fg)],
+                );
+            } else {
+                canvas.draw_text(tl, text_x as i32, text_y as i32);
+            }
         } else if let Some(ref pl) = self.placeholder_layout {
             canvas.draw_text(pl, (rect.x1 + self.padding.left) as i32, text_y as i32);
         }
