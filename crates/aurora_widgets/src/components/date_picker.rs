@@ -101,10 +101,11 @@ impl DatePicker {
     }
 
     fn dropdown_rect(&self, trigger_rect: &Rect) -> Rect {
+        let w = self.calendar_size.width.max(trigger_rect.width());
         Rect::new(
             trigger_rect.x1,
             trigger_rect.y2 + 4.0,
-            trigger_rect.x1 + self.calendar_size.width,
+            trigger_rect.x1 + w,
             trigger_rect.y2 + 4.0 + self.calendar_size.height + 16.0,
         )
     }
@@ -198,10 +199,11 @@ impl Widget for DatePicker {
         canvas.fill_rounded_rect(dr, drop_corners, colors::popover());
         canvas.stroke_rounded_rect(dr, drop_corners, 1, colors::border());
 
+        let cal_offset_x = (dr.width() - self.calendar_size.width) / 2.0;
         let cal_rect = Rect::new(
-            dr.x1 + 8.0,
+            dr.x1 + cal_offset_x,
             dr.y1 + 8.0,
-            dr.x1 + 8.0 + self.calendar_size.width,
+            dr.x1 + cal_offset_x + self.calendar_size.width,
             dr.y1 + 8.0 + self.calendar_size.height,
         );
         self.calendar.paint(canvas, cal_rect);
@@ -250,10 +252,11 @@ impl Widget for DatePicker {
                 let dr = self.dropdown_rect(&rect);
                 if dr.contains(&e.position) {
                     // Forward all click events (Pressed + Released) to calendar
+                    let cal_offset_x = (dr.width() - self.calendar_size.width) / 2.0;
                     let cal_rect = Rect::new(
-                        dr.x1 + 8.0,
+                        dr.x1 + cal_offset_x,
                         dr.y1 + 8.0,
-                        dr.x1 + 8.0 + self.calendar_size.width,
+                        dr.x1 + cal_offset_x + self.calendar_size.width,
                         dr.y1 + 8.0 + self.calendar_size.height,
                     );
                     let resp = self.calendar.event(event, cal_rect);
@@ -286,10 +289,11 @@ impl Widget for DatePicker {
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
                 let dr = self.dropdown_rect(&rect);
                 if dr.contains(pos) {
+                    let cal_offset_x = (dr.width() - self.calendar_size.width) / 2.0;
                     let cal_rect = Rect::new(
-                        dr.x1 + 8.0,
+                        dr.x1 + cal_offset_x,
                         dr.y1 + 8.0,
-                        dr.x1 + 8.0 + self.calendar_size.width,
+                        dr.x1 + cal_offset_x + self.calendar_size.width,
                         dr.y1 + 8.0 + self.calendar_size.height,
                     );
                     return self.calendar.event(event, cal_rect);
@@ -298,10 +302,11 @@ impl Widget for DatePicker {
             }
             WidgetEvent::Mouse(MouseEvent::MouseScrollEvent(_)) => {
                 let dr = self.dropdown_rect(&rect);
+                let cal_offset_x = (dr.width() - self.calendar_size.width) / 2.0;
                 let cal_rect = Rect::new(
-                    dr.x1 + 8.0,
+                    dr.x1 + cal_offset_x,
                     dr.y1 + 8.0,
-                    dr.x1 + 8.0 + self.calendar_size.width,
+                    dr.x1 + cal_offset_x + self.calendar_size.width,
                     dr.y1 + 8.0 + self.calendar_size.height,
                 );
                 self.calendar.event(event, cal_rect)
