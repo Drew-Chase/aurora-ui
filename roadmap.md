@@ -170,7 +170,7 @@ These are needed for most real-world applications.
 
 ---
 
-### 2.6 Undo/Redo System
+### ~~2.6 Undo/Redo System~~
 
 **Required work:**
 
