@@ -411,6 +411,29 @@ impl Widget for TagInput {
                 canvas.draw_text(tl, input_x as i32, ty as i32);
             }
         }
+
+        // Draw cursor when focused
+        if self.focused {
+            let cursor_x = if !self.input_text.is_empty() {
+                if let Some(ref tl) = self.input_layout {
+                    let positions = tl.char_x_positions();
+                    if !positions.is_empty() {
+                        input_x + positions[positions.len() - 1]
+                    } else {
+                        input_x
+                    }
+                } else {
+                    input_x
+                }
+            } else {
+                input_x
+            };
+            let cursor_y = input_y;
+            canvas.fill_rect(
+                Rect::new(cursor_x, cursor_y, cursor_x + 1.5, cursor_y + self.tag_height),
+                colors::foreground(),
+            );
+        }
     }
 
     fn children(&self) -> &[Box<dyn Widget>] {
