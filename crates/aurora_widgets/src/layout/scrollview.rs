@@ -8,8 +8,8 @@ use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_render::canvas::Canvas;
 
-use std::cell::Cell;
-use std::rc::Rc;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 
 use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 
@@ -17,8 +17,8 @@ use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 ///
 /// Create a `ScrollState` once and pass it to each rebuilt [`ScrollView`] via
 /// [`.state()`](ScrollView::state). The scroll offset is stored in an
-/// `Rc<Cell<f32>>`, so cloning is cheap and both the old and new ScrollView
-/// instances share the same value.
+/// `Arc<AtomicU64>` (f64 encoded as bits), so cloning is cheap, the value is
+/// lock-free, and `ScrollState` is `Send + Sync`.
 ///
 /// # Example
 ///
@@ -31,25 +31,25 @@ use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 /// ```
 #[derive(Clone)]
 pub struct ScrollState {
-    offset: Rc<Cell<f64>>,
+    offset: Arc<AtomicU64>,
 }
 
 impl ScrollState {
     /// Creates a new scroll state starting at offset 0.
     pub fn new() -> Self {
         Self {
-            offset: Rc::new(Cell::new(0.0)),
+            offset: Arc::new(AtomicU64::new(0.0f64.to_bits())),
         }
     }
 
     /// Returns the current scroll offset.
     pub fn get(&self) -> f64 {
-        self.offset.get()
+        f64::from_bits(self.offset.load(Ordering::Relaxed))
     }
 
     /// Sets the scroll offset.
     pub fn set(&self, value: f64) {
-        self.offset.set(value);
+        self.offset.store(value.to_bits(), Ordering::Relaxed);
     }
 }
 
@@ -555,5 +555,40 @@ impl Widget for ScrollView {
     #[cfg(feature = "a11y")]
     fn access_info(&self) -> aurora_a11y::NodeInfo {
         aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::ScrollView)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn assert_send<T: Send>() {}
+    fn assert_sync<T: Sync>() {}
+
+    #[test]
+    fn scroll_state_is_send_sync() {
+        assert_send::<ScrollState>();
+        assert_sync::<ScrollState>();
+    }
+
+    #[test]
+    fn scroll_state_get_set_roundtrip() {
+        let state = ScrollState::new();
+        assert_eq!(state.get(), 0.0);
+
+        state.set(123.456);
+        assert!((state.get() - 123.456).abs() < f64::EPSILON);
+
+        state.set(-50.0);
+        assert!((state.get() - -50.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn scroll_state_clone_shares_offset() {
+        let a = ScrollState::new();
+        let b = a.clone();
+
+        a.set(42.0);
+        assert!((b.get() - 42.0).abs() < f64::EPSILON);
     }
 }
