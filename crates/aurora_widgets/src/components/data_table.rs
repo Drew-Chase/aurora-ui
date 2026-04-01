@@ -308,8 +308,8 @@ impl Widget for DataTable {
         // Rows — clip to data area when virtualized
         let offset = self.scroll_offset.clamp(0.0, self.max_scroll);
         let data_top = rect.y1 + self.header_height;
-        let data_bottom = if self.vp_height.is_some() {
-            data_top + self.vp_height.unwrap()
+        let data_bottom = if let Some(vp_h) = self.vp_height {
+            data_top + vp_h
         } else {
             rect.y2
         };
@@ -353,14 +353,13 @@ impl Widget for DataTable {
             );
         }
 
-        if self.vp_height.is_some() {
+        if let Some(vp_h) = self.vp_height {
             canvas.pop_clip();
 
             // Scrollbar
             if self.max_scroll > 0.0 {
                 let sb_w = 6.0_f32;
                 let track = Rect::new(rect.x2 - sb_w, data_top, rect.x2, data_bottom);
-                let vp_h = self.vp_height.unwrap();
                 let total = self.row_height * self.sorted_indices.len() as f32;
                 let ratio = vp_h / total;
                 let thumb_h = (ratio * vp_h).max(20.0);
