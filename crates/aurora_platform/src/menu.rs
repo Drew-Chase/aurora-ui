@@ -317,13 +317,13 @@ impl SubmenuBuilder {
 // NativeMenu
 // ---------------------------------------------------------------------------
 
+/// Callback type for menu item click events.
+pub type MenuClickHandler = Arc<dyn Fn(&str) + Send + Sync>;
+
 /// Configuration for a native OS menu bar.
 ///
 /// Built via the builder pattern and attached to [`App`](crate::app::App) or
 /// [`WindowConfig`](crate::app::WindowConfig).
-/// Callback type for menu item click events.
-pub type MenuClickHandler = Arc<dyn Fn(&str) + Send + Sync>;
-
 #[derive(Clone)]
 pub struct NativeMenu {
     pub(crate) items: Vec<NativeMenuItem>,
@@ -607,32 +607,10 @@ pub(crate) fn attach_menu_to_app(menu: &muda::Menu) {
     menu.init_for_nsapp();
 }
 
-/// Attaches a `muda::Menu` to a GTK window on Linux.
-#[cfg(target_os = "linux")]
-pub(crate) fn attach_menu_to_window(
-    menu: &muda::Menu,
-    window: &winit::window::Window,
-    vbox: &gtk::Box,
-) {
-    use winit::raw_window_handle::{HasWindowHandle, RawWindowHandle};
-    if let Ok(handle) = window.window_handle() {
-        // On Linux muda requires a GTK window and container. This is a
-        // best-effort integration; if the handle is not a GTK surface the
-        // menu will silently not appear.
-        unsafe {
-            let _ = menu.init_for_gtk_window(
-                gtk::prelude::WidgetExt::window(vbox).as_ref().unwrap(),
-                Some(vbox),
-            );
-        }
-    }
-}
-
-// Fallback for platforms without native menu bar support.
-#[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-pub(crate) fn attach_menu_to_window(_menu: &muda::Menu, _window: &winit::window::Window) {
-    log::warn!("Native menu bars are not supported on this platform");
-}
+// Note: On Linux, winit creates X11/Wayland windows — not GTK windows — so
+// muda's `init_for_gtk_window` cannot be used and native menu bars are not
+// supported. Tray context menus still work because tray-icon manages its own
+// GTK thread. Use the Menubar widget for an in-window menu on Linux.
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -738,6 +716,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_os = "macos"))] // muda::Menu requires the Cocoa main thread
     fn build_muda_menu_maps_all_ids() {
         let menu = NativeMenu::new()
             .submenu(
@@ -760,6 +739,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_os = "macos"))] // muda::Menu requires the Cocoa main thread
     fn predefined_items_produce_no_id_mapping() {
         let menu = NativeMenu::new().item(NativeMenuItem::Predefined(PredefinedItem::Quit));
         let (_muda_menu, id_map) = build_muda_menu(&menu);
@@ -767,6 +747,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_os = "macos"))] // muda::Menu requires the Cocoa main thread
     fn separator_produces_no_id_mapping() {
         let menu = NativeMenu::new().separator();
         let (_muda_menu, id_map) = build_muda_menu(&menu);
