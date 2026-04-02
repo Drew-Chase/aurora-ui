@@ -488,11 +488,11 @@ mod tests {
 
     #[test]
     fn precision_formatting() {
-        let input = NumberInput::new().value(3.14159).precision(2);
-        assert_eq!(input.format_value(), "3.14");
+        let input = NumberInput::new().value(7.456).precision(2);
+        assert_eq!(input.format_value(), "7.46");
 
-        let input = NumberInput::new().value(3.14159).precision(4);
-        assert_eq!(input.format_value(), "3.1416");
+        let input = NumberInput::new().value(7.4567).precision(4);
+        assert_eq!(input.format_value(), "7.4567");
 
         let input = NumberInput::new().value(42.0).precision(0);
         assert_eq!(input.format_value(), "42");

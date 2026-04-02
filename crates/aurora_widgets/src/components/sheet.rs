@@ -400,7 +400,7 @@ mod tests {
         let sheet = make_sheet();
         let t = sheet.current_t();
         assert!(
-            t >= 0.0 && t <= 1.0,
+            (0.0..=1.0).contains(&t),
             "animation progress should be in [0, 1]"
         );
 
