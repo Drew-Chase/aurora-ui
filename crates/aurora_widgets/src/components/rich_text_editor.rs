@@ -77,9 +77,8 @@ pub struct RichTextEditor {
     font_size: f32,
     focused: bool,
     cursor_pos: usize,
-    /// Selection anchor (reserved for future use).
-    #[allow(dead_code)]
     selection_start: Option<usize>,
+    mouse_down: bool,
     #[allow(clippy::type_complexity)]
     on_change: Option<Box<dyn FnMut(&str)>>,
     content_layout: Option<TextLayout>,
@@ -121,6 +120,7 @@ impl RichTextEditor {
             focused: false,
             cursor_pos: 0,
             selection_start: None,
+            mouse_down: false,
             on_change: None,
             content_layout: None,
             placeholder_layout: None,
@@ -456,6 +456,63 @@ impl RichTextEditor {
         let point = aurora_core::geometry::point::Point::new(x, y);
         (0..3).find(|&i| self.toolbar_button_rect(rect, i).contains(&point))
     }
+
+    /// Converts an X coordinate relative to the content area start into a
+    /// character index using the content layout's glyph positions.
+    fn x_to_char_index(&self, relative_x: f32) -> usize {
+        if let Some(ref tl) = self.content_layout {
+            let positions = tl.char_x_positions();
+            if positions.is_empty() {
+                return 0;
+            }
+            for (i, &right_edge) in positions.iter().enumerate() {
+                let left_edge = if i == 0 { 0.0 } else { positions[i - 1] };
+                let mid = (left_edge + right_edge) / 2.0;
+                if relative_x < mid {
+                    return i;
+                }
+            }
+            positions.len()
+        } else {
+            0
+        }
+    }
+
+    /// Returns the (start, end) character indices of the current selection,
+    /// ordered so start <= end.
+    fn selection_range(&self) -> Option<(usize, usize)> {
+        self.selection_start.map(|start| {
+            let end = self.cursor_pos;
+            if start <= end {
+                (start, end)
+            } else {
+                (end, start)
+            }
+        })
+    }
+
+    /// Deletes the selected text and positions cursor at the start of selection.
+    fn delete_selection(&mut self) {
+        if let Some((start, end)) = self.selection_range() {
+            if start != end {
+                let plain = self.plain_text();
+                if end <= plain.len() {
+                    // Build new text with the selected range removed
+                    let mut new_text = plain;
+                    new_text.drain(start..end);
+                    // Simplify: replace all spans with a single span preserving current format
+                    self.spans = vec![TextSpan::new(
+                        new_text,
+                        self.bold_active,
+                        self.italic_active,
+                        self.underline_active,
+                    )];
+                    self.cursor_pos = start;
+                }
+            }
+            self.selection_start = None;
+        }
+    }
 }
 
 impl Default for RichTextEditor {
@@ -608,6 +665,29 @@ impl Widget for RichTextEditor {
         let tx = text_rect.x1;
         let ty = text_rect.y1 - self.scroll_offset;
 
+        // Selection highlight
+        if let Some((sel_start, sel_end)) = self.selection_range()
+            && sel_start != sel_end
+            && let Some(ref tl) = self.content_layout
+        {
+            let positions = tl.char_x_positions();
+            let start_x = if sel_start > 0 && !positions.is_empty() {
+                positions[sel_start.min(positions.len()) - 1]
+            } else {
+                0.0
+            };
+            let end_x = if sel_end > 0 && !positions.is_empty() {
+                positions[sel_end.min(positions.len()) - 1]
+            } else {
+                0.0
+            };
+            let line_height = self.font_size * 1.4;
+            canvas.fill_rect(
+                Rect::new(tx + start_x, ty, tx + end_x, ty + line_height),
+                colors::primary().opacity(0.3),
+            );
+        }
+
         // Draw content or placeholder
         if let Some(ref tl) = self.content_layout {
             canvas.draw_text(tl, tx as i32, ty as i32);
@@ -722,11 +802,15 @@ impl Widget for RichTextEditor {
                         };
                     }
 
-                    // Click in content area positions cursor (simplified: go to end).
+                    // Click in content area positions cursor.
                     let content = self.content_rect(&rect);
                     if content.contains(&e.position) {
-                        // For simplicity, clicking puts cursor at end.
-                        self.cursor_pos = self.plain_text().len();
+                        self.mouse_down = true;
+                        let relative_x =
+                            e.position.x - content.x1 - CONTENT_PADDING.left;
+                        self.cursor_pos = self.x_to_char_index(relative_x);
+                        // Start selection anchor at click point
+                        self.selection_start = Some(self.cursor_pos);
                     }
 
                     return EventResponse {
@@ -736,12 +820,33 @@ impl Widget for RichTextEditor {
                         ..Default::default()
                     };
                 }
+                if e.state == MouseState::Released
+                    && self.mouse_down
+                {
+                    self.mouse_down = false;
+                    // If selection start equals cursor, clear selection (was just a click)
+                    if self.selection_start == Some(self.cursor_pos) {
+                        self.selection_start = None;
+                    }
+                }
                 if e.state == MouseState::Pressed && !rect.contains(&e.position) {
                     self.focused = false;
+                    self.selection_start = None;
                 }
                 EventResponse::default()
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
+                // Drag selection
+                if self.mouse_down && self.focused {
+                    let content = self.content_rect(&rect);
+                    let relative_x = pos.x - content.x1 - CONTENT_PADDING.left;
+                    self.cursor_pos = self.x_to_char_index(relative_x);
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Text),
+                        ..Default::default()
+                    };
+                }
                 if rect.contains(pos) {
                     // Check if hovering toolbar buttons.
                     if self.toolbar {
@@ -774,6 +879,11 @@ impl Widget for RichTextEditor {
                 if !self.focused {
                     return EventResponse::default();
                 }
+                // Delete selection if active before inserting
+                if self.selection_range().is_some_and(|(s, e)| s != e) {
+                    self.delete_selection();
+                }
+                self.selection_start = None;
                 self.insert_char(*ch);
                 self.notify_change();
                 EventResponse {
@@ -815,27 +925,71 @@ impl Widget for RichTextEditor {
 
                 match key {
                     Key::Enter => {
+                        if self.selection_range().is_some_and(|(s, e)| s != e) {
+                            self.delete_selection();
+                        }
+                        self.selection_start = None;
                         self.insert_char('\n');
                         self.notify_change();
                     }
                     Key::Backspace => {
-                        self.delete_before_cursor();
-                        self.notify_change();
+                        if self.selection_range().is_some_and(|(s, e)| s != e) {
+                            self.delete_selection();
+                            self.notify_change();
+                        } else {
+                            self.selection_start = None;
+                            self.delete_before_cursor();
+                            self.notify_change();
+                        }
                     }
                     Key::Delete => {
-                        self.delete_after_cursor();
-                        self.notify_change();
+                        if self.selection_range().is_some_and(|(s, e)| s != e) {
+                            self.delete_selection();
+                            self.notify_change();
+                        } else {
+                            self.selection_start = None;
+                            self.delete_after_cursor();
+                            self.notify_change();
+                        }
                     }
                     Key::Left => {
+                        if modifiers.shift {
+                            if self.selection_start.is_none() {
+                                self.selection_start = Some(self.cursor_pos);
+                            }
+                        } else {
+                            self.selection_start = None;
+                        }
                         self.move_cursor_left();
                     }
                     Key::Right => {
+                        if modifiers.shift {
+                            if self.selection_start.is_none() {
+                                self.selection_start = Some(self.cursor_pos);
+                            }
+                        } else {
+                            self.selection_start = None;
+                        }
                         self.move_cursor_right();
                     }
                     Key::Home => {
+                        if modifiers.shift {
+                            if self.selection_start.is_none() {
+                                self.selection_start = Some(self.cursor_pos);
+                            }
+                        } else {
+                            self.selection_start = None;
+                        }
                         self.cursor_pos = 0;
                     }
                     Key::End => {
+                        if modifiers.shift {
+                            if self.selection_start.is_none() {
+                                self.selection_start = Some(self.cursor_pos);
+                            }
+                        } else {
+                            self.selection_start = None;
+                        }
                         self.cursor_pos = self.plain_text().len();
                     }
                     _ => return EventResponse::default(),
@@ -881,6 +1035,7 @@ mod tests {
         assert_eq!(editor.font_size, 14.0);
         assert_eq!(editor.cursor_pos, 0);
         assert!(editor.selection_start.is_none());
+        assert!(!editor.mouse_down);
         assert!(!editor.focused);
         assert!(!editor.error);
         assert!(editor.spans.is_empty());
@@ -1000,5 +1155,43 @@ mod tests {
         editor.merge_adjacent_spans();
         assert_eq!(editor.spans.len(), 1);
         assert_eq!(editor.spans[0].text, "ABC");
+    }
+
+    #[test]
+    fn selection_range_ordered() {
+        let mut editor = RichTextEditor::new().spans(vec![TextSpan::plain("Hello")]);
+        // No selection by default.
+        assert!(editor.selection_range().is_none());
+
+        // Forward selection: start < cursor.
+        editor.selection_start = Some(1);
+        editor.cursor_pos = 4;
+        assert_eq!(editor.selection_range(), Some((1, 4)));
+
+        // Backward selection: start > cursor.
+        editor.selection_start = Some(4);
+        editor.cursor_pos = 1;
+        assert_eq!(editor.selection_range(), Some((1, 4)));
+    }
+
+    #[test]
+    fn delete_selection_removes_range() {
+        let mut editor = RichTextEditor::new().spans(vec![TextSpan::plain("Hello World")]);
+        editor.selection_start = Some(5);
+        editor.cursor_pos = 11;
+        editor.delete_selection();
+        assert_eq!(editor.plain_text(), "Hello");
+        assert_eq!(editor.cursor_pos, 5);
+        assert!(editor.selection_start.is_none());
+    }
+
+    #[test]
+    fn delete_selection_no_op_when_empty() {
+        let mut editor = RichTextEditor::new().spans(vec![TextSpan::plain("Hello")]);
+        editor.selection_start = Some(3);
+        editor.cursor_pos = 3;
+        editor.delete_selection();
+        // Same start and end, should not delete anything.
+        assert_eq!(editor.plain_text(), "Hello");
     }
 }

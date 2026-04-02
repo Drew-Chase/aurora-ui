@@ -59,6 +59,8 @@ pub struct TextArea {
     disabled: bool,
     undo_stack: UndoStack<(String, usize)>,
     last_action: LastAction,
+    selection_start: Option<usize>,
+    mouse_down: bool,
 }
 
 impl TextArea {
@@ -87,6 +89,8 @@ impl TextArea {
             disabled: false,
             undo_stack: UndoStack::new(),
             last_action: LastAction::None,
+            selection_start: None,
+            mouse_down: false,
         }
     }
 
@@ -161,6 +165,51 @@ impl TextArea {
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
         self
+    }
+
+    /// Converts an X coordinate relative to the text area's content start
+    /// into a character index using the text layout's glyph positions.
+    fn x_to_char_index(&self, relative_x: f32) -> usize {
+        if let Some(ref tl) = self.text_layout {
+            let positions = tl.char_x_positions();
+            if positions.is_empty() {
+                return 0;
+            }
+            for (i, &right_edge) in positions.iter().enumerate() {
+                let left_edge = if i == 0 { 0.0 } else { positions[i - 1] };
+                let mid = (left_edge + right_edge) / 2.0;
+                if relative_x < mid {
+                    return i;
+                }
+            }
+            positions.len()
+        } else {
+            0
+        }
+    }
+
+    /// Returns the (start, end) character indices of the current selection,
+    /// ordered so start <= end.
+    fn selection_range(&self) -> Option<(usize, usize)> {
+        self.selection_start.map(|start| {
+            let end = self.cursor_pos;
+            if start <= end {
+                (start, end)
+            } else {
+                (end, start)
+            }
+        })
+    }
+
+    /// Deletes the selected text and positions cursor at the start of selection.
+    fn delete_selection(&mut self) {
+        if let Some((start, end)) = self.selection_range() {
+            if start != end && end <= self.text.len() {
+                self.text.drain(start..end);
+                self.cursor_pos = start;
+            }
+            self.selection_start = None;
+        }
     }
 
     fn notify_change(&mut self) {
@@ -262,6 +311,31 @@ impl Widget for TextArea {
         let tx = text_rect.x1;
         let ty = text_rect.y1;
 
+        // Selection highlight
+        if let Some((sel_start, sel_end)) = self.selection_range()
+            && sel_start != sel_end
+            && let Some(ref tl) = self.text_layout
+        {
+            let positions = tl.char_x_positions();
+            let start_x = if sel_start > 0 && !positions.is_empty() {
+                positions[sel_start.min(positions.len()) - 1]
+            } else {
+                0.0
+            };
+            let end_x = if sel_end > 0 && !positions.is_empty() {
+                positions[sel_end.min(positions.len()) - 1]
+            } else {
+                0.0
+            };
+            let sel_rect = Rect::new(
+                tx + start_x,
+                ty,
+                tx + end_x,
+                ty + self.font_size * 1.4,
+            );
+            canvas.fill_rect(sel_rect, colors::primary().opacity(0.3));
+        }
+
         // Draw text or placeholder
         if let Some(ref tl) = self.text_layout {
             canvas.draw_text(tl, tx as i32, ty as i32);
@@ -325,6 +399,12 @@ impl Widget for TextArea {
             WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e)) => {
                 if e.state == MouseState::Pressed && rect.contains(&e.position) {
                     self.focused = true;
+                    self.mouse_down = true;
+                    // Position cursor at click location
+                    let relative_x = e.position.x - rect.x1 - self.padding.left;
+                    self.cursor_pos = self.x_to_char_index(relative_x);
+                    // Start selection anchor at click point
+                    self.selection_start = Some(self.cursor_pos);
                     return EventResponse {
                         status: EventStatus::Consumed,
                         request_focus: Some(self.id),
@@ -332,12 +412,32 @@ impl Widget for TextArea {
                         ..Default::default()
                     };
                 }
+                if e.state == MouseState::Released
+                    && self.mouse_down
+                {
+                    self.mouse_down = false;
+                    // If selection start equals cursor, clear selection (was just a click)
+                    if self.selection_start == Some(self.cursor_pos) {
+                        self.selection_start = None;
+                    }
+                }
                 if e.state == MouseState::Pressed && !rect.contains(&e.position) {
                     self.focused = false;
+                    self.selection_start = None;
                 }
                 EventResponse::default()
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
+                // Drag selection
+                if self.mouse_down && self.focused {
+                    let relative_x = pos.x - rect.x1 - self.padding.left;
+                    self.cursor_pos = self.x_to_char_index(relative_x);
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Text),
+                        ..Default::default()
+                    };
+                }
                 if rect.contains(pos) {
                     return EventResponse {
                         cursor: Some(CursorIcon::Text),
@@ -350,9 +450,14 @@ impl Widget for TextArea {
                 if !self.focused {
                     return EventResponse::default();
                 }
-                if self.last_action != LastAction::Typing {
+                // Delete selection if active
+                if self.selection_range().is_some_and(|(s, e)| s != e) {
+                    self.undo_stack.push((self.text.clone(), self.cursor_pos));
+                    self.delete_selection();
+                } else if self.last_action != LastAction::Typing {
                     self.undo_stack.push((self.text.clone(), self.cursor_pos));
                 }
+                self.selection_start = None;
                 self.last_action = LastAction::Typing;
                 self.text.insert(self.cursor_pos, *ch);
                 self.cursor_pos += ch.len_utf8();
@@ -412,7 +517,10 @@ impl Widget for TextArea {
                     Key::Backspace => {
                         self.undo_stack.push((self.text.clone(), self.cursor_pos));
                         self.last_action = LastAction::Other;
-                        if self.cursor_pos > 0 {
+                        if self.selection_range().is_some_and(|(s, e)| s != e) {
+                            self.delete_selection();
+                            self.notify_change();
+                        } else if self.cursor_pos > 0 {
                             let prev = self.text[..self.cursor_pos]
                                 .char_indices()
                                 .last()
@@ -437,6 +545,13 @@ impl Widget for TextArea {
                         }
                     }
                     Key::Left => {
+                        if modifiers.shift {
+                            if self.selection_start.is_none() {
+                                self.selection_start = Some(self.cursor_pos);
+                            }
+                        } else {
+                            self.selection_start = None;
+                        }
                         if self.cursor_pos > 0 {
                             self.cursor_pos = self.text[..self.cursor_pos]
                                 .char_indices()
@@ -446,6 +561,13 @@ impl Widget for TextArea {
                         }
                     }
                     Key::Right => {
+                        if modifiers.shift {
+                            if self.selection_start.is_none() {
+                                self.selection_start = Some(self.cursor_pos);
+                            }
+                        } else {
+                            self.selection_start = None;
+                        }
                         if self.cursor_pos < self.text.len() {
                             self.cursor_pos = self.text[self.cursor_pos..]
                                 .char_indices()
