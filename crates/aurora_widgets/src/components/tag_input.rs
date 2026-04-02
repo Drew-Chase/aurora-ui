@@ -53,6 +53,11 @@ pub struct TagInput {
     hover_remove: Option<usize>,
     tag_rects: Vec<Rect>,
     error: bool,
+    #[allow(dead_code)]
+    text_color: Color,
+    cursor_pos: usize,
+    selection_start: Option<usize>,
+    mouse_down: bool,
 }
 
 impl TagInput {
@@ -81,6 +86,10 @@ impl TagInput {
             hover_remove: None,
             tag_rects: Vec::new(),
             error: false,
+            text_color: colors::foreground(),
+            cursor_pos: 0,
+            selection_start: None,
+            mouse_down: false,
         }
     }
 
@@ -211,6 +220,48 @@ impl TagInput {
         let btn_x = tag_rect.x2 - 8.0 - btn_size;
         let btn_y = tag_rect.y1 + (self.tag_height - btn_size) / 2.0;
         Rect::new(btn_x, btn_y, btn_x + btn_size, btn_y + btn_size)
+    }
+
+    /// Converts an X coordinate relative to the input text start
+    /// into a character index using the text layout's glyph positions.
+    fn x_to_char_index(&self, relative_x: f32) -> usize {
+        if let Some(ref tl) = self.input_layout {
+            let positions = tl.char_x_positions();
+            if positions.is_empty() {
+                return 0;
+            }
+            for (i, &right_edge) in positions.iter().enumerate() {
+                let left_edge = if i == 0 { 0.0 } else { positions[i - 1] };
+                let mid = (left_edge + right_edge) / 2.0;
+                if relative_x < mid {
+                    return i;
+                }
+            }
+            positions.len()
+        } else {
+            0
+        }
+    }
+
+    fn selection_range(&self) -> Option<(usize, usize)> {
+        self.selection_start.map(|start| {
+            let end = self.cursor_pos;
+            if start <= end {
+                (start, end)
+            } else {
+                (end, start)
+            }
+        })
+    }
+
+    fn delete_selection(&mut self) {
+        if let Some((start, end)) = self.selection_range() {
+            if start != end && end <= self.input_text.len() {
+                self.input_text.drain(start..end);
+                self.cursor_pos = start;
+            }
+            self.selection_start = None;
+        }
     }
 }
 
@@ -397,6 +448,32 @@ impl Widget for TagInput {
             (rect.x1 + self.padding.left, rect.y1 + self.padding.top)
         };
 
+        // Selection highlight
+        if let Some((sel_start, sel_end)) = self.selection_range()
+            && sel_start != sel_end
+                && let Some(ref tl) = self.input_layout {
+                    let positions = tl.char_x_positions();
+                    let start_x = if sel_start > 0 && !positions.is_empty() {
+                        positions[sel_start.min(positions.len()) - 1]
+                    } else {
+                        0.0
+                    };
+                    let end_x = if sel_end > 0 && !positions.is_empty() {
+                        positions[sel_end.min(positions.len()) - 1]
+                    } else {
+                        0.0
+                    };
+                    canvas.fill_rect(
+                        Rect::new(
+                            input_x + start_x,
+                            input_y,
+                            input_x + end_x,
+                            input_y + self.tag_height,
+                        ),
+                        colors::primary().opacity(0.3),
+                    );
+                }
+
         if !self.input_text.is_empty() {
             if let Some(ref tl) = self.input_layout {
                 let ts = tl.size();
@@ -417,8 +494,8 @@ impl Widget for TagInput {
             let cursor_x = if !self.input_text.is_empty() {
                 if let Some(ref tl) = self.input_layout {
                     let positions = tl.char_x_positions();
-                    if !positions.is_empty() {
-                        input_x + positions[positions.len() - 1]
+                    if self.cursor_pos > 0 && !positions.is_empty() {
+                        input_x + positions[self.cursor_pos.min(positions.len()) - 1]
                     } else {
                         input_x
                     }
@@ -471,6 +548,24 @@ impl Widget for TagInput {
                         }
                     }
 
+                    // Click in input area — position cursor
+                    self.mouse_down = true;
+                    // Compute input_x position (same logic as paint)
+                    let input_x = if let Some(last_rect) = self.tag_rects.last() {
+                        let ix = rect.x1 + last_rect.x2 + self.tag_spacing;
+                        let remaining = rect.x2 - self.padding.right - ix;
+                        if remaining < 60.0 {
+                            rect.x1 + self.padding.left
+                        } else {
+                            ix
+                        }
+                    } else {
+                        rect.x1 + self.padding.left
+                    };
+                    let relative_x = e.position.x - input_x;
+                    self.cursor_pos = self.x_to_char_index(relative_x.max(0.0));
+                    self.selection_start = Some(self.cursor_pos);
+
                     return EventResponse {
                         status: EventStatus::Consumed,
                         cursor: Some(CursorIcon::Text),
@@ -479,9 +574,42 @@ impl Widget for TagInput {
                 }
                 // Click outside — unfocus
                 self.focused = false;
+                self.selection_start = None;
+                EventResponse::default()
+            }
+            WidgetEvent::Mouse(MouseEvent::MouseClickEvent(e))
+                if e.state == MouseState::Released =>
+            {
+                if self.mouse_down {
+                    self.mouse_down = false;
+                    if self.selection_start == Some(self.cursor_pos) {
+                        self.selection_start = None;
+                    }
+                }
                 EventResponse::default()
             }
             WidgetEvent::Mouse(MouseEvent::MouseMoveEvent(pos)) => {
+                // Drag selection in input
+                if self.mouse_down && self.focused {
+                    let input_x = if let Some(last_rect) = self.tag_rects.last() {
+                        let ix = rect.x1 + last_rect.x2 + self.tag_spacing;
+                        let remaining = rect.x2 - self.padding.right - ix;
+                        if remaining < 60.0 {
+                            rect.x1 + self.padding.left
+                        } else {
+                            ix
+                        }
+                    } else {
+                        rect.x1 + self.padding.left
+                    };
+                    let relative_x = pos.x - input_x;
+                    self.cursor_pos = self.x_to_char_index(relative_x.max(0.0));
+                    return EventResponse {
+                        status: EventStatus::Consumed,
+                        cursor: Some(CursorIcon::Text),
+                        ..Default::default()
+                    };
+                }
                 if rect.contains(pos) {
                     // Track hover over X buttons
                     if self.removable {
@@ -520,9 +648,15 @@ impl Widget for TagInput {
                 if !self.focused || ch.is_control() {
                     return EventResponse::default();
                 }
+                // Delete selection if active
+                if self.selection_range().is_some_and(|(s, e)| s != e) {
+                    self.delete_selection();
+                }
+                self.selection_start = None;
                 // Comma triggers tag creation
                 if *ch == ',' {
                     let text = std::mem::take(&mut self.input_text);
+                    self.cursor_pos = 0;
                     if self.try_add_tag(text) {
                         self.notify_change();
                     }
@@ -531,19 +665,22 @@ impl Widget for TagInput {
                         ..Default::default()
                     };
                 }
-                self.input_text.push(*ch);
+                self.input_text.insert(self.cursor_pos, *ch);
+                self.cursor_pos += ch.len_utf8();
                 EventResponse {
                     status: EventStatus::Consumed,
                     ..Default::default()
                 }
             }
-            WidgetEvent::Keyboard(KeyboardEvent::KeyPressed { key, .. }) => {
+            WidgetEvent::Keyboard(KeyboardEvent::KeyPressed { key, modifiers }) => {
                 if !self.focused {
                     return EventResponse::default();
                 }
                 match key {
                     Key::Enter => {
+                        self.selection_start = None;
                         let text = std::mem::take(&mut self.input_text);
+                        self.cursor_pos = 0;
                         if self.try_add_tag(text) {
                             self.notify_change();
                         }
@@ -553,14 +690,59 @@ impl Widget for TagInput {
                         }
                     }
                     Key::Backspace => {
-                        if self.input_text.is_empty() {
+                        if self.selection_range().is_some_and(|(s, e)| s != e) {
+                            self.delete_selection();
+                        } else if self.input_text.is_empty() {
                             // Remove last tag
                             if !self.tags.is_empty() {
                                 self.tags.pop();
                                 self.notify_change();
                             }
-                        } else {
-                            self.input_text.pop();
+                        } else if self.cursor_pos > 0 {
+                            let prev = self.input_text[..self.cursor_pos]
+                                .char_indices()
+                                .last()
+                                .map(|(i, _)| i)
+                                .unwrap_or(0);
+                            self.input_text.drain(prev..self.cursor_pos);
+                            self.cursor_pos = prev;
+                        }
+                        self.selection_start = None;
+                        EventResponse {
+                            status: EventStatus::Consumed,
+                            ..Default::default()
+                        }
+                    }
+                    Key::Left => {
+                        if modifiers.shift && self.selection_start.is_none() {
+                            self.selection_start = Some(self.cursor_pos);
+                        } else if !modifiers.shift {
+                            self.selection_start = None;
+                        }
+                        if self.cursor_pos > 0 {
+                            self.cursor_pos = self.input_text[..self.cursor_pos]
+                                .char_indices()
+                                .last()
+                                .map(|(i, _)| i)
+                                .unwrap_or(0);
+                        }
+                        EventResponse {
+                            status: EventStatus::Consumed,
+                            ..Default::default()
+                        }
+                    }
+                    Key::Right => {
+                        if modifiers.shift && self.selection_start.is_none() {
+                            self.selection_start = Some(self.cursor_pos);
+                        } else if !modifiers.shift {
+                            self.selection_start = None;
+                        }
+                        if self.cursor_pos < self.input_text.len() {
+                            self.cursor_pos = self.input_text[self.cursor_pos..]
+                                .char_indices()
+                                .nth(1)
+                                .map(|(i, _)| self.cursor_pos + i)
+                                .unwrap_or(self.input_text.len());
                         }
                         EventResponse {
                             status: EventStatus::Consumed,
@@ -570,6 +752,8 @@ impl Widget for TagInput {
                     Key::Escape => {
                         self.focused = false;
                         self.input_text.clear();
+                        self.cursor_pos = 0;
+                        self.selection_start = None;
                         EventResponse {
                             status: EventStatus::Consumed,
                             ..Default::default()

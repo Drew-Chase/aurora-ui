@@ -874,11 +874,10 @@ impl Widget for RichTextEditor {
                             _ => {}
                         }
                         // Apply formatting to selected text (if any)
-                        if let Some((sel_start, sel_end)) = self.selection_range() {
-                            if sel_start != sel_end {
+                        if let Some((sel_start, sel_end)) = self.selection_range()
+                            && sel_start != sel_end {
                                 self.apply_format_to_range(sel_start, sel_end, btn);
                             }
-                        }
                         return EventResponse {
                             status: EventStatus::Consumed,
                             request_focus: Some(self.id),
@@ -984,11 +983,10 @@ impl Widget for RichTextEditor {
                 // Ctrl+B — toggle bold (apply to selection if active)
                 if modifiers.ctrl && *key == Key::Character('b') {
                     self.bold_active = !self.bold_active;
-                    if let Some((s, e)) = self.selection_range() {
-                        if s != e {
+                    if let Some((s, e)) = self.selection_range()
+                        && s != e {
                             self.apply_format_to_range(s, e, 0);
                         }
-                    }
                     return EventResponse {
                         status: EventStatus::Consumed,
                         ..Default::default()
@@ -998,11 +996,10 @@ impl Widget for RichTextEditor {
                 // Ctrl+I — toggle italic (apply to selection if active)
                 if modifiers.ctrl && *key == Key::Character('i') {
                     self.italic_active = !self.italic_active;
-                    if let Some((s, e)) = self.selection_range() {
-                        if s != e {
+                    if let Some((s, e)) = self.selection_range()
+                        && s != e {
                             self.apply_format_to_range(s, e, 1);
                         }
-                    }
                     return EventResponse {
                         status: EventStatus::Consumed,
                         ..Default::default()
@@ -1012,11 +1009,10 @@ impl Widget for RichTextEditor {
                 // Ctrl+U — toggle underline (apply to selection if active)
                 if modifiers.ctrl && *key == Key::Character('u') {
                     self.underline_active = !self.underline_active;
-                    if let Some((s, e)) = self.selection_range() {
-                        if s != e {
+                    if let Some((s, e)) = self.selection_range()
+                        && s != e {
                             self.apply_format_to_range(s, e, 2);
                         }
-                    }
                     return EventResponse {
                         status: EventStatus::Consumed,
                         ..Default::default()
