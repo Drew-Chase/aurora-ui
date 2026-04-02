@@ -434,10 +434,9 @@ impl Widget for Combobox {
                     ..Default::default()
                 }
             }
-            _ => EventResponse {
-                status: EventStatus::Canceled,
-                ..Default::default()
-            },
+            // Let keyboard events pass through to the normal event handler
+            // so that CharTyped/KeyPressed reach the Combobox's event() method.
+            _ => EventResponse::default(),
         }
     }
 
