@@ -207,9 +207,9 @@ impl Widget for Sheet {
         }
 
         // Semi-transparent backdrop, alpha scaled by animation progress
-        let backdrop = self.overlay_color.opacity(
-            (self.overlay_color.alpha as f32 / 255.0) * anim,
-        );
+        let backdrop = self
+            .overlay_color
+            .opacity((self.overlay_color.alpha as f32 / 255.0) * anim);
         canvas.fill_rect(rect, backdrop);
 
         // Panel sliding in from the specified side
@@ -399,7 +399,10 @@ mod tests {
         // Freshly created sheet: anim_from=0, anim_to=0, so current_t = 0
         let sheet = make_sheet();
         let t = sheet.current_t();
-        assert!(t >= 0.0 && t <= 1.0, "animation progress should be in [0, 1]");
+        assert!(
+            t >= 0.0 && t <= 1.0,
+            "animation progress should be in [0, 1]"
+        );
 
         // A sheet that just opened: anim_to=1 but elapsed is ~0
         let mut sheet = make_sheet();
@@ -408,6 +411,9 @@ mod tests {
         sheet.anim_start = Instant::now();
         let t = sheet.current_t();
         // At time ~0, the eased value should be very close to anim_from (0.0)
-        assert!(t < 0.1, "animation should be near start immediately after opening");
+        assert!(
+            t < 0.1,
+            "animation should be near start immediately after opening"
+        );
     }
 }

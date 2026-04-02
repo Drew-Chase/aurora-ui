@@ -180,13 +180,7 @@ impl Widget for SegmentedControl {
             let mut opts = ctx.font_options.clone();
             opts.size = Some(13.0);
             opts.weight = Some(FontWeight::Medium);
-            let mut tl = TextLayout::new(
-                ctx.font_manager,
-                label,
-                &opts,
-                self.text_color,
-                None,
-            );
+            let mut tl = TextLayout::new(ctx.font_manager, label, &opts, self.text_color, None);
             tl.set_max_width(ctx.font_manager, f32::MAX);
             self.option_layouts.push(Some(tl));
         }
@@ -226,12 +220,7 @@ impl Widget for SegmentedControl {
             let inner_w = w - self.padding * 2.0;
 
             let (ix, iw) = self.current_indicator();
-            let pill_rect = Rect::new(
-                inner_x + ix,
-                inner_y,
-                inner_x + ix + iw,
-                inner_y + inner_h,
-            );
+            let pill_rect = Rect::new(inner_x + ix, inner_y, inner_x + ix + iw, inner_y + inner_h);
             canvas.fill_rounded_rect(pill_rect, inner_corners, self.indicator_color);
 
             // 3. Draw text for each option

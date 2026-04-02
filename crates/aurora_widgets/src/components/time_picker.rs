@@ -223,7 +223,11 @@ impl TimePicker {
 
     /// Decrement the minute, wrapping around.
     fn decrement_minute(&mut self) {
-        self.minute = if self.minute == 0 { 59 } else { self.minute - 1 };
+        self.minute = if self.minute == 0 {
+            59
+        } else {
+            self.minute - 1
+        };
     }
 
     /// Increment the second, wrapping around.
@@ -233,7 +237,11 @@ impl TimePicker {
 
     /// Decrement the second, wrapping around.
     fn decrement_second(&mut self) {
-        self.second = if self.second == 0 { 59 } else { self.second - 1 };
+        self.second = if self.second == 0 {
+            59
+        } else {
+            self.second - 1
+        };
     }
 
     /// Toggle AM/PM by flipping 12 hours.
@@ -340,10 +348,7 @@ impl TimePicker {
             let hw = half_w * (1.0 - t);
             let y = bot_y - i as f32;
             if hw > 0.3 {
-                canvas.fill_rect(
-                    Rect::new(cx - hw, y, cx + hw, y + 1.0),
-                    color,
-                );
+                canvas.fill_rect(Rect::new(cx - hw, y, cx + hw, y + 1.0), color);
             }
         }
     }
@@ -360,10 +365,7 @@ impl TimePicker {
             let hw = half_w * (1.0 - t);
             let y = top_y + i as f32;
             if hw > 0.3 {
-                canvas.fill_rect(
-                    Rect::new(cx - hw, y, cx + hw, y + 1.0),
-                    color,
-                );
+                canvas.fill_rect(Rect::new(cx - hw, y, cx + hw, y + 1.0), color);
             }
         }
     }
@@ -463,8 +465,16 @@ impl Widget for TimePicker {
 
         // Paint hour field
         let hour_fr = self.field_rect(TimeField::Hour, &rect);
-        Self::paint_up_arrow(canvas, self.up_arrow_rect(TimeField::Hour, &rect), arrow_color);
-        Self::paint_down_arrow(canvas, self.down_arrow_rect(TimeField::Hour, &rect), arrow_color);
+        Self::paint_up_arrow(
+            canvas,
+            self.up_arrow_rect(TimeField::Hour, &rect),
+            arrow_color,
+        );
+        Self::paint_down_arrow(
+            canvas,
+            self.down_arrow_rect(TimeField::Hour, &rect),
+            arrow_color,
+        );
         if let Some(ref tl) = self.hour_layout {
             let ts = tl.size();
             let tx = hour_fr.x1 + (FIELD_WIDTH - ts.width) / 2.0;
@@ -480,8 +490,16 @@ impl Widget for TimePicker {
 
         // Paint minute field
         let minute_fr = self.field_rect(TimeField::Minute, &rect);
-        Self::paint_up_arrow(canvas, self.up_arrow_rect(TimeField::Minute, &rect), arrow_color);
-        Self::paint_down_arrow(canvas, self.down_arrow_rect(TimeField::Minute, &rect), arrow_color);
+        Self::paint_up_arrow(
+            canvas,
+            self.up_arrow_rect(TimeField::Minute, &rect),
+            arrow_color,
+        );
+        Self::paint_down_arrow(
+            canvas,
+            self.down_arrow_rect(TimeField::Minute, &rect),
+            arrow_color,
+        );
         if let Some(ref tl) = self.minute_layout {
             let ts = tl.size();
             let tx = minute_fr.x1 + (FIELD_WIDTH - ts.width) / 2.0;
@@ -497,8 +515,16 @@ impl Widget for TimePicker {
             }
 
             let second_fr = self.field_rect(TimeField::Second, &rect);
-            Self::paint_up_arrow(canvas, self.up_arrow_rect(TimeField::Second, &rect), arrow_color);
-            Self::paint_down_arrow(canvas, self.down_arrow_rect(TimeField::Second, &rect), arrow_color);
+            Self::paint_up_arrow(
+                canvas,
+                self.up_arrow_rect(TimeField::Second, &rect),
+                arrow_color,
+            );
+            Self::paint_down_arrow(
+                canvas,
+                self.down_arrow_rect(TimeField::Second, &rect),
+                arrow_color,
+            );
             if let Some(ref tl) = self.second_layout {
                 let ts = tl.size();
                 let tx = second_fr.x1 + (FIELD_WIDTH - ts.width) / 2.0;

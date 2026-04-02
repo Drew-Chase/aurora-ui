@@ -248,8 +248,7 @@ impl Widget for Stepper {
             } else {
                 self.upcoming_color
             };
-            let num_tl =
-                TextLayout::new(ctx.font_manager, &num_str, &num_opts, num_color, None);
+            let num_tl = TextLayout::new(ctx.font_manager, &num_str, &num_opts, num_color, None);
             self.number_layouts.push(Some(num_tl));
         }
 
@@ -402,12 +401,7 @@ impl Stepper {
             } else {
                 self.line_color
             };
-            canvas.draw_line(
-                Point::new(x1, cy),
-                Point::new(x2, cy),
-                2.0,
-                line_color,
-            );
+            canvas.draw_line(Point::new(x1, cy), Point::new(x2, cy), 2.0, line_color);
         }
 
         // Draw circles and labels
@@ -488,12 +482,7 @@ impl Stepper {
             } else {
                 self.line_color
             };
-            canvas.draw_line(
-                Point::new(cx, y1),
-                Point::new(cx, y2),
-                2.0,
-                line_color,
-            );
+            canvas.draw_line(Point::new(cx, y1), Point::new(cx, y2), 2.0, line_color);
         }
 
         // Draw circles and labels
@@ -581,10 +570,7 @@ mod tests {
     #[test]
     fn current_clamping() {
         // current beyond steps count is clamped
-        let s = Stepper::new()
-            .step("A")
-            .step("B")
-            .current(99);
+        let s = Stepper::new().step("A").step("B").current(99);
         assert_eq!(s.clamped_current(), 1); // 0-indexed, max = len-1
 
         // No steps: clamped to 0

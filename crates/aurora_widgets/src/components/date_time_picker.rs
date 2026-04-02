@@ -54,19 +54,38 @@ fn days_in_month(year: i32, month: u32) -> u32 {
 #[cfg(test)]
 fn day_of_week(year: i32, month: u32, day: u32) -> u32 {
     let t = [0i64, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
-    let y = if month <= 2 { year as i64 - 1 } else { year as i64 };
+    let y = if month <= 2 {
+        year as i64 - 1
+    } else {
+        year as i64
+    };
     let m = month as usize;
     let d = day as i64;
     ((d + t[m - 1] + y + y / 4 - y / 100 + y / 400) % 7) as u32
 }
 
 #[allow(clippy::too_many_arguments)]
-fn format_display(year: i32, month: u32, day: u32, hour: u8, minute: u8, second: u8, show_seconds: bool, format_24h: bool) -> String {
+fn format_display(
+    year: i32,
+    month: u32,
+    day: u32,
+    hour: u8,
+    minute: u8,
+    second: u8,
+    show_seconds: bool,
+    format_24h: bool,
+) -> String {
     if format_24h {
         if show_seconds {
-            format!("{:04}-{:02}-{:02} {:02}:{:02}:{:02}", year, month, day, hour, minute, second)
+            format!(
+                "{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
+                year, month, day, hour, minute, second
+            )
         } else {
-            format!("{:04}-{:02}-{:02} {:02}:{:02}", year, month, day, hour, minute)
+            format!(
+                "{:04}-{:02}-{:02} {:02}:{:02}",
+                year, month, day, hour, minute
+            )
         }
     } else {
         let (h12, ampm) = if hour == 0 {
@@ -79,9 +98,15 @@ fn format_display(year: i32, month: u32, day: u32, hour: u8, minute: u8, second:
             (hour - 12, "PM")
         };
         if show_seconds {
-            format!("{:04}-{:02}-{:02} {:02}:{:02}:{:02} {}", year, month, day, h12, minute, second, ampm)
+            format!(
+                "{:04}-{:02}-{:02} {:02}:{:02}:{:02} {}",
+                year, month, day, h12, minute, second, ampm
+            )
         } else {
-            format!("{:04}-{:02}-{:02} {:02}:{:02} {}", year, month, day, h12, minute, ampm)
+            format!(
+                "{:04}-{:02}-{:02} {:02}:{:02} {}",
+                year, month, day, h12, minute, ampm
+            )
         }
     }
 }
@@ -305,7 +330,11 @@ impl DateTimePicker {
         (self.computed_first_weekday + self.computed_days_in_month).div_ceil(7)
     }
 
-    fn day_at_position(&self, pos: &aurora_core::geometry::point::Point, grid_rect: &Rect) -> Option<u32> {
+    fn day_at_position(
+        &self,
+        pos: &aurora_core::geometry::point::Point,
+        grid_rect: &Rect,
+    ) -> Option<u32> {
         let cell_w = self.calendar_width / 7.0;
         let cell_h = 32.0;
         let lx = pos.x - grid_rect.x1;
@@ -332,7 +361,14 @@ impl DateTimePicker {
 
     fn fire_on_change(&mut self) {
         if let Some(ref mut cb) = self.on_change {
-            cb(self.year, self.month, self.day, self.hour, self.minute, self.second);
+            cb(
+                self.year,
+                self.month,
+                self.day,
+                self.hour,
+                self.minute,
+                self.second,
+            );
         }
     }
 
@@ -366,14 +402,44 @@ impl DateTimePicker {
 
         TimeRects {
             hour_up: Rect::new(hour_x, time_y, hour_x + spinner_w, time_y + arrow_h),
-            hour_val: Rect::new(hour_x, time_y + arrow_h, hour_x + spinner_w, time_y + arrow_h + val_h),
-            hour_down: Rect::new(hour_x, time_y + arrow_h + val_h, hour_x + spinner_w, time_y + TIME_SPINNER_H),
+            hour_val: Rect::new(
+                hour_x,
+                time_y + arrow_h,
+                hour_x + spinner_w,
+                time_y + arrow_h + val_h,
+            ),
+            hour_down: Rect::new(
+                hour_x,
+                time_y + arrow_h + val_h,
+                hour_x + spinner_w,
+                time_y + TIME_SPINNER_H,
+            ),
             min_up: Rect::new(min_x, time_y, min_x + spinner_w, time_y + arrow_h),
-            min_val: Rect::new(min_x, time_y + arrow_h, min_x + spinner_w, time_y + arrow_h + val_h),
-            min_down: Rect::new(min_x, time_y + arrow_h + val_h, min_x + spinner_w, time_y + TIME_SPINNER_H),
+            min_val: Rect::new(
+                min_x,
+                time_y + arrow_h,
+                min_x + spinner_w,
+                time_y + arrow_h + val_h,
+            ),
+            min_down: Rect::new(
+                min_x,
+                time_y + arrow_h + val_h,
+                min_x + spinner_w,
+                time_y + TIME_SPINNER_H,
+            ),
             sec_up: Rect::new(sec_x, time_y, sec_x + spinner_w, time_y + arrow_h),
-            sec_val: Rect::new(sec_x, time_y + arrow_h, sec_x + spinner_w, time_y + arrow_h + val_h),
-            sec_down: Rect::new(sec_x, time_y + arrow_h + val_h, sec_x + spinner_w, time_y + TIME_SPINNER_H),
+            sec_val: Rect::new(
+                sec_x,
+                time_y + arrow_h,
+                sec_x + spinner_w,
+                time_y + arrow_h + val_h,
+            ),
+            sec_down: Rect::new(
+                sec_x,
+                time_y + arrow_h + val_h,
+                sec_x + spinner_w,
+                time_y + TIME_SPINNER_H,
+            ),
             colon1_x: hour_x + spinner_w,
             colon2_x: min_x + spinner_w,
             colon_w,
@@ -433,14 +499,20 @@ impl Widget for DateTimePicker {
 
         // Compute calendar data for current view
         self.computed_days_in_month = days_in_month(self.view_year, self.view_month);
-        self.computed_first_weekday = Calendar::first_day_of_week(self.view_year as u32, self.view_month);
+        self.computed_first_weekday =
+            Calendar::first_day_of_week(self.view_year as u32, self.view_month);
         self.calendar_width = 32.0 * 7.0; // 7 columns x 32px
 
         // Display text
         let display_text = format_display(
-            self.year, self.month, self.day,
-            self.hour, self.minute, self.second,
-            self.show_seconds, self.format_24h,
+            self.year,
+            self.month,
+            self.day,
+            self.hour,
+            self.minute,
+            self.second,
+            self.show_seconds,
+            self.format_24h,
         );
 
         let mut opts = ctx.font_options.clone();
@@ -478,10 +550,18 @@ impl Widget for DateTimePicker {
             arrow_opts.size = Some(14.0);
             arrow_opts.weight = Some(aurora_text::font_options::FontWeight::Normal);
             self.prev_layout = Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, "<", &arrow_opts, colors::foreground(), None,
+                ctx.font_manager,
+                "<",
+                &arrow_opts,
+                colors::foreground(),
+                None,
             ));
             self.next_layout = Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, ">", &arrow_opts, colors::foreground(), None,
+                ctx.font_manager,
+                ">",
+                &arrow_opts,
+                colors::foreground(),
+                None,
             ));
 
             // Weekday headers
@@ -490,9 +570,14 @@ impl Widget for DateTimePicker {
             wo.size = Some(12.0);
             wo.weight = Some(aurora_text::font_options::FontWeight::Normal);
             for name in &["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"] {
-                self.weekday_layouts.push(Some(aurora_text::text_layout::TextLayout::new(
-                    ctx.font_manager, name, &wo, colors::muted_foreground(), None,
-                )));
+                self.weekday_layouts
+                    .push(Some(aurora_text::text_layout::TextLayout::new(
+                        ctx.font_manager,
+                        name,
+                        &wo,
+                        colors::muted_foreground(),
+                        None,
+                    )));
             }
 
             // Day number layouts
@@ -509,13 +594,14 @@ impl Widget for DateTimePicker {
                 } else {
                     colors::foreground()
                 };
-                self.day_layouts.push(Some(aurora_text::text_layout::TextLayout::new(
-                    ctx.font_manager,
-                    &d.to_string(),
-                    &day_opts,
-                    fg,
-                    None,
-                )));
+                self.day_layouts
+                    .push(Some(aurora_text::text_layout::TextLayout::new(
+                        ctx.font_manager,
+                        &d.to_string(),
+                        &day_opts,
+                        fg,
+                        None,
+                    )));
             }
 
             // Time spinner layouts
@@ -524,30 +610,33 @@ impl Widget for DateTimePicker {
             to.size = Some(14.0);
             to.weight = Some(aurora_text::font_options::FontWeight::SemiBold);
             // hour display
-            self.time_layouts.push(Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager,
-                &format!("{:02}", self.hour),
-                &to,
-                colors::foreground(),
-                None,
-            )));
-            // minute display
-            self.time_layouts.push(Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager,
-                &format!("{:02}", self.minute),
-                &to,
-                colors::foreground(),
-                None,
-            )));
-            // second display (if shown)
-            if self.show_seconds {
-                self.time_layouts.push(Some(aurora_text::text_layout::TextLayout::new(
+            self.time_layouts
+                .push(Some(aurora_text::text_layout::TextLayout::new(
                     ctx.font_manager,
-                    &format!("{:02}", self.second),
+                    &format!("{:02}", self.hour),
                     &to,
                     colors::foreground(),
                     None,
                 )));
+            // minute display
+            self.time_layouts
+                .push(Some(aurora_text::text_layout::TextLayout::new(
+                    ctx.font_manager,
+                    &format!("{:02}", self.minute),
+                    &to,
+                    colors::foreground(),
+                    None,
+                )));
+            // second display (if shown)
+            if self.show_seconds {
+                self.time_layouts
+                    .push(Some(aurora_text::text_layout::TextLayout::new(
+                        ctx.font_manager,
+                        &format!("{:02}", self.second),
+                        &to,
+                        colors::foreground(),
+                        None,
+                    )));
             }
 
             // Arrow layouts for time spinners
@@ -557,29 +646,57 @@ impl Widget for DateTimePicker {
             let arrow_color = colors::muted_foreground();
 
             self.hour_up_layout = Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, "\u{25B2}", &small_opts, arrow_color, None,
+                ctx.font_manager,
+                "\u{25B2}",
+                &small_opts,
+                arrow_color,
+                None,
             ));
             self.hour_down_layout = Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, "\u{25BC}", &small_opts, arrow_color, None,
+                ctx.font_manager,
+                "\u{25BC}",
+                &small_opts,
+                arrow_color,
+                None,
             ));
             self.min_up_layout = Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, "\u{25B2}", &small_opts, arrow_color, None,
+                ctx.font_manager,
+                "\u{25B2}",
+                &small_opts,
+                arrow_color,
+                None,
             ));
             self.min_down_layout = Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, "\u{25BC}", &small_opts, arrow_color, None,
+                ctx.font_manager,
+                "\u{25BC}",
+                &small_opts,
+                arrow_color,
+                None,
             ));
             if self.show_seconds {
                 self.sec_up_layout = Some(aurora_text::text_layout::TextLayout::new(
-                    ctx.font_manager, "\u{25B2}", &small_opts, arrow_color, None,
+                    ctx.font_manager,
+                    "\u{25B2}",
+                    &small_opts,
+                    arrow_color,
+                    None,
                 ));
                 self.sec_down_layout = Some(aurora_text::text_layout::TextLayout::new(
-                    ctx.font_manager, "\u{25BC}", &small_opts, arrow_color, None,
+                    ctx.font_manager,
+                    "\u{25BC}",
+                    &small_opts,
+                    arrow_color,
+                    None,
                 ));
             }
 
             // Colon layout
             self.colon_layout = Some(aurora_text::text_layout::TextLayout::new(
-                ctx.font_manager, ":", &to, colors::foreground(), None,
+                ctx.font_manager,
+                ":",
+                &to,
+                colors::foreground(),
+                None,
             ));
         }
 
@@ -648,7 +765,12 @@ impl Widget for DateTimePicker {
         if let Some(ref tl) = self.prev_layout {
             let ax = header_rect.x1 + 8.0;
             let ay = header_rect.y1 + (header_h - tl.size().height) / 2.0;
-            let hover_rect = Rect::new(header_rect.x1, header_rect.y1, header_rect.x1 + 32.0, header_rect.y2);
+            let hover_rect = Rect::new(
+                header_rect.x1,
+                header_rect.y1,
+                header_rect.x1 + 32.0,
+                header_rect.y2,
+            );
             canvas.fill_rounded_rect(hover_rect, Corners::all(4.0), Color::TRANSPARENT);
             canvas.draw_text(tl, ax as i32, ay as i32);
         }
@@ -694,9 +816,8 @@ impl Widget for DateTimePicker {
             let cell_y = cy + row as f32 * day_cell_h;
             let cell_rect = Rect::new(cx, cell_y, cx + cell_w, cell_y + day_cell_h);
 
-            let is_selected = self.view_year == self.year
-                && self.view_month == self.month
-                && day == self.day;
+            let is_selected =
+                self.view_year == self.year && self.view_month == self.month && day == self.day;
             let is_hovered = self.hover_day == Some(day);
 
             // Background
@@ -733,8 +854,13 @@ impl Widget for DateTimePicker {
         let tr = self.time_rects(&dr);
 
         // Draw hour spinner
-        self.paint_time_spinner(canvas, &tr.hour_up, &tr.hour_val, &tr.hour_down,
-            self.hour_up_layout.as_ref(), self.hour_down_layout.as_ref(),
+        self.paint_time_spinner(
+            canvas,
+            &tr.hour_up,
+            &tr.hour_val,
+            &tr.hour_down,
+            self.hour_up_layout.as_ref(),
+            self.hour_down_layout.as_ref(),
             self.time_layouts.first().and_then(|o| o.as_ref()),
             self.hover_time_field == Some(0),
         );
@@ -747,8 +873,13 @@ impl Widget for DateTimePicker {
         }
 
         // Draw minute spinner
-        self.paint_time_spinner(canvas, &tr.min_up, &tr.min_val, &tr.min_down,
-            self.min_up_layout.as_ref(), self.min_down_layout.as_ref(),
+        self.paint_time_spinner(
+            canvas,
+            &tr.min_up,
+            &tr.min_val,
+            &tr.min_down,
+            self.min_up_layout.as_ref(),
+            self.min_down_layout.as_ref(),
             self.time_layouts.get(1).and_then(|o| o.as_ref()),
             self.hover_time_field == Some(1),
         );
@@ -762,8 +893,13 @@ impl Widget for DateTimePicker {
                 canvas.draw_text(tl, cx as i32, cy_colon as i32);
             }
 
-            self.paint_time_spinner(canvas, &tr.sec_up, &tr.sec_val, &tr.sec_down,
-                self.sec_up_layout.as_ref(), self.sec_down_layout.as_ref(),
+            self.paint_time_spinner(
+                canvas,
+                &tr.sec_up,
+                &tr.sec_val,
+                &tr.sec_down,
+                self.sec_up_layout.as_ref(),
+                self.sec_down_layout.as_ref(),
                 self.time_layouts.get(2).and_then(|o| o.as_ref()),
                 self.hover_time_field == Some(2),
             );
@@ -891,33 +1027,73 @@ impl Widget for DateTimePicker {
                     if tr.hour_up.contains(&e.position) {
                         self.hour = if self.hour == 23 { 0 } else { self.hour + 1 };
                         self.fire_on_change();
-                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
                     if tr.hour_down.contains(&e.position) {
                         self.hour = if self.hour == 0 { 23 } else { self.hour - 1 };
                         self.fire_on_change();
-                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
                     if tr.min_up.contains(&e.position) {
-                        self.minute = if self.minute == 59 { 0 } else { self.minute + 1 };
+                        self.minute = if self.minute == 59 {
+                            0
+                        } else {
+                            self.minute + 1
+                        };
                         self.fire_on_change();
-                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
                     if tr.min_down.contains(&e.position) {
-                        self.minute = if self.minute == 0 { 59 } else { self.minute - 1 };
+                        self.minute = if self.minute == 0 {
+                            59
+                        } else {
+                            self.minute - 1
+                        };
                         self.fire_on_change();
-                        return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                        return EventResponse {
+                            status: EventStatus::Consumed,
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
                     }
                     if self.show_seconds {
                         if tr.sec_up.contains(&e.position) {
-                            self.second = if self.second == 59 { 0 } else { self.second + 1 };
+                            self.second = if self.second == 59 {
+                                0
+                            } else {
+                                self.second + 1
+                            };
                             self.fire_on_change();
-                            return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                            return EventResponse {
+                                status: EventStatus::Consumed,
+                                cursor: Some(CursorIcon::Pointer),
+                                ..Default::default()
+                            };
                         }
                         if tr.sec_down.contains(&e.position) {
-                            self.second = if self.second == 0 { 59 } else { self.second - 1 };
+                            self.second = if self.second == 0 {
+                                59
+                            } else {
+                                self.second - 1
+                            };
                             self.fire_on_change();
-                            return EventResponse { status: EventStatus::Consumed, cursor: Some(CursorIcon::Pointer), ..Default::default() };
+                            return EventResponse {
+                                status: EventStatus::Consumed,
+                                cursor: Some(CursorIcon::Pointer),
+                                ..Default::default()
+                            };
                         }
                     }
                 }
@@ -950,7 +1126,10 @@ impl Widget for DateTimePicker {
 
                 // Check time spinner hover
                 let tr = self.time_rects(&dr);
-                if tr.hour_up.contains(pos) || tr.hour_down.contains(pos) || tr.hour_val.contains(pos) {
+                if tr.hour_up.contains(pos)
+                    || tr.hour_down.contains(pos)
+                    || tr.hour_val.contains(pos)
+                {
                     self.hover_time_field = Some(0);
                     return EventResponse {
                         status: EventStatus::Consumed,
@@ -958,7 +1137,8 @@ impl Widget for DateTimePicker {
                         ..Default::default()
                     };
                 }
-                if tr.min_up.contains(pos) || tr.min_down.contains(pos) || tr.min_val.contains(pos) {
+                if tr.min_up.contains(pos) || tr.min_down.contains(pos) || tr.min_val.contains(pos)
+                {
                     self.hover_time_field = Some(1);
                     return EventResponse {
                         status: EventStatus::Consumed,
@@ -967,7 +1147,9 @@ impl Widget for DateTimePicker {
                     };
                 }
                 if self.show_seconds
-                    && (tr.sec_up.contains(pos) || tr.sec_down.contains(pos) || tr.sec_val.contains(pos))
+                    && (tr.sec_up.contains(pos)
+                        || tr.sec_down.contains(pos)
+                        || tr.sec_val.contains(pos))
                 {
                     self.hover_time_field = Some(2);
                     return EventResponse {

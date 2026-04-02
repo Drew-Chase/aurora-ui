@@ -364,12 +364,7 @@ impl RichTextEditor {
                     text.push_str(&span.text[(end - span_start)..]);
                 }
                 if !text.is_empty() {
-                    new_spans.push(TextSpan::new(
-                        text,
-                        span.bold,
-                        span.italic,
-                        span.underline,
-                    ));
+                    new_spans.push(TextSpan::new(text, span.bold, span.italic, span.underline));
                 }
             }
         }
@@ -596,8 +591,7 @@ impl Default for RichTextEditor {
 impl Widget for RichTextEditor {
     fn layout(&mut self, available: Size, ctx: &mut LayoutCtx) -> Size {
         let w = self.width.unwrap_or(available.width);
-        let inner_w =
-            (w - CONTENT_PADDING.left - CONTENT_PADDING.right).max(0.0);
+        let inner_w = (w - CONTENT_PADDING.left - CONTENT_PADDING.right).max(0.0);
 
         // Content text layout — per-span formatting (bold/italic/underline)
         if !self.spans.is_empty() && !self.is_empty() {
@@ -621,13 +615,10 @@ impl Widget for RichTextEditor {
                     (span.text.clone(), opts)
                 })
                 .collect();
-            let refs: Vec<(&str, &aurora_text::font_options::FontOptions)> = span_opts
-                .iter()
-                .map(|(t, o)| (t.as_str(), o))
-                .collect();
+            let refs: Vec<(&str, &aurora_text::font_options::FontOptions)> =
+                span_opts.iter().map(|(t, o)| (t.as_str(), o)).collect();
             if !refs.is_empty() {
-                let mut tl =
-                    TextLayout::new_rich(ctx.font_manager, &refs, self.text_color, None);
+                let mut tl = TextLayout::new_rich(ctx.font_manager, &refs, self.text_color, None);
                 tl.set_max_width(ctx.font_manager, inner_w);
                 self.content_layout = Some(tl);
             } else {
@@ -670,13 +661,7 @@ impl Widget for RichTextEditor {
                 } else {
                     colors::foreground()
                 };
-                let tl = TextLayout::new(
-                    ctx.font_manager,
-                    label,
-                    &opts,
-                    color,
-                    None,
-                );
+                let tl = TextLayout::new(ctx.font_manager, label, &opts, color, None);
                 self.toolbar_layouts.push(Some(tl));
             }
         }
@@ -792,12 +777,7 @@ impl Widget for RichTextEditor {
                     };
                     if end_x > start_x {
                         canvas.fill_rect(
-                            Rect::new(
-                                tx + start_x,
-                                underline_y,
-                                tx + end_x,
-                                underline_y + 1.0,
-                            ),
+                            Rect::new(tx + start_x, underline_y, tx + end_x, underline_y + 1.0),
                             self.text_color,
                         );
                     }
@@ -875,9 +855,10 @@ impl Widget for RichTextEditor {
                         }
                         // Apply formatting to selected text (if any)
                         if let Some((sel_start, sel_end)) = self.selection_range()
-                            && sel_start != sel_end {
-                                self.apply_format_to_range(sel_start, sel_end, btn);
-                            }
+                            && sel_start != sel_end
+                        {
+                            self.apply_format_to_range(sel_start, sel_end, btn);
+                        }
                         return EventResponse {
                             status: EventStatus::Consumed,
                             request_focus: Some(self.id),
@@ -890,8 +871,7 @@ impl Widget for RichTextEditor {
                     let content = self.content_rect(&rect);
                     if content.contains(&e.position) {
                         self.mouse_down = true;
-                        let relative_x =
-                            e.position.x - content.x1 - CONTENT_PADDING.left;
+                        let relative_x = e.position.x - content.x1 - CONTENT_PADDING.left;
                         self.cursor_pos = self.x_to_char_index(relative_x);
                         // Start selection anchor at click point
                         self.selection_start = Some(self.cursor_pos);
@@ -904,9 +884,7 @@ impl Widget for RichTextEditor {
                         ..Default::default()
                     };
                 }
-                if e.state == MouseState::Released
-                    && self.mouse_down
-                {
+                if e.state == MouseState::Released && self.mouse_down {
                     self.mouse_down = false;
                     // If selection start equals cursor, clear selection (was just a click)
                     if self.selection_start == Some(self.cursor_pos) {
@@ -984,9 +962,10 @@ impl Widget for RichTextEditor {
                 if modifiers.ctrl && *key == Key::Character('b') {
                     self.bold_active = !self.bold_active;
                     if let Some((s, e)) = self.selection_range()
-                        && s != e {
-                            self.apply_format_to_range(s, e, 0);
-                        }
+                        && s != e
+                    {
+                        self.apply_format_to_range(s, e, 0);
+                    }
                     return EventResponse {
                         status: EventStatus::Consumed,
                         ..Default::default()
@@ -997,9 +976,10 @@ impl Widget for RichTextEditor {
                 if modifiers.ctrl && *key == Key::Character('i') {
                     self.italic_active = !self.italic_active;
                     if let Some((s, e)) = self.selection_range()
-                        && s != e {
-                            self.apply_format_to_range(s, e, 1);
-                        }
+                        && s != e
+                    {
+                        self.apply_format_to_range(s, e, 1);
+                    }
                     return EventResponse {
                         status: EventStatus::Consumed,
                         ..Default::default()
@@ -1010,9 +990,10 @@ impl Widget for RichTextEditor {
                 if modifiers.ctrl && *key == Key::Character('u') {
                     self.underline_active = !self.underline_active;
                     if let Some((s, e)) = self.selection_range()
-                        && s != e {
-                            self.apply_format_to_range(s, e, 2);
-                        }
+                        && s != e
+                    {
+                        self.apply_format_to_range(s, e, 2);
+                    }
                     return EventResponse {
                         status: EventStatus::Consumed,
                         ..Default::default()
@@ -1101,8 +1082,7 @@ impl Widget for RichTextEditor {
 
     #[cfg(feature = "a11y")]
     fn access_info(&self) -> aurora_a11y::NodeInfo {
-        let mut info =
-            aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::MultilineTextInput);
+        let mut info = aurora_a11y::NodeInfo::new(aurora_a11y::accesskit::Role::MultilineTextInput);
         if !self.placeholder.is_empty() {
             info = info.with_label(self.placeholder.clone());
         }

@@ -274,7 +274,8 @@ impl ColorPicker {
 
     /// Returns the rect for the info row (preview swatch + text).
     fn info_rect(&self, content: &Rect) -> Rect {
-        let y = content.y1 + self.sv_area_height + Self::SPACING + self.hue_bar_height + Self::SPACING;
+        let y =
+            content.y1 + self.sv_area_height + Self::SPACING + self.hue_bar_height + Self::SPACING;
         Rect::new(content.x1, y, content.x2, y + Self::INFO_ROW_HEIGHT)
     }
 
@@ -292,12 +293,7 @@ impl ColorPicker {
     /// Computes the content rect (inside padding) from the outer bounds.
     fn content_rect(&self, rect: &Rect) -> Rect {
         let pad = 8.0;
-        Rect::new(
-            rect.x1 + pad,
-            rect.y1 + pad,
-            rect.x2 - pad,
-            rect.y2 - pad,
-        )
+        Rect::new(rect.x1 + pad, rect.y1 + pad, rect.x2 - pad, rect.y2 - pad)
     }
 
     /// Total height of the widget.
@@ -406,11 +402,7 @@ impl ColorPicker {
             let h = (i as f32 + 0.5) / segments as f32 * 360.0;
             let color = hsv_to_rgb(h, 1.0, 1.0);
             let x1 = hr.x1 + i as f32 * seg_w;
-            let x2 = if i == segments - 1 {
-                hr.x2
-            } else {
-                x1 + seg_w
-            };
+            let x2 = if i == segments - 1 { hr.x2 } else { x1 + seg_w };
             canvas.fill_rect(Rect::new(x1, hr.y1, x2, hr.y2), color);
         }
 
@@ -711,10 +703,7 @@ mod tests {
             let color = hsv_to_rgb(h, original_s, original_v);
             let (rh, rs, rv) = rgb_to_hsv(color);
             // Allow small rounding tolerance due to u8 quantization
-            assert!(
-                (rh - h).abs() < 2.0,
-                "Hue mismatch: expected {h}, got {rh}"
-            );
+            assert!((rh - h).abs() < 2.0, "Hue mismatch: expected {h}, got {rh}");
             assert!(
                 (rs - original_s).abs() < 0.02,
                 "Saturation mismatch at hue {h}: expected {original_s}, got {rs}"

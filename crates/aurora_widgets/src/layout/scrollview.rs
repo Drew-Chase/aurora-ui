@@ -8,8 +8,8 @@ use aurora_core::kmi::WidgetEvent;
 use aurora_core::kmi::mouse::{MouseEvent, MouseState};
 use aurora_render::canvas::Canvas;
 
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::widgets::{EventResponse, EventStatus, LayoutCtx, Widget};
 

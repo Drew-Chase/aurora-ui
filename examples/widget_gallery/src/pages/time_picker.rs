@@ -16,11 +16,7 @@ pub fn page_time_picker() -> impl Widget {
         .child(crate::example_card(
             row!()
                 .spacing(16.0)
-                .child(
-                    time_picker::TimePicker::new()
-                        .hour(14)
-                        .minute(30),
-                )
+                .child(time_picker::TimePicker::new().hour(14).minute(30))
                 .child(
                     time_picker::TimePicker::new()
                         .hour(9)

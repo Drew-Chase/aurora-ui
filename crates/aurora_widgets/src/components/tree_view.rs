@@ -258,11 +258,7 @@ impl TreeView {
     }
 
     /// Flattens the visible tree into a list for rendering.
-    fn flatten_visible(
-        nodes: &[TreeNode],
-        depth: usize,
-        path_prefix: &[usize],
-    ) -> Vec<FlatNode> {
+    fn flatten_visible(nodes: &[TreeNode], depth: usize, path_prefix: &[usize]) -> Vec<FlatNode> {
         let mut result = Vec::new();
         for (i, node) in nodes.iter().enumerate() {
             let mut path = path_prefix.to_vec();
@@ -355,14 +351,8 @@ impl Widget for TreeView {
             let x_offset = rect.x1 + cached.depth as f32 * self.indent;
 
             // Selection / hover background
-            let is_selected = self
-                .selected
-                .as_ref()
-                .is_some_and(|p| *p == cached.path);
-            let is_hovered = self
-                .hover_path
-                .as_ref()
-                .is_some_and(|p| *p == cached.path);
+            let is_selected = self.selected.as_ref().is_some_and(|p| *p == cached.path);
+            let is_hovered = self.hover_path.as_ref().is_some_and(|p| *p == cached.path);
 
             if is_selected {
                 canvas.fill_rect(item_rect, self.selected_bg);

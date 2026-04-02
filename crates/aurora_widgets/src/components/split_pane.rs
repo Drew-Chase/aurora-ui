@@ -196,9 +196,7 @@ impl SplitPane {
             SplitDirection::Horizontal => {
                 Rect::new(rect.x1, rect.y1, rect.x1 + first_size, rect.y2)
             }
-            SplitDirection::Vertical => {
-                Rect::new(rect.x1, rect.y1, rect.x2, rect.y1 + first_size)
-            }
+            SplitDirection::Vertical => Rect::new(rect.x1, rect.y1, rect.x2, rect.y1 + first_size),
         }
     }
 
@@ -427,8 +425,7 @@ impl Widget for SplitPane {
                         };
                         let delta = current - self.drag_start;
                         let delta_ratio = delta / axis;
-                        self.ratio =
-                            self.clamp_ratio(self.drag_start_ratio + delta_ratio, axis);
+                        self.ratio = self.clamp_ratio(self.drag_start_ratio + delta_ratio, axis);
                     }
                     return EventResponse {
                         status: EventStatus::Consumed,

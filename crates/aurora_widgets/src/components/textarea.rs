@@ -327,12 +327,7 @@ impl Widget for TextArea {
             } else {
                 0.0
             };
-            let sel_rect = Rect::new(
-                tx + start_x,
-                ty,
-                tx + end_x,
-                ty + self.font_size * 1.4,
-            );
+            let sel_rect = Rect::new(tx + start_x, ty, tx + end_x, ty + self.font_size * 1.4);
             canvas.fill_rect(sel_rect, colors::primary().opacity(0.3));
         }
 
@@ -412,9 +407,7 @@ impl Widget for TextArea {
                         ..Default::default()
                     };
                 }
-                if e.state == MouseState::Released
-                    && self.mouse_down
-                {
+                if e.state == MouseState::Released && self.mouse_down {
                     self.mouse_down = false;
                     // If selection start equals cursor, clear selection (was just a click)
                     if self.selection_start == Some(self.cursor_pos) {

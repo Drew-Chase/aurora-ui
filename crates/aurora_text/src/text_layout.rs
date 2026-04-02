@@ -57,11 +57,7 @@ impl TextLayout {
         color: Color,
         align: Option<cosmic_text::Align>,
     ) -> Self {
-        let first_opts = spans
-            .first()
-            .map(|(_, o)| *o)
-            .cloned()
-            .unwrap_or_default();
+        let first_opts = spans.first().map(|(_, o)| *o).cloned().unwrap_or_default();
         let size = first_opts.effective_size();
         let line_height = first_opts.effective_line_height();
         let metrics = cosmic_text::Metrics::new(size, line_height);

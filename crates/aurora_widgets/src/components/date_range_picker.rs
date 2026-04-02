@@ -49,8 +49,7 @@ fn days_in_month(year: i32, month: u32) -> u32 {
 fn day_of_week(year: i32, month: u32, day: u32) -> u32 {
     let t = [0i32, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
     let y = if month < 3 { year - 1 } else { year };
-    ((y + y / 4 - y / 100 + y / 400 + t[month as usize - 1] + day as i32) % 7)
-        .unsigned_abs()
+    ((y + y / 4 - y / 100 + y / 400 + t[month as usize - 1] + day as i32) % 7).unsigned_abs()
 }
 
 /// First day of week for a given year/month (0 = Sunday).
@@ -209,10 +208,7 @@ impl DateRangePicker {
         self
     }
 
-    pub fn on_change(
-        mut self,
-        cb: impl FnMut((i32, u32, u32), (i32, u32, u32)) + 'static,
-    ) -> Self {
+    pub fn on_change(mut self, cb: impl FnMut((i32, u32, u32), (i32, u32, u32)) + 'static) -> Self {
         self.on_change = Some(Box::new(cb));
         self
     }
@@ -395,7 +391,11 @@ impl DateRangePicker {
         }
         let day = cell_idx - fw + 1;
         let dim = days_in_month(year, month);
-        if day >= 1 && day <= dim { Some(day) } else { None }
+        if day >= 1 && day <= dim {
+            Some(day)
+        } else {
+            None
+        }
     }
 
     fn build_day_layouts(
@@ -555,8 +555,7 @@ impl Widget for DateRangePicker {
             ));
 
             // Day layouts for both calendars
-            self.left_day_layouts =
-                self.build_day_layouts(self.left_year, self.left_month, ctx);
+            self.left_day_layouts = self.build_day_layouts(self.left_year, self.left_month, ctx);
             let (ry, rm) = self.right_year_month();
             self.right_day_layouts = self.build_day_layouts(ry, rm, ctx);
 
@@ -767,8 +766,7 @@ impl Widget for DateRangePicker {
                     let right_x = inner_x + CAL_WIDTH + GAP;
 
                     // Check prev arrow (far left header area)
-                    let prev_rect =
-                        Rect::new(inner_x, inner_y, inner_x + 28.0, inner_y + HEADER_H);
+                    let prev_rect = Rect::new(inner_x, inner_y, inner_x + 28.0, inner_y + HEADER_H);
                     if prev_rect.contains(&e.position) {
                         self.prev_month();
                         return EventResponse {

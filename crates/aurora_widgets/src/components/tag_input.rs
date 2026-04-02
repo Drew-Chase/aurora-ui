@@ -369,12 +369,7 @@ impl Widget for TagInput {
 
         // Focus ring
         if self.focused && !self.error {
-            let ring_rect = Rect::new(
-                rect.x1 - 1.0,
-                rect.y1 - 1.0,
-                rect.x2 + 1.0,
-                rect.y2 + 1.0,
-            );
+            let ring_rect = Rect::new(rect.x1 - 1.0, rect.y1 - 1.0, rect.x2 + 1.0, rect.y2 + 1.0);
             let ring_corners = Corners::all(self.corners.top_left + 1.0);
             canvas.stroke_rounded_rect(ring_rect, ring_corners, 1, colors::ring());
         }
@@ -451,28 +446,29 @@ impl Widget for TagInput {
         // Selection highlight
         if let Some((sel_start, sel_end)) = self.selection_range()
             && sel_start != sel_end
-                && let Some(ref tl) = self.input_layout {
-                    let positions = tl.char_x_positions();
-                    let start_x = if sel_start > 0 && !positions.is_empty() {
-                        positions[sel_start.min(positions.len()) - 1]
-                    } else {
-                        0.0
-                    };
-                    let end_x = if sel_end > 0 && !positions.is_empty() {
-                        positions[sel_end.min(positions.len()) - 1]
-                    } else {
-                        0.0
-                    };
-                    canvas.fill_rect(
-                        Rect::new(
-                            input_x + start_x,
-                            input_y,
-                            input_x + end_x,
-                            input_y + self.tag_height,
-                        ),
-                        colors::primary().opacity(0.3),
-                    );
-                }
+            && let Some(ref tl) = self.input_layout
+        {
+            let positions = tl.char_x_positions();
+            let start_x = if sel_start > 0 && !positions.is_empty() {
+                positions[sel_start.min(positions.len()) - 1]
+            } else {
+                0.0
+            };
+            let end_x = if sel_end > 0 && !positions.is_empty() {
+                positions[sel_end.min(positions.len()) - 1]
+            } else {
+                0.0
+            };
+            canvas.fill_rect(
+                Rect::new(
+                    input_x + start_x,
+                    input_y,
+                    input_x + end_x,
+                    input_y + self.tag_height,
+                ),
+                colors::primary().opacity(0.3),
+            );
+        }
 
         if !self.input_text.is_empty() {
             if let Some(ref tl) = self.input_layout {
@@ -507,7 +503,12 @@ impl Widget for TagInput {
             };
             let cursor_y = input_y;
             canvas.fill_rect(
-                Rect::new(cursor_x, cursor_y, cursor_x + 1.5, cursor_y + self.tag_height),
+                Rect::new(
+                    cursor_x,
+                    cursor_y,
+                    cursor_x + 1.5,
+                    cursor_y + self.tag_height,
+                ),
                 colors::foreground(),
             );
         }
