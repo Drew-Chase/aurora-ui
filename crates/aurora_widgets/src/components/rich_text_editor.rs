@@ -513,6 +513,78 @@ impl RichTextEditor {
             self.selection_start = None;
         }
     }
+
+    /// Applies formatting toggle to a byte range within the spans.
+    /// `btn`: 0 = bold, 1 = italic, 2 = underline.
+    fn apply_format_to_range(&mut self, start: usize, end: usize, btn: usize) {
+        // Rebuild spans: split at start and end boundaries, toggle the format
+        // on all spans within the range.
+        let plain = self.plain_text();
+        if end > plain.len() {
+            return;
+        }
+
+        // Collect span boundaries with byte offsets
+        let mut new_spans: Vec<TextSpan> = Vec::new();
+        let mut offset = 0usize;
+
+        for span in &self.spans {
+            let span_end = offset + span.text.len();
+
+            if span_end <= start || offset >= end {
+                // Entirely outside the selection — keep as-is
+                if !span.text.is_empty() {
+                    new_spans.push(span.clone());
+                }
+            } else {
+                // Partially or fully inside the selection — split and toggle
+                let sel_start_in_span = start.saturating_sub(offset);
+                let sel_end_in_span = (end - offset).min(span.text.len());
+
+                // Before selection
+                if sel_start_in_span > 0 {
+                    let before = &span.text[..sel_start_in_span];
+                    if !before.is_empty() {
+                        new_spans.push(TextSpan::new(
+                            before,
+                            span.bold,
+                            span.italic,
+                            span.underline,
+                        ));
+                    }
+                }
+
+                // Inside selection — toggle the format
+                let inside = &span.text[sel_start_in_span..sel_end_in_span];
+                if !inside.is_empty() {
+                    let (b, i, u) = match btn {
+                        0 => (!span.bold, span.italic, span.underline),
+                        1 => (span.bold, !span.italic, span.underline),
+                        2 => (span.bold, span.italic, !span.underline),
+                        _ => (span.bold, span.italic, span.underline),
+                    };
+                    new_spans.push(TextSpan::new(inside, b, i, u));
+                }
+
+                // After selection
+                if sel_end_in_span < span.text.len() {
+                    let after = &span.text[sel_end_in_span..];
+                    if !after.is_empty() {
+                        new_spans.push(TextSpan::new(
+                            after,
+                            span.bold,
+                            span.italic,
+                            span.underline,
+                        ));
+                    }
+                }
+            }
+
+            offset = span_end;
+        }
+
+        self.spans = new_spans;
+    }
 }
 
 impl Default for RichTextEditor {
@@ -584,18 +656,25 @@ impl Widget for RichTextEditor {
         }
 
         // Toolbar button label layouts (B, I, U)
+        // Use contrasting color when button is active (primary background)
         if self.toolbar {
             let labels = ["B", "I", "U"];
+            let active_flags = [self.bold_active, self.italic_active, self.underline_active];
             self.toolbar_layouts.clear();
-            for label in &labels {
+            for (label, &is_active) in labels.iter().zip(active_flags.iter()) {
                 let mut opts = ctx.font_options.clone();
                 opts.size = Some(13.0);
                 opts.weight = Some(aurora_text::font_options::FontWeight::Bold);
+                let color = if is_active {
+                    colors::primary_foreground()
+                } else {
+                    colors::foreground()
+                };
                 let tl = TextLayout::new(
                     ctx.font_manager,
                     label,
                     &opts,
-                    colors::foreground(),
+                    color,
                     None,
                 );
                 self.toolbar_layouts.push(Some(tl));
@@ -794,6 +873,12 @@ impl Widget for RichTextEditor {
                             2 => self.underline_active = !self.underline_active,
                             _ => {}
                         }
+                        // Apply formatting to selected text (if any)
+                        if let Some((sel_start, sel_end)) = self.selection_range() {
+                            if sel_start != sel_end {
+                                self.apply_format_to_range(sel_start, sel_end, btn);
+                            }
+                        }
                         return EventResponse {
                             status: EventStatus::Consumed,
                             request_focus: Some(self.id),
@@ -896,27 +981,42 @@ impl Widget for RichTextEditor {
                     return EventResponse::default();
                 }
 
-                // Ctrl+B — toggle bold
+                // Ctrl+B — toggle bold (apply to selection if active)
                 if modifiers.ctrl && *key == Key::Character('b') {
                     self.bold_active = !self.bold_active;
+                    if let Some((s, e)) = self.selection_range() {
+                        if s != e {
+                            self.apply_format_to_range(s, e, 0);
+                        }
+                    }
                     return EventResponse {
                         status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
 
-                // Ctrl+I — toggle italic
+                // Ctrl+I — toggle italic (apply to selection if active)
                 if modifiers.ctrl && *key == Key::Character('i') {
                     self.italic_active = !self.italic_active;
+                    if let Some((s, e)) = self.selection_range() {
+                        if s != e {
+                            self.apply_format_to_range(s, e, 1);
+                        }
+                    }
                     return EventResponse {
                         status: EventStatus::Consumed,
                         ..Default::default()
                     };
                 }
 
-                // Ctrl+U — toggle underline
+                // Ctrl+U — toggle underline (apply to selection if active)
                 if modifiers.ctrl && *key == Key::Character('u') {
                     self.underline_active = !self.underline_active;
+                    if let Some((s, e)) = self.selection_range() {
+                        if s != e {
+                            self.apply_format_to_range(s, e, 2);
+                        }
+                    }
                     return EventResponse {
                         status: EventStatus::Consumed,
                         ..Default::default()
