@@ -40,7 +40,8 @@ members = [
     "examples/tray_menu_example",
     "examples/form_validation_example",
     "examples/virtual_list_example",
-    "examples/threading_example"
+    "examples/threading_example",
+    "examples/async_table_population"
 ]
 default-members = [
     "aurora",

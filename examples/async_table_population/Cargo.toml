@@ -1,0 +1,7 @@
+[package]
+name = "async_table_population"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+aurora_ui = {path="../../aurora", features = []}
