@@ -27,22 +27,71 @@ aurora_animate = { path = "../crates/aurora_animate", optional = true }
 aurora_a11y = { path = "../crates/aurora_a11y", optional = true }
 aurora_i18n = { path = "../crates/aurora_i18n", optional = true }
 aurora_lang = { path = "../crates/aurora_lang", optional = true }
-
+document-features = { version = "0.2", optional = true }
 
 [features]
 default = ["software"]
+
+#! ### GPU Backends
+#!
+#! At least one backend must be enabled. Priority: wgpu > opengl > software.
+
+## CPU-based rendering via softbuffer (GDI on Windows). Negligible binary impact.
 software = ["aurora_gpu/software"]
+
+## OpenGL 3.3 rendering via glow. Broad compatibility. ~200 KB binary impact.
 opengl = ["aurora_gpu/opengl", "aurora_platform/opengl"]
+
+## Vulkan/Metal/DX12 rendering via wgpu. Best quality. ~2 MB binary impact.
 wgpu_backend = ["aurora_gpu/wgpu_backend", "aurora_platform/wgpu_backend"]
+
+#! ### Content
+#!
+#! Opt-in subsystems for text, images, and vector graphics.
+
+## Font loading, text shaping (cosmic-text), text widgets, buttons with labels, and clipboard.
 text = ["dep:aurora_text", "aurora_platform/text", "aurora_render/text", "aurora_widgets/text"]
+
+## PNG/JPEG decoding and the `Image` widget.
 image = ["aurora_platform/image", "aurora_render/image", "aurora_widgets/image"]
+
+## SVG parsing (usvg), rasterization (tiny-skia), and the `Svg` widget.
 svg = ["aurora_platform/svg", "aurora_render/svg", "aurora_widgets/svg"]
-animate = ["dep:aurora_animate"]
+
+## Syntax highlighting for code display. Enables `text` automatically.
 syntax = ["aurora_widgets/syntax", "text"]
-a11y = ["dep:aurora_a11y", "aurora_platform/a11y", "aurora_widgets/a11y"]
+
+#! ### Animation
+
+## Tweens, easing functions, keyframes, timelines, and animation presets.
+animate = ["dep:aurora_animate"]
+
+#! ### Platform Integration
+
+## Native file open/save/folder dialogs via rfd.
 dialogs = ["aurora_platform/dialogs"]
-i18n = ["dep:aurora_i18n", "aurora_platform/i18n", "dep:aurora_lang"]
-i18n-icu = ["i18n", "aurora_i18n/icu"]
+
+## Native application menus (menu bar) via muda.
 menu = ["aurora_platform/menu"]
+
+## System tray icon with context menu via tray-icon. Enables `menu` automatically.
 tray = ["aurora_platform/tray", "menu"]
+
+#! ### Accessibility & Internationalization
+
+## Screen reader support via AccessKit (Narrator, NVDA, VoiceOver, Orca).
+a11y = ["dep:aurora_a11y", "aurora_platform/a11y", "aurora_widgets/a11y"]
+
+## Locale detection, fluent-rs message bundles, and `lang!` compile-time TOML.
+i18n = ["dep:aurora_i18n", "aurora_platform/i18n", "dep:aurora_lang"]
+
+## ICU4X number/date/currency formatting on top of `i18n`.
+i18n-icu = ["i18n", "aurora_i18n/icu"]
+
+#! ### Input Validation
+
+## Regex-based validation patterns for input widgets.
 regex = ["aurora_widgets/regex"]
+
+[package.metadata.docs.rs]
+features = ["document-features", "software", "text", "image", "svg", "animate", "a11y", "dialogs", "i18n", "menu", "tray", "regex"]

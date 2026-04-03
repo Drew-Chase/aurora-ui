@@ -3,7 +3,7 @@ set shell := ["bash", "-c"]
 
 # Builds the rustdocs for the aurora_ui package with the option to open it.
 doc open="false":
-    cargo doc --no-deps --package aurora_ui --release {{ if open == "true" { "--open" } else { "" } }}
+    cargo doc --no-deps --package aurora_ui --release --features document-features {{ if open == "true" { "--open" } else { "" } }}
 
 # Builds all examples in release mode and reports binary size, startup time, and memory usage
 [windows]
@@ -40,6 +40,7 @@ act_env := "--env CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=gcc --env CC=gcc 
 act_volumes := "--container-options \"-v aurora-cargo-registry:/root/.cargo/registry -v aurora-cargo-git:/root/.cargo/git -v aurora-cargo-target:/tmp/cargo-target\""
 
 cicd:
+    cargo fmt --all
     gh act -P ubuntu-latest={{act_image}} -j check --matrix os:ubuntu-latest {{act_env}} {{act_volumes}}
     gh act -P ubuntu-latest={{act_image}} -j bench {{act_env}} --bind {{act_volumes}}
 

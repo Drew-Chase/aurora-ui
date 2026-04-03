@@ -1,4 +1,10 @@
 #![doc = include_str!("../../README.md")]
+#![doc = ""]
+#![doc = "# Feature Reference"]
+#![doc = ""]
+#![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
+#![doc = ""]
+#![doc = include_str!("../features.md")]
 
 pub mod prelude;
 
