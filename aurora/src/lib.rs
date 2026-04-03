@@ -1,6 +1,6 @@
 #![doc = include_str!("../../README.md")]
 #![doc = ""]
-#![doc = "# Feature Reference"]
+#![doc = "# Feature flags"]
 #![doc = ""]
 #![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
 #![doc = ""]

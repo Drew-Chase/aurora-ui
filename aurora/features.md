@@ -1,7 +1,28 @@
-# Feature Guide
+# Feature flags
 
 Aurora UI is feature-gated by design: every subsystem is opt-in so your binary
 contains only what you use. This guide covers each feature flag in detail.
+
+Aurora UI does not enable any features by default except `software` (the CPU
+rendering backend). Below is a summary of available feature flags. You may also
+notice above each function, struct, and trait there is listed one or more
+feature flags required for that item to be used.
+
+- `software`: CPU-based rendering via softbuffer (GDI on Windows). Default backend.
+- `opengl`: OpenGL 3.3 rendering via glow. ~200 KB binary impact.
+- `wgpu_backend`: Vulkan/Metal/DX12 rendering via wgpu. Best quality. ~2 MB binary impact.
+- `text`: Font loading, text shaping, text widgets, buttons with labels, and clipboard.
+- `image`: PNG/JPEG decoding and the `Image` widget.
+- `svg`: SVG parsing, rasterization, and the `Svg` widget.
+- `syntax`: Syntax highlighting for code display. Enables `text`.
+- `animate`: Tweens, easing functions, keyframes, timelines, and animation presets.
+- `dialogs`: Native file open/save/folder dialogs via rfd.
+- `menu`: Native application menus (menu bar) via muda.
+- `tray`: System tray icon with context menu via tray-icon. Enables `menu`.
+- `a11y`: Screen reader support via AccessKit (Narrator, NVDA, VoiceOver, Orca).
+- `i18n`: Locale detection, fluent-rs message bundles, and `lang!` compile-time TOML.
+- `i18n-icu`: ICU4X number/date/currency formatting on top of `i18n`.
+- `regex`: Regex-based validation patterns for input widgets.
 
 ## GPU Backends
 
