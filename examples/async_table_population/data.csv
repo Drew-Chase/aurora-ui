@@ -1,0 +1,16 @@
+ID,Name,Email,Department,Role,Salary,Start Date
+1,Alice Chen,alice.chen@example.com,Engineering,Senior Developer,95000,3/15/2021
+2,Bob Smith,bob.smith@example.com,Marketing,Campaign Manager,72000,7/22/2020
+3,Carol White,carol.white@example.com,Engineering,Tech Lead,110000,11/1/2019
+4,Dave Jones,dave.jones@example.com,Sales,Account Executive,68000,1/10/2022
+5,Eve Martinez,eve.martinez@example.com,Engineering,Junior Developer,65000,6/5/2023
+6,Frank Lee,frank.lee@example.com,Finance,Financial Analyst,78000,9/18/2021
+7,Grace Kim,grace.kim@example.com,HR,Recruiter,62000,4/30/2022
+8,Henry Park,henry.park@example.com,Engineering,DevOps Engineer,92000,12/14/2020
+9,Iris Nguyen,iris.nguyen@example.com,Design,UX Designer,80000,5/20/2021
+10,Jack Brown,jack.brown@example.com,Sales,Sales Director,105000,8/3/2018
+11,Karen Davis,karen.davis@example.com,Marketing,Content Strategist,70000,11/15/2022
+12,Leo Wilson,leo.wilson@example.com,Engineering,Backend Developer,88000,2/28/2021
+13,Mia Taylor,mia.taylor@example.com,Finance,Controller,98000,4/12/2019
+14,Noah Garcia,noah.garcia@example.com,Design,Product Designer,85000,10/7/2020
+15,Olivia Harris,olivia.harris@example.com,HR,HR Director,100000,6/25/2017

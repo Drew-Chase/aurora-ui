@@ -4,4 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-aurora_ui = {path="../../aurora", features = []}
+aurora_ui = {path="../../aurora", features = ["menu", "text", "animate", "software", "dialogs"]}
+tokio = {version = "1.51.0", features = ["rt-multi-thread", "macros"]}
+anyhow = "1.0.102"
+csv = {version = "1.4.0"}
+serde = {version = "1.0.228", features = ["derive"]}
