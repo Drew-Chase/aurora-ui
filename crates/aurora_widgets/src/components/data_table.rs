@@ -430,10 +430,13 @@ impl Widget for DataTable {
                 }
 
                 if rect.contains(pos) {
-                    return EventResponse {
-                        cursor: Some(CursorIcon::Pointer),
-                        ..Default::default()
-                    };
+                    let in_header = pos.y < rect.y1 + self.header_height;
+                    if in_header || self.on_row_click.is_some() {
+                        return EventResponse {
+                            cursor: Some(CursorIcon::Pointer),
+                            ..Default::default()
+                        };
+                    }
                 }
                 EventResponse::default()
             }
