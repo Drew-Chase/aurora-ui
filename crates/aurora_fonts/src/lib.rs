@@ -103,16 +103,14 @@ pub fn font_families(input: TokenStream) -> TokenStream {
         for variant in &font_data {
             let weight = variant.weight;
             let is_italic = variant.italic;
-            let bytes = &variant.bytes;
-            let byte_literals: Vec<_> = bytes.iter().map(|b| quote! { #b }).collect();
+            let path_str = variant.path.to_string_lossy().into_owned();
 
             let fn_name = weight_method_name(weight, is_italic);
             let fn_ident = format_ident!("{}", fn_name);
 
             weight_methods.push(quote! {
                 pub fn #fn_ident(&self) -> &'static [u8] {
-                    static DATA: &[u8] = &[#(#byte_literals),*];
-                    DATA
+                    include_bytes!(#path_str)
                 }
             });
 
@@ -257,7 +255,7 @@ struct FamilyMeta {
 struct FontVariant {
     weight: u16,
     italic: bool,
-    bytes: Vec<u8>,
+    path: PathBuf,
 }
 
 // ---------------------------------------------------------------------------
@@ -428,18 +426,19 @@ fn fetch_family_fonts(
         };
 
         let cache_file = family_dir.join(format!("{}.ttf", key));
-        let bytes = if cache_file.exists() && is_cache_valid(&cache_file) {
-            fs::read(&cache_file).map_err(|e| format!("cache read failed: {e}"))?
-        } else {
+        if !cache_file.exists() || !is_cache_valid(&cache_file) {
             let font_bytes = http_get_bytes(url)?;
-            let _ = fs::write(&cache_file, &font_bytes);
-            font_bytes
-        };
+            // The file must exist on disk so the generated `include_bytes!`
+            // can read it at compile time, so this write must not be ignored.
+            fs::write(&cache_file, &font_bytes).map_err(|e| {
+                format!("failed to write font cache {}: {e}", cache_file.display())
+            })?;
+        }
 
         result.push(FontVariant {
             weight: *weight,
             italic: *italic,
-            bytes,
+            path: cache_file,
         });
     }
 

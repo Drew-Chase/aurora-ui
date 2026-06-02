@@ -1,4 +1,4 @@
-aurora_fonts::font_families!("Roboto");
+aurora_fonts::font_families!("Roboto", "Inter");
 
 fn main() {
     // Named weight access
