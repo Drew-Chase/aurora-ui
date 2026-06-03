@@ -1,6 +1,6 @@
 [package]
 name = "aurora_iconify"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "Compile-time icon embedding from iconify.design — type-safe access to 200,000+ icons with zero runtime cost"
 authors = ["Drew Chase"]
