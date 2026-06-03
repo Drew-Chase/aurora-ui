@@ -1,4 +1,4 @@
-aurora_iconify::icon_sets!("mage");
+aurora_iconify::icon_sets!("mage", "lucide", "material-symbols");
 
 fn main() {
     // Type-safe access
