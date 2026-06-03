@@ -62,9 +62,10 @@ pub fn icon_sets(input: TokenStream) -> TokenStream {
         let mut icon_methods = Vec::new();
         let mut by_name_arms = Vec::new();
 
-        for (icon_name, svg_string) in &data.icons {
+        for (icon_name, svg_path) in &data.icons {
             let fn_name = format_ident!("{}", sanitize_ident(icon_name));
             let name_str = icon_name.as_str();
+            let path_str = svg_path.to_string_lossy().into_owned();
             let preview_url = format!(
                 "https://api.iconify.design/{}/{}.svg?width=48&height=48&color=white",
                 set_name, icon_name
@@ -73,7 +74,7 @@ pub fn icon_sets(input: TokenStream) -> TokenStream {
 
             icon_methods.push(quote! {
                 #[doc = #doc_line]
-                pub fn #fn_name(&self) -> &'static str { #svg_string }
+                pub fn #fn_name(&self) -> &'static str { include_str!(#path_str) }
             });
 
             by_name_arms.push(quote! {
@@ -172,7 +173,7 @@ impl Parse for IconSetsInput {
 // ---------------------------------------------------------------------------
 
 struct IconSetData {
-    icons: Vec<(String, String)>, // (name, full_svg_string)
+    icons: Vec<(String, PathBuf)>, // (name, path to cached .svg file)
 }
 
 fn cache_dir() -> PathBuf {
@@ -287,7 +288,13 @@ fn fetch_icon_set(prefix: &str, cache_dir: &Path) -> Result<IconSetData, String>
         json_str
     };
 
-    parse_icon_set_json(&json_str)
+    // Each icon's SVG is written to its own file so the generated
+    // `include_str!` can read it at compile time.
+    let svg_dir = cache_dir.join(prefix);
+    fs::create_dir_all(&svg_dir)
+        .map_err(|e| format!("failed to create svg dir {}: {e}", svg_dir.display()))?;
+
+    parse_icon_set_json(&json_str, &svg_dir)
 }
 
 fn fetch_icon_names(prefix: &str) -> Result<Vec<String>, String> {
@@ -323,7 +330,7 @@ fn fetch_icon_names(prefix: &str) -> Result<Vec<String>, String> {
     Ok(names)
 }
 
-fn parse_icon_set_json(json_str: &str) -> Result<IconSetData, String> {
+fn parse_icon_set_json(json_str: &str, svg_dir: &Path) -> Result<IconSetData, String> {
     let parsed: serde_json::Value =
         serde_json::from_str(json_str).map_err(|e| format!("JSON parse error: {e}"))?;
 
@@ -354,7 +361,15 @@ fn parse_icon_set_json(json_str: &str) -> Result<IconSetData, String> {
         let svg = format!(
             "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{w}\" height=\"{h}\" viewBox=\"0 0 {w} {h}\">{body}</svg>"
         );
-        icons.push((name.clone(), svg));
+
+        // Write each SVG to its own file so the generated `include_str!` can
+        // read it at compile time. The icon name is filesystem-safe (lowercase
+        // alphanumerics and dashes), so it can be used directly as a filename.
+        let svg_file = svg_dir.join(format!("{name}.svg"));
+        fs::write(&svg_file, &svg)
+            .map_err(|e| format!("failed to write svg cache {}: {e}", svg_file.display()))?;
+
+        icons.push((name.clone(), svg_file));
     }
 
     icons.sort_by(|a, b| a.0.cmp(&b.0));
