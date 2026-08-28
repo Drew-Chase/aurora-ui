@@ -289,12 +289,30 @@ fn fetch_icon_set(prefix: &str, cache_dir: &Path) -> Result<IconSetData, String>
     };
 
     // Each icon's SVG is written to its own file so the generated
-    // `include_str!` can read it at compile time.
+    // `include_str!` can read it at compile time. Files are only written when
+    // their content actually changes: rewriting identical files would refresh
+    // their mtimes and make rustc treat the unchanged `include_str!` inputs as
+    // dirty, recompiling (and re-expanding this macro) on every build.
     let svg_dir = cache_dir.join(prefix);
     fs::create_dir_all(&svg_dir)
         .map_err(|e| format!("failed to create svg dir {}: {e}", svg_dir.display()))?;
 
-    parse_icon_set_json(&json_str, &svg_dir)
+    // Fast path: if a manifest records that these SVGs were materialized from
+    // exactly this cached JSON and all files still exist, skip parsing and
+    // writing entirely.
+    let manifest_path = cache_dir.join(format!("{prefix}.manifest.json"));
+    if let Some(names) = load_manifest(&manifest_path, &json_str)
+        && !names.is_empty()
+        && names
+            .iter()
+            .all(|name| svg_dir.join(format!("{name}.svg")).exists())
+    {
+        return Ok(icons_from_names(&names, &svg_dir));
+    }
+
+    let icons = parse_icon_set_json(&json_str, &svg_dir)?;
+    write_manifest(&manifest_path, &json_str, &icons);
+    Ok(icons)
 }
 
 fn fetch_icon_names(prefix: &str) -> Result<Vec<String>, String> {
@@ -365,8 +383,9 @@ fn parse_icon_set_json(json_str: &str, svg_dir: &Path) -> Result<IconSetData, St
         // Write each SVG to its own file so the generated `include_str!` can
         // read it at compile time. The icon name is filesystem-safe (lowercase
         // alphanumerics and dashes), so it can be used directly as a filename.
+        // Only write when the content differs to keep mtimes stable.
         let svg_file = svg_dir.join(format!("{name}.svg"));
-        fs::write(&svg_file, &svg)
+        write_if_changed(&svg_file, &svg)
             .map_err(|e| format!("failed to write svg cache {}: {e}", svg_file.display()))?;
 
         icons.push((name.clone(), svg_file));
@@ -374,6 +393,73 @@ fn parse_icon_set_json(json_str: &str, svg_dir: &Path) -> Result<IconSetData, St
 
     icons.sort_by(|a, b| a.0.cmp(&b.0));
     Ok(IconSetData { icons })
+}
+
+/// Builds `IconSetData` from a manifest's icon names, which are already sorted
+/// and known to exist on disk.
+fn icons_from_names(names: &[String], svg_dir: &Path) -> IconSetData {
+    IconSetData {
+        icons: names
+            .iter()
+            .map(|name| (name.clone(), svg_dir.join(format!("{name}.svg"))))
+            .collect(),
+    }
+}
+
+/// Returns the icon names recorded in the manifest if it was written for
+/// exactly `json_str` (matched by content hash).
+fn load_manifest(manifest_path: &Path, json_str: &str) -> Option<Vec<String>> {
+    let manifest = fs::read_to_string(manifest_path).ok()?;
+    let parsed: serde_json::Value = serde_json::from_str(&manifest).ok()?;
+    let stored_hash = parsed.get("hash")?.as_str()?;
+    if stored_hash != hash_str(json_str) {
+        return None;
+    }
+    let names = parsed.get("icons")?.as_array()?;
+    Some(
+        names
+            .iter()
+            .filter_map(|name| name.as_str().map(str::to_string))
+            .collect(),
+    )
+}
+
+/// Records the hash of the cached JSON and the materialized icon names so
+/// subsequent expansions can skip re-parsing and re-writing the SVG cache.
+fn write_manifest(manifest_path: &Path, json_str: &str, icons: &IconSetData) {
+    let manifest = serde_json::json!({
+        "hash": hash_str(json_str),
+        "icons": icons.icons.iter().map(|(name, _)| name.clone()).collect::<Vec<_>>(),
+    });
+    // A failed or truncated manifest only costs a re-parse on the next run.
+    let _ = fs::write(
+        manifest_path,
+        serde_json::to_string(&manifest).unwrap_or_default(),
+    );
+}
+
+/// Writes `contents` to `path` only when the file is missing or differs,
+/// leaving the modification time untouched otherwise. Keeping mtimes stable
+/// stops rustc from treating unchanged `include_str!` inputs as dirty.
+fn write_if_changed(path: &Path, contents: &str) -> Result<(), String> {
+    if path.exists()
+        && fs::read_to_string(path)
+            .map(|existing| existing == contents)
+            .unwrap_or(false)
+    {
+        return Ok(());
+    }
+    fs::write(path, contents).map_err(|e| e.to_string())
+}
+
+/// FNV-1a 64-bit hash, used to fingerprint cached JSON without extra deps.
+fn hash_str(value: &str) -> String {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in value.as_bytes() {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    format!("{hash:016x}")
 }
 
 fn http_get(url: &str) -> Result<String, String> {

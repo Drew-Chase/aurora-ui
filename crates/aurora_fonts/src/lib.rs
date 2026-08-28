@@ -407,8 +407,18 @@ fn fetch_family_fonts(
         axis_params.join(";")
     );
 
-    // Fetch CSS and parse font URLs
-    let css = http_get_with_ua(&css_url)?;
+    // Fetch CSS and parse font URLs. The CSS response is cached per family so
+    // that expansions within the TTL do not hit the network at all.
+    let css_cache = family_dir.join("styles.css");
+    let (css, css_was_cached) = if is_cache_valid(&css_cache)
+        && let Ok(cached_css) = fs::read_to_string(&css_cache)
+    {
+        (cached_css, true)
+    } else {
+        let css = http_get_with_ua(&css_url)?;
+        let _ = fs::write(&css_cache, &css);
+        (css, false)
+    };
     let url_map = parse_css_font_urls(&css)?;
 
     // Download each font variant
@@ -426,12 +436,20 @@ fn fetch_family_fonts(
         };
 
         let cache_file = family_dir.join(format!("{}.ttf", key));
-        if !cache_file.exists() || !is_cache_valid(&cache_file) {
-            let font_bytes = http_get_bytes(url)?;
+        if !cache_file.exists() {
             // The file must exist on disk so the generated `include_bytes!`
             // can read it at compile time, so this write must not be ignored.
-            fs::write(&cache_file, &font_bytes).map_err(|e| {
-                format!("failed to write font cache {}: {e}", cache_file.display())
+            let font_bytes = http_get_bytes(url)?;
+            fs::write(&cache_file, &font_bytes)
+                .map_err(|e| format!("failed to write font cache {}: {e}", cache_file.display()))?;
+        } else if !css_was_cached {
+            // The CSS (and download URLs) was just re-fetched, so re-verify
+            // the cached font and update it only when the bytes changed.
+            // Rewriting identical files would refresh mtimes and make rustc
+            // rebuild every `include_bytes!` consumer on the next build.
+            let font_bytes = http_get_bytes(url)?;
+            write_bytes_if_changed(&cache_file, &font_bytes).map_err(|e| {
+                format!("failed to update font cache {}: {e}", cache_file.display())
             })?;
         }
 
@@ -447,6 +465,20 @@ fn fetch_family_fonts(
     }
 
     Ok(result)
+}
+
+/// Writes `contents` to `path` only when the file is missing or differs,
+/// leaving the modification time untouched otherwise. Keeping mtimes stable
+/// stops rustc from treating unchanged `include_bytes!` inputs as dirty.
+fn write_bytes_if_changed(path: &Path, contents: &[u8]) -> Result<(), String> {
+    if path.exists()
+        && fs::read(path)
+            .map(|existing| existing == contents)
+            .unwrap_or(false)
+    {
+        return Ok(());
+    }
+    fs::write(path, contents).map_err(|e| e.to_string())
 }
 
 fn parse_css_font_urls(css: &str) -> Result<std::collections::HashMap<String, String>, String> {
