@@ -8,9 +8,13 @@ use std::time::Duration;
 use syn::parse::{Parse, ParseStream};
 use syn::{LitStr, Token, parse_macro_input};
 
-const API_BASE: &str = "https://api.iconify.design";
 const CACHE_TTL: Duration = Duration::from_secs(7 * 24 * 60 * 60); // 7 days
 const BATCH_SIZE: usize = 80;
+
+const API_BASE: &str = match option_env!("ICONIFY_API_URL") {
+    Some(v) => v,
+    None => "https://api.iconify.design",
+};
 
 /// Fetches icon sets from [iconify.design](https://iconify.design) at compile
 /// time and generates a type-safe Rust API with all SVGs embedded as string
@@ -67,8 +71,7 @@ pub fn icon_sets(input: TokenStream) -> TokenStream {
             let name_str = icon_name.as_str();
             let path_str = svg_path.to_string_lossy().into_owned();
             let preview_url = format!(
-                "https://api.iconify.design/{}/{}.svg?width=48&height=48&color=white",
-                set_name, icon_name
+                "{API_BASE}/{set_name}/{icon_name}.svg?width=48&height=48&color=white",
             );
             let doc_line = format!("![{icon_name}]({preview_url})");
 
