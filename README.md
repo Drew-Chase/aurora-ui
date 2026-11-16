@@ -269,8 +269,10 @@ let svg: Option<&str> = Icon::mage().by_name("calendar-2-fill");
 let svg = Icon::from_set("mage").and_then(|s| s.by_name("calendar-2-fill"));
 ```
 
-Icon data is cached locally for 7 days. All SVGs are embedded directly in
-the binary as `&'static str`.
+Every icon in a set gets a method, but only the icons your crate refers to are
+downloaded and embedded in the binary as `&'static str`. Use
+`icon_sets!("lucide": all)` or `icon_sets!("lucide": ["arrow-left"])` to embed
+icons that are only looked up by a runtime name. Downloads are cached locally.
 
 ## Accessibility
 

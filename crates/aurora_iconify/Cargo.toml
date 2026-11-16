@@ -1,8 +1,8 @@
 [package]
 name = "aurora_iconify"
-version = "0.1.3"
+version = "0.2.0"
 edition = "2024"
-description = "Compile-time icon embedding from iconify.design — type-safe access to 200,000+ icons with zero runtime cost"
+description = "Compile-time icon embedding from iconify.design — type-safe access to 200,000+ icons, embedding only the ones you use"
 authors = ["Drew Chase"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/drew-chase/aurora-ui"
@@ -16,8 +16,9 @@ categories = ["gui", "development-tools::procedural-macro-helpers"]
 proc-macro = true
 
 [dependencies]
-syn = { version = "2", features = ["full"] }
-quote = "1"
-proc-macro2 = "1"
 ureq = "3"
 serde_json = "1"
+
+[dev-dependencies]
+# Only used by tests to check that generated code parses.
+syn = { version = "2", features = ["full"] }
