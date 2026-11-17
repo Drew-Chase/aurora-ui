@@ -30,9 +30,10 @@ const FIXED_FEATURES: usize = 2;
 const FEATURES_BEGIN: &str =
     "# BEGIN GENERATED SET FEATURES (cargo run -p xtask -- iconify-catalog)";
 const FEATURES_END: &str = "# END GENERATED SET FEATURES";
-/// Pause between the per-set requests. The API rate-limits bursts (a `429`
-/// with a `Retry-After` of about an hour), so this stays well below that.
-const REQUEST_GAP: Duration = Duration::from_secs(10);
+/// Pause between the per-set requests. The public API rate-limits bursts (a `429`
+/// with a `Retry-After` of about an hour), so use `ICONIFY_API_URL` for a mirror
+/// that does not; a 1-second pause is enough there.
+const REQUEST_GAP: Duration = Duration::from_secs(1);
 /// Attempts per request before giving up.
 const MAX_ATTEMPTS: u32 = 8;
 

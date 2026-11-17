@@ -9,46 +9,2776 @@ use crate::{Provider, missing};
 use aurora_iconify_macros::__set_accessors;
 
 /// Fingerprint of the icon catalog this crate was generated from.
-pub const CATALOG_HASH: u64 = 0x3d11b683a3ca76af;
+pub const CATALOG_HASH: u64 = 0x81dff72b338e0244;
 
 /// Identifies an icon set. Only the sets enabled by Cargo features have a variant.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SetId {
+    /// The `academicons` icon set.
+    #[cfg(feature = "academicons")]
+    Academicons,
+    /// The `akar-icons` icon set.
+    #[cfg(feature = "akar-icons")]
+    AkarIcons,
+    /// The `andrsrxn` icon set.
+    #[cfg(feature = "andrsrxn")]
+    Andrsrxn,
+    /// The `ant-design` icon set.
+    #[cfg(feature = "ant-design")]
+    AntDesign,
+    /// The `arcticons` icon set.
+    #[cfg(feature = "arcticons")]
+    Arcticons,
+    /// The `at-icons` icon set.
+    #[cfg(feature = "at-icons")]
+    AtIcons,
+    /// The `basil` icon set.
+    #[cfg(feature = "basil")]
+    Basil,
+    /// The `bi` icon set.
+    #[cfg(feature = "bi")]
+    Bi,
+    /// The `bitcoin-icons` icon set.
+    #[cfg(feature = "bitcoin-icons")]
+    BitcoinIcons,
+    /// The `boxicons` icon set.
+    #[cfg(feature = "boxicons")]
+    Boxicons,
+    /// The `bpmn` icon set.
+    #[cfg(feature = "bpmn")]
+    Bpmn,
+    /// The `brandico` icon set.
+    #[cfg(feature = "brandico")]
+    Brandico,
+    /// The `bx` icon set.
+    #[cfg(feature = "bx")]
+    Bx,
+    /// The `bxl` icon set.
+    #[cfg(feature = "bxl")]
+    Bxl,
+    /// The `bxs` icon set.
+    #[cfg(feature = "bxs")]
+    Bxs,
+    /// The `bytesize` icon set.
+    #[cfg(feature = "bytesize")]
+    Bytesize,
+    /// The `carbon` icon set.
+    #[cfg(feature = "carbon")]
+    Carbon,
+    /// The `catppuccin` icon set.
+    #[cfg(feature = "catppuccin")]
+    Catppuccin,
+    /// The `cbi` icon set.
+    #[cfg(feature = "cbi")]
+    Cbi,
+    /// The `charm` icon set.
+    #[cfg(feature = "charm")]
+    Charm,
+    /// The `ci` icon set.
+    #[cfg(feature = "ci")]
+    Ci,
+    /// The `cib` icon set.
+    #[cfg(feature = "cib")]
+    Cib,
+    /// The `cif` icon set.
+    #[cfg(feature = "cif")]
+    Cif,
+    /// The `cil` icon set.
+    #[cfg(feature = "cil")]
+    Cil,
+    /// The `circle-flags` icon set.
+    #[cfg(feature = "circle-flags")]
+    CircleFlags,
+    /// The `circum` icon set.
+    #[cfg(feature = "circum")]
+    Circum,
+    /// The `clarity` icon set.
+    #[cfg(feature = "clarity")]
+    Clarity,
+    /// The `codex` icon set.
+    #[cfg(feature = "codex")]
+    Codex,
+    /// The `codicon` icon set.
+    #[cfg(feature = "codicon")]
+    Codicon,
+    /// The `coolicons` icon set.
+    #[cfg(feature = "coolicons")]
+    Coolicons,
+    /// The `covid` icon set.
+    #[cfg(feature = "covid")]
+    Covid,
+    /// The `cryptocurrency` icon set.
+    #[cfg(feature = "cryptocurrency")]
+    Cryptocurrency,
+    /// The `cryptocurrency-color` icon set.
+    #[cfg(feature = "cryptocurrency-color")]
+    CryptocurrencyColor,
+    /// The `cuida` icon set.
+    #[cfg(feature = "cuida")]
+    Cuida,
+    /// The `dashicons` icon set.
+    #[cfg(feature = "dashicons")]
+    Dashicons,
+    /// The `devicon` icon set.
+    #[cfg(feature = "devicon")]
+    Devicon,
+    /// The `devicon-plain` icon set.
+    #[cfg(feature = "devicon-plain")]
+    DeviconPlain,
+    /// The `dinkie-icons` icon set.
+    #[cfg(feature = "dinkie-icons")]
+    DinkieIcons,
+    /// The `doodle-icons` icon set.
+    #[cfg(feature = "doodle-icons")]
+    DoodleIcons,
+    /// The `duo-icons` icon set.
+    #[cfg(feature = "duo-icons")]
+    DuoIcons,
+    /// The `ei` icon set.
+    #[cfg(feature = "ei")]
+    Ei,
+    /// The `el` icon set.
+    #[cfg(feature = "el")]
+    El,
+    /// The `emojione` icon set.
+    #[cfg(feature = "emojione")]
+    Emojione,
+    /// The `emojione-monotone` icon set.
+    #[cfg(feature = "emojione-monotone")]
+    EmojioneMonotone,
+    /// The `emojione-v1` icon set.
+    #[cfg(feature = "emojione-v1")]
+    EmojioneV1,
+    /// The `energy-icons` icon set.
+    #[cfg(feature = "energy-icons")]
+    EnergyIcons,
+    /// The `entypo` icon set.
+    #[cfg(feature = "entypo")]
+    Entypo,
+    /// The `entypo-social` icon set.
+    #[cfg(feature = "entypo-social")]
+    EntypoSocial,
+    /// The `eos-icons` icon set.
+    #[cfg(feature = "eos-icons")]
+    EosIcons,
+    /// The `ep` icon set.
+    #[cfg(feature = "ep")]
+    Ep,
+    /// The `et` icon set.
+    #[cfg(feature = "et")]
+    Et,
+    /// The `eva` icon set.
+    #[cfg(feature = "eva")]
+    Eva,
+    /// The `f7` icon set.
+    #[cfg(feature = "f7")]
+    F7,
+    /// The `fa` icon set.
+    #[cfg(feature = "fa")]
+    Fa,
+    /// The `fa-brands` icon set.
+    #[cfg(feature = "fa-brands")]
+    FaBrands,
+    /// The `fa-regular` icon set.
+    #[cfg(feature = "fa-regular")]
+    FaRegular,
+    /// The `fa-solid` icon set.
+    #[cfg(feature = "fa-solid")]
+    FaSolid,
+    /// The `fa6-brands` icon set.
+    #[cfg(feature = "fa6-brands")]
+    Fa6Brands,
+    /// The `fa6-regular` icon set.
+    #[cfg(feature = "fa6-regular")]
+    Fa6Regular,
+    /// The `fa6-solid` icon set.
+    #[cfg(feature = "fa6-solid")]
+    Fa6Solid,
+    /// The `fa7-brands` icon set.
+    #[cfg(feature = "fa7-brands")]
+    Fa7Brands,
+    /// The `fa7-regular` icon set.
+    #[cfg(feature = "fa7-regular")]
+    Fa7Regular,
+    /// The `fa7-solid` icon set.
+    #[cfg(feature = "fa7-solid")]
+    Fa7Solid,
+    /// The `fad` icon set.
+    #[cfg(feature = "fad")]
+    Fad,
+    /// The `famicons` icon set.
+    #[cfg(feature = "famicons")]
+    Famicons,
+    /// The `fe` icon set.
+    #[cfg(feature = "fe")]
+    Fe,
+    /// The `feather` icon set.
+    #[cfg(feature = "feather")]
+    Feather,
+    /// The `file-icons` icon set.
+    #[cfg(feature = "file-icons")]
+    FileIcons,
+    /// The `flag` icon set.
+    #[cfg(feature = "flag")]
+    Flag,
+    /// The `flagpack` icon set.
+    #[cfg(feature = "flagpack")]
+    Flagpack,
+    /// The `flat-color-icons` icon set.
+    #[cfg(feature = "flat-color-icons")]
+    FlatColorIcons,
+    /// The `flat-ui` icon set.
+    #[cfg(feature = "flat-ui")]
+    FlatUi,
+    /// The `flowbite` icon set.
+    #[cfg(feature = "flowbite")]
+    Flowbite,
+    /// The `fluent` icon set.
+    #[cfg(feature = "fluent")]
+    Fluent,
+    /// The `fluent-color` icon set.
+    #[cfg(feature = "fluent-color")]
+    FluentColor,
+    /// The `fluent-emoji` icon set.
+    #[cfg(feature = "fluent-emoji")]
+    FluentEmoji,
+    /// The `fluent-emoji-flat` icon set.
+    #[cfg(feature = "fluent-emoji-flat")]
+    FluentEmojiFlat,
+    /// The `fluent-emoji-high-contrast` icon set.
+    #[cfg(feature = "fluent-emoji-high-contrast")]
+    FluentEmojiHighContrast,
+    /// The `fluent-mdl2` icon set.
+    #[cfg(feature = "fluent-mdl2")]
+    FluentMdl2,
+    /// The `fontelico` icon set.
+    #[cfg(feature = "fontelico")]
+    Fontelico,
+    /// The `fontisto` icon set.
+    #[cfg(feature = "fontisto")]
+    Fontisto,
+    /// The `formkit` icon set.
+    #[cfg(feature = "formkit")]
+    Formkit,
+    /// The `foundation` icon set.
+    #[cfg(feature = "foundation")]
+    Foundation,
+    /// The `fxemoji` icon set.
+    #[cfg(feature = "fxemoji")]
+    Fxemoji,
+    /// The `gala` icon set.
+    #[cfg(feature = "gala")]
+    Gala,
+    /// The `game-icons` icon set.
+    #[cfg(feature = "game-icons")]
+    GameIcons,
+    /// The `garden` icon set.
+    #[cfg(feature = "garden")]
+    Garden,
+    /// The `gcp` icon set.
+    #[cfg(feature = "gcp")]
+    Gcp,
+    /// The `geo` icon set.
+    #[cfg(feature = "geo")]
+    Geo,
+    /// The `gg` icon set.
+    #[cfg(feature = "gg")]
+    Gg,
+    /// The `ginetex` icon set.
+    #[cfg(feature = "ginetex")]
+    Ginetex,
+    /// The `gis` icon set.
+    #[cfg(feature = "gis")]
+    Gis,
+    /// The `glyphs` icon set.
+    #[cfg(feature = "glyphs")]
+    Glyphs,
+    /// The `glyphs-poly` icon set.
+    #[cfg(feature = "glyphs-poly")]
+    GlyphsPoly,
+    /// The `gravity-ui` icon set.
+    #[cfg(feature = "gravity-ui")]
+    GravityUi,
+    /// The `griddy-icons` icon set.
+    #[cfg(feature = "griddy-icons")]
+    GriddyIcons,
+    /// The `gridicons` icon set.
+    #[cfg(feature = "gridicons")]
+    Gridicons,
+    /// The `grommet-icons` icon set.
+    #[cfg(feature = "grommet-icons")]
+    GrommetIcons,
+    /// The `guidance` icon set.
+    #[cfg(feature = "guidance")]
+    Guidance,
+    /// The `healthicons` icon set.
+    #[cfg(feature = "healthicons")]
+    Healthicons,
+    /// The `heroicons` icon set.
+    #[cfg(feature = "heroicons")]
+    Heroicons,
+    /// The `heroicons-outline` icon set.
+    #[cfg(feature = "heroicons-outline")]
+    HeroiconsOutline,
+    /// The `heroicons-solid` icon set.
+    #[cfg(feature = "heroicons-solid")]
+    HeroiconsSolid,
+    /// The `hugeicons` icon set.
+    #[cfg(feature = "hugeicons")]
+    Hugeicons,
+    /// The `humbleicons` icon set.
+    #[cfg(feature = "humbleicons")]
+    Humbleicons,
+    /// The `ic` icon set.
+    #[cfg(feature = "ic")]
+    Ic,
+    /// The `icomoon-free` icon set.
+    #[cfg(feature = "icomoon-free")]
+    IcomoonFree,
+    /// The `icon-park` icon set.
+    #[cfg(feature = "icon-park")]
+    IconPark,
+    /// The `icon-park-outline` icon set.
+    #[cfg(feature = "icon-park-outline")]
+    IconParkOutline,
+    /// The `icon-park-solid` icon set.
+    #[cfg(feature = "icon-park-solid")]
+    IconParkSolid,
+    /// The `icon-park-twotone` icon set.
+    #[cfg(feature = "icon-park-twotone")]
+    IconParkTwotone,
+    /// The `iconamoon` icon set.
+    #[cfg(feature = "iconamoon")]
+    Iconamoon,
+    /// The `iconito` icon set.
+    #[cfg(feature = "iconito")]
+    Iconito,
+    /// The `iconmind` icon set.
+    #[cfg(feature = "iconmind")]
+    Iconmind,
+    /// The `iconoir` icon set.
+    #[cfg(feature = "iconoir")]
+    Iconoir,
+    /// The `iconoven` icon set.
+    #[cfg(feature = "iconoven")]
+    Iconoven,
+    /// The `icons8` icon set.
+    #[cfg(feature = "icons8")]
+    Icons8,
+    /// The `il` icon set.
+    #[cfg(feature = "il")]
+    Il,
+    /// The `ion` icon set.
+    #[cfg(feature = "ion")]
+    Ion,
+    /// The `iwwa` icon set.
+    #[cfg(feature = "iwwa")]
+    Iwwa,
+    /// The `ix` icon set.
+    #[cfg(feature = "ix")]
+    Ix,
+    /// The `jam` icon set.
+    #[cfg(feature = "jam")]
+    Jam,
+    /// The `k8s` icon set.
+    #[cfg(feature = "k8s")]
+    K8s,
+    /// The `keyline-icons` icon set.
+    #[cfg(feature = "keyline-icons")]
+    KeylineIcons,
+    /// The `la` icon set.
+    #[cfg(feature = "la")]
+    La,
+    /// The `lets-icons` icon set.
+    #[cfg(feature = "lets-icons")]
+    LetsIcons,
+    /// The `line-md` icon set.
+    #[cfg(feature = "line-md")]
+    LineMd,
+    /// The `lineicons` icon set.
+    #[cfg(feature = "lineicons")]
+    Lineicons,
+    /// The `logos` icon set.
+    #[cfg(feature = "logos")]
+    Logos,
+    /// The `ls` icon set.
+    #[cfg(feature = "ls")]
+    Ls,
+    /// The `lsicon` icon set.
+    #[cfg(feature = "lsicon")]
+    Lsicon,
     /// The `lucide` icon set.
     #[cfg(feature = "lucide")]
     Lucide,
+    /// The `lucide-extended` icon set.
+    #[cfg(feature = "lucide-extended")]
+    LucideExtended,
+    /// The `lucide-lab` icon set.
+    #[cfg(feature = "lucide-lab")]
+    LucideLab,
     /// The `mage` icon set.
     #[cfg(feature = "mage")]
     Mage,
+    /// The `majesticons` icon set.
+    #[cfg(feature = "majesticons")]
+    Majesticons,
+    /// The `maki` icon set.
+    #[cfg(feature = "maki")]
+    Maki,
+    /// The `map` icon set.
+    #[cfg(feature = "map")]
+    Map,
+    /// The `marketeq` icon set.
+    #[cfg(feature = "marketeq")]
+    Marketeq,
+    /// The `material-icon-theme` icon set.
+    #[cfg(feature = "material-icon-theme")]
+    MaterialIconTheme,
     /// The `material-symbols` icon set.
     #[cfg(feature = "material-symbols")]
     MaterialSymbols,
+    /// The `material-symbols-light` icon set.
+    #[cfg(feature = "material-symbols-light")]
+    MaterialSymbolsLight,
+    /// The `matita` icon set.
+    #[cfg(feature = "matita")]
+    Matita,
+    /// The `mdi` icon set.
+    #[cfg(feature = "mdi")]
+    Mdi,
+    /// The `mdi-light` icon set.
+    #[cfg(feature = "mdi-light")]
+    MdiLight,
+    /// The `medical-icon` icon set.
+    #[cfg(feature = "medical-icon")]
+    MedicalIcon,
+    /// The `memory` icon set.
+    #[cfg(feature = "memory")]
+    Memory,
+    /// The `meteocons` icon set.
+    #[cfg(feature = "meteocons")]
+    Meteocons,
+    /// The `meteor-icons` icon set.
+    #[cfg(feature = "meteor-icons")]
+    MeteorIcons,
+    /// The `mi` icon set.
+    #[cfg(feature = "mi")]
+    Mi,
+    /// The `mingcute` icon set.
+    #[cfg(feature = "mingcute")]
+    Mingcute,
+    /// The `mono-icons` icon set.
+    #[cfg(feature = "mono-icons")]
+    MonoIcons,
+    /// The `mynaui` icon set.
+    #[cfg(feature = "mynaui")]
+    Mynaui,
+    /// The `nimbus` icon set.
+    #[cfg(feature = "nimbus")]
+    Nimbus,
+    /// The `nonicons` icon set.
+    #[cfg(feature = "nonicons")]
+    Nonicons,
+    /// The `noto` icon set.
+    #[cfg(feature = "noto")]
+    Noto,
+    /// The `noto-v1` icon set.
+    #[cfg(feature = "noto-v1")]
+    NotoV1,
+    /// The `nrk` icon set.
+    #[cfg(feature = "nrk")]
+    Nrk,
+    /// The `octicon` icon set.
+    #[cfg(feature = "octicon")]
+    Octicon,
+    /// The `oi` icon set.
+    #[cfg(feature = "oi")]
+    Oi,
+    /// The `ooui` icon set.
+    #[cfg(feature = "ooui")]
+    Ooui,
+    /// The `openmoji` icon set.
+    #[cfg(feature = "openmoji")]
+    Openmoji,
+    /// The `osmic` icon set.
+    #[cfg(feature = "osmic")]
+    Osmic,
+    /// The `oui` icon set.
+    #[cfg(feature = "oui")]
+    Oui,
+    /// The `pajamas` icon set.
+    #[cfg(feature = "pajamas")]
+    Pajamas,
+    /// The `pepicons` icon set.
+    #[cfg(feature = "pepicons")]
+    Pepicons,
+    /// The `pepicons-pencil` icon set.
+    #[cfg(feature = "pepicons-pencil")]
+    PepiconsPencil,
+    /// The `pepicons-pop` icon set.
+    #[cfg(feature = "pepicons-pop")]
+    PepiconsPop,
+    /// The `pepicons-print` icon set.
+    #[cfg(feature = "pepicons-print")]
+    PepiconsPrint,
+    /// The `ph` icon set.
+    #[cfg(feature = "ph")]
+    Ph,
+    /// The `picon` icon set.
+    #[cfg(feature = "picon")]
+    Picon,
+    /// The `pinhead` icon set.
+    #[cfg(feature = "pinhead")]
+    Pinhead,
+    /// The `pixel` icon set.
+    #[cfg(feature = "pixel")]
+    Pixel,
+    /// The `pixelarticons` icon set.
+    #[cfg(feature = "pixelarticons")]
+    Pixelarticons,
+    /// The `prime` icon set.
+    #[cfg(feature = "prime")]
+    Prime,
+    /// The `proicons` icon set.
+    #[cfg(feature = "proicons")]
+    Proicons,
+    /// The `ps` icon set.
+    #[cfg(feature = "ps")]
+    Ps,
+    /// The `qlementine-icons` icon set.
+    #[cfg(feature = "qlementine-icons")]
+    QlementineIcons,
+    /// The `quill` icon set.
+    #[cfg(feature = "quill")]
+    Quill,
+    /// The `radix-icons` icon set.
+    #[cfg(feature = "radix-icons")]
+    RadixIcons,
+    /// The `raphael` icon set.
+    #[cfg(feature = "raphael")]
+    Raphael,
+    /// The `reicon` icon set.
+    #[cfg(feature = "reicon")]
+    Reicon,
+    /// The `ri` icon set.
+    #[cfg(feature = "ri")]
+    Ri,
+    /// The `rivet-icons` icon set.
+    #[cfg(feature = "rivet-icons")]
+    RivetIcons,
+    /// The `roentgen` icon set.
+    #[cfg(feature = "roentgen")]
+    Roentgen,
+    /// The `selfhst` icon set.
+    #[cfg(feature = "selfhst")]
+    Selfhst,
+    /// The `si` icon set.
+    #[cfg(feature = "si")]
+    Si,
+    /// The `si-glyph` icon set.
+    #[cfg(feature = "si-glyph")]
+    SiGlyph,
+    /// The `sidekickicons` icon set.
+    #[cfg(feature = "sidekickicons")]
+    Sidekickicons,
+    /// The `simple-icons` icon set.
+    #[cfg(feature = "simple-icons")]
+    SimpleIcons,
+    /// The `simple-line-icons` icon set.
+    #[cfg(feature = "simple-line-icons")]
+    SimpleLineIcons,
+    /// The `skill-icons` icon set.
+    #[cfg(feature = "skill-icons")]
+    SkillIcons,
+    /// The `solar` icon set.
+    #[cfg(feature = "solar")]
+    Solar,
+    /// The `stash` icon set.
+    #[cfg(feature = "stash")]
+    Stash,
+    /// The `streamline` icon set.
+    #[cfg(feature = "streamline")]
+    Streamline,
+    /// The `streamline-block` icon set.
+    #[cfg(feature = "streamline-block")]
+    StreamlineBlock,
+    /// The `streamline-color` icon set.
+    #[cfg(feature = "streamline-color")]
+    StreamlineColor,
+    /// The `streamline-cyber` icon set.
+    #[cfg(feature = "streamline-cyber")]
+    StreamlineCyber,
+    /// The `streamline-cyber-color` icon set.
+    #[cfg(feature = "streamline-cyber-color")]
+    StreamlineCyberColor,
+    /// The `streamline-emojis` icon set.
+    #[cfg(feature = "streamline-emojis")]
+    StreamlineEmojis,
+    /// The `streamline-flex` icon set.
+    #[cfg(feature = "streamline-flex")]
+    StreamlineFlex,
+    /// The `streamline-flex-color` icon set.
+    #[cfg(feature = "streamline-flex-color")]
+    StreamlineFlexColor,
+    /// The `streamline-freehand` icon set.
+    #[cfg(feature = "streamline-freehand")]
+    StreamlineFreehand,
+    /// The `streamline-freehand-color` icon set.
+    #[cfg(feature = "streamline-freehand-color")]
+    StreamlineFreehandColor,
+    /// The `streamline-kameleon-color` icon set.
+    #[cfg(feature = "streamline-kameleon-color")]
+    StreamlineKameleonColor,
+    /// The `streamline-logos` icon set.
+    #[cfg(feature = "streamline-logos")]
+    StreamlineLogos,
+    /// The `streamline-memes` icon set.
+    #[cfg(feature = "streamline-memes")]
+    StreamlineMemes,
+    /// The `streamline-pixel` icon set.
+    #[cfg(feature = "streamline-pixel")]
+    StreamlinePixel,
+    /// The `streamline-plump` icon set.
+    #[cfg(feature = "streamline-plump")]
+    StreamlinePlump,
+    /// The `streamline-plump-color` icon set.
+    #[cfg(feature = "streamline-plump-color")]
+    StreamlinePlumpColor,
+    /// The `streamline-sharp` icon set.
+    #[cfg(feature = "streamline-sharp")]
+    StreamlineSharp,
+    /// The `streamline-sharp-color` icon set.
+    #[cfg(feature = "streamline-sharp-color")]
+    StreamlineSharpColor,
+    /// The `streamline-stickies-color` icon set.
+    #[cfg(feature = "streamline-stickies-color")]
+    StreamlineStickiesColor,
+    /// The `streamline-ultimate` icon set.
+    #[cfg(feature = "streamline-ultimate")]
+    StreamlineUltimate,
+    /// The `streamline-ultimate-color` icon set.
+    #[cfg(feature = "streamline-ultimate-color")]
+    StreamlineUltimateColor,
+    /// The `struq` icon set.
+    #[cfg(feature = "struq")]
+    Struq,
+    /// The `subway` icon set.
+    #[cfg(feature = "subway")]
+    Subway,
+    /// The `svg-spinners` icon set.
+    #[cfg(feature = "svg-spinners")]
+    SvgSpinners,
+    /// The `system-uicons` icon set.
+    #[cfg(feature = "system-uicons")]
+    SystemUicons,
+    /// The `tabler` icon set.
+    #[cfg(feature = "tabler")]
+    Tabler,
+    /// The `tabler-flags` icon set.
+    #[cfg(feature = "tabler-flags")]
+    TablerFlags,
+    /// The `tdesign` icon set.
+    #[cfg(feature = "tdesign")]
+    Tdesign,
+    /// The `teenyicons` icon set.
+    #[cfg(feature = "teenyicons")]
+    Teenyicons,
+    /// The `temaki` icon set.
+    #[cfg(feature = "temaki")]
+    Temaki,
+    /// The `thesvg` icon set.
+    #[cfg(feature = "thesvg")]
+    Thesvg,
+    /// The `thesvg-color` icon set.
+    #[cfg(feature = "thesvg-color")]
+    ThesvgColor,
+    /// The `token` icon set.
+    #[cfg(feature = "token")]
+    Token,
+    /// The `token-branded` icon set.
+    #[cfg(feature = "token-branded")]
+    TokenBranded,
+    /// The `topcoat` icon set.
+    #[cfg(feature = "topcoat")]
+    Topcoat,
+    /// The `twemoji` icon set.
+    #[cfg(feature = "twemoji")]
+    Twemoji,
+    /// The `typcn` icon set.
+    #[cfg(feature = "typcn")]
+    Typcn,
+    /// The `uil` icon set.
+    #[cfg(feature = "uil")]
+    Uil,
+    /// The `uim` icon set.
+    #[cfg(feature = "uim")]
+    Uim,
+    /// The `uis` icon set.
+    #[cfg(feature = "uis")]
+    Uis,
+    /// The `uit` icon set.
+    #[cfg(feature = "uit")]
+    Uit,
+    /// The `uiw` icon set.
+    #[cfg(feature = "uiw")]
+    Uiw,
+    /// The `unjs` icon set.
+    #[cfg(feature = "unjs")]
+    Unjs,
+    /// The `vaadin` icon set.
+    #[cfg(feature = "vaadin")]
+    Vaadin,
+    /// The `vadivam` icon set.
+    #[cfg(feature = "vadivam")]
+    Vadivam,
+    /// The `vs` icon set.
+    #[cfg(feature = "vs")]
+    Vs,
+    /// The `vscode-icons` icon set.
+    #[cfg(feature = "vscode-icons")]
+    VscodeIcons,
+    /// The `websymbol` icon set.
+    #[cfg(feature = "websymbol")]
+    Websymbol,
+    /// The `weui` icon set.
+    #[cfg(feature = "weui")]
+    Weui,
+    /// The `whh` icon set.
+    #[cfg(feature = "whh")]
+    Whh,
+    /// The `wi` icon set.
+    #[cfg(feature = "wi")]
+    Wi,
+    /// The `withicons` icon set.
+    #[cfg(feature = "withicons")]
+    Withicons,
+    /// The `withicons-anime` icon set.
+    #[cfg(feature = "withicons-anime")]
+    WithiconsAnime,
+    /// The `withicons-bauhaus` icon set.
+    #[cfg(feature = "withicons-bauhaus")]
+    WithiconsBauhaus,
+    /// The `withicons-bento` icon set.
+    #[cfg(feature = "withicons-bento")]
+    WithiconsBento,
+    /// The `withicons-brutal` icon set.
+    #[cfg(feature = "withicons-brutal")]
+    WithiconsBrutal,
+    /// The `withicons-christmas` icon set.
+    #[cfg(feature = "withicons-christmas")]
+    WithiconsChristmas,
+    /// The `withicons-chrome` icon set.
+    #[cfg(feature = "withicons-chrome")]
+    WithiconsChrome,
+    /// The `withicons-clay` icon set.
+    #[cfg(feature = "withicons-clay")]
+    WithiconsClay,
+    /// The `withicons-coquette` icon set.
+    #[cfg(feature = "withicons-coquette")]
+    WithiconsCoquette,
+    /// The `withicons-dock` icon set.
+    #[cfg(feature = "withicons-dock")]
+    WithiconsDock,
+    /// The `withicons-glass` icon set.
+    #[cfg(feature = "withicons-glass")]
+    WithiconsGlass,
+    /// The `withicons-gothic` icon set.
+    #[cfg(feature = "withicons-gothic")]
+    WithiconsGothic,
+    /// The `withicons-halloween` icon set.
+    #[cfg(feature = "withicons-halloween")]
+    WithiconsHalloween,
+    /// The `withicons-kawaii` icon set.
+    #[cfg(feature = "withicons-kawaii")]
+    WithiconsKawaii,
+    /// The `withicons-liquid` icon set.
+    #[cfg(feature = "withicons-liquid")]
+    WithiconsLiquid,
+    /// The `withicons-lunar` icon set.
+    #[cfg(feature = "withicons-lunar")]
+    WithiconsLunar,
+    /// The `withicons-luxe` icon set.
+    #[cfg(feature = "withicons-luxe")]
+    WithiconsLuxe,
+    /// The `withicons-pastel` icon set.
+    #[cfg(feature = "withicons-pastel")]
+    WithiconsPastel,
+    /// The `withicons-plush` icon set.
+    #[cfg(feature = "withicons-plush")]
+    WithiconsPlush,
+    /// The `withicons-rangoli` icon set.
+    #[cfg(feature = "withicons-rangoli")]
+    WithiconsRangoli,
+    /// The `withicons-retro` icon set.
+    #[cfg(feature = "withicons-retro")]
+    WithiconsRetro,
+    /// The `withicons-skeuo` icon set.
+    #[cfg(feature = "withicons-skeuo")]
+    WithiconsSkeuo,
+    /// The `withicons-soft3d` icon set.
+    #[cfg(feature = "withicons-soft3d")]
+    WithiconsSoft3d,
+    /// The `withicons-sticker` icon set.
+    #[cfg(feature = "withicons-sticker")]
+    WithiconsSticker,
+    /// The `withicons-suite` icon set.
+    #[cfg(feature = "withicons-suite")]
+    WithiconsSuite,
+    /// The `withicons-utsav` icon set.
+    #[cfg(feature = "withicons-utsav")]
+    WithiconsUtsav,
+    /// The `withicons-valentine` icon set.
+    #[cfg(feature = "withicons-valentine")]
+    WithiconsValentine,
+    /// The `wordpress` icon set.
+    #[cfg(feature = "wordpress")]
+    Wordpress,
+    /// The `wpf` icon set.
+    #[cfg(feature = "wpf")]
+    Wpf,
+    /// The `zmdi` icon set.
+    #[cfg(feature = "zmdi")]
+    Zmdi,
+    /// The `zondicons` icon set.
+    #[cfg(feature = "zondicons")]
+    Zondicons,
 }
 
 /// Whether the icon set `name` is enabled. `icon_sets!` checks each declared set with this.
 #[doc(hidden)]
 #[allow(unused_variables)] // With no sets enabled, `name` is never read.
 pub const fn __set_enabled(name: &str) -> bool {
+    #[cfg(feature = "academicons")]
+    if crate::bytes_equal(name.as_bytes(), "academicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "akar-icons")]
+    if crate::bytes_equal(name.as_bytes(), "akar-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "andrsrxn")]
+    if crate::bytes_equal(name.as_bytes(), "andrsrxn".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ant-design")]
+    if crate::bytes_equal(name.as_bytes(), "ant-design".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "arcticons")]
+    if crate::bytes_equal(name.as_bytes(), "arcticons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "at-icons")]
+    if crate::bytes_equal(name.as_bytes(), "at-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "basil")]
+    if crate::bytes_equal(name.as_bytes(), "basil".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "bi")]
+    if crate::bytes_equal(name.as_bytes(), "bi".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "bitcoin-icons")]
+    if crate::bytes_equal(name.as_bytes(), "bitcoin-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "boxicons")]
+    if crate::bytes_equal(name.as_bytes(), "boxicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "bpmn")]
+    if crate::bytes_equal(name.as_bytes(), "bpmn".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "brandico")]
+    if crate::bytes_equal(name.as_bytes(), "brandico".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "bx")]
+    if crate::bytes_equal(name.as_bytes(), "bx".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "bxl")]
+    if crate::bytes_equal(name.as_bytes(), "bxl".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "bxs")]
+    if crate::bytes_equal(name.as_bytes(), "bxs".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "bytesize")]
+    if crate::bytes_equal(name.as_bytes(), "bytesize".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "carbon")]
+    if crate::bytes_equal(name.as_bytes(), "carbon".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "catppuccin")]
+    if crate::bytes_equal(name.as_bytes(), "catppuccin".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "cbi")]
+    if crate::bytes_equal(name.as_bytes(), "cbi".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "charm")]
+    if crate::bytes_equal(name.as_bytes(), "charm".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ci")]
+    if crate::bytes_equal(name.as_bytes(), "ci".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "cib")]
+    if crate::bytes_equal(name.as_bytes(), "cib".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "cif")]
+    if crate::bytes_equal(name.as_bytes(), "cif".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "cil")]
+    if crate::bytes_equal(name.as_bytes(), "cil".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "circle-flags")]
+    if crate::bytes_equal(name.as_bytes(), "circle-flags".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "circum")]
+    if crate::bytes_equal(name.as_bytes(), "circum".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "clarity")]
+    if crate::bytes_equal(name.as_bytes(), "clarity".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "codex")]
+    if crate::bytes_equal(name.as_bytes(), "codex".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "codicon")]
+    if crate::bytes_equal(name.as_bytes(), "codicon".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "coolicons")]
+    if crate::bytes_equal(name.as_bytes(), "coolicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "covid")]
+    if crate::bytes_equal(name.as_bytes(), "covid".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "cryptocurrency")]
+    if crate::bytes_equal(name.as_bytes(), "cryptocurrency".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "cryptocurrency-color")]
+    if crate::bytes_equal(name.as_bytes(), "cryptocurrency-color".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "cuida")]
+    if crate::bytes_equal(name.as_bytes(), "cuida".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "dashicons")]
+    if crate::bytes_equal(name.as_bytes(), "dashicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "devicon")]
+    if crate::bytes_equal(name.as_bytes(), "devicon".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "devicon-plain")]
+    if crate::bytes_equal(name.as_bytes(), "devicon-plain".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "dinkie-icons")]
+    if crate::bytes_equal(name.as_bytes(), "dinkie-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "doodle-icons")]
+    if crate::bytes_equal(name.as_bytes(), "doodle-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "duo-icons")]
+    if crate::bytes_equal(name.as_bytes(), "duo-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ei")]
+    if crate::bytes_equal(name.as_bytes(), "ei".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "el")]
+    if crate::bytes_equal(name.as_bytes(), "el".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "emojione")]
+    if crate::bytes_equal(name.as_bytes(), "emojione".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "emojione-monotone")]
+    if crate::bytes_equal(name.as_bytes(), "emojione-monotone".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "emojione-v1")]
+    if crate::bytes_equal(name.as_bytes(), "emojione-v1".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "energy-icons")]
+    if crate::bytes_equal(name.as_bytes(), "energy-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "entypo")]
+    if crate::bytes_equal(name.as_bytes(), "entypo".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "entypo-social")]
+    if crate::bytes_equal(name.as_bytes(), "entypo-social".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "eos-icons")]
+    if crate::bytes_equal(name.as_bytes(), "eos-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ep")]
+    if crate::bytes_equal(name.as_bytes(), "ep".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "et")]
+    if crate::bytes_equal(name.as_bytes(), "et".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "eva")]
+    if crate::bytes_equal(name.as_bytes(), "eva".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "f7")]
+    if crate::bytes_equal(name.as_bytes(), "f7".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fa")]
+    if crate::bytes_equal(name.as_bytes(), "fa".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fa-brands")]
+    if crate::bytes_equal(name.as_bytes(), "fa-brands".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fa-regular")]
+    if crate::bytes_equal(name.as_bytes(), "fa-regular".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fa-solid")]
+    if crate::bytes_equal(name.as_bytes(), "fa-solid".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fa6-brands")]
+    if crate::bytes_equal(name.as_bytes(), "fa6-brands".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fa6-regular")]
+    if crate::bytes_equal(name.as_bytes(), "fa6-regular".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fa6-solid")]
+    if crate::bytes_equal(name.as_bytes(), "fa6-solid".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fa7-brands")]
+    if crate::bytes_equal(name.as_bytes(), "fa7-brands".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fa7-regular")]
+    if crate::bytes_equal(name.as_bytes(), "fa7-regular".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fa7-solid")]
+    if crate::bytes_equal(name.as_bytes(), "fa7-solid".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fad")]
+    if crate::bytes_equal(name.as_bytes(), "fad".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "famicons")]
+    if crate::bytes_equal(name.as_bytes(), "famicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fe")]
+    if crate::bytes_equal(name.as_bytes(), "fe".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "feather")]
+    if crate::bytes_equal(name.as_bytes(), "feather".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "file-icons")]
+    if crate::bytes_equal(name.as_bytes(), "file-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "flag")]
+    if crate::bytes_equal(name.as_bytes(), "flag".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "flagpack")]
+    if crate::bytes_equal(name.as_bytes(), "flagpack".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "flat-color-icons")]
+    if crate::bytes_equal(name.as_bytes(), "flat-color-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "flat-ui")]
+    if crate::bytes_equal(name.as_bytes(), "flat-ui".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "flowbite")]
+    if crate::bytes_equal(name.as_bytes(), "flowbite".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fluent")]
+    if crate::bytes_equal(name.as_bytes(), "fluent".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fluent-color")]
+    if crate::bytes_equal(name.as_bytes(), "fluent-color".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fluent-emoji")]
+    if crate::bytes_equal(name.as_bytes(), "fluent-emoji".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fluent-emoji-flat")]
+    if crate::bytes_equal(name.as_bytes(), "fluent-emoji-flat".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fluent-emoji-high-contrast")]
+    if crate::bytes_equal(name.as_bytes(), "fluent-emoji-high-contrast".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fluent-mdl2")]
+    if crate::bytes_equal(name.as_bytes(), "fluent-mdl2".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fontelico")]
+    if crate::bytes_equal(name.as_bytes(), "fontelico".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fontisto")]
+    if crate::bytes_equal(name.as_bytes(), "fontisto".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "formkit")]
+    if crate::bytes_equal(name.as_bytes(), "formkit".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "foundation")]
+    if crate::bytes_equal(name.as_bytes(), "foundation".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "fxemoji")]
+    if crate::bytes_equal(name.as_bytes(), "fxemoji".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "gala")]
+    if crate::bytes_equal(name.as_bytes(), "gala".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "game-icons")]
+    if crate::bytes_equal(name.as_bytes(), "game-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "garden")]
+    if crate::bytes_equal(name.as_bytes(), "garden".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "gcp")]
+    if crate::bytes_equal(name.as_bytes(), "gcp".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "geo")]
+    if crate::bytes_equal(name.as_bytes(), "geo".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "gg")]
+    if crate::bytes_equal(name.as_bytes(), "gg".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ginetex")]
+    if crate::bytes_equal(name.as_bytes(), "ginetex".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "gis")]
+    if crate::bytes_equal(name.as_bytes(), "gis".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "glyphs")]
+    if crate::bytes_equal(name.as_bytes(), "glyphs".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "glyphs-poly")]
+    if crate::bytes_equal(name.as_bytes(), "glyphs-poly".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "gravity-ui")]
+    if crate::bytes_equal(name.as_bytes(), "gravity-ui".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "griddy-icons")]
+    if crate::bytes_equal(name.as_bytes(), "griddy-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "gridicons")]
+    if crate::bytes_equal(name.as_bytes(), "gridicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "grommet-icons")]
+    if crate::bytes_equal(name.as_bytes(), "grommet-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "guidance")]
+    if crate::bytes_equal(name.as_bytes(), "guidance".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "healthicons")]
+    if crate::bytes_equal(name.as_bytes(), "healthicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "heroicons")]
+    if crate::bytes_equal(name.as_bytes(), "heroicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "heroicons-outline")]
+    if crate::bytes_equal(name.as_bytes(), "heroicons-outline".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "heroicons-solid")]
+    if crate::bytes_equal(name.as_bytes(), "heroicons-solid".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "hugeicons")]
+    if crate::bytes_equal(name.as_bytes(), "hugeicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "humbleicons")]
+    if crate::bytes_equal(name.as_bytes(), "humbleicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ic")]
+    if crate::bytes_equal(name.as_bytes(), "ic".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "icomoon-free")]
+    if crate::bytes_equal(name.as_bytes(), "icomoon-free".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "icon-park")]
+    if crate::bytes_equal(name.as_bytes(), "icon-park".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "icon-park-outline")]
+    if crate::bytes_equal(name.as_bytes(), "icon-park-outline".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "icon-park-solid")]
+    if crate::bytes_equal(name.as_bytes(), "icon-park-solid".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "icon-park-twotone")]
+    if crate::bytes_equal(name.as_bytes(), "icon-park-twotone".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "iconamoon")]
+    if crate::bytes_equal(name.as_bytes(), "iconamoon".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "iconito")]
+    if crate::bytes_equal(name.as_bytes(), "iconito".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "iconmind")]
+    if crate::bytes_equal(name.as_bytes(), "iconmind".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "iconoir")]
+    if crate::bytes_equal(name.as_bytes(), "iconoir".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "iconoven")]
+    if crate::bytes_equal(name.as_bytes(), "iconoven".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "icons8")]
+    if crate::bytes_equal(name.as_bytes(), "icons8".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "il")]
+    if crate::bytes_equal(name.as_bytes(), "il".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ion")]
+    if crate::bytes_equal(name.as_bytes(), "ion".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "iwwa")]
+    if crate::bytes_equal(name.as_bytes(), "iwwa".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ix")]
+    if crate::bytes_equal(name.as_bytes(), "ix".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "jam")]
+    if crate::bytes_equal(name.as_bytes(), "jam".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "k8s")]
+    if crate::bytes_equal(name.as_bytes(), "k8s".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "keyline-icons")]
+    if crate::bytes_equal(name.as_bytes(), "keyline-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "la")]
+    if crate::bytes_equal(name.as_bytes(), "la".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "lets-icons")]
+    if crate::bytes_equal(name.as_bytes(), "lets-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "line-md")]
+    if crate::bytes_equal(name.as_bytes(), "line-md".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "lineicons")]
+    if crate::bytes_equal(name.as_bytes(), "lineicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "logos")]
+    if crate::bytes_equal(name.as_bytes(), "logos".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ls")]
+    if crate::bytes_equal(name.as_bytes(), "ls".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "lsicon")]
+    if crate::bytes_equal(name.as_bytes(), "lsicon".as_bytes()) {
+        return true;
+    }
     #[cfg(feature = "lucide")]
     if crate::bytes_equal(name.as_bytes(), "lucide".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "lucide-extended")]
+    if crate::bytes_equal(name.as_bytes(), "lucide-extended".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "lucide-lab")]
+    if crate::bytes_equal(name.as_bytes(), "lucide-lab".as_bytes()) {
         return true;
     }
     #[cfg(feature = "mage")]
     if crate::bytes_equal(name.as_bytes(), "mage".as_bytes()) {
         return true;
     }
+    #[cfg(feature = "majesticons")]
+    if crate::bytes_equal(name.as_bytes(), "majesticons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "maki")]
+    if crate::bytes_equal(name.as_bytes(), "maki".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "map")]
+    if crate::bytes_equal(name.as_bytes(), "map".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "marketeq")]
+    if crate::bytes_equal(name.as_bytes(), "marketeq".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "material-icon-theme")]
+    if crate::bytes_equal(name.as_bytes(), "material-icon-theme".as_bytes()) {
+        return true;
+    }
     #[cfg(feature = "material-symbols")]
     if crate::bytes_equal(name.as_bytes(), "material-symbols".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "material-symbols-light")]
+    if crate::bytes_equal(name.as_bytes(), "material-symbols-light".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "matita")]
+    if crate::bytes_equal(name.as_bytes(), "matita".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "mdi")]
+    if crate::bytes_equal(name.as_bytes(), "mdi".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "mdi-light")]
+    if crate::bytes_equal(name.as_bytes(), "mdi-light".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "medical-icon")]
+    if crate::bytes_equal(name.as_bytes(), "medical-icon".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "memory")]
+    if crate::bytes_equal(name.as_bytes(), "memory".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "meteocons")]
+    if crate::bytes_equal(name.as_bytes(), "meteocons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "meteor-icons")]
+    if crate::bytes_equal(name.as_bytes(), "meteor-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "mi")]
+    if crate::bytes_equal(name.as_bytes(), "mi".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "mingcute")]
+    if crate::bytes_equal(name.as_bytes(), "mingcute".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "mono-icons")]
+    if crate::bytes_equal(name.as_bytes(), "mono-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "mynaui")]
+    if crate::bytes_equal(name.as_bytes(), "mynaui".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "nimbus")]
+    if crate::bytes_equal(name.as_bytes(), "nimbus".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "nonicons")]
+    if crate::bytes_equal(name.as_bytes(), "nonicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "noto")]
+    if crate::bytes_equal(name.as_bytes(), "noto".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "noto-v1")]
+    if crate::bytes_equal(name.as_bytes(), "noto-v1".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "nrk")]
+    if crate::bytes_equal(name.as_bytes(), "nrk".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "octicon")]
+    if crate::bytes_equal(name.as_bytes(), "octicon".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "oi")]
+    if crate::bytes_equal(name.as_bytes(), "oi".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ooui")]
+    if crate::bytes_equal(name.as_bytes(), "ooui".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "openmoji")]
+    if crate::bytes_equal(name.as_bytes(), "openmoji".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "osmic")]
+    if crate::bytes_equal(name.as_bytes(), "osmic".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "oui")]
+    if crate::bytes_equal(name.as_bytes(), "oui".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "pajamas")]
+    if crate::bytes_equal(name.as_bytes(), "pajamas".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "pepicons")]
+    if crate::bytes_equal(name.as_bytes(), "pepicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "pepicons-pencil")]
+    if crate::bytes_equal(name.as_bytes(), "pepicons-pencil".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "pepicons-pop")]
+    if crate::bytes_equal(name.as_bytes(), "pepicons-pop".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "pepicons-print")]
+    if crate::bytes_equal(name.as_bytes(), "pepicons-print".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ph")]
+    if crate::bytes_equal(name.as_bytes(), "ph".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "picon")]
+    if crate::bytes_equal(name.as_bytes(), "picon".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "pinhead")]
+    if crate::bytes_equal(name.as_bytes(), "pinhead".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "pixel")]
+    if crate::bytes_equal(name.as_bytes(), "pixel".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "pixelarticons")]
+    if crate::bytes_equal(name.as_bytes(), "pixelarticons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "prime")]
+    if crate::bytes_equal(name.as_bytes(), "prime".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "proicons")]
+    if crate::bytes_equal(name.as_bytes(), "proicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ps")]
+    if crate::bytes_equal(name.as_bytes(), "ps".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "qlementine-icons")]
+    if crate::bytes_equal(name.as_bytes(), "qlementine-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "quill")]
+    if crate::bytes_equal(name.as_bytes(), "quill".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "radix-icons")]
+    if crate::bytes_equal(name.as_bytes(), "radix-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "raphael")]
+    if crate::bytes_equal(name.as_bytes(), "raphael".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "reicon")]
+    if crate::bytes_equal(name.as_bytes(), "reicon".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "ri")]
+    if crate::bytes_equal(name.as_bytes(), "ri".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "rivet-icons")]
+    if crate::bytes_equal(name.as_bytes(), "rivet-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "roentgen")]
+    if crate::bytes_equal(name.as_bytes(), "roentgen".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "selfhst")]
+    if crate::bytes_equal(name.as_bytes(), "selfhst".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "si")]
+    if crate::bytes_equal(name.as_bytes(), "si".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "si-glyph")]
+    if crate::bytes_equal(name.as_bytes(), "si-glyph".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "sidekickicons")]
+    if crate::bytes_equal(name.as_bytes(), "sidekickicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "simple-icons")]
+    if crate::bytes_equal(name.as_bytes(), "simple-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "simple-line-icons")]
+    if crate::bytes_equal(name.as_bytes(), "simple-line-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "skill-icons")]
+    if crate::bytes_equal(name.as_bytes(), "skill-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "solar")]
+    if crate::bytes_equal(name.as_bytes(), "solar".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "stash")]
+    if crate::bytes_equal(name.as_bytes(), "stash".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline")]
+    if crate::bytes_equal(name.as_bytes(), "streamline".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-block")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-block".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-color")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-color".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-cyber")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-cyber".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-cyber-color")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-cyber-color".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-emojis")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-emojis".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-flex")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-flex".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-flex-color")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-flex-color".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-freehand")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-freehand".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-freehand-color")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-freehand-color".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-kameleon-color")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-kameleon-color".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-logos")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-logos".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-memes")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-memes".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-pixel")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-pixel".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-plump")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-plump".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-plump-color")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-plump-color".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-sharp")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-sharp".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-sharp-color")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-sharp-color".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-stickies-color")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-stickies-color".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-ultimate")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-ultimate".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "streamline-ultimate-color")]
+    if crate::bytes_equal(name.as_bytes(), "streamline-ultimate-color".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "struq")]
+    if crate::bytes_equal(name.as_bytes(), "struq".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "subway")]
+    if crate::bytes_equal(name.as_bytes(), "subway".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "svg-spinners")]
+    if crate::bytes_equal(name.as_bytes(), "svg-spinners".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "system-uicons")]
+    if crate::bytes_equal(name.as_bytes(), "system-uicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "tabler")]
+    if crate::bytes_equal(name.as_bytes(), "tabler".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "tabler-flags")]
+    if crate::bytes_equal(name.as_bytes(), "tabler-flags".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "tdesign")]
+    if crate::bytes_equal(name.as_bytes(), "tdesign".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "teenyicons")]
+    if crate::bytes_equal(name.as_bytes(), "teenyicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "temaki")]
+    if crate::bytes_equal(name.as_bytes(), "temaki".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "thesvg")]
+    if crate::bytes_equal(name.as_bytes(), "thesvg".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "thesvg-color")]
+    if crate::bytes_equal(name.as_bytes(), "thesvg-color".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "token")]
+    if crate::bytes_equal(name.as_bytes(), "token".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "token-branded")]
+    if crate::bytes_equal(name.as_bytes(), "token-branded".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "topcoat")]
+    if crate::bytes_equal(name.as_bytes(), "topcoat".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "twemoji")]
+    if crate::bytes_equal(name.as_bytes(), "twemoji".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "typcn")]
+    if crate::bytes_equal(name.as_bytes(), "typcn".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "uil")]
+    if crate::bytes_equal(name.as_bytes(), "uil".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "uim")]
+    if crate::bytes_equal(name.as_bytes(), "uim".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "uis")]
+    if crate::bytes_equal(name.as_bytes(), "uis".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "uit")]
+    if crate::bytes_equal(name.as_bytes(), "uit".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "uiw")]
+    if crate::bytes_equal(name.as_bytes(), "uiw".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "unjs")]
+    if crate::bytes_equal(name.as_bytes(), "unjs".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "vaadin")]
+    if crate::bytes_equal(name.as_bytes(), "vaadin".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "vadivam")]
+    if crate::bytes_equal(name.as_bytes(), "vadivam".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "vs")]
+    if crate::bytes_equal(name.as_bytes(), "vs".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "vscode-icons")]
+    if crate::bytes_equal(name.as_bytes(), "vscode-icons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "websymbol")]
+    if crate::bytes_equal(name.as_bytes(), "websymbol".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "weui")]
+    if crate::bytes_equal(name.as_bytes(), "weui".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "whh")]
+    if crate::bytes_equal(name.as_bytes(), "whh".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "wi")]
+    if crate::bytes_equal(name.as_bytes(), "wi".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons")]
+    if crate::bytes_equal(name.as_bytes(), "withicons".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-anime")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-anime".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-bauhaus")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-bauhaus".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-bento")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-bento".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-brutal")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-brutal".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-christmas")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-christmas".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-chrome")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-chrome".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-clay")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-clay".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-coquette")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-coquette".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-dock")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-dock".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-glass")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-glass".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-gothic")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-gothic".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-halloween")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-halloween".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-kawaii")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-kawaii".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-liquid")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-liquid".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-lunar")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-lunar".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-luxe")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-luxe".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-pastel")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-pastel".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-plush")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-plush".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-rangoli")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-rangoli".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-retro")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-retro".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-skeuo")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-skeuo".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-soft3d")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-soft3d".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-sticker")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-sticker".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-suite")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-suite".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-utsav")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-utsav".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "withicons-valentine")]
+    if crate::bytes_equal(name.as_bytes(), "withicons-valentine".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "wordpress")]
+    if crate::bytes_equal(name.as_bytes(), "wordpress".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "wpf")]
+    if crate::bytes_equal(name.as_bytes(), "wpf".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "zmdi")]
+    if crate::bytes_equal(name.as_bytes(), "zmdi".as_bytes()) {
+        return true;
+    }
+    #[cfg(feature = "zondicons")]
+    if crate::bytes_equal(name.as_bytes(), "zondicons".as_bytes()) {
         return true;
     }
     false
 }
 
+#[cfg(feature = "academicons")]
+__set_accessors!("academicons");
+
+#[cfg(feature = "akar-icons")]
+__set_accessors!("akar-icons");
+
+#[cfg(feature = "andrsrxn")]
+__set_accessors!("andrsrxn");
+
+#[cfg(feature = "ant-design")]
+__set_accessors!("ant-design");
+
+#[cfg(feature = "arcticons")]
+__set_accessors!("arcticons");
+
+#[cfg(feature = "at-icons")]
+__set_accessors!("at-icons");
+
+#[cfg(feature = "basil")]
+__set_accessors!("basil");
+
+#[cfg(feature = "bi")]
+__set_accessors!("bi");
+
+#[cfg(feature = "bitcoin-icons")]
+__set_accessors!("bitcoin-icons");
+
+#[cfg(feature = "boxicons")]
+__set_accessors!("boxicons");
+
+#[cfg(feature = "bpmn")]
+__set_accessors!("bpmn");
+
+#[cfg(feature = "brandico")]
+__set_accessors!("brandico");
+
+#[cfg(feature = "bx")]
+__set_accessors!("bx");
+
+#[cfg(feature = "bxl")]
+__set_accessors!("bxl");
+
+#[cfg(feature = "bxs")]
+__set_accessors!("bxs");
+
+#[cfg(feature = "bytesize")]
+__set_accessors!("bytesize");
+
+#[cfg(feature = "carbon")]
+__set_accessors!("carbon");
+
+#[cfg(feature = "catppuccin")]
+__set_accessors!("catppuccin");
+
+#[cfg(feature = "cbi")]
+__set_accessors!("cbi");
+
+#[cfg(feature = "charm")]
+__set_accessors!("charm");
+
+#[cfg(feature = "ci")]
+__set_accessors!("ci");
+
+#[cfg(feature = "cib")]
+__set_accessors!("cib");
+
+#[cfg(feature = "cif")]
+__set_accessors!("cif");
+
+#[cfg(feature = "cil")]
+__set_accessors!("cil");
+
+#[cfg(feature = "circle-flags")]
+__set_accessors!("circle-flags");
+
+#[cfg(feature = "circum")]
+__set_accessors!("circum");
+
+#[cfg(feature = "clarity")]
+__set_accessors!("clarity");
+
+#[cfg(feature = "codex")]
+__set_accessors!("codex");
+
+#[cfg(feature = "codicon")]
+__set_accessors!("codicon");
+
+#[cfg(feature = "coolicons")]
+__set_accessors!("coolicons");
+
+#[cfg(feature = "covid")]
+__set_accessors!("covid");
+
+#[cfg(feature = "cryptocurrency")]
+__set_accessors!("cryptocurrency");
+
+#[cfg(feature = "cryptocurrency-color")]
+__set_accessors!("cryptocurrency-color");
+
+#[cfg(feature = "cuida")]
+__set_accessors!("cuida");
+
+#[cfg(feature = "dashicons")]
+__set_accessors!("dashicons");
+
+#[cfg(feature = "devicon")]
+__set_accessors!("devicon");
+
+#[cfg(feature = "devicon-plain")]
+__set_accessors!("devicon-plain");
+
+#[cfg(feature = "dinkie-icons")]
+__set_accessors!("dinkie-icons");
+
+#[cfg(feature = "doodle-icons")]
+__set_accessors!("doodle-icons");
+
+#[cfg(feature = "duo-icons")]
+__set_accessors!("duo-icons");
+
+#[cfg(feature = "ei")]
+__set_accessors!("ei");
+
+#[cfg(feature = "el")]
+__set_accessors!("el");
+
+#[cfg(feature = "emojione")]
+__set_accessors!("emojione");
+
+#[cfg(feature = "emojione-monotone")]
+__set_accessors!("emojione-monotone");
+
+#[cfg(feature = "emojione-v1")]
+__set_accessors!("emojione-v1");
+
+#[cfg(feature = "energy-icons")]
+__set_accessors!("energy-icons");
+
+#[cfg(feature = "entypo")]
+__set_accessors!("entypo");
+
+#[cfg(feature = "entypo-social")]
+__set_accessors!("entypo-social");
+
+#[cfg(feature = "eos-icons")]
+__set_accessors!("eos-icons");
+
+#[cfg(feature = "ep")]
+__set_accessors!("ep");
+
+#[cfg(feature = "et")]
+__set_accessors!("et");
+
+#[cfg(feature = "eva")]
+__set_accessors!("eva");
+
+#[cfg(feature = "f7")]
+__set_accessors!("f7");
+
+#[cfg(feature = "fa")]
+__set_accessors!("fa");
+
+#[cfg(feature = "fa-brands")]
+__set_accessors!("fa-brands");
+
+#[cfg(feature = "fa-regular")]
+__set_accessors!("fa-regular");
+
+#[cfg(feature = "fa-solid")]
+__set_accessors!("fa-solid");
+
+#[cfg(feature = "fa6-brands")]
+__set_accessors!("fa6-brands");
+
+#[cfg(feature = "fa6-regular")]
+__set_accessors!("fa6-regular");
+
+#[cfg(feature = "fa6-solid")]
+__set_accessors!("fa6-solid");
+
+#[cfg(feature = "fa7-brands")]
+__set_accessors!("fa7-brands");
+
+#[cfg(feature = "fa7-regular")]
+__set_accessors!("fa7-regular");
+
+#[cfg(feature = "fa7-solid")]
+__set_accessors!("fa7-solid");
+
+#[cfg(feature = "fad")]
+__set_accessors!("fad");
+
+#[cfg(feature = "famicons")]
+__set_accessors!("famicons");
+
+#[cfg(feature = "fe")]
+__set_accessors!("fe");
+
+#[cfg(feature = "feather")]
+__set_accessors!("feather");
+
+#[cfg(feature = "file-icons")]
+__set_accessors!("file-icons");
+
+#[cfg(feature = "flag")]
+__set_accessors!("flag");
+
+#[cfg(feature = "flagpack")]
+__set_accessors!("flagpack");
+
+#[cfg(feature = "flat-color-icons")]
+__set_accessors!("flat-color-icons");
+
+#[cfg(feature = "flat-ui")]
+__set_accessors!("flat-ui");
+
+#[cfg(feature = "flowbite")]
+__set_accessors!("flowbite");
+
+#[cfg(feature = "fluent")]
+__set_accessors!("fluent");
+
+#[cfg(feature = "fluent-color")]
+__set_accessors!("fluent-color");
+
+#[cfg(feature = "fluent-emoji")]
+__set_accessors!("fluent-emoji");
+
+#[cfg(feature = "fluent-emoji-flat")]
+__set_accessors!("fluent-emoji-flat");
+
+#[cfg(feature = "fluent-emoji-high-contrast")]
+__set_accessors!("fluent-emoji-high-contrast");
+
+#[cfg(feature = "fluent-mdl2")]
+__set_accessors!("fluent-mdl2");
+
+#[cfg(feature = "fontelico")]
+__set_accessors!("fontelico");
+
+#[cfg(feature = "fontisto")]
+__set_accessors!("fontisto");
+
+#[cfg(feature = "formkit")]
+__set_accessors!("formkit");
+
+#[cfg(feature = "foundation")]
+__set_accessors!("foundation");
+
+#[cfg(feature = "fxemoji")]
+__set_accessors!("fxemoji");
+
+#[cfg(feature = "gala")]
+__set_accessors!("gala");
+
+#[cfg(feature = "game-icons")]
+__set_accessors!("game-icons");
+
+#[cfg(feature = "garden")]
+__set_accessors!("garden");
+
+#[cfg(feature = "gcp")]
+__set_accessors!("gcp");
+
+#[cfg(feature = "geo")]
+__set_accessors!("geo");
+
+#[cfg(feature = "gg")]
+__set_accessors!("gg");
+
+#[cfg(feature = "ginetex")]
+__set_accessors!("ginetex");
+
+#[cfg(feature = "gis")]
+__set_accessors!("gis");
+
+#[cfg(feature = "glyphs")]
+__set_accessors!("glyphs");
+
+#[cfg(feature = "glyphs-poly")]
+__set_accessors!("glyphs-poly");
+
+#[cfg(feature = "gravity-ui")]
+__set_accessors!("gravity-ui");
+
+#[cfg(feature = "griddy-icons")]
+__set_accessors!("griddy-icons");
+
+#[cfg(feature = "gridicons")]
+__set_accessors!("gridicons");
+
+#[cfg(feature = "grommet-icons")]
+__set_accessors!("grommet-icons");
+
+#[cfg(feature = "guidance")]
+__set_accessors!("guidance");
+
+#[cfg(feature = "healthicons")]
+__set_accessors!("healthicons");
+
+#[cfg(feature = "heroicons")]
+__set_accessors!("heroicons");
+
+#[cfg(feature = "heroicons-outline")]
+__set_accessors!("heroicons-outline");
+
+#[cfg(feature = "heroicons-solid")]
+__set_accessors!("heroicons-solid");
+
+#[cfg(feature = "hugeicons")]
+__set_accessors!("hugeicons");
+
+#[cfg(feature = "humbleicons")]
+__set_accessors!("humbleicons");
+
+#[cfg(feature = "ic")]
+__set_accessors!("ic");
+
+#[cfg(feature = "icomoon-free")]
+__set_accessors!("icomoon-free");
+
+#[cfg(feature = "icon-park")]
+__set_accessors!("icon-park");
+
+#[cfg(feature = "icon-park-outline")]
+__set_accessors!("icon-park-outline");
+
+#[cfg(feature = "icon-park-solid")]
+__set_accessors!("icon-park-solid");
+
+#[cfg(feature = "icon-park-twotone")]
+__set_accessors!("icon-park-twotone");
+
+#[cfg(feature = "iconamoon")]
+__set_accessors!("iconamoon");
+
+#[cfg(feature = "iconito")]
+__set_accessors!("iconito");
+
+#[cfg(feature = "iconmind")]
+__set_accessors!("iconmind");
+
+#[cfg(feature = "iconoir")]
+__set_accessors!("iconoir");
+
+#[cfg(feature = "iconoven")]
+__set_accessors!("iconoven");
+
+#[cfg(feature = "icons8")]
+__set_accessors!("icons8");
+
+#[cfg(feature = "il")]
+__set_accessors!("il");
+
+#[cfg(feature = "ion")]
+__set_accessors!("ion");
+
+#[cfg(feature = "iwwa")]
+__set_accessors!("iwwa");
+
+#[cfg(feature = "ix")]
+__set_accessors!("ix");
+
+#[cfg(feature = "jam")]
+__set_accessors!("jam");
+
+#[cfg(feature = "k8s")]
+__set_accessors!("k8s");
+
+#[cfg(feature = "keyline-icons")]
+__set_accessors!("keyline-icons");
+
+#[cfg(feature = "la")]
+__set_accessors!("la");
+
+#[cfg(feature = "lets-icons")]
+__set_accessors!("lets-icons");
+
+#[cfg(feature = "line-md")]
+__set_accessors!("line-md");
+
+#[cfg(feature = "lineicons")]
+__set_accessors!("lineicons");
+
+#[cfg(feature = "logos")]
+__set_accessors!("logos");
+
+#[cfg(feature = "ls")]
+__set_accessors!("ls");
+
+#[cfg(feature = "lsicon")]
+__set_accessors!("lsicon");
+
 #[cfg(feature = "lucide")]
 __set_accessors!("lucide");
+
+#[cfg(feature = "lucide-extended")]
+__set_accessors!("lucide-extended");
+
+#[cfg(feature = "lucide-lab")]
+__set_accessors!("lucide-lab");
 
 #[cfg(feature = "mage")]
 __set_accessors!("mage");
 
+#[cfg(feature = "majesticons")]
+__set_accessors!("majesticons");
+
+#[cfg(feature = "maki")]
+__set_accessors!("maki");
+
+#[cfg(feature = "map")]
+__set_accessors!("map");
+
+#[cfg(feature = "marketeq")]
+__set_accessors!("marketeq");
+
+#[cfg(feature = "material-icon-theme")]
+__set_accessors!("material-icon-theme");
+
 #[cfg(feature = "material-symbols")]
 __set_accessors!("material-symbols");
+
+#[cfg(feature = "material-symbols-light")]
+__set_accessors!("material-symbols-light");
+
+#[cfg(feature = "matita")]
+__set_accessors!("matita");
+
+#[cfg(feature = "mdi")]
+__set_accessors!("mdi");
+
+#[cfg(feature = "mdi-light")]
+__set_accessors!("mdi-light");
+
+#[cfg(feature = "medical-icon")]
+__set_accessors!("medical-icon");
+
+#[cfg(feature = "memory")]
+__set_accessors!("memory");
+
+#[cfg(feature = "meteocons")]
+__set_accessors!("meteocons");
+
+#[cfg(feature = "meteor-icons")]
+__set_accessors!("meteor-icons");
+
+#[cfg(feature = "mi")]
+__set_accessors!("mi");
+
+#[cfg(feature = "mingcute")]
+__set_accessors!("mingcute");
+
+#[cfg(feature = "mono-icons")]
+__set_accessors!("mono-icons");
+
+#[cfg(feature = "mynaui")]
+__set_accessors!("mynaui");
+
+#[cfg(feature = "nimbus")]
+__set_accessors!("nimbus");
+
+#[cfg(feature = "nonicons")]
+__set_accessors!("nonicons");
+
+#[cfg(feature = "noto")]
+__set_accessors!("noto");
+
+#[cfg(feature = "noto-v1")]
+__set_accessors!("noto-v1");
+
+#[cfg(feature = "nrk")]
+__set_accessors!("nrk");
+
+#[cfg(feature = "octicon")]
+__set_accessors!("octicon");
+
+#[cfg(feature = "oi")]
+__set_accessors!("oi");
+
+#[cfg(feature = "ooui")]
+__set_accessors!("ooui");
+
+#[cfg(feature = "openmoji")]
+__set_accessors!("openmoji");
+
+#[cfg(feature = "osmic")]
+__set_accessors!("osmic");
+
+#[cfg(feature = "oui")]
+__set_accessors!("oui");
+
+#[cfg(feature = "pajamas")]
+__set_accessors!("pajamas");
+
+#[cfg(feature = "pepicons")]
+__set_accessors!("pepicons");
+
+#[cfg(feature = "pepicons-pencil")]
+__set_accessors!("pepicons-pencil");
+
+#[cfg(feature = "pepicons-pop")]
+__set_accessors!("pepicons-pop");
+
+#[cfg(feature = "pepicons-print")]
+__set_accessors!("pepicons-print");
+
+#[cfg(feature = "ph")]
+__set_accessors!("ph");
+
+#[cfg(feature = "picon")]
+__set_accessors!("picon");
+
+#[cfg(feature = "pinhead")]
+__set_accessors!("pinhead");
+
+#[cfg(feature = "pixel")]
+__set_accessors!("pixel");
+
+#[cfg(feature = "pixelarticons")]
+__set_accessors!("pixelarticons");
+
+#[cfg(feature = "prime")]
+__set_accessors!("prime");
+
+#[cfg(feature = "proicons")]
+__set_accessors!("proicons");
+
+#[cfg(feature = "ps")]
+__set_accessors!("ps");
+
+#[cfg(feature = "qlementine-icons")]
+__set_accessors!("qlementine-icons");
+
+#[cfg(feature = "quill")]
+__set_accessors!("quill");
+
+#[cfg(feature = "radix-icons")]
+__set_accessors!("radix-icons");
+
+#[cfg(feature = "raphael")]
+__set_accessors!("raphael");
+
+#[cfg(feature = "reicon")]
+__set_accessors!("reicon");
+
+#[cfg(feature = "ri")]
+__set_accessors!("ri");
+
+#[cfg(feature = "rivet-icons")]
+__set_accessors!("rivet-icons");
+
+#[cfg(feature = "roentgen")]
+__set_accessors!("roentgen");
+
+#[cfg(feature = "selfhst")]
+__set_accessors!("selfhst");
+
+#[cfg(feature = "si")]
+__set_accessors!("si");
+
+#[cfg(feature = "si-glyph")]
+__set_accessors!("si-glyph");
+
+#[cfg(feature = "sidekickicons")]
+__set_accessors!("sidekickicons");
+
+#[cfg(feature = "simple-icons")]
+__set_accessors!("simple-icons");
+
+#[cfg(feature = "simple-line-icons")]
+__set_accessors!("simple-line-icons");
+
+#[cfg(feature = "skill-icons")]
+__set_accessors!("skill-icons");
+
+#[cfg(feature = "solar")]
+__set_accessors!("solar");
+
+#[cfg(feature = "stash")]
+__set_accessors!("stash");
+
+#[cfg(feature = "streamline")]
+__set_accessors!("streamline");
+
+#[cfg(feature = "streamline-block")]
+__set_accessors!("streamline-block");
+
+#[cfg(feature = "streamline-color")]
+__set_accessors!("streamline-color");
+
+#[cfg(feature = "streamline-cyber")]
+__set_accessors!("streamline-cyber");
+
+#[cfg(feature = "streamline-cyber-color")]
+__set_accessors!("streamline-cyber-color");
+
+#[cfg(feature = "streamline-emojis")]
+__set_accessors!("streamline-emojis");
+
+#[cfg(feature = "streamline-flex")]
+__set_accessors!("streamline-flex");
+
+#[cfg(feature = "streamline-flex-color")]
+__set_accessors!("streamline-flex-color");
+
+#[cfg(feature = "streamline-freehand")]
+__set_accessors!("streamline-freehand");
+
+#[cfg(feature = "streamline-freehand-color")]
+__set_accessors!("streamline-freehand-color");
+
+#[cfg(feature = "streamline-kameleon-color")]
+__set_accessors!("streamline-kameleon-color");
+
+#[cfg(feature = "streamline-logos")]
+__set_accessors!("streamline-logos");
+
+#[cfg(feature = "streamline-memes")]
+__set_accessors!("streamline-memes");
+
+#[cfg(feature = "streamline-pixel")]
+__set_accessors!("streamline-pixel");
+
+#[cfg(feature = "streamline-plump")]
+__set_accessors!("streamline-plump");
+
+#[cfg(feature = "streamline-plump-color")]
+__set_accessors!("streamline-plump-color");
+
+#[cfg(feature = "streamline-sharp")]
+__set_accessors!("streamline-sharp");
+
+#[cfg(feature = "streamline-sharp-color")]
+__set_accessors!("streamline-sharp-color");
+
+#[cfg(feature = "streamline-stickies-color")]
+__set_accessors!("streamline-stickies-color");
+
+#[cfg(feature = "streamline-ultimate")]
+__set_accessors!("streamline-ultimate");
+
+#[cfg(feature = "streamline-ultimate-color")]
+__set_accessors!("streamline-ultimate-color");
+
+#[cfg(feature = "struq")]
+__set_accessors!("struq");
+
+#[cfg(feature = "subway")]
+__set_accessors!("subway");
+
+#[cfg(feature = "svg-spinners")]
+__set_accessors!("svg-spinners");
+
+#[cfg(feature = "system-uicons")]
+__set_accessors!("system-uicons");
+
+#[cfg(feature = "tabler")]
+__set_accessors!("tabler");
+
+#[cfg(feature = "tabler-flags")]
+__set_accessors!("tabler-flags");
+
+#[cfg(feature = "tdesign")]
+__set_accessors!("tdesign");
+
+#[cfg(feature = "teenyicons")]
+__set_accessors!("teenyicons");
+
+#[cfg(feature = "temaki")]
+__set_accessors!("temaki");
+
+#[cfg(feature = "thesvg")]
+__set_accessors!("thesvg");
+
+#[cfg(feature = "thesvg-color")]
+__set_accessors!("thesvg-color");
+
+#[cfg(feature = "token")]
+__set_accessors!("token");
+
+#[cfg(feature = "token-branded")]
+__set_accessors!("token-branded");
+
+#[cfg(feature = "topcoat")]
+__set_accessors!("topcoat");
+
+#[cfg(feature = "twemoji")]
+__set_accessors!("twemoji");
+
+#[cfg(feature = "typcn")]
+__set_accessors!("typcn");
+
+#[cfg(feature = "uil")]
+__set_accessors!("uil");
+
+#[cfg(feature = "uim")]
+__set_accessors!("uim");
+
+#[cfg(feature = "uis")]
+__set_accessors!("uis");
+
+#[cfg(feature = "uit")]
+__set_accessors!("uit");
+
+#[cfg(feature = "uiw")]
+__set_accessors!("uiw");
+
+#[cfg(feature = "unjs")]
+__set_accessors!("unjs");
+
+#[cfg(feature = "vaadin")]
+__set_accessors!("vaadin");
+
+#[cfg(feature = "vadivam")]
+__set_accessors!("vadivam");
+
+#[cfg(feature = "vs")]
+__set_accessors!("vs");
+
+#[cfg(feature = "vscode-icons")]
+__set_accessors!("vscode-icons");
+
+#[cfg(feature = "websymbol")]
+__set_accessors!("websymbol");
+
+#[cfg(feature = "weui")]
+__set_accessors!("weui");
+
+#[cfg(feature = "whh")]
+__set_accessors!("whh");
+
+#[cfg(feature = "wi")]
+__set_accessors!("wi");
+
+#[cfg(feature = "withicons")]
+__set_accessors!("withicons");
+
+#[cfg(feature = "withicons-anime")]
+__set_accessors!("withicons-anime");
+
+#[cfg(feature = "withicons-bauhaus")]
+__set_accessors!("withicons-bauhaus");
+
+#[cfg(feature = "withicons-bento")]
+__set_accessors!("withicons-bento");
+
+#[cfg(feature = "withicons-brutal")]
+__set_accessors!("withicons-brutal");
+
+#[cfg(feature = "withicons-christmas")]
+__set_accessors!("withicons-christmas");
+
+#[cfg(feature = "withicons-chrome")]
+__set_accessors!("withicons-chrome");
+
+#[cfg(feature = "withicons-clay")]
+__set_accessors!("withicons-clay");
+
+#[cfg(feature = "withicons-coquette")]
+__set_accessors!("withicons-coquette");
+
+#[cfg(feature = "withicons-dock")]
+__set_accessors!("withicons-dock");
+
+#[cfg(feature = "withicons-glass")]
+__set_accessors!("withicons-glass");
+
+#[cfg(feature = "withicons-gothic")]
+__set_accessors!("withicons-gothic");
+
+#[cfg(feature = "withicons-halloween")]
+__set_accessors!("withicons-halloween");
+
+#[cfg(feature = "withicons-kawaii")]
+__set_accessors!("withicons-kawaii");
+
+#[cfg(feature = "withicons-liquid")]
+__set_accessors!("withicons-liquid");
+
+#[cfg(feature = "withicons-lunar")]
+__set_accessors!("withicons-lunar");
+
+#[cfg(feature = "withicons-luxe")]
+__set_accessors!("withicons-luxe");
+
+#[cfg(feature = "withicons-pastel")]
+__set_accessors!("withicons-pastel");
+
+#[cfg(feature = "withicons-plush")]
+__set_accessors!("withicons-plush");
+
+#[cfg(feature = "withicons-rangoli")]
+__set_accessors!("withicons-rangoli");
+
+#[cfg(feature = "withicons-retro")]
+__set_accessors!("withicons-retro");
+
+#[cfg(feature = "withicons-skeuo")]
+__set_accessors!("withicons-skeuo");
+
+#[cfg(feature = "withicons-soft3d")]
+__set_accessors!("withicons-soft3d");
+
+#[cfg(feature = "withicons-sticker")]
+__set_accessors!("withicons-sticker");
+
+#[cfg(feature = "withicons-suite")]
+__set_accessors!("withicons-suite");
+
+#[cfg(feature = "withicons-utsav")]
+__set_accessors!("withicons-utsav");
+
+#[cfg(feature = "withicons-valentine")]
+__set_accessors!("withicons-valentine");
+
+#[cfg(feature = "wordpress")]
+__set_accessors!("wordpress");
+
+#[cfg(feature = "wpf")]
+__set_accessors!("wpf");
+
+#[cfg(feature = "zmdi")]
+__set_accessors!("zmdi");
+
+#[cfg(feature = "zondicons")]
+__set_accessors!("zondicons");
