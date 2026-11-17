@@ -115,15 +115,35 @@ SVGs are cached in `target/.iconify-cache/` relative to your workspace root, ove
 
 If the API is unreachable, a build fails only for icons your code clearly asks for (`.icon_name()` calls, quoted names, the explicit list). A word that merely coincides with an icon name is skipped.
 
-## Upgrading from 0.3
+## Upgrading
 
-Add the sets you use to the features of `aurora_iconify`. Everything else stays the same: `Icon::lucide().trash()` and `by_name` work as before. The names are bundled now, so `icon_sets!` no longer downloads name lists.
+### From 0.3
+
+The only change you have to make is to enable the icon sets you use as features. The call sites stay the same: `Icon::lucide().trash()`, `by_name` and `Icon::from_set` work as before.
 
 ```toml
 aurora_iconify = { version = "0.4", features = ["lucide"] }
 ```
 
-`Icon::from_set` still matches only the sets listed in `icon_sets!`.
+Without the feature, `icon_sets!` fails with a message naming the feature to add.
+
+Other changes:
+
+- **Generic accessor types.** `LucideIcons` is now `LucideIcons<P>`, and `DynIconSet` is `DynIconSet<P>`. Code that only calls methods on `Icon` doesn't change. Code that names these types in a struct field or signature needs a type alias, with `Provider` being the type that `icon_sets!` generates in the module that calls it:
+
+  ```rust,ignore
+  type Lucide = aurora_iconify::LucideIcons<crate::aurora::Provider>;
+  ```
+
+- **Bundled icon names.** `icon_sets!` no longer downloads icon name lists. SVGs are still downloaded and cached as before. An icon added upstream after this release is only available after the next release.
+- **`"set": all` skips missing icons.** If the API no longer serves an icon, it is left out and its accessor panics at run time. Previously the build failed.
+- **Cache location.** The cache directory is `target/.iconify-cache/v3`. The old `v2` directory is ignored and can be deleted.
+
+### From 0.1.x
+
+0.1.x embedded every icon of every set listed in `icon_sets!`. Since 0.3, only the icons your crate refers to are embedded, unless you ask for `"set": all`. If you looked up icons with `by_name` using names that never appear in your source, add `: all` (or a list of names) to those sets.
+
+Upgrading from 0.1.x also brings the 0.3 changes above: enable the sets as features, and update any type names that refer to the accessor types.
 
 ## Requirements
 
