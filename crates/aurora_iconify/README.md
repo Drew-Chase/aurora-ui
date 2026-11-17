@@ -2,7 +2,7 @@
 
 Compile-time icon embedding from [iconify.design](https://iconify.design) for Rust.
 
-Type-safe accessors for every icon in the icon sets you enable, and the SVGs of the icons your crate uses are embedded in your binary as `&'static str`. More than 550,000 icons from 280 open-source sets, with no runtime HTTP requests and no asset files.
+Type-safe accessors for every icon in the icon sets you enable, and the SVGs of the icons your crate uses are embedded in your binary as `&'static str`. About 470,000 icons from 280 open-source sets, with no runtime HTTP requests and no asset files.
 
 ## Usage
 

@@ -248,8 +248,8 @@ Button::new()
 ## Iconify Icons
 
 The `aurora_iconify` crate gives type-safe access to icons from
-[iconify.design](https://iconify.design) at compile time: more than 550,000 icons
-from 280 icon sets. Enable the sets you use as features:
+[iconify.design](https://iconify.design) at compile time: about 470,000 icons
+from 276 icon sets. Enable the sets you use as features:
 
 ```toml
 [dependencies]
