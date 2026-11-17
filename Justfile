@@ -5,6 +5,10 @@ set shell := ["bash", "-c"]
 doc open="false":
     cargo doc --no-deps --package aurora_ui --release --features document-features {{ if open == "true" { "--open" } else { "" } }}
 
+# Refreshes the icon names bundled with aurora_iconify and its set features. Needs network access.
+iconify-catalog:
+    cargo run -p xtask -- iconify-catalog
+
 # Builds all examples in release mode and reports binary size, startup time, and memory usage
 [windows]
 benchmark:

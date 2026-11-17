@@ -12,6 +12,7 @@ aurora_iconify::icon_sets!(
 fn main() {
     // Type-safe access
     let svg = Icon::mage().calendar_2_fill();
+
     println!("calendar-2-fill SVG length: {} bytes", svg.len());
     println!("First 100 chars: {}...", &svg[..100.min(svg.len())]);
 

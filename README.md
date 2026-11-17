@@ -247,16 +247,17 @@ Button::new()
 
 ## Iconify Icons
 
-The `aurora_iconify` crate fetches icons from [iconify.design](https://iconify.design)
-at compile time. Over 200,000 icons from 150+ icon sets are available.
+The `aurora_iconify` crate gives type-safe access to icons from
+[iconify.design](https://iconify.design) at compile time: more than 550,000 icons
+from 280 icon sets. Enable the sets you use as features:
 
 ```toml
 [dependencies]
-aurora_iconify = { path = "crates/aurora_iconify" }
+aurora_iconify = { path = "crates/aurora_iconify", features = ["mage", "lucide"] }
 ```
 
 ```rust,ignore
-// Declare which icon sets to include (fetched at compile time):
+// Declare which icon sets to use:
 aurora_iconify::icon_sets!("mage", "lucide");
 
 // Type-safe access — one method per icon:
@@ -269,10 +270,15 @@ let svg: Option<&str> = Icon::mage().by_name("calendar-2-fill");
 let svg = Icon::from_set("mage").and_then(|s| s.by_name("calendar-2-fill"));
 ```
 
-Every icon in a set gets a method, but only the icons your crate refers to are
-downloaded and embedded in the binary as `&'static str`. Use
+Every icon in an enabled set has a method, and only the icons your crate refers
+to are downloaded and embedded in the binary as `&'static str`. Use
 `icon_sets!("lucide": all)` or `icon_sets!("lucide": ["arrow-left"])` to embed
 icons that are only looked up by a runtime name. Downloads are cached locally.
+
+The icon names are bundled with the crate, and the accessors live in the
+`aurora_iconify` crate rather than in each crate that uses icons. That keeps
+editors fast even with many icon sets enabled. To refresh the bundled names,
+run `just iconify-catalog`.
 
 ## Accessibility
 

@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-aurora_iconify = { path = "../../crates/aurora_iconify" }
+aurora_iconify = { path = "../../crates/aurora_iconify", features = ["mage", "lucide", "material-symbols"] }

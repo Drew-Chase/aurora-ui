@@ -20,7 +20,7 @@ pub fn page_installation() -> impl Widget {
                     r#"[dependencies]
 aurora_ui = { version = "0.1", features = ["opengl", "text"] }
 aurora_theme = "0.1"
-aurora_iconify = "0.2"  # optional, for icon support"#,
+aurora_iconify = { version = "0.4", features = ["lucide"] }  # optional, for icon support"#,
                 )
                 .font_size(13.0),
         )

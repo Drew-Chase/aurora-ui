@@ -52,6 +52,10 @@
       <sourceFolder url="file://$MODULE_DIR$/examples/virtual_list_example/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/threading_example/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/examples/async_table_population/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_iconify/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_iconify_catalog/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/aurora_iconify_macros/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/xtask/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/examples/fonts_example/target" />
       <excludeFolder url="file://$MODULE_DIR$/examples/iconify_example/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
