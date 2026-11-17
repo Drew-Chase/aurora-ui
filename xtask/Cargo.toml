@@ -1,0 +1,11 @@
+[package]
+name = "xtask"
+version = "0.0.0"
+edition = "2024"
+description = "Maintenance commands for the aurora workspace (not published)"
+publish = false
+
+[dependencies]
+aurora_iconify_catalog = { path = "../crates/aurora_iconify_catalog" }
+serde_json = "1"
+ureq = "3"

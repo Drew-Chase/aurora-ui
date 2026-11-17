@@ -1,0 +1,24 @@
+[package]
+name = "aurora_iconify_macros"
+version = "0.4.0"
+edition = "2024"
+description = "The icon_sets! macro of aurora_iconify. Depend on aurora_iconify, which re-exports it"
+authors = ["Drew Chase"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/drew-chase/aurora-ui"
+homepage = "https://github.com/drew-chase/aurora-ui"
+readme = "README.md"
+keywords = ["icons", "iconify", "proc-macro"]
+categories = ["development-tools::procedural-macro-helpers"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+aurora_iconify_catalog = { version = "=0.4.0", path = "../aurora_iconify_catalog" }
+serde_json = "1"
+ureq = "3"
+
+[dev-dependencies]
+# Only used by tests to check that generated code parses.
+syn = { version = "2", features = ["full"] }
